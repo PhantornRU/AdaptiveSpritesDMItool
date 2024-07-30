@@ -52,6 +52,8 @@ namespace AdaptiveSpritesDMItool
                 services.AddSingleton<DataViewModel>();
                 services.AddSingleton<SettingsPage>();
                 services.AddSingleton<SettingsViewModel>();
+                services.AddSingleton<StatesEditorPage>();
+                services.AddSingleton<StatesEditorViewModel>();
             }).Build();
 
         /// <summary>

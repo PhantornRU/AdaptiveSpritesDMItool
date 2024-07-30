@@ -19,8 +19,14 @@ namespace AdaptiveSpritesDMItool.ViewModels.Windows
             },
             new NavigationViewItem()
             {
+                Content = "Edit",
+                Icon = new SymbolIcon { Symbol = SymbolRegular.TableEdit24 },
+                TargetPageType = typeof(Views.Pages.StatesEditorPage)
+            },
+            new NavigationViewItem()
+            {
                 Content = "Data",
-                Icon = new SymbolIcon { Symbol = SymbolRegular.DataHistogram24 },
+                Icon = new SymbolIcon { Symbol = SymbolRegular.DocumentBulletList24 },
                 TargetPageType = typeof(Views.Pages.DataPage)
             }
         };
