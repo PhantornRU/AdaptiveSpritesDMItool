@@ -28,6 +28,7 @@ using System.Reflection;
 using SixLabors.ImageSharp.Formats.Bmp;
 using System.Runtime.CompilerServices;
 using System.IO;
+using AdaptiveSpritesDMItool.Models;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -37,11 +38,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
     public partial class StatesEditorPage : INavigableView<StatesEditorViewModel>
     {
         public StatesEditorViewModel ViewModel { get; }
-
-        private DMIState currentState;
-
-        Dictionary<StateDirection, WriteableBitmap> stateBMPdictOriginal = new Dictionary<StateDirection, WriteableBitmap>();
-        Dictionary<StateDirection, WriteableBitmap> stateBMPdictEdit = new Dictionary<StateDirection, WriteableBitmap>();
+        DataImageState dataImageState;
 
         public StatesEditorPage(StatesEditorViewModel viewModel)
         {
@@ -49,6 +46,20 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             DataContext = this;
 
             InitializeComponent();
+
+
+
+            // Load File
+
+            string path = "TestImages";
+            string fullpath = $"{path}/testBodyHuman.dmi";
+            using DMIFile file = new DMIFile(fullpath);
+
+            Debug.WriteLine($"Loaded {file}({file.States.Count}).");
+
+            DMIState currentState = file.States.First();
+
+            dataImageState = new DataImageState(currentState);
 
             TestFunction();
         }
@@ -58,39 +69,19 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void TestFunction()
         {
-            // Load File
-
-            string path = "TestImages";
-            string fullpath = $"{path}/testBodyHuman.dmi";
-            using DMIFile file = new DMIFile(fullpath);
-
-            Debug.WriteLine($"Loaded {file}({file.States.Count}).");
-
-            currentState = file.States.First();
-
 
             // Preview
-
-            stateBMPdictOriginal.Add(StateDirection.South, GetBMPFromDMIState(currentState, StateDirection.South));
-            stateBMPdictOriginal.Add(StateDirection.North, GetBMPFromDMIState(currentState, StateDirection.North));
-            stateBMPdictOriginal.Add(StateDirection.East, GetBMPFromDMIState(currentState, StateDirection.East));
-            stateBMPdictOriginal.Add(StateDirection.West, GetBMPFromDMIState(currentState, StateDirection.West));
-
-            imageLeftPreview.Source = stateBMPdictOriginal[StateDirection.South];
-            imageState1.Source = stateBMPdictOriginal[StateDirection.North];
-            imageState2.Source = stateBMPdictOriginal[StateDirection.East];
-            imageState3.Source = stateBMPdictOriginal[StateDirection.West];
+            imageLeftPreview.Source = dataImageState.GetBMPstate(StateDirection.South);
+            imageState1.Source = dataImageState.GetBMPstate(StateDirection.North);
+            imageState2.Source = dataImageState.GetBMPstate(StateDirection.East);
+            imageState3.Source = dataImageState.GetBMPstate(StateDirection.West);
 
 
             // Edit
-
-            stateBMPdictEdit = stateBMPdictOriginal.ToDictionary(entry => entry.Key,
-                                               entry => (WriteableBitmap)entry.Value.Clone());
-
-            imageRightPreview.Source = stateBMPdictEdit[StateDirection.South];
-            imageState4.Source = stateBMPdictEdit[StateDirection.North];
-            imageState5.Source = stateBMPdictEdit[StateDirection.East];
-            imageState6.Source = stateBMPdictEdit[StateDirection.West];
+            imageRightPreview.Source = dataImageState.GetBMPstate(StateDirection.South, true);
+            imageState4.Source = dataImageState.GetBMPstate(StateDirection.North, true);
+            imageState5.Source = dataImageState.GetBMPstate(StateDirection.East, true);
+            imageState6.Source = dataImageState.GetBMPstate(StateDirection.West, true);
         }
 
         #region Mouse Controller
@@ -109,7 +100,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             System.Drawing.Point mousePos = GetMouseCoordinates(e, imageRightPreview);
             Debug.WriteLine(mousePos);
 
-            stateBMPdictEdit[StateDirection.South].SetPixel(mousePos.X, mousePos.Y, Colors.White);
+            // Test
+            dataImageState.GetBMPstate(StateDirection.South, true).SetPixel(mousePos.X, mousePos.Y, Colors.Red);
+            dataImageState.GetBMPstate(StateDirection.North, true).SetPixel(mousePos.X, mousePos.Y, Colors.Red);
+            dataImageState.GetBMPstate(StateDirection.East, true).SetPixel(mousePos.X, mousePos.Y, Colors.Red);
+            dataImageState.GetBMPstate(StateDirection.West, true).SetPixel(mousePos.X, mousePos.Y, Colors.Red);
         }
 
         private System.Drawing.Point GetMouseCoordinates(System.Windows.Input.MouseButtonEventArgs _e, System.Windows.Controls.Image _img)
@@ -130,54 +125,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
 
 
-        #region Image Encoder
-        private WriteableBitmap GetBMPFromDMIState(DMIState _state, StateDirection _stateDirection)
-        {
-            using Image<Rgba32>? imgState = _state.GetFrame(_stateDirection, 0);
-            if (imgState is Image<Rgba32> valueOfImage)
-                Console.WriteLine($"image state is {valueOfImage}");
-            else
-                Console.WriteLine("image state does not have a value");
-            return GetBMPFromRGBA32(imgState);
-        }
-
-        private WriteableBitmap GetBMPFromRGBA32(Image<Rgba32> _imgState)
-        {
-            var bmp = new WriteableBitmap(_imgState.Width, _imgState.Height, _imgState.Metadata.HorizontalResolution, _imgState.Metadata.VerticalResolution, PixelFormats.Bgra32, null);
-
-            bmp.Lock();
-            try
-            {
-
-                using Image<Rgba32> _image = _imgState;
-                _image.ProcessPixelRows(accessor =>
-                {
-                    var backBuffer = bmp.BackBuffer;
-
-                    for (var y = 0; y < _imgState.Height; y++)
-                    {
-                        Span<Rgba32> pixelRow = accessor.GetRowSpan(y);
-
-                        for (var x = 0; x < _imgState.Width; x++)
-                        {
-                            var backBufferPos = backBuffer + (y * _imgState.Width + x) * 4;
-                            var rgba = pixelRow[x];
-                            var color = rgba.A << 24 | rgba.R << 16 | rgba.G << 8 | rgba.B;
-
-                            System.Runtime.InteropServices.Marshal.WriteInt32(backBufferPos, color);
-                        }
-                    }
-                });
-
-                bmp.AddDirtyRect(new Int32Rect(0, 0, _imgState.Width, _imgState.Height));
-            }
-            finally
-            {
-                bmp.Unlock();
-            }
-            return bmp;
-        }
-        #endregion
+        
 
     }
 }
