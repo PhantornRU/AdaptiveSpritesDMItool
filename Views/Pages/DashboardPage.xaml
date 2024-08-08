@@ -20,6 +20,8 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
         <ui:Button
@@ -32,5 +34,29 @@
             Margin="12,0,0,0"
             VerticalAlignment="Center"
             Text="{Binding ViewModel.Counter, Mode=OneWay}" />
+
+        <Viewbox  Grid.Row="0" Grid.Column="1"
+                          Margin="12,12,12,12"
+                            Stretch="Uniform">
+            <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                <Canvas x:Name="testCanvas">
+                </Canvas>
+            </Border>
+        </Viewbox>
+        
+        <Viewbox  Grid.Row="0" Grid.Column="2"
+                          Margin="12,12,12,12"
+                            Stretch="Uniform">
+            <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+
+                <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTest"></Image>
+                <!--<Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
+
+
+            </Border>
+        </Viewbox>
+        
     </Grid>
 </Page>

@@ -21,6 +21,243 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!--<ScrollViewer
+                Name="ForegroundElement"
+                IsTabStop="True"
+                HorizontalAlignment="Stretch">
+            <StackPanel HorizontalAlignment="Left">
+
+
+
+            </StackPanel>
+        </ScrollViewer>-->
+
+
+
+
+        <!--<Viewbox x:Name="imageViewbox" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,-109,156" Grid.RowSpan="2" >
+            <Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center" OpacityMask="#FF332222"/>
+        </Viewbox>-->
+        
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <ToolBarTray Grid.Row="0">
+                <ToolBar x:Name="toolBar">
+                    <Separator Margin="6,0,10,0" />
+                    <RadioButton 
+                                    Style="{StaticResource {x:Type ToggleButton}}"
+                                    GroupName="Edit" 
+                                    IsChecked="True"
+                                    Content="+"
+                                    />
+                    <RadioButton 
+                                    Style="{StaticResource {x:Type ToggleButton}}"
+                                    GroupName="Edit" 
+                                    Content="Fill"
+                                    />
+                    <RadioButton 
+                                    Style="{StaticResource {x:Type ToggleButton}}"
+                                    GroupName="Edit" 
+                                    Content="Select"
+                                    />
+                    <RadioButton 
+                                    Style="{StaticResource {x:Type ToggleButton}}"
+                                    GroupName="Edit" 
+                                    Content="Move"
+                                    />
+                    <Separator Margin="6,0,6,0" />
+                    <RadioButton 
+                                    Style="{StaticResource {x:Type ToggleButton}}" 
+                                    GroupName="Edit" 
+                                    Content="Pick"
+                                    />
+                    <RadioButton 
+                                    Style="{StaticResource {x:Type ToggleButton}}" 
+                                    GroupName="Edit" 
+                                    Content="Delete"
+                                    />
+
+                    <!--Переключатели "Один, Горизонтально, вертикально, все"-->
+                    <Separator Margin="10,0,10,0" />
+                    <RadioButton 
+                                    Style="{StaticResource {x:Type ToggleButton}}" 
+                                    GroupName="Projection" 
+                                    IsChecked="True"
+                                    Content="1"
+                                    />
+                    <RadioButton 
+                                    Style="{StaticResource {x:Type ToggleButton}}" 
+                                    GroupName="Projection" 
+                                    Content="2Ver"
+                                    />
+                    <RadioButton 
+                                    Style="{StaticResource {x:Type ToggleButton}}" 
+                                    GroupName="Projection" 
+                                    Content="2Hor"
+                                    />
+                    <RadioButton 
+                                    Style="{StaticResource {x:Type ToggleButton}}" 
+                                    GroupName="Projection" 
+                                    Content="All"
+                                    />
+
+                    <!--<ToggleButton>
+                                    <Image Source="icon0.gif" />
+                                </ToggleButton>-->
+
+
+                    <Separator Margin="6,0,6,0" />
+                    <Button Content="TEST"/>
+
+
+                </ToolBar>
+            </ToolBarTray>
+            <!--<TabControl Grid.Row="1" x:Name="mainTabControl"/>-->
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="0.3*"/>
+            </Grid.RowDefinitions>
+
+            
+            
+            <!--Choosen States Row-->
+            <Grid Grid.Row="0" VerticalAlignment="Stretch" >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Viewbox  Grid.Row="0" Grid.Column="0"
+                          Margin="12,12,12,12"
+                            Stretch="Uniform">
+                    <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                        <Image x:Name="imageLeftPreview"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                               RenderOptions.EdgeMode="Aliased">
+                        </Image>
+
+                        <!--<Canvas x:Name="stateCanvasLeftPreview">
+                            -->
+                        <!--MinWidth="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" 
+                                        MinHeight="{Binding ActualWidth, RelativeSource={RelativeSource Self}}"-->
+                        <!--
+                        </Canvas>-->
+                    </Border>
+                </Viewbox>
+
+                <Viewbox  Grid.Row="0" Grid.Column="1"
+                          Margin="12,12,12,12"
+                            Stretch="Uniform">
+                    <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                        <Image x:Name="imageRightPreview"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                               RenderOptions.EdgeMode="Aliased">
+                        </Image>
+                    </Border>
+                </Viewbox>
+            </Grid>
+
+        
+        <!--States Row-->
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Viewbox  Grid.Row="1" Grid.Column="0"
+                          Margin="12,6,6,6"
+                            Stretch="Uniform">
+                    <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                        <Image x:Name="imageState1"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                               RenderOptions.EdgeMode="Aliased">
+                        </Image>
+                    </Border>
+                </Viewbox>
+                <Viewbox  Grid.Row="1" Grid.Column="1"
+                          Margin="6,6,6,6"
+                            Stretch="Uniform">
+                    <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                        <Image x:Name="imageState2"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                               RenderOptions.EdgeMode="Aliased">
+                        </Image>
+                    </Border>
+                </Viewbox>
+                <Viewbox  Grid.Row="1" Grid.Column="2"
+                          Margin="6,6,12,6"
+                            Stretch="Uniform">
+                    <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                        <Image x:Name="imageState3"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                               RenderOptions.EdgeMode="Aliased">
+                        </Image>
+                    </Border>
+                </Viewbox>
+
+                <Viewbox  Grid.Row="1" Grid.Column="3"
+                          Margin="12,6,6,6"
+                            Stretch="Uniform">
+                    <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                        <Image x:Name="imageState4"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                               RenderOptions.EdgeMode="Aliased">
+                        </Image>
+                    </Border>
+                </Viewbox>
+                <Viewbox  Grid.Row="1" Grid.Column="4"
+                          Margin="6,6,6,6"
+                            Stretch="Uniform">
+                    <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                        <Image x:Name="imageState5"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                               RenderOptions.EdgeMode="Aliased">
+                        </Image>
+                    </Border>
+                </Viewbox>
+                <Viewbox  Grid.Row="1" Grid.Column="5"
+                          Margin="6,6,6,12"
+                            Stretch="Uniform">
+                    <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                        <Image x:Name="imageState6"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                               RenderOptions.EdgeMode="Aliased">
+                        </Image>
+                    </Border>
+                </Viewbox>
+                
+            </Grid>
+
+        </Grid>
 
     </Grid>
 </Page>
