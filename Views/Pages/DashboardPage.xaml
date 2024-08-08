@@ -19,9 +19,8 @@
     <Grid VerticalAlignment="Top">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         
@@ -46,13 +45,25 @@
             VerticalAlignment="Center"
             Text="{Binding ViewModel.Counter, Mode=OneWay}" />
 
-        <Viewbox  Grid.Row="0" Grid.Column="1"
+        <!--<Viewbox  Grid.Row="0" Grid.Column="1"
                           Margin="12,12,12,12"
                             Stretch="Uniform">
             <Border BorderBrush="Black" BorderThickness="0.5"
                                 MinWidth="100" MinHeight="100">
                 <Canvas x:Name="testCanvas">
                 </Canvas>
+            </Border>
+        </Viewbox>-->
+        <Viewbox  Grid.Row="0" Grid.Column="1"
+                          Margin="12,12,12,12"
+                            Stretch="Uniform">
+            <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+
+                <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTest1"></Image>
+                <!--<Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
+
+
             </Border>
         </Viewbox>
         
@@ -62,7 +73,7 @@
             <Border BorderBrush="Black" BorderThickness="0.5"
                                 MinWidth="100" MinHeight="100">
 
-                <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTest"></Image>
+                <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTest2"></Image>
                 <!--<Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
 
 

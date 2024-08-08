@@ -112,6 +112,7 @@
 
                     <!--<ToggleButton>
                                     <Image Source="icon0.gif" />
+                        
                                 </ToggleButton>-->
 
 
@@ -129,7 +130,8 @@
 
         <!--Choosen States Row-->
 
-        <Grid Grid.Row="1" MaxWidth="550"> <!--!!!!!!!!!!!! TODO: Better Width !!!!!!!!!-->
+        <Grid Grid.Row="1" MaxWidth="550">
+            <!--!!!!!!!!!!!! TODO: Better Width !!!!!!!!!-->
             <!--<Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>-->

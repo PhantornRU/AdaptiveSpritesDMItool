@@ -80,7 +80,25 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             Rgba32[] pixelArray = new Rgba32[imgState.Width * imgState.Height];
             imgState.CopyPixelDataTo(pixelArray);
 
-            imgTest.Source = GetBMP(imgState);
+
+
+            // получаем
+            WriteableBitmap testBMPOriginal = GetBMP(imgState);
+            WriteableBitmap testBMP = testBMPOriginal.Clone();
+
+            // стереть 1 пиксель на 16:16
+            testBMP.SetPixel(16, 16, Colors.White);
+
+            // копируем и вставляем
+
+            testBMP.SetPixel(25, 25, testBMPOriginal.GetPixel(13, 13)); 
+
+            //устанавливаем
+            imgTest1.Source = testBMPOriginal;
+            imgTest2.Source = testBMP;
+
+            testBMP.DrawRectangle(2, 4, 8, 10, Colors.Red);
+
 
             //imgTest.Source = ToImage(pixelBytes, width);
 
