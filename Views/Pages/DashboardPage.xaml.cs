@@ -86,17 +86,17 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             WriteableBitmap testBMPOriginal = GetBMP(imgState);
             WriteableBitmap testBMP = testBMPOriginal.Clone();
 
-            // стереть 1 пиксель на 16:16
-            testBMP.SetPixel(16, 16, Colors.White);
-
-            // копируем и вставляем
-
-            testBMP.SetPixel(25, 25, testBMPOriginal.GetPixel(13, 13)); 
-
             //устанавливаем
             imgTest1.Source = testBMPOriginal;
             imgTest2.Source = testBMP;
 
+            // стереть/нарисовать 1 пиксель на 16:16
+            testBMP.SetPixel(16, 16, Colors.White);
+
+            // копируем и вставляем
+            testBMP.SetPixel(25, 25, testBMPOriginal.GetPixel(13, 13)); 
+
+            // Квадрат
             testBMP.DrawRectangle(2, 4, 8, 10, Colors.Red);
 
 
@@ -129,6 +129,27 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             //using SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(bitmap);
             //image.Save("output.jpg");
+        }
+
+        private void imgTest2_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+
+        }
+
+        private void imgTest2_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            //Debug.WriteLine(e.GetPosition(imgTest2));
+
+            Debug.WriteLine(GetMouseCoordinates(e, imgTest2));
+        }
+
+        private System.Drawing.Point GetMouseCoordinates(System.Windows.Input.MouseButtonEventArgs _e, System.Windows.Controls.Image _img)
+        {
+            System.Windows.Point pos = _e.GetPosition(_img);
+            int x = (int)Math.Floor(pos.X * _img.Source.Width / _img.ActualWidth);
+            int y = (int)Math.Floor(pos.Y * _img.Source.Height / _img.ActualHeight);
+            return new System.Drawing.Point(x, y);
+            
         }
 
         private WriteableBitmap GetBMP(Image<Rgba32> _imgState)

@@ -73,7 +73,7 @@
             <Border BorderBrush="Black" BorderThickness="0.5"
                                 MinWidth="100" MinHeight="100">
 
-                <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTest2"></Image>
+                <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTest2" MouseMove="imgTest2_MouseMove" MouseUp="imgTest2_MouseUp"></Image>
                 <!--<Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
 
 

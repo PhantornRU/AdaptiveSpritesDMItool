@@ -165,7 +165,7 @@
                                 MinWidth="100" MinHeight="100">
                     <Image x:Name="imageRightPreview"
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased">
+                               RenderOptions.EdgeMode="Aliased" MouseDown="imageRightPreview_MouseDown" MouseMove="imageRightPreview_MouseMove" MouseUp="imageRightPreview_MouseUp">
                     </Image>
                 </Border>
             </Viewbox>

@@ -40,6 +40,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private DMIState currentState;
 
+        Dictionary<StateDirection, WriteableBitmap> stateBMPdictOriginal = new Dictionary<StateDirection, WriteableBitmap>();
+        Dictionary<StateDirection, WriteableBitmap> stateBMPdictEdit = new Dictionary<StateDirection, WriteableBitmap>();
 
         public StatesEditorPage(StatesEditorViewModel viewModel)
         {
@@ -66,22 +68,69 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             currentState = file.States.First();
 
+
             // Preview
 
-            WriteableBitmap stateSouthBMP = GetBMPFromDMIState(currentState, StateDirection.South);
-            WriteableBitmap stateNorthBMP = GetBMPFromDMIState(currentState, StateDirection.North);
-            WriteableBitmap stateEastBMP = GetBMPFromDMIState(currentState, StateDirection.East);
-            WriteableBitmap stateWestBMP = GetBMPFromDMIState(currentState, StateDirection.West);
+            stateBMPdictOriginal.Add(StateDirection.South, GetBMPFromDMIState(currentState, StateDirection.South));
+            stateBMPdictOriginal.Add(StateDirection.North, GetBMPFromDMIState(currentState, StateDirection.North));
+            stateBMPdictOriginal.Add(StateDirection.East, GetBMPFromDMIState(currentState, StateDirection.East));
+            stateBMPdictOriginal.Add(StateDirection.West, GetBMPFromDMIState(currentState, StateDirection.West));
 
-            imageLeftPreview.Source = stateSouthBMP;
-            imageState1.Source = stateNorthBMP;
-            imageState2.Source = stateEastBMP;
-            imageState3.Source = stateWestBMP;
+            imageLeftPreview.Source = stateBMPdictOriginal[StateDirection.South];
+            imageState1.Source = stateBMPdictOriginal[StateDirection.North];
+            imageState2.Source = stateBMPdictOriginal[StateDirection.East];
+            imageState3.Source = stateBMPdictOriginal[StateDirection.West];
+
 
             // Edit
 
+            stateBMPdictEdit = stateBMPdictOriginal.ToDictionary(entry => entry.Key,
+                                               entry => (WriteableBitmap)entry.Value.Clone());
+
+            imageRightPreview.Source = stateBMPdictEdit[StateDirection.South];
+            imageState4.Source = stateBMPdictEdit[StateDirection.North];
+            imageState5.Source = stateBMPdictEdit[StateDirection.East];
+            imageState6.Source = stateBMPdictEdit[StateDirection.West];
         }
 
+        #region Mouse Controller
+
+        private void imageRightPreview_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+        }
+
+        private void imageRightPreview_MouseMove(object sender, MouseEventArgs e)
+        {
+
+        }
+
+        private void imageRightPreview_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            System.Drawing.Point mousePos = GetMouseCoordinates(e, imageRightPreview);
+            Debug.WriteLine(mousePos);
+
+            stateBMPdictEdit[StateDirection.South].SetPixel(mousePos.X, mousePos.Y, Colors.White);
+        }
+
+        private System.Drawing.Point GetMouseCoordinates(System.Windows.Input.MouseButtonEventArgs _e, System.Windows.Controls.Image _img)
+        {
+            System.Windows.Point pos = _e.GetPosition(_img);
+            int x = (int)Math.Floor(pos.X * _img.Source.Width / _img.ActualWidth);
+            int y = (int)Math.Floor(pos.Y * _img.Source.Height / _img.ActualHeight);
+            return new System.Drawing.Point(x, y);
+
+        }
+        #endregion
+
+
+        #region User Controller
+
+
+        #endregion
+
+
+
+        #region Image Encoder
         private WriteableBitmap GetBMPFromDMIState(DMIState _state, StateDirection _stateDirection)
         {
             using Image<Rgba32>? imgState = _state.GetFrame(_stateDirection, 0);
@@ -128,6 +177,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             }
             return bmp;
         }
+        #endregion
 
     }
 }
