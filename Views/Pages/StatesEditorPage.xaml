@@ -18,12 +18,12 @@
 
     <Grid VerticalAlignment="Top">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!--<ScrollViewer
@@ -43,7 +43,8 @@
         <!--<Viewbox x:Name="imageViewbox" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,-109,156" Grid.RowSpan="2" >
             <Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center" OpacityMask="#FF332222"/>
         </Viewbox>-->
-        
+
+        <!--ToolBar-->
         <Grid Grid.Row="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -123,141 +124,136 @@
             <!--<TabControl Grid.Row="1" x:Name="mainTabControl"/>-->
         </Grid>
 
-        <Grid Grid.Row="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="0.3*"/>
-            </Grid.RowDefinitions>
+        <!--Edit Windows-->
 
-            
-            
-            <!--Choosen States Row-->
-            <Grid Grid.Row="0" VerticalAlignment="Stretch" >
-                <Grid.RowDefinitions>
+
+        <!--Choosen States Row-->
+
+        <Grid Grid.Row="1" MaxWidth="550"> <!--!!!!!!!!!!!! TODO: Better Width !!!!!!!!!-->
+            <!--<Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Viewbox  Grid.Row="0" Grid.Column="0"
+                </Grid.RowDefinitions>-->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Viewbox  Grid.Row="0" Grid.Column="0"
                           Margin="12,12,12,12"
                             Stretch="Uniform">
-                    <Border BorderBrush="Black" BorderThickness="0.5"
+                <Border BorderBrush="Black" BorderThickness="0.5"
                                 MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageLeftPreview"
+                    <Image x:Name="imageLeftPreview"
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased">
-                        </Image>
+                    </Image>
 
-                        <!--<Canvas x:Name="stateCanvasLeftPreview">
+                    <!--<Canvas x:Name="stateCanvasLeftPreview">
                             -->
-                        <!--MinWidth="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" 
+                    <!--MinWidth="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" 
                                         MinHeight="{Binding ActualWidth, RelativeSource={RelativeSource Self}}"-->
-                        <!--
+                    <!--
                         </Canvas>-->
-                    </Border>
-                </Viewbox>
+                </Border>
+            </Viewbox>
 
-                <Viewbox  Grid.Row="0" Grid.Column="1"
+            <Viewbox  Grid.Row="0" Grid.Column="1"
                           Margin="12,12,12,12"
                             Stretch="Uniform">
-                    <Border BorderBrush="Black" BorderThickness="0.5"
+                <Border BorderBrush="Black" BorderThickness="0.5"
                                 MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageRightPreview"
+                    <Image x:Name="imageRightPreview"
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased">
-                        </Image>
-                    </Border>
-                </Viewbox>
-            </Grid>
+                    </Image>
+                </Border>
+            </Viewbox>
+        </Grid>
 
-        
+
         <!--States Row-->
-            <Grid Grid.Row="1">
-                <Grid.RowDefinitions>
+        <Grid Grid.Row="2">
+            <!--<Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+                </Grid.RowDefinitions>-->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <Viewbox  Grid.Row="1" Grid.Column="0"
-                          Margin="12,6,6,6"
-                            Stretch="Uniform">
-                    <Border BorderBrush="Black" BorderThickness="0.5"
-                                MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageState1"
-                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased">
-                        </Image>
-                    </Border>
-                </Viewbox>
-                <Viewbox  Grid.Row="1" Grid.Column="1"
+            <Viewbox  Grid.Row="1" Grid.Column="0"
                           Margin="6,6,6,6"
                             Stretch="Uniform">
-                    <Border BorderBrush="Black" BorderThickness="0.5"
+                <Border BorderBrush="Black" BorderThickness="0.5"
                                 MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageState2"
+                    <Image x:Name="imageState1"
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased">
-                        </Image>
-                    </Border>
-                </Viewbox>
-                <Viewbox  Grid.Row="1" Grid.Column="2"
-                          Margin="6,6,12,6"
-                            Stretch="Uniform">
-                    <Border BorderBrush="Black" BorderThickness="0.5"
-                                MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageState3"
-                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased">
-                        </Image>
-                    </Border>
-                </Viewbox>
-
-                <Viewbox  Grid.Row="1" Grid.Column="3"
-                          Margin="12,6,6,6"
-                            Stretch="Uniform">
-                    <Border BorderBrush="Black" BorderThickness="0.5"
-                                MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageState4"
-                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased">
-                        </Image>
-                    </Border>
-                </Viewbox>
-                <Viewbox  Grid.Row="1" Grid.Column="4"
+                    </Image>
+                </Border>
+            </Viewbox>
+            <Viewbox  Grid.Row="1" Grid.Column="1"
                           Margin="6,6,6,6"
                             Stretch="Uniform">
-                    <Border BorderBrush="Black" BorderThickness="0.5"
+                <Border BorderBrush="Black" BorderThickness="0.5"
                                 MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageState5"
+                    <Image x:Name="imageState2"
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased">
-                        </Image>
-                    </Border>
-                </Viewbox>
-                <Viewbox  Grid.Row="1" Grid.Column="5"
+                    </Image>
+                </Border>
+            </Viewbox>
+            <Viewbox  Grid.Row="1" Grid.Column="2"
+                          Margin="6,6,6,6"
+                            Stretch="Uniform">
+                <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                    <Image x:Name="imageState3"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                               RenderOptions.EdgeMode="Aliased">
+                    </Image>
+                </Border>
+            </Viewbox>
+
+            <Viewbox  Grid.Row="1" Grid.Column="3"
+                          Margin="6,6,6,6"
+                            Stretch="Uniform">
+                <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                    <Image x:Name="imageState4"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                               RenderOptions.EdgeMode="Aliased">
+                    </Image>
+                </Border>
+            </Viewbox>
+            <Viewbox  Grid.Row="1" Grid.Column="4"
+                          Margin="6,6,6,6"
+                            Stretch="Uniform">
+                <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+                    <Image x:Name="imageState5"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                               RenderOptions.EdgeMode="Aliased">
+                    </Image>
+                </Border>
+            </Viewbox>
+            <Viewbox  Grid.Row="1" Grid.Column="5"
                           Margin="6,6,6,12"
                             Stretch="Uniform">
-                    <Border BorderBrush="Black" BorderThickness="0.5"
+                <Border BorderBrush="Black" BorderThickness="0.5"
                                 MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageState6"
+                    <Image x:Name="imageState6"
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased">
-                        </Image>
-                    </Border>
-                </Viewbox>
-                
-            </Grid>
+                    </Image>
+                </Border>
+            </Viewbox>
 
         </Grid>
+
 
     </Grid>
 </Page>

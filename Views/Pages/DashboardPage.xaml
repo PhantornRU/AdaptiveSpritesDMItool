@@ -24,6 +24,17 @@
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         <ui:Button
             Grid.Column="0"
             Command="{Binding ViewModel.CounterIncrementCommand, Mode=OneWay}"
@@ -57,6 +68,8 @@
 
             </Border>
         </Viewbox>
+        
+        
         
     </Grid>
 </Page>

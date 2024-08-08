@@ -38,6 +38,9 @@ namespace AdaptiveSpritesDMItool.Views.Pages
     {
         public StatesEditorViewModel ViewModel { get; }
 
+        private DMIState currentState;
+
+
         public StatesEditorPage(StatesEditorViewModel viewModel)
         {
             ViewModel = viewModel;
@@ -51,9 +54,9 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
 
 
-
         private void TestFunction()
         {
+            // Load File
 
             string path = "TestImages";
             string fullpath = $"{path}/testBodyHuman.dmi";
@@ -61,12 +64,22 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             Debug.WriteLine($"Loaded {file}({file.States.Count}).");
 
-            DMIState stateFirst = file.States.First();
+            currentState = file.States.First();
 
-            imageLeftPreview.Source = GetBMPFromDMIState(stateFirst, StateDirection.South);
-            imageState1.Source = GetBMPFromDMIState(stateFirst, StateDirection.North);
-            imageState2.Source = GetBMPFromDMIState(stateFirst, StateDirection.East);
-            imageState3.Source = GetBMPFromDMIState(stateFirst, StateDirection.West);
+            // Preview
+
+            WriteableBitmap stateSouthBMP = GetBMPFromDMIState(currentState, StateDirection.South);
+            WriteableBitmap stateNorthBMP = GetBMPFromDMIState(currentState, StateDirection.North);
+            WriteableBitmap stateEastBMP = GetBMPFromDMIState(currentState, StateDirection.East);
+            WriteableBitmap stateWestBMP = GetBMPFromDMIState(currentState, StateDirection.West);
+
+            imageLeftPreview.Source = stateSouthBMP;
+            imageState1.Source = stateNorthBMP;
+            imageState2.Source = stateEastBMP;
+            imageState3.Source = stateWestBMP;
+
+            // Edit
+
         }
 
         private WriteableBitmap GetBMPFromDMIState(DMIState _state, StateDirection _stateDirection)

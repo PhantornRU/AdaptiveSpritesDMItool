@@ -47,7 +47,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             Debug.WriteLine($"Loaded {file}({file.States.Count}).");
 
-            DMIState stateFirst = file.States.First();
+            DMIState currentState = file.States.First();
 
             //stateCanvasLeftPreview.Background = Brushes.Black;
 
@@ -55,7 +55,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             //brush.ImageSource = new BitmapImage(new Uri(fullpath, UriKind.Relative));
             //stateCanvasLeftPreview.Background = brush;
 
-            using Image<Rgba32>? imgState = stateFirst.GetFrame(StateDirection.South, 0);
+            using Image<Rgba32>? imgState = currentState.GetFrame(StateDirection.South, 0);
             if (imgState is Image<Rgba32> valueOfImage)
                 Console.WriteLine($"image is {valueOfImage}");
             else
