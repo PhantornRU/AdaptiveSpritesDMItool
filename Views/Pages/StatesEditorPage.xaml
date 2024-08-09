@@ -59,30 +59,30 @@
                 <ui:Button
                         x:Name="SingleButton"
                         Appearance="Primary"
-                        Icon="{ui:SymbolIcon AddSquare24}" />
+                        Icon="{ui:SymbolIcon AddSquare24}" Click="SingleButton_Click" />
                 <ui:Button
                         x:Name="FillButton"
                         Appearance="Secondary"
-                        Icon="{ui:SymbolIcon Grid24}" />
+                        Icon="{ui:SymbolIcon Grid24}" Click="FillButton_Click" />
                 <ui:Button
                         x:Name="PickButton"
                         Appearance="Secondary"
-                        Icon="{ui:SymbolIcon EyeDropper24}" />
+                        Icon="{ui:SymbolIcon EyeDropper24}" Click="PickButton_Click" />
                 <ui:Button
                         x:Name="DeleteButton"
                         Appearance="Secondary"
-                        Icon="{ui:SymbolIcon Eraser24}" />
+                        Icon="{ui:SymbolIcon Eraser24}" Click="DeleteButton_Click" />
 
                 <!--Move pixels of the edited part-->
                 <Separator Margin="6,0,6,0" />
                 <ui:Button
                         x:Name="SelectButton"
                         Appearance="Secondary"
-                        Icon="{ui:SymbolIcon SquareHintApps24}" />
+                        Icon="{ui:SymbolIcon SquareHintApps24}" Click="SelectButton_Click" />
                 <ui:Button
                         x:Name="MoveButton"
                         Appearance="Secondary"
-                        Icon="{ui:SymbolIcon ArrowMove24}" />
+                        Icon="{ui:SymbolIcon ArrowMove24}" Click="MoveButton_Click" />
 
                 <!--Switches "One, Horizontal, Vertical, All" states-->
                 <Separator Margin="10,0,10,0" />
@@ -90,11 +90,11 @@
                 <ui:Button
                         x:Name="ChooseSingleStateButton"
                         Appearance="Primary"
-                        Icon="{ui:SymbolIcon Square24}" />
+                        Icon="{ui:SymbolIcon Square24}" Click="ChooseSingleStateButton_Click" />
                 <ui:Button
                         x:Name="ChooseParallelStatesButton"
                         Appearance="Secondary"
-                        Icon="{ui:SymbolIcon TableCellsMerge24}" />
+                        Icon="{ui:SymbolIcon TableCellsMerge24}" Click="ChooseParallelStatesButton_Click" />
                 <!--<ui:Button
                         x:Name="ChooseTwoVerticalStatesButton"
                         Appearance="Secondary"
@@ -106,7 +106,7 @@
                 <ui:Button
                         x:Name="ChooseAllStatesButton"
                         Appearance="Secondary"
-                        Icon="{ui:SymbolIcon TableSimple24}" />
+                        Icon="{ui:SymbolIcon TableSimple24}" Click="ChooseAllStatesButton_Click" />
 
             </ToolBar>
 

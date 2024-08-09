@@ -40,6 +40,9 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         public StatesEditorViewModel ViewModel { get; }
         DataImageState dataImageState;
 
+        StateEditMode currentStateEditMode = StateEditMode.Single;
+        StateQuantityMode currentStateQuantityMode = StateQuantityMode.Single;
+
         public StatesEditorPage(StatesEditorViewModel viewModel)
         {
             ViewModel = viewModel;
@@ -67,6 +70,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private Dictionary<StateDirection, System.Windows.Controls.Image> stateSourceOrigDictionary = new Dictionary<StateDirection, System.Windows.Controls.Image>();
         private Dictionary<StateDirection, System.Windows.Controls.Image> stateSourceEditDictionary = new Dictionary<StateDirection, System.Windows.Controls.Image>();
+
         private void TestFunction()
         {
             // Preview
@@ -107,6 +111,34 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private void state_MouseUp(object sender, MouseButtonEventArgs e, StateDirection _stateDirection)
         {
             SetPixel(e, _stateDirection);
+
+            switch (currentStateQuantityMode)
+            {
+                case StateQuantityMode.Single:
+                    break;
+                case StateQuantityMode.Parallel:
+                    break;
+                case StateQuantityMode.All:
+                    break;
+            }
+
+            switch (currentStateEditMode)
+            {
+                case StateEditMode.Single:
+                    break;
+                case StateEditMode.Fill:
+                    break;
+                case StateEditMode.Pick:
+                    break;
+                case StateEditMode.Delete:
+                    break;
+                case StateEditMode.Select:
+                    break;
+                case StateEditMode.Move:
+                    break;
+            }
+
+
         }
 
         private void SetPixel(MouseButtonEventArgs e, StateDirection _stateDirection)
@@ -219,22 +251,31 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void SingleButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ClearEditButtons();
+            SingleButton.Appearance = ControlAppearance.Primary;
+            currentStateEditMode = StateEditMode.Single;
         }
 
         private void FillButton_Click(object sender, RoutedEventArgs e)
         {
+            ClearEditButtons();
+            FillButton.Appearance = ControlAppearance.Primary;
 
+            currentStateEditMode = StateEditMode.Fill;
         }
 
         private void PickButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ClearEditButtons();
+            PickButton.Appearance = ControlAppearance.Primary;
+            currentStateEditMode = StateEditMode.Pick;
         }
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ClearEditButtons();
+            DeleteButton.Appearance = ControlAppearance.Primary;
+            currentStateEditMode = StateEditMode.Delete;
         }
 
         #endregion Buttons Edit Controller
@@ -244,12 +285,16 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void SelectButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ClearEditButtons();
+            SelectButton.Appearance = ControlAppearance.Primary;
+            currentStateEditMode = StateEditMode.Select;
         }
 
         private void MoveButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ClearEditButtons();
+            MoveButton.Appearance = ControlAppearance.Primary;
+            currentStateEditMode = StateEditMode.Move;
         }
 
         #endregion Buttons Move Controller
@@ -259,20 +304,43 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void ChooseSingleStateButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ClearStatesButtons();
+            ChooseSingleStateButton.Appearance = ControlAppearance.Primary;
+            currentStateQuantityMode = StateQuantityMode.Single;
         }
 
         private void ChooseParallelStatesButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ClearStatesButtons();
+            ChooseParallelStatesButton.Appearance = ControlAppearance.Primary;
+            currentStateQuantityMode = StateQuantityMode.Parallel;
         }
 
         private void ChooseAllStatesButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ClearStatesButtons();
+            ChooseAllStatesButton.Appearance = ControlAppearance.Primary;
+            currentStateQuantityMode = StateQuantityMode.All;
         }
 
         #endregion Buttons States Controller
+
+        private void ClearEditButtons()
+        {
+            SingleButton.Appearance = ControlAppearance.Secondary;
+            FillButton.Appearance = ControlAppearance.Secondary;
+            PickButton.Appearance = ControlAppearance.Secondary;
+            DeleteButton.Appearance = ControlAppearance.Secondary;
+            SelectButton.Appearance = ControlAppearance.Secondary;
+            MoveButton.Appearance = ControlAppearance.Secondary;
+        }
+
+        private void ClearStatesButtons()
+        {
+            ChooseSingleStateButton.Appearance = ControlAppearance.Secondary;
+            ChooseParallelStatesButton.Appearance = ControlAppearance.Secondary;
+            ChooseAllStatesButton.Appearance = ControlAppearance.Secondary;
+        }
 
         #endregion Buttons Controller
 
