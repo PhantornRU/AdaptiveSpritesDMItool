@@ -59,18 +59,22 @@
                 <ui:Button
                         x:Name="SingleButton"
                         Appearance="Primary"
+                        ToolTip="Add single cell."
                         Icon="{ui:SymbolIcon AddSquare24}" Click="SingleButton_Click" />
                 <ui:Button
                         x:Name="FillButton"
                         Appearance="Secondary"
+                        ToolTip="Fill area."
                         Icon="{ui:SymbolIcon Grid24}" Click="FillButton_Click" />
                 <ui:Button
                         x:Name="PickButton"
                         Appearance="Secondary"
+                        ToolTip="Pick cell."
                         Icon="{ui:SymbolIcon EyeDropper24}" Click="PickButton_Click" />
                 <ui:Button
                         x:Name="DeleteButton"
                         Appearance="Secondary"
+                        ToolTip="Erase."
                         Icon="{ui:SymbolIcon Eraser24}" Click="DeleteButton_Click" />
 
                 <!--Move pixels of the edited part-->
@@ -78,10 +82,12 @@
                 <ui:Button
                         x:Name="SelectButton"
                         Appearance="Secondary"
+                        ToolTip="Select cells."
                         Icon="{ui:SymbolIcon SquareHintApps24}" Click="SelectButton_Click" />
                 <ui:Button
                         x:Name="MoveButton"
                         Appearance="Secondary"
+                        ToolTip="Move cell."
                         Icon="{ui:SymbolIcon ArrowMove24}" Click="MoveButton_Click" />
 
                 <!--Switches "One, Horizontal, Vertical, All" states-->
@@ -90,10 +96,12 @@
                 <ui:Button
                         x:Name="ChooseSingleStateButton"
                         Appearance="Primary"
+                        ToolTip="Edit single state."
                         Icon="{ui:SymbolIcon Square24}" Click="ChooseSingleStateButton_Click" />
                 <ui:Button
                         x:Name="ChooseParallelStatesButton"
                         Appearance="Secondary"
+                        ToolTip="Edit parallel states."
                         Icon="{ui:SymbolIcon TableCellsMerge24}" Click="ChooseParallelStatesButton_Click" />
                 <!--<ui:Button
                         x:Name="ChooseTwoVerticalStatesButton"
@@ -106,8 +114,23 @@
                 <ui:Button
                         x:Name="ChooseAllStatesButton"
                         Appearance="Secondary"
+                        ToolTip="Edit all states."
                         Icon="{ui:SymbolIcon TableSimple24}" Click="ChooseAllStatesButton_Click" />
 
+                <Separator Margin="10,0,10,0" />
+                <ui:Button
+                        x:Name="MirrorStatesButton"
+                        Appearance="Primary"
+                        IsEnabled="True"
+                        ToolTip="Mirror."
+                        Icon="{ui:SymbolIcon DualScreenMirror24}" Click="MirrorStatesButton_Click" />
+
+                <ui:Button
+                        x:Name="CentralizeStatesButton"
+                        Appearance="Primary"
+                        IsEnabled="True"
+                        ToolTip="Shift pixels to the left to centralize."
+                        Icon="{ui:SymbolIcon TableInsertColumn24}" Click="CentralizeStatesButton_Click" />
             </ToolBar>
 
         </Grid>
