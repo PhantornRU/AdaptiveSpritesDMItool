@@ -65,47 +65,61 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         }
 
 
-
-
+        private Dictionary<StateDirection, System.Windows.Controls.Image> stateSourceOrigDictionary = new Dictionary<StateDirection, System.Windows.Controls.Image>();
+        private Dictionary<StateDirection, System.Windows.Controls.Image> stateSourceEditDictionary = new Dictionary<StateDirection, System.Windows.Controls.Image>();
         private void TestFunction()
         {
-
             // Preview
-            imageLeftPreview.Source = dataImageState.GetBMPstate(StateDirection.South);
-            imageState1.Source = dataImageState.GetBMPstate(StateDirection.North);
-            imageState2.Source = dataImageState.GetBMPstate(StateDirection.East);
-            imageState3.Source = dataImageState.GetBMPstate(StateDirection.West);
+            imageLeftPreviewSouth.Source = dataImageState.GetBMPstate(StateDirection.South, false);
+            imageLeftPreviewNorth.Source = dataImageState.GetBMPstate(StateDirection.North, false);
+            imageLeftPreviewEast.Source = dataImageState.GetBMPstate(StateDirection.East, false);
+            imageLeftPreviewWest.Source = dataImageState.GetBMPstate(StateDirection.West, false);
 
+            stateSourceOrigDictionary.Add(StateDirection.South, imageLeftPreviewSouth);
+            stateSourceOrigDictionary.Add(StateDirection.North, imageLeftPreviewNorth);
+            stateSourceOrigDictionary.Add(StateDirection.East, imageLeftPreviewEast);
+            stateSourceOrigDictionary.Add(StateDirection.West, imageLeftPreviewWest);
 
             // Edit
-            imageRightPreview.Source = dataImageState.GetBMPstate(StateDirection.South, true);
-            imageState4.Source = dataImageState.GetBMPstate(StateDirection.North, true);
-            imageState5.Source = dataImageState.GetBMPstate(StateDirection.East, true);
-            imageState6.Source = dataImageState.GetBMPstate(StateDirection.West, true);
+            imageRightPreviewSouth.Source = dataImageState.GetBMPstate(StateDirection.South, true);
+            imageRightPreviewNorth.Source = dataImageState.GetBMPstate(StateDirection.North, true);
+            imageRightPreviewEast.Source = dataImageState.GetBMPstate(StateDirection.East, true);
+            imageRightPreviewWest.Source = dataImageState.GetBMPstate(StateDirection.West, true);
+
+            stateSourceEditDictionary.Add(StateDirection.South, imageRightPreviewSouth);
+            stateSourceEditDictionary.Add(StateDirection.North, imageRightPreviewNorth);
+            stateSourceEditDictionary.Add(StateDirection.East, imageRightPreviewEast);
+            stateSourceEditDictionary.Add(StateDirection.West, imageRightPreviewWest);
         }
+
+        #region User Controller
+
+        private void state_MouseDown(object sender, MouseButtonEventArgs e, StateDirection _stateDirection)
+        {
+
+        }
+
+        private void state_MouseMove(object sender, MouseEventArgs e, StateDirection _stateDirection)
+        {
+
+        }
+
+        private void state_MouseUp(object sender, MouseButtonEventArgs e, StateDirection _stateDirection)
+        {
+            SetPixel(e, _stateDirection);
+        }
+
+        private void SetPixel(MouseButtonEventArgs e, StateDirection _stateDirection)
+        {
+            System.Windows.Media.Color color = System.Windows.Media.Colors.Red;
+            System.Drawing.Point mousePos = GetMouseCoordinates(e, stateSourceEditDictionary[_stateDirection]);
+            Debug.WriteLine(mousePos);
+            dataImageState.GetBMPstate(_stateDirection, true).SetPixel(mousePos.X, mousePos.Y, color);
+        }
+
+        #endregion  User Controller
 
         #region Mouse Controller
-
-        private void imageRightPreview_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-        }
-
-        private void imageRightPreview_MouseMove(object sender, MouseEventArgs e)
-        {
-
-        }
-
-        private void imageRightPreview_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            System.Drawing.Point mousePos = GetMouseCoordinates(e, imageRightPreview);
-            Debug.WriteLine(mousePos);
-
-            // Test
-            dataImageState.GetBMPstate(StateDirection.South, true).SetPixel(mousePos.X, mousePos.Y, Colors.Red);
-            dataImageState.GetBMPstate(StateDirection.North, true).SetPixel(mousePos.X, mousePos.Y, Colors.Red);
-            dataImageState.GetBMPstate(StateDirection.East, true).SetPixel(mousePos.X, mousePos.Y, Colors.Red);
-            dataImageState.GetBMPstate(StateDirection.West, true).SetPixel(mousePos.X, mousePos.Y, Colors.Red);
-        }
 
         private System.Drawing.Point GetMouseCoordinates(System.Windows.Input.MouseButtonEventArgs _e, System.Windows.Controls.Image _img)
         {
@@ -115,17 +129,152 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             return new System.Drawing.Point(x, y);
 
         }
-        #endregion
+
+        #region Mouse Buttons - South Preview
+
+        private void imageRightPreviewSouth_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            state_MouseDown(sender, e, StateDirection.South);
+        }
+
+        private void imageRightPreviewSouth_MouseMove(object sender, MouseEventArgs e)
+        {
+            state_MouseMove(sender, e, StateDirection.South);
+        }
+
+        private void imageRightPreviewSouth_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            state_MouseUp(sender, e, StateDirection.South);
+        }
+
+        #endregion Mouse Buttons - South Preview
 
 
-        #region User Controller
+        #region Mouse Buttons - North Preview
+
+        private void imageRightPreviewNorth_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            state_MouseDown(sender, e, StateDirection.North);
+        }
+
+        private void imageRightPreviewNorth_MouseMove(object sender, MouseEventArgs e)
+        {
+            state_MouseMove(sender, e, StateDirection.North);
+        }
+
+        private void imageRightPreviewNorth_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+
+            state_MouseUp(sender, e, StateDirection.North);
+        }
+
+        #endregion Mouse Buttons - North Preview
 
 
-        #endregion
+        #region Mouse Buttons - East Preview
+
+        private void imageRightPreviewEast_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            state_MouseDown(sender, e, StateDirection.East);
+        }
+
+        private void imageRightPreviewEast_MouseMove(object sender, MouseEventArgs e)
+        {
+            state_MouseMove(sender, e, StateDirection.East);
+        }
+
+        private void imageRightPreviewEast_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+
+            state_MouseUp(sender, e, StateDirection.East);
+        }
+
+        #endregion Mouse Buttons - East Preview
 
 
+        #region Mouse Buttons - West Preview
 
-        
+        private void imageRightPreviewWest_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            state_MouseDown(sender, e, StateDirection.West);
+        }
+
+        private void imageRightPreviewWest_MouseMove(object sender, MouseEventArgs e)
+        {
+            state_MouseMove(sender, e, StateDirection.West);
+        }
+
+        private void imageRightPreviewWest_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            state_MouseUp(sender, e, StateDirection.West);
+        }
+
+        #endregion Mouse Buttons - West Preview
+
+        #endregion Mouse Controller
+
+        #region Buttons Controller
+
+        #region Buttons Edit Controller
+
+        private void SingleButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void FillButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void PickButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        #endregion Buttons Edit Controller
+
+
+        #region Buttons Move Controller
+
+        private void SelectButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void MoveButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        #endregion Buttons Move Controller
+
+
+        #region Buttons States Controller
+
+        private void ChooseSingleStateButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ChooseParallelStatesButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ChooseAllStatesButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        #endregion Buttons States Controller
+
+        #endregion Buttons Controller
 
     }
 }
