@@ -195,7 +195,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             foreach (var stateDirectionToModify in stateDirections)
             {
                 WriteableBitmap bitmap = dataImageState.GetBMPstate(stateDirectionToModify, true);
-                mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, (int)bitmap.Width);
+                int bitmapWidth = (int)bitmap.Width;
+                mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, bitmapWidth);
                 bitmap.SetPixel(mousePos.X, mousePos.Y, color);
             }
         }
@@ -208,29 +209,41 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                     return new[] { _stateDirection };
 
                 case StateQuantityMode.Parallel:
-                    return new[] { _stateDirection, (StateDirection)(_stateDirection + 1) };
+                    return GetParallelStates(_stateDirection);
 
                 case StateQuantityMode.All:
-                    return Enum.GetValues(typeof(StateDirection))
-                        .Cast<StateDirection>()
-                        .Where(direction => stateSourceEditDictionary.ContainsKey(direction));
+                    int parallValue = ((int)_stateDirection / 2 == 1) ? -2 : 2;
+                    return GetParallelStates(_stateDirection).Union(GetParallelStates((StateDirection)((int)_stateDirection + parallValue)));
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        private int CorrectMousePositionX(StateDirection stateDirection, int mouseX, int bitmapWidth)
+        private StateDirection[] GetParallelStates(StateDirection _stateDirection)
         {
-            if (!isMirroredState || ((int)stateDirection % 2 == 0))
+            int parallValue = isStateOpposite(_stateDirection) ? 1 : -1;
+            StateDirection parallelState = _stateDirection + parallValue;
+            return new[] { _stateDirection, parallelState };
+        }
+
+        private int CorrectMousePositionX(StateDirection _stateDirection, int _mouseX, int _bitmapWidth)
+        {
+            if (!isMirroredState || isStateOpposite(_stateDirection))
             {
-                return mouseX;
+                return _mouseX;
             }
+            //_bitmapWidth = isStateOpposite(_stateDirection) ? 0 : _bitmapWidth;
             var additionValueX = isCentralizedState ? -1 : 0;
-            int result = bitmapWidth - mouseX - 1 + additionValueX; 
+            int result = _bitmapWidth - _mouseX - 1 + additionValueX; 
             result = Math.Max(result, 0);
-            result = Math.Min(result, bitmapWidth - 1);
+            result = Math.Min(result, _bitmapWidth - 1);
             return result;
 
+        }
+
+        private bool isStateOpposite(StateDirection _stateDirection)
+        {
+            return (int)_stateDirection % 2 == 0;
         }
 
         private System.Windows.Media.Color GetColorModify()
