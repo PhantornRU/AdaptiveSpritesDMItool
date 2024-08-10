@@ -29,6 +29,8 @@ using SixLabors.ImageSharp.Formats.Bmp;
 using System.Runtime.CompilerServices;
 using System.IO;
 using AdaptiveSpritesDMItool.Models;
+using AdaptiveSpritesDMItool.Helpers;
+using System.Drawing;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -171,83 +173,60 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         }
 
+
         private void SetPixel(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
-            System.Windows.Media.Color color = System.Windows.Media.Colors.Red;
-            System.Drawing.Point mousePos = GetMouseCoordinates(e, stateSourceEditDictionary[_stateDirection]);
-            Debug.WriteLine(mousePos);
+            System.Windows.Media.Color color = GetColorModify();
+            System.Drawing.Point mousePos = MouseController.GetMouseCoordinates(e, stateSourceEditDictionary[_stateDirection]);
 
+            var stateDirections = GetStateDirections(_stateDirection, mousePos);
 
-            //switch (currentStateQuantityMode)
-            //{
-            //    case StateQuantityMode.Single:
-            //        dataImageState.GetBMPstate(_stateDirection, true).SetPixel(mousePos.X, mousePos.Y, color);
-            //        break;
-            //    case StateQuantityMode.Parallel:
-            //        dataImageState.GetBMPstate(_stateDirection, true).SetPixel(mousePos.X, mousePos.Y, color);
-            //        dataImageState.GetBMPstate(_stateDirection+1, true).SetPixel(mousePos.X, mousePos.Y, color);
-            //        break;
-            //    case StateQuantityMode.All:
-            //        foreach (StateDirection tempStateDirection in Enum.GetValues(typeof(StateDirection)))
-            //        {
-            //            if (!stateSourceEditDictionary.Keys.Contains(tempStateDirection))
-            //                continue;
-            //            dataImageState.GetBMPstate(tempStateDirection, true).SetPixel(mousePos.X, mousePos.Y, color);
-            //        }
-            //        break;
-            //}
+            foreach (var stateDirectionToModify in stateDirections)
+            {
+                WriteableBitmap bitmap = dataImageState.GetBMPstate(stateDirectionToModify, true);
+                mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, (int)bitmap.Width);
+                bitmap.SetPixel(mousePos.X, mousePos.Y, color);
+            }
+        }
 
-            int additionValueX = isCentralizedState ? -1 : 0;
-
+        private IEnumerable<StateDirection> GetStateDirections(StateDirection _stateDirection, System.Drawing.Point _mousePos)
+        {
             switch (currentStateQuantityMode)
             {
                 case StateQuantityMode.Single:
-                    dataImageState.GetBMPstate(_stateDirection, true).SetPixel(mousePos.X, mousePos.Y, color);
-                    break;
+                    return new[] { _stateDirection };
 
                 case StateQuantityMode.Parallel:
-                    dataImageState.GetBMPstate(_stateDirection, true).SetPixel(mousePos.X, mousePos.Y, color);
-                    StateDirection parallelStateDirection = _stateDirection + 1;
-                    int tempXp = mousePos.X;
-                    if (isMirroredState)
-                    {
-                        //additionValueX = (int)parallelStateDirection <= 1 ? additionValueX : 0; // чтобы было нормальное центрирование на востоке/западе
-                        tempXp = (int)dataImageState.GetBMPstate(parallelStateDirection, true).Width - mousePos.X - 1 + additionValueX;
-                    }
-                    dataImageState.GetBMPstate(parallelStateDirection, true).SetPixel(tempXp, mousePos.Y, color);
-                    break;
+                    return new[] { _stateDirection, (StateDirection)(_stateDirection + 1) };
 
                 case StateQuantityMode.All:
-                    foreach (StateDirection tempStateDirection in Enum.GetValues(typeof(StateDirection)))
-                    {
-                        if(!stateSourceEditDictionary.Keys.Contains(tempStateDirection))
-                            continue;
-                        int tempX = mousePos.X;
-                        if (isMirroredState && ((int)tempStateDirection % 2 != 0))
-                        {
-                            //additionValueX = (int)tempStateDirection <= 1 ? additionValueX : 0;
-                            tempX = (int)dataImageState.GetBMPstate(tempStateDirection, true).Width - mousePos.X - 1 + additionValueX;
-                        }
-                        dataImageState.GetBMPstate(tempStateDirection, true).SetPixel(tempX, mousePos.Y, color);
-                    }
-                    break;
+                    return Enum.GetValues(typeof(StateDirection))
+                        .Cast<StateDirection>()
+                        .Where(direction => stateSourceEditDictionary.ContainsKey(direction));
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
+        }
 
+        private int CorrectMousePositionX(StateDirection stateDirection, int mouseX, int bitmapWidth)
+        {
+            if (!isMirroredState || ((int)stateDirection % 2 == 0))
+            {
+                return mouseX;
+            }
+            var additionValueX = isCentralizedState ? -1 : 0;
+            return bitmapWidth - mouseX - 1 + additionValueX;
 
+        }
+
+        private System.Windows.Media.Color GetColorModify()
+        {
+            return System.Windows.Media.Colors.Red;
         }
 
         #endregion  User Controller
 
         #region Mouse Controller
-
-        private System.Drawing.Point GetMouseCoordinates(System.Windows.Input.MouseButtonEventArgs _e, System.Windows.Controls.Image _img)
-        {
-            System.Windows.Point pos = _e.GetPosition(_img);
-            int x = (int)Math.Floor(pos.X * _img.Source.Width / _img.ActualWidth);
-            int y = (int)Math.Floor(pos.Y * _img.Source.Height / _img.ActualHeight);
-            return new System.Drawing.Point(x, y);
-
-        }
 
         #region Mouse Buttons - South Preview
 
@@ -267,7 +246,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         }
 
         #endregion Mouse Buttons - South Preview
-
 
         #region Mouse Buttons - North Preview
 

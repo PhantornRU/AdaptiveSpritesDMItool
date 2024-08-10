@@ -136,6 +136,7 @@
         </Grid>
 
         <!--Edit State Windows-->
+        
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
@@ -146,6 +147,9 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
+            <!-- TODO: Dynamic Data Elements without copypaste and with correct row and column -->
+            
+            <!-- South States -->
             <Grid Grid.Row="0" Grid.Column="0"
                     Margin="12,12,12,12">
                 <Grid.ColumnDefinitions>
@@ -153,15 +157,14 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
+                <ui:SymbolIcon Grid.Column="0" Symbol="ArrowCircleDown24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
+                <ui:SymbolIcon Grid.Column="1" Symbol="ArrowCircleDown24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
+
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
                     <Border
-                    BorderBrush="Black" BorderThickness="0.5"
-                    MinWidth="100" MinHeight="100">
-                        <!--HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"-->
-                        <!--Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" 
-                    Height="{Binding ActualWidth, RelativeSource={RelativeSource Self}}">-->
+                        BorderBrush="Black" BorderThickness="0.5"
+                        MinWidth="100" MinHeight="100">
                         <Image x:Name="imageLeftPreviewSouth"                               
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased">
@@ -172,8 +175,8 @@
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
                     <Border
-                    BorderBrush="Black" BorderThickness="0.5"
-                    MinWidth="100" MinHeight="100">
+                        BorderBrush="Black" BorderThickness="0.5"
+                        MinWidth="100" MinHeight="100">
                         <Image x:Name="imageRightPreviewSouth"                               
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased" MouseDown="imageRightPreviewSouth_MouseDown" MouseUp="imageRightPreviewSouth_MouseUp" MouseMove="imageRightPreviewSouth_MouseMove">
@@ -182,7 +185,8 @@
                 </Viewbox>
             </Grid>
 
-            
+
+            <!-- North States -->
             <Grid Grid.Row="0" Grid.Column="1"
                     Margin="12,12,12,12">
                 <Grid.ColumnDefinitions>
@@ -190,13 +194,14 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
+                <ui:SymbolIcon Grid.Column="0" Symbol="ArrowCircleUp24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
+                <ui:SymbolIcon Grid.Column="1" Symbol="ArrowCircleUp24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
+
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
                     <Border
-                    BorderBrush="Black" BorderThickness="0.5"
-                    MinWidth="100" MinHeight="100">
-                        <!--Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" 
-                    Height="{Binding ActualWidth, RelativeSource={RelativeSource Self}}">-->
+                        BorderBrush="Black" BorderThickness="0.5"
+                        MinWidth="100" MinHeight="100">
                         <Image x:Name="imageLeftPreviewNorth"                               
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased">
@@ -207,8 +212,8 @@
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
                     <Border
-                    BorderBrush="Black" BorderThickness="0.5"
-                    MinWidth="100" MinHeight="100">
+                        BorderBrush="Black" BorderThickness="0.5"
+                        MinWidth="100" MinHeight="100">
                         <Image x:Name="imageRightPreviewNorth"                               
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased" MouseDown="imageRightPreviewNorth_MouseDown" MouseMove="imageRightPreviewNorth_MouseMove" MouseUp="imageRightPreviewNorth_MouseUp">
@@ -217,7 +222,7 @@
                 </Viewbox>
             </Grid>
 
-
+            <!-- East States -->
             <Grid Grid.Row="1" Grid.Column="0"
                     Margin="12,12,12,12">
                 <Grid.ColumnDefinitions>
@@ -225,13 +230,14 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
+                <ui:SymbolIcon Grid.Column="0" Symbol="ArrowCircleRight24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
+                <ui:SymbolIcon Grid.Column="1" Symbol="ArrowCircleRight24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
+
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
                     <Border
-                    BorderBrush="Black" BorderThickness="0.5"
-                    MinWidth="100" MinHeight="100">
-                        <!--Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" 
-                    Height="{Binding ActualWidth, RelativeSource={RelativeSource Self}}">-->
+                        BorderBrush="Black" BorderThickness="0.5"
+                        MinWidth="100" MinHeight="100">
                         <Image x:Name="imageLeftPreviewEast"                               
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased">
@@ -242,18 +248,17 @@
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
                     <Border
-                    BorderBrush="Black" BorderThickness="0.5"
-                    MinWidth="100" MinHeight="100">
+                        BorderBrush="Black" BorderThickness="0.5"
+                        MinWidth="100" MinHeight="100">
                         <Image x:Name="imageRightPreviewEast"                               
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased" MouseDown="imageRightPreviewEast_MouseDown" MouseMove="imageRightPreviewEast_MouseMove" MouseUp="imageRightPreviewEast_MouseUp">
                         </Image>
                     </Border>
                 </Viewbox>
-
             </Grid>
 
-
+            <!-- West States -->
             <Grid Grid.Row="1" Grid.Column="1"
                     Margin="12,12,12,12">
                 <Grid.ColumnDefinitions>
@@ -261,13 +266,14 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
+                <ui:SymbolIcon Grid.Column="0" Symbol="ArrowCircleLeft24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
+                <ui:SymbolIcon Grid.Column="1" Symbol="ArrowCircleLeft24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
+
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
                     <Border
-                    BorderBrush="Black" BorderThickness="0.5"
-                    MinWidth="100" MinHeight="100">
-                        <!--Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" 
-                    Height="{Binding ActualWidth, RelativeSource={RelativeSource Self}}">-->
+                        BorderBrush="Black" BorderThickness="0.5"
+                        MinWidth="100" MinHeight="100">
                         <Image x:Name="imageLeftPreviewWest"                               
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased">
@@ -278,8 +284,12 @@
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
                     <Border
-                    BorderBrush="Black" BorderThickness="0.5"
-                    MinWidth="100" MinHeight="100">
+                        BorderBrush="Black" BorderThickness="0.5"
+                        MinWidth="100" MinHeight="100">
+                        <!--HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"-->
+                        <!--Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" 
+                    Height="{Binding ActualWidth, RelativeSource={RelativeSource Self}}">-->
                         <Image x:Name="imageRightPreviewWest"                               
                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                RenderOptions.EdgeMode="Aliased" MouseDown="imageRightPreviewWest_MouseDown" MouseMove="imageRightPreviewWest_MouseMove" MouseUp="imageRightPreviewWest_MouseUp"/>
