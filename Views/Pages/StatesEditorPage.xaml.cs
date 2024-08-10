@@ -112,108 +112,170 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         System.Drawing.Point currentMousePosition;
         System.Drawing.Point currentMouseUpPosition;
 
+        StateDirection currentStateDirection;
+
         private void state_MouseDown(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
             currentMouseDownPosition = MouseController.GetModifyMousePosition(e, stateSourceEditDictionary[_stateDirection]);
-        }
+            currentMousePosition = currentMouseDownPosition;
+            currentStateDirection = _stateDirection;
 
-        private void state_MouseMove(MouseEventArgs e, StateDirection _stateDirection)
-        {
-            bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
-            if (!mouseIsDown)
-                return;
-            currentMousePosition = MouseController.GetModifyMousePosition(e, stateSourceEditDictionary[_stateDirection]);
-            SetPixel(_stateDirection);
+            switch (currentStateEditMode)
+            {
+                case StateEditMode.Single:
+                    EditSingleMode();
+                    break;
+                case StateEditMode.Fill:
+                    EditFillModeStart();
+                    break;
+                case StateEditMode.Pick:
+                    EditPickMode();
+                    break;
+                case StateEditMode.Delete:
+                    EditDeleteMode();
+                    break;
+                case StateEditMode.Select:
+                    EditSelectModeStart();
+                    break;
+                case StateEditMode.Move:
+                    EditMoveMode();
+                    break;
+            }
         }
 
         private void state_MouseUp(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
             currentMouseUpPosition = MouseController.GetModifyMousePosition(e, stateSourceEditDictionary[_stateDirection]);
+            currentMousePosition = currentMouseUpPosition;
+            currentStateDirection = _stateDirection;
 
-            SetPixel(_stateDirection);
+            switch (currentStateEditMode)
+            {
+                case StateEditMode.Fill:
+                    EditFillModeEnd();
+                    break;
+                case StateEditMode.Select:
+                    EditSelectModeEnd();
+                    break;
+            }
+
+        }
+
+        private void state_MouseMove(MouseEventArgs e, StateDirection _stateDirection)
+        {
+
+            bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
+            if (!mouseIsDown)
+                return;
+            currentMousePosition = MouseController.GetModifyMousePosition(e, stateSourceEditDictionary[_stateDirection]);
+            currentStateDirection = _stateDirection;
 
             switch (currentStateEditMode)
             {
                 case StateEditMode.Single:
-                    EditSingleMode(e, _stateDirection);
+                    EditSingleMode( );
                     break;
                 case StateEditMode.Fill:
-                    EditFillMode(e, _stateDirection);
+                    EditFillMode();
                     break;
                 case StateEditMode.Pick:
-                    EditPickMode(e, _stateDirection);
+                    EditPickMode();
                     break;
                 case StateEditMode.Delete:
-                    EditDeleteMode(e, _stateDirection);
+                    EditDeleteMode();
                     break;
                 case StateEditMode.Select:
-                    EditSelectMode(e, _stateDirection);
+                    EditSelectMode();
                     break;
                 case StateEditMode.Move:
-                    EditMoveMode(e, _stateDirection);
+                    EditMoveMode();
                     break;
             }
         }
 
-        private void EditSingleMode(MouseButtonEventArgs e, StateDirection _stateDirection)
+        private void EditSingleMode()
         {
-            SetPixel(_stateDirection);
+            SetPixel();
         }
 
-        private void EditFillMode(MouseButtonEventArgs e, StateDirection _stateDirection)
-        {
-
-        }
-
-        private void EditPickMode(MouseButtonEventArgs e, StateDirection _stateDirection)
+        private void EditFillModeStart()
         {
 
         }
 
-        private void EditDeleteMode(MouseButtonEventArgs e, StateDirection _stateDirection)
+        private void EditFillMode()
         {
 
         }
 
-        private void EditSelectMode(MouseButtonEventArgs e, StateDirection _stateDirection)
-        {
-
-        }
-        private void EditMoveMode(MouseButtonEventArgs e, StateDirection _stateDirection)
+        private void EditFillModeEnd()
         {
 
         }
 
 
-        private void SetPixel(StateDirection _stateDirection)
+        private void EditPickMode()
+        {
+
+        }
+
+        private void EditDeleteMode()
+        {
+
+        }
+
+        private void EditSelectModeStart()
+        {
+
+        }
+
+        private void EditSelectMode()
+        {
+
+        }
+        private void EditSelectModeEnd()
+        {
+
+        }
+
+        private void EditMoveMode()
+        {
+
+        }
+
+
+        private void SetPixel()
         {
             System.Drawing.Point mousePos = currentMousePosition;
             System.Windows.Media.Color color = GetColorModify();
 
-            var stateDirections = GetStateDirections(_stateDirection, mousePos);
+            var stateDirections = GetStateDirections(mousePos);
 
             foreach (var stateDirectionToModify in stateDirections)
             {
                 WriteableBitmap bitmap = dataImageState.GetBMPstate(stateDirectionToModify, true);
                 int bitmapWidth = (int)bitmap.Width;
+                //bitmapWidth = _stateDirection == stateDirectionToModify ? 0 : bitmapWidth;
+                var mousePosXTemp = mousePos.X;
                 mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, bitmapWidth);
+                Debug.WriteLine($"_stateDirection: {currentStateDirection}; stateDirectionToModify: {stateDirectionToModify}; MousePosX: [Orig: {mousePosXTemp} - Mod: {mousePos.X}]");
                 bitmap.SetPixel(mousePos.X, mousePos.Y, color);
             }
         }
 
-        private IEnumerable<StateDirection> GetStateDirections(StateDirection _stateDirection, System.Drawing.Point _mousePos)
+        private IEnumerable<StateDirection> GetStateDirections(System.Drawing.Point _mousePos)
         {
             switch (currentStateQuantityMode)
             {
                 case StateQuantityMode.Single:
-                    return new[] { _stateDirection };
+                    return new[] { currentStateDirection };
 
                 case StateQuantityMode.Parallel:
-                    return GetParallelStates(_stateDirection);
+                    return GetParallelStates(currentStateDirection);
 
                 case StateQuantityMode.All:
-                    int parallValue = ((int)_stateDirection / 2 == 1) ? -2 : 2;
-                    return GetParallelStates(_stateDirection).Union(GetParallelStates((StateDirection)((int)_stateDirection + parallValue)));
+                    int parallValue = ((int)currentStateDirection / 2 == 1) ? -2 : 2;
+                    return GetParallelStates(currentStateDirection).Union(GetParallelStates((StateDirection)((int)currentStateDirection + parallValue)));
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -228,7 +290,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private int CorrectMousePositionX(StateDirection _stateDirection, int _mouseX, int _bitmapWidth)
         {
-            if (!isMirroredState || isStateOpposite(_stateDirection))
+            if (!isMirroredState || currentStateDirection == _stateDirection)
             {
                 return _mouseX;
             }
@@ -243,7 +305,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private bool isStateOpposite(StateDirection _stateDirection)
         {
-            return (int)_stateDirection % 2 == 0;
+            return ((int)_stateDirection % 2 == 0);
         }
 
         private System.Windows.Media.Color GetColorModify()
