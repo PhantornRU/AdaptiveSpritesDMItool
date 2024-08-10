@@ -107,19 +107,30 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region User Controller
 
+
+        System.Drawing.Point currentMouseDownPosition;
+        System.Drawing.Point currentMousePosition;
+        System.Drawing.Point currentMouseUpPosition;
+
         private void state_MouseDown(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
-
+            currentMouseDownPosition = MouseController.GetModifyMousePosition(e, stateSourceEditDictionary[_stateDirection]);
         }
 
         private void state_MouseMove(MouseEventArgs e, StateDirection _stateDirection)
         {
-
+            bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
+            if (!mouseIsDown)
+                return;
+            currentMousePosition = MouseController.GetModifyMousePosition(e, stateSourceEditDictionary[_stateDirection]);
+            SetPixel(_stateDirection);
         }
 
         private void state_MouseUp(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
-            SetPixel(e, _stateDirection);
+            currentMouseUpPosition = MouseController.GetModifyMousePosition(e, stateSourceEditDictionary[_stateDirection]);
+
+            SetPixel(_stateDirection);
 
             switch (currentStateEditMode)
             {
@@ -146,7 +157,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void EditSingleMode(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
-            SetPixel(e, _stateDirection);
+            SetPixel(_stateDirection);
         }
 
         private void EditFillMode(MouseButtonEventArgs e, StateDirection _stateDirection)
@@ -174,10 +185,10 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         }
 
 
-        private void SetPixel(MouseButtonEventArgs e, StateDirection _stateDirection)
+        private void SetPixel(StateDirection _stateDirection)
         {
+            System.Drawing.Point mousePos = currentMousePosition;
             System.Windows.Media.Color color = GetColorModify();
-            System.Drawing.Point mousePos = MouseController.GetMouseCoordinates(e, stateSourceEditDictionary[_stateDirection]);
 
             var stateDirections = GetStateDirections(_stateDirection, mousePos);
 
@@ -215,7 +226,10 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 return mouseX;
             }
             var additionValueX = isCentralizedState ? -1 : 0;
-            return bitmapWidth - mouseX - 1 + additionValueX;
+            int result = bitmapWidth - mouseX - 1 + additionValueX; 
+            result = Math.Max(result, 0);
+            result = Math.Min(result, bitmapWidth - 1);
+            return result;
 
         }
 
