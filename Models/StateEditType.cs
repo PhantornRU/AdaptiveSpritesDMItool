@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AdaptiveSpritesDMItool.Models
 {
-    public enum StateEditMode
+    public enum StateEditType
     {
         Single,
         Fill,
@@ -16,7 +16,7 @@ namespace AdaptiveSpritesDMItool.Models
         Move
     }
 
-    public enum StateQuantityMode
+    public enum StateQuantityType
     {
         Single,
         Parallel,

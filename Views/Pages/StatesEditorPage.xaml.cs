@@ -31,6 +31,7 @@ using System.IO;
 using AdaptiveSpritesDMItool.Models;
 using AdaptiveSpritesDMItool.Helpers;
 using System.Drawing;
+using CommunityToolkit.HighPerformance.Helpers;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -42,8 +43,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         public StatesEditorViewModel ViewModel { get; }
         DataImageState dataImageState;
 
-        StateEditMode currentStateEditMode = StateEditMode.Single;
-        StateQuantityMode currentStateQuantityMode = StateQuantityMode.Single;
+        StateEditType currentStateEditMode = StateEditType.Single;
+        StateQuantityType currentStateQuantityMode = StateQuantityType.Single;
 
         /// <summary>
         /// Determines whether the state is centralized - setting the pixel in the middle of the pixel
@@ -122,22 +123,22 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             switch (currentStateEditMode)
             {
-                case StateEditMode.Single:
+                case StateEditType.Single:
                     EditSingleMode();
                     break;
-                case StateEditMode.Fill:
+                case StateEditType.Fill:
                     EditFillModeStart();
                     break;
-                case StateEditMode.Pick:
+                case StateEditType.Pick:
                     EditPickMode();
                     break;
-                case StateEditMode.Delete:
+                case StateEditType.Delete:
                     EditDeleteMode();
                     break;
-                case StateEditMode.Select:
+                case StateEditType.Select:
                     EditSelectModeStart();
                     break;
-                case StateEditMode.Move:
+                case StateEditType.Move:
                     EditMoveMode();
                     break;
             }
@@ -151,10 +152,10 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             switch (currentStateEditMode)
             {
-                case StateEditMode.Fill:
+                case StateEditType.Fill:
                     EditFillModeEnd();
                     break;
-                case StateEditMode.Select:
+                case StateEditType.Select:
                     EditSelectModeEnd();
                     break;
             }
@@ -172,22 +173,22 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             switch (currentStateEditMode)
             {
-                case StateEditMode.Single:
+                case StateEditType.Single:
                     EditSingleMode( );
                     break;
-                case StateEditMode.Fill:
+                case StateEditType.Fill:
                     EditFillMode();
                     break;
-                case StateEditMode.Pick:
+                case StateEditType.Pick:
                     EditPickMode();
                     break;
-                case StateEditMode.Delete:
+                case StateEditType.Delete:
                     EditDeleteMode();
                     break;
-                case StateEditMode.Select:
+                case StateEditType.Select:
                     EditSelectMode();
                     break;
-                case StateEditMode.Move:
+                case StateEditType.Move:
                     EditMoveMode();
                     break;
             }
@@ -267,13 +268,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             switch (currentStateQuantityMode)
             {
-                case StateQuantityMode.Single:
+                case StateQuantityType.Single:
                     return new[] { currentStateDirection };
 
-                case StateQuantityMode.Parallel:
+                case StateQuantityType.Parallel:
                     return GetParallelStates(currentStateDirection);
 
-                case StateQuantityMode.All:
+                case StateQuantityType.All:
                     int parallValue = ((int)currentStateDirection / 2 == 1) ? -2 : 2;
                     return GetParallelStates(currentStateDirection).Union(GetParallelStates((StateDirection)((int)currentStateDirection + parallValue)));
                 default:
@@ -407,7 +408,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             ResetEditButtons();
             SingleButton.Appearance = ControlAppearance.Primary;
-            currentStateEditMode = StateEditMode.Single;
+            currentStateEditMode = StateEditType.Single;
         }
 
         private void FillButton_Click(object sender, RoutedEventArgs e)
@@ -415,21 +416,21 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             ResetEditButtons();
             FillButton.Appearance = ControlAppearance.Primary;
 
-            currentStateEditMode = StateEditMode.Fill;
+            currentStateEditMode = StateEditType.Fill;
         }
 
         private void PickButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
             PickButton.Appearance = ControlAppearance.Primary;
-            currentStateEditMode = StateEditMode.Pick;
+            currentStateEditMode = StateEditType.Pick;
         }
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
             DeleteButton.Appearance = ControlAppearance.Primary;
-            currentStateEditMode = StateEditMode.Delete;
+            currentStateEditMode = StateEditType.Delete;
         }
 
         #endregion Buttons Edit Controller
@@ -441,14 +442,14 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             ResetEditButtons();
             SelectButton.Appearance = ControlAppearance.Primary;
-            currentStateEditMode = StateEditMode.Select;
+            currentStateEditMode = StateEditType.Select;
         }
 
         private void MoveButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
             MoveButton.Appearance = ControlAppearance.Primary;
-            currentStateEditMode = StateEditMode.Move;
+            currentStateEditMode = StateEditType.Move;
         }
 
         #endregion Buttons Move Controller
@@ -460,7 +461,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             ResetStatesButtons();
             ChooseSingleStateButton.Appearance = ControlAppearance.Primary;
-            currentStateQuantityMode = StateQuantityMode.Single;
+            currentStateQuantityMode = StateQuantityType.Single;
             ControllButtonsAvailability();
         }
 
@@ -468,7 +469,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             ResetStatesButtons();
             ChooseParallelStatesButton.Appearance = ControlAppearance.Primary;
-            currentStateQuantityMode = StateQuantityMode.Parallel;
+            currentStateQuantityMode = StateQuantityType.Parallel;
             ControllButtonsAvailability();
         }
 
@@ -476,7 +477,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             ResetStatesButtons();
             ChooseAllStatesButton.Appearance = ControlAppearance.Primary;
-            currentStateQuantityMode = StateQuantityMode.All;
+            currentStateQuantityMode = StateQuantityType.All;
             ControllButtonsAvailability();
         }
 
@@ -495,8 +496,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void ControllButtonsAvailability()
         {
-            MirrorStatesButton.IsEnabled = currentStateQuantityMode != StateQuantityMode.Single;
-            CentralizeStatesButton.IsEnabled = isMirroredState && (currentStateQuantityMode != StateQuantityMode.Single);
+            MirrorStatesButton.IsEnabled = currentStateQuantityMode != StateQuantityType.Single;
+            CentralizeStatesButton.IsEnabled = isMirroredState && (currentStateQuantityMode != StateQuantityType.Single);
 
         }
 
