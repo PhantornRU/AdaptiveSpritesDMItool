@@ -175,36 +175,48 @@
 
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
-                    <Border
-                        BorderBrush="Black" BorderThickness="0.5"
-                        MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageLeftPreviewSouth"                               
-                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased">
-                        </Image>
-                    </Border>
-                </Viewbox>
-
-                <Viewbox Grid.Row="0" Grid.Column="1"
-                    Margin="6,6,6,6">
-                        <Grid>
-                            <Image x:Name="backgroundImg"                              
+                    <Grid>
+                        <Image x:Name="backgroundImgPreviewLeftSouth"                              
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
-                            <Image x:Name="imageRightPreviewSouth"                              
+                        <Image x:Name="imagePreviewLeftSouth"                              
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                                RenderOptions.EdgeMode="Aliased" 
-                                MouseDown="imageRightPreviewSouth_MouseDown" 
-                                MouseUp="imageRightPreviewSouth_MouseUp" 
-                                MouseMove="imageRightPreviewSouth_MouseMove">
-                            </Image>
-                            <Image x:Name="imageOverlay"                             
+                                RenderOptions.EdgeMode="Aliased">
+                        </Image>
+                        <Image x:Name="imageOverlayPreviewLeftSouth"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
                         <Border BorderBrush="Black" BorderThickness="0.5"
                             MinWidth="100" MinHeight="100">
-                            <Image x:Name="imageSelection"                             
+                            <Image x:Name="imageSelectionPreviewLeftSouth"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        </Border>
+                    </Grid>
+                </Viewbox>
+
+                <Viewbox Grid.Row="0" Grid.Column="1"
+                    Margin="6,6,6,6">
+                    <Grid>
+                        <Image x:Name="backgroundImgPreviewRightSouth"                              
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Image x:Name="imagePreviewRightSouth"                              
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                MouseDown="imagePreviewRightSouth_MouseDown" 
+                                MouseUp="imagePreviewRightSouth_MouseUp" 
+                                MouseMove="imagePreviewRightSouth_MouseMove">
+                        </Image>
+                        <Image x:Name="imageOverlayPreviewRightSouth"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Border BorderBrush="Black" BorderThickness="0.5"
+                            MinWidth="100" MinHeight="100">
+                            <Image x:Name="imageSelectionPreviewRightSouth"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
@@ -225,29 +237,58 @@
                 <ui:SymbolIcon Grid.Column="0" Symbol="ArrowCircleUp24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
                 <ui:SymbolIcon Grid.Column="1" Symbol="ArrowCircleUp24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
 
+
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
-                    <Border
-                        BorderBrush="Black" BorderThickness="0.5"
-                        MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageLeftPreviewNorth"                               
-                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased">
+                    <Grid>
+                        <Image x:Name="backgroundImgPreviewLeftNorth"                              
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Image x:Name="imagePreviewLeftNorth"                              
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased">
                         </Image>
-                    </Border>
+                        <Image x:Name="imageOverlayPreviewLeftNorth"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Border BorderBrush="Black" BorderThickness="0.5"
+                            MinWidth="100" MinHeight="100">
+                            <Image x:Name="imageSelectionPreviewLeftNorth"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        </Border>
+                    </Grid>
                 </Viewbox>
 
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
-                    <Border
-                        BorderBrush="Black" BorderThickness="0.5"
-                        MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageRightPreviewNorth"                               
-                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased" MouseDown="imageRightPreviewNorth_MouseDown" MouseMove="imageRightPreviewNorth_MouseMove" MouseUp="imageRightPreviewNorth_MouseUp">
+                    <Grid>
+                        <Image x:Name="backgroundImgPreviewRightNorth"                              
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Image x:Name="imagePreviewRightNorth"                              
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                MouseDown="imagePreviewRightNorth_MouseDown" 
+                                MouseUp="imagePreviewRightNorth_MouseUp" 
+                                MouseMove="imagePreviewRightNorth_MouseMove">
                         </Image>
-                    </Border>
+                        <Image x:Name="imageOverlayPreviewRightNorth"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Border BorderBrush="Black" BorderThickness="0.5"
+                            MinWidth="100" MinHeight="100">
+                            <Image x:Name="imageSelectionPreviewRightNorth"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        </Border>
+                    </Grid>
                 </Viewbox>
+
             </Grid>
 
             <!-- East States -->
@@ -261,29 +302,58 @@
                 <ui:SymbolIcon Grid.Column="0" Symbol="ArrowCircleRight24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
                 <ui:SymbolIcon Grid.Column="1" Symbol="ArrowCircleRight24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
 
+
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
-                    <Border
-                        BorderBrush="Black" BorderThickness="0.5"
-                        MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageLeftPreviewEast"                               
-                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased">
+                    <Grid>
+                        <Image x:Name="backgroundImgPreviewLeftEast"                              
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Image x:Name="imagePreviewLeftEast"                              
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased">
                         </Image>
-                    </Border>
+                        <Image x:Name="imageOverlayPreviewLeftEast"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Border BorderBrush="Black" BorderThickness="0.5"
+                            MinWidth="100" MinHeight="100">
+                            <Image x:Name="imageSelectionPreviewLeftEast"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        </Border>
+                    </Grid>
                 </Viewbox>
 
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
-                    <Border
-                        BorderBrush="Black" BorderThickness="0.5"
-                        MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageRightPreviewEast"                               
-                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased" MouseDown="imageRightPreviewEast_MouseDown" MouseMove="imageRightPreviewEast_MouseMove" MouseUp="imageRightPreviewEast_MouseUp">
+                    <Grid>
+                        <Image x:Name="backgroundImgPreviewRightEast"                              
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Image x:Name="imagePreviewRightEast"                              
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                MouseDown="imagePreviewRightEast_MouseDown" 
+                                MouseUp="imagePreviewRightEast_MouseUp" 
+                                MouseMove="imagePreviewRightEast_MouseMove">
                         </Image>
-                    </Border>
+                        <Image x:Name="imageOverlayPreviewRightEast"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Border BorderBrush="Black" BorderThickness="0.5"
+                            MinWidth="100" MinHeight="100">
+                            <Image x:Name="imageSelectionPreviewRightEast"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        </Border>
+                    </Grid>
                 </Viewbox>
+
             </Grid>
 
             <!-- West States -->
@@ -297,32 +367,58 @@
                 <ui:SymbolIcon Grid.Column="0" Symbol="ArrowCircleLeft24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
                 <ui:SymbolIcon Grid.Column="1" Symbol="ArrowCircleLeft24" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,8,8,8"/>
 
+
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
-                    <Border
-                        BorderBrush="Black" BorderThickness="0.5"
-                        MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageLeftPreviewWest"                               
-                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased">
+                    <Grid>
+                        <Image x:Name="backgroundImgPreviewLeftWest"                              
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Image x:Name="imagePreviewLeftWest"                              
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased">
                         </Image>
-                    </Border>
+                        <Image x:Name="imageOverlayPreviewLeftWest"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Border BorderBrush="Black" BorderThickness="0.5"
+                            MinWidth="100" MinHeight="100">
+                            <Image x:Name="imageSelectionPreviewLeftWest"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        </Border>
+                    </Grid>
                 </Viewbox>
 
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
-                    <Border
-                        BorderBrush="Black" BorderThickness="0.5"
-                        MinWidth="100" MinHeight="100">
-                        <!--HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"-->
-                        <!--Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" 
-                    Height="{Binding ActualWidth, RelativeSource={RelativeSource Self}}">-->
-                        <Image x:Name="imageRightPreviewWest"                               
-                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased" MouseDown="imageRightPreviewWest_MouseDown" MouseMove="imageRightPreviewWest_MouseMove" MouseUp="imageRightPreviewWest_MouseUp"/>
-                    </Border>
+                    <Grid>
+                        <Image x:Name="backgroundImgPreviewRightWest"                              
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Image x:Name="imagePreviewRightWest"                              
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                MouseDown="imagePreviewRightWest_MouseDown" 
+                                MouseUp="imagePreviewRightWest_MouseUp" 
+                                MouseMove="imagePreviewRightWest_MouseMove">
+                        </Image>
+                        <Image x:Name="imageOverlayPreviewRightWest"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Border BorderBrush="Black" BorderThickness="0.5"
+                            MinWidth="100" MinHeight="100">
+                            <Image x:Name="imageSelectionPreviewRightWest"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        </Border>
+                    </Grid>
                 </Viewbox>
+
             </Grid>
 
 

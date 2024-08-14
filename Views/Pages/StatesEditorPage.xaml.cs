@@ -77,6 +77,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             dataImageState = new DataImageState(currentState);
 
             InitializeDictionaries();
+            MakeGrids();
 
             TestFunction();
         }
@@ -88,31 +89,30 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private void InitializeDictionaries()
         {
             // Preview
-            imageLeftPreviewSouth.Source = dataImageState.GetBMPstate(StateDirection.South, false);
-            imageLeftPreviewNorth.Source = dataImageState.GetBMPstate(StateDirection.North, false);
-            imageLeftPreviewEast.Source = dataImageState.GetBMPstate(StateDirection.East, false);
-            imageLeftPreviewWest.Source = dataImageState.GetBMPstate(StateDirection.West, false);
+            imagePreviewLeftSouth.Source = dataImageState.GetBMPstate(StateDirection.South, false);
+            imagePreviewLeftNorth.Source = dataImageState.GetBMPstate(StateDirection.North, false);
+            imagePreviewLeftEast.Source = dataImageState.GetBMPstate(StateDirection.East, false);
+            imagePreviewLeftWest.Source = dataImageState.GetBMPstate(StateDirection.West, false);
 
-            stateSourceOrigDictionary.Add(StateDirection.South, imageLeftPreviewSouth);
-            stateSourceOrigDictionary.Add(StateDirection.North, imageLeftPreviewNorth);
-            stateSourceOrigDictionary.Add(StateDirection.East, imageLeftPreviewEast);
-            stateSourceOrigDictionary.Add(StateDirection.West, imageLeftPreviewWest);
+            stateSourceOrigDictionary.Add(StateDirection.South, imagePreviewLeftSouth);
+            stateSourceOrigDictionary.Add(StateDirection.North, imagePreviewLeftNorth);
+            stateSourceOrigDictionary.Add(StateDirection.East, imagePreviewLeftEast);
+            stateSourceOrigDictionary.Add(StateDirection.West, imagePreviewLeftWest);
 
             // Edit
-            imageRightPreviewSouth.Source = dataImageState.GetBMPstate(StateDirection.South, true);
-            imageRightPreviewNorth.Source = dataImageState.GetBMPstate(StateDirection.North, true);
-            imageRightPreviewEast.Source = dataImageState.GetBMPstate(StateDirection.East, true);
-            imageRightPreviewWest.Source = dataImageState.GetBMPstate(StateDirection.West, true);
+            imagePreviewRightSouth.Source = dataImageState.GetBMPstate(StateDirection.South, true);
+            imagePreviewRightNorth.Source = dataImageState.GetBMPstate(StateDirection.North, true);
+            imagePreviewRightEast.Source = dataImageState.GetBMPstate(StateDirection.East, true);
+            imagePreviewRightWest.Source = dataImageState.GetBMPstate(StateDirection.West, true);
 
-            stateSourceEditDictionary.Add(StateDirection.South, imageRightPreviewSouth);
-            stateSourceEditDictionary.Add(StateDirection.North, imageRightPreviewNorth);
-            stateSourceEditDictionary.Add(StateDirection.East, imageRightPreviewEast);
-            stateSourceEditDictionary.Add(StateDirection.West, imageRightPreviewWest);
+            stateSourceEditDictionary.Add(StateDirection.South, imagePreviewRightSouth);
+            stateSourceEditDictionary.Add(StateDirection.North, imagePreviewRightNorth);
+            stateSourceEditDictionary.Add(StateDirection.East, imagePreviewRightEast);
+            stateSourceEditDictionary.Add(StateDirection.West, imagePreviewRightWest);
         }
 
         private void TestFunction()
         {
-            MakeGrid(backgroundImg);
         }
 
         #region User Controller
@@ -329,17 +329,17 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region Mouse Buttons - South Preview
 
-        private void imageRightPreviewSouth_MouseDown(object sender, MouseButtonEventArgs e)
+        private void imagePreviewRightSouth_MouseDown(object sender, MouseButtonEventArgs e)
         {
             state_MouseDown(e, StateDirection.South);
         }
 
-        private void imageRightPreviewSouth_MouseMove(object sender, MouseEventArgs e)
+        private void imagePreviewRightSouth_MouseMove(object sender, MouseEventArgs e)
         {
             state_MouseMove(e, StateDirection.South);
         }
 
-        private void imageRightPreviewSouth_MouseUp(object sender, MouseButtonEventArgs e)
+        private void imagePreviewRightSouth_MouseUp(object sender, MouseButtonEventArgs e)
         {
             state_MouseUp(e, StateDirection.South);
         }
@@ -348,17 +348,17 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region Mouse Buttons - North Preview
 
-        private void imageRightPreviewNorth_MouseDown(object sender, MouseButtonEventArgs e)
+        private void imagePreviewRightNorth_MouseDown(object sender, MouseButtonEventArgs e)
         {
             state_MouseDown(e, StateDirection.North);
         }
 
-        private void imageRightPreviewNorth_MouseMove(object sender, MouseEventArgs e)
+        private void imagePreviewRightNorth_MouseMove(object sender, MouseEventArgs e)
         {
             state_MouseMove(e, StateDirection.North);
         }
 
-        private void imageRightPreviewNorth_MouseUp(object sender, MouseButtonEventArgs e)
+        private void imagePreviewRightNorth_MouseUp(object sender, MouseButtonEventArgs e)
         {
 
             state_MouseUp(e, StateDirection.North);
@@ -369,17 +369,17 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region Mouse Buttons - East Preview
 
-        private void imageRightPreviewEast_MouseDown(object sender, MouseButtonEventArgs e)
+        private void imagePreviewRightEast_MouseDown(object sender, MouseButtonEventArgs e)
         {
             state_MouseDown(e, StateDirection.East);
         }
 
-        private void imageRightPreviewEast_MouseMove(object sender, MouseEventArgs e)
+        private void imagePreviewRightEast_MouseMove(object sender, MouseEventArgs e)
         {
             state_MouseMove(e, StateDirection.East);
         }
 
-        private void imageRightPreviewEast_MouseUp(object sender, MouseButtonEventArgs e)
+        private void imagePreviewRightEast_MouseUp(object sender, MouseButtonEventArgs e)
         {
 
             state_MouseUp(e, StateDirection.East);
@@ -390,17 +390,17 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region Mouse Buttons - West Preview
 
-        private void imageRightPreviewWest_MouseDown(object sender, MouseButtonEventArgs e)
+        private void imagePreviewRightWest_MouseDown(object sender, MouseButtonEventArgs e)
         {
             state_MouseDown(e, StateDirection.West);
         }
 
-        private void imageRightPreviewWest_MouseMove(object sender, MouseEventArgs e)
+        private void imagePreviewRightWest_MouseMove(object sender, MouseEventArgs e)
         {
             state_MouseMove(e, StateDirection.West);
         }
 
-        private void imageRightPreviewWest_MouseUp(object sender, MouseButtonEventArgs e)
+        private void imagePreviewRightWest_MouseUp(object sender, MouseButtonEventArgs e)
         {
             state_MouseUp(e, StateDirection.West);
         }
@@ -519,7 +519,18 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             isShowGrid = !isShowGrid;
             GridEnvironmentButton.Appearance = isShowGrid ? ControlAppearance.Primary : ControlAppearance.Secondary;
 
-            backgroundImg.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+            backgroundImgPreviewLeftSouth.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+            backgroundImgPreviewRightSouth.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+
+            backgroundImgPreviewLeftNorth.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+            backgroundImgPreviewRightNorth.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+
+            backgroundImgPreviewLeftEast.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+            backgroundImgPreviewRightEast.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+
+            backgroundImgPreviewLeftWest.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+            backgroundImgPreviewRightWest.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+
         }
 
         #endregion Buttons Environment Controller
@@ -547,14 +558,51 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region Editor
 
-        private void MakeGrid(System.Windows.Controls.Image _img)
+        private void MakeGrids()
+        {
+            // TODO: Make Better File Way
+            string gridBitmapPath = System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", "grid.png");
+            WriteableBitmap gridBitmap;
+
+            if (!File.Exists(gridBitmapPath))
+            {
+                gridBitmap = MakeAndGetGrid();
+
+                // Save the bitmap into a file.
+                using (FileStream stream =
+                    new FileStream(gridBitmapPath, FileMode.Create))
+                {
+                    PngBitmapEncoder encoder = new PngBitmapEncoder();
+                    encoder.Frames.Add(BitmapFrame.Create(gridBitmap));
+                    encoder.Save(stream);
+                }
+            }
+            else
+            {
+                BitmapImage bitmap = new BitmapImage(new Uri(gridBitmapPath, UriKind.Relative));
+                gridBitmap = new WriteableBitmap(bitmap);
+            }
+
+            backgroundImgPreviewLeftSouth.Source = gridBitmap;
+            backgroundImgPreviewRightSouth.Source = gridBitmap;
+
+            backgroundImgPreviewLeftNorth.Source = gridBitmap;
+            backgroundImgPreviewRightNorth.Source = gridBitmap;
+
+            backgroundImgPreviewLeftEast.Source = gridBitmap;
+            backgroundImgPreviewRightEast.Source = gridBitmap;
+
+            backgroundImgPreviewLeftWest.Source = gridBitmap;
+            backgroundImgPreviewRightWest.Source = gridBitmap;
+        }
+
+        private WriteableBitmap MakeAndGetGrid(int _width = 257, int _height = 257, byte _alpha = 100)
         {
             int pixelSize = 8;
-            WriteableBitmap bitmap = new WriteableBitmap(257, 257, pixelSize, pixelSize, PixelFormats.Bgra32, null);
+            WriteableBitmap bitmap = new WriteableBitmap(_width, _height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
 
             System.Windows.Media.Color colorTemp = System.Windows.Media.Colors.Black;
-            byte A = 100;
-            System.Windows.Media.Color color = System.Windows.Media.Color.FromArgb(A, colorTemp.R, colorTemp.G, colorTemp.B);
+            System.Windows.Media.Color color = System.Windows.Media.Color.FromArgb(_alpha, colorTemp.R, colorTemp.G, colorTemp.B);
 
             for (int i = 0; i < bitmap.PixelWidth; i += pixelSize)
             {
@@ -571,8 +619,10 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 bitmap.DrawRectangle(0+i, 0+i, bitmap.PixelWidth - i - 1, bitmap.PixelHeight - i - 1, Colors.Black);
             }
 
-            _img.Source = bitmap;
+            return bitmap;
         }
+
+
 
         #endregion Editor
     }
