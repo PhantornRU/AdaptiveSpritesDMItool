@@ -51,6 +51,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         /// </summary>
         bool isCentralizedState = true;
         bool isMirroredState = true;
+        bool isShowGrid = true;
+        int borderThickness = 2;
 
         public StatesEditorPage(StatesEditorViewModel viewModel)
         {
@@ -74,6 +76,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             dataImageState = new DataImageState(currentState);
 
+            InitializeDictionaries();
+
             TestFunction();
         }
 
@@ -81,7 +85,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private Dictionary<StateDirection, System.Windows.Controls.Image> stateSourceOrigDictionary = new Dictionary<StateDirection, System.Windows.Controls.Image>();
         private Dictionary<StateDirection, System.Windows.Controls.Image> stateSourceEditDictionary = new Dictionary<StateDirection, System.Windows.Controls.Image>();
 
-        private void TestFunction()
+        private void InitializeDictionaries()
         {
             // Preview
             imageLeftPreviewSouth.Source = dataImageState.GetBMPstate(StateDirection.South, false);
@@ -104,6 +108,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             stateSourceEditDictionary.Add(StateDirection.North, imageRightPreviewNorth);
             stateSourceEditDictionary.Add(StateDirection.East, imageRightPreviewEast);
             stateSourceEditDictionary.Add(StateDirection.West, imageRightPreviewWest);
+        }
+
+        private void TestFunction()
+        {
+            MakeGrid(backgroundImg);
         }
 
         #region User Controller
@@ -503,6 +512,18 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #endregion Buttons States Controller
 
+        #region Buttons Environment Controller
+
+        private void GridEnvironmentButton_Click(object sender, RoutedEventArgs e)
+        {
+            isShowGrid = !isShowGrid;
+            GridEnvironmentButton.Appearance = isShowGrid ? ControlAppearance.Primary : ControlAppearance.Secondary;
+
+            backgroundImg.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        #endregion Buttons Environment Controller
+
         private void ResetEditButtons()
         {
             SingleButton.Appearance = ControlAppearance.Secondary;
@@ -521,5 +542,38 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         }
 
         #endregion Buttons Controller
+
+
+
+        #region Editor
+
+        private void MakeGrid(System.Windows.Controls.Image _img)
+        {
+            int pixelSize = 8;
+            WriteableBitmap bitmap = new WriteableBitmap(257, 257, pixelSize, pixelSize, PixelFormats.Bgra32, null);
+
+            System.Windows.Media.Color colorTemp = System.Windows.Media.Colors.Black;
+            byte A = 100;
+            System.Windows.Media.Color color = System.Windows.Media.Color.FromArgb(A, colorTemp.R, colorTemp.G, colorTemp.B);
+
+            for (int i = 0; i < bitmap.PixelWidth; i += pixelSize)
+            {
+                for (int j = 0; j < bitmap.PixelHeight; j += pixelSize)
+                {
+                    Debug.WriteLine($"{i}, {j} (int)bitmap.Width == {bitmap.Width}, (int)bitmap.Height == {bitmap.Height}");
+                    bitmap.DrawLine(i, j, i, bitmap.PixelHeight - j, color);
+                    bitmap.DrawLine(j, i, bitmap.PixelWidth - j, i, color);
+                }
+            }
+
+            for (int i = 0; i < borderThickness; i++)
+            {
+                bitmap.DrawRectangle(0+i, 0+i, bitmap.PixelWidth - i - 1, bitmap.PixelHeight - i - 1, Colors.Black);
+            }
+
+            _img.Source = bitmap;
+        }
+
+        #endregion Editor
     }
 }

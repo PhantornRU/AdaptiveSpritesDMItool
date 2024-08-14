@@ -115,8 +115,9 @@
                         x:Name="ChooseAllStatesButton"
                         Appearance="Secondary"
                         ToolTip="Edit all states."
-                        Icon="{ui:SymbolIcon TableSimple24}" Click="ChooseAllStatesButton_Click" />
+                        Icon="{ui:SymbolIcon Grid24}" Click="ChooseAllStatesButton_Click" />
 
+                <!--States Conditions-->
                 <Separator Margin="10,0,10,0" />
                 <ui:Button
                         x:Name="MirrorStatesButton"
@@ -124,13 +125,25 @@
                         IsEnabled="True"
                         ToolTip="Mirror."
                         Icon="{ui:SymbolIcon DualScreenMirror24}" Click="MirrorStatesButton_Click" />
-
                 <ui:Button
                         x:Name="CentralizeStatesButton"
                         Appearance="Primary"
                         IsEnabled="True"
                         ToolTip="Shift pixels to the left to centralize."
                         Icon="{ui:SymbolIcon TableInsertColumn24}" Click="CentralizeStatesButton_Click" />
+
+
+                <!--Environment Settings-->
+                <Separator Margin="10,0,10,0" />
+                <ui:Button
+                        x:Name="GridEnvironmentButton"
+                        Appearance="Primary"
+                        IsEnabled="True"
+                        ToolTip="Mirror."
+                        Icon="{ui:SymbolIcon TableSimple24}" Click="GridEnvironmentButton_Click" />
+                
+             
+                
             </ToolBar>
 
         </Grid>
@@ -174,14 +187,29 @@
 
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
-                    <Border
-                        BorderBrush="Black" BorderThickness="0.5"
-                        MinWidth="100" MinHeight="100">
-                        <Image x:Name="imageRightPreviewSouth"                               
-                               RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                               RenderOptions.EdgeMode="Aliased" MouseDown="imageRightPreviewSouth_MouseDown" MouseUp="imageRightPreviewSouth_MouseUp" MouseMove="imageRightPreviewSouth_MouseMove">
-                        </Image>
-                    </Border>
+                        <Grid>
+                            <Image x:Name="backgroundImg"                              
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                            <Image x:Name="imageRightPreviewSouth"                              
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                MouseDown="imageRightPreviewSouth_MouseDown" 
+                                MouseUp="imageRightPreviewSouth_MouseUp" 
+                                MouseMove="imageRightPreviewSouth_MouseMove">
+                            </Image>
+                            <Image x:Name="imageOverlay"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Border BorderBrush="Black" BorderThickness="0.5"
+                            MinWidth="100" MinHeight="100">
+                            <Image x:Name="imageSelection"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        </Border>
+                    </Grid>
                 </Viewbox>
             </Grid>
 
