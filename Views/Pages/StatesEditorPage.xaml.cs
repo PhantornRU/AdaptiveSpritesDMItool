@@ -41,6 +41,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
     public partial class StatesEditorPage : INavigableView<StatesEditorViewModel>
     {
         public StatesEditorViewModel ViewModel { get; }
+
         DataImageState dataImageState;
         DataImageState dataImageStateOverlay;
 
@@ -69,7 +70,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             // Load File
 
-            Debug.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            //Debug.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             string path = "TestImages";
 
 
@@ -99,7 +100,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             // Post Initializers
             InitializeDictionaries();
             InitializeSources();
-            MakeGrids();
+
 
             TestFunction();
         }
@@ -337,12 +338,14 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             foreach (var stateDirectionToModify in stateDirections)
             {
                 WriteableBitmap bitmap = dataImageState.GetBMPstate(stateDirectionToModify, true);
+                WriteableBitmap bitmapOverlay = dataImageStateOverlay.GetBMPstate(stateDirectionToModify, true);
                 int bitmapWidth = (int)bitmap.Width;
                 //bitmapWidth = _stateDirection == stateDirectionToModify ? 0 : bitmapWidth;
                 var mousePosXTemp = mousePos.X;
                 mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, bitmapWidth);
                 Debug.WriteLine($"_stateDirection: {currentStateDirection}; stateDirectionToModify: {stateDirectionToModify}; MousePosX: [Orig: {mousePosXTemp} - Mod: {mousePos.X}]");
                 bitmap.SetPixel(mousePos.X, mousePos.Y, color);
+                bitmapOverlay.SetPixel(mousePos.X, mousePos.Y, color);
             }
         }
 
@@ -620,9 +623,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #endregion Buttons Controller
 
-
-
-        #region Editor
+        #region Editor Controller
 
         private void MakeGrids()
         {
@@ -632,7 +633,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             if (!File.Exists(gridBitmapPath))
             {
-                gridBitmap = MakeAndGetGrid();
+                gridBitmap = EditorController.MakeAndGetGrid();
 
                 // Save the bitmap into a file.
                 using (FileStream stream =
@@ -655,34 +656,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 state[StateImageType.BackgroundRight].Source = gridBitmap;
             }
         }
-
-        private WriteableBitmap MakeAndGetGrid(int _width = 257, int _height = 257, byte _alpha = 100)
-        {
-            int pixelSize = 8;
-            WriteableBitmap bitmap = new WriteableBitmap(_width, _height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
-
-            System.Windows.Media.Color colorTemp = System.Windows.Media.Colors.Black;
-            System.Windows.Media.Color color = System.Windows.Media.Color.FromArgb(_alpha, colorTemp.R, colorTemp.G, colorTemp.B);
-
-            for (int i = 0; i < bitmap.PixelWidth; i += pixelSize)
-            {
-                for (int j = 0; j < bitmap.PixelHeight; j += pixelSize)
-                {
-                    Debug.WriteLine($"{i}, {j} (int)bitmap.Width == {bitmap.Width}, (int)bitmap.Height == {bitmap.Height}");
-                    bitmap.DrawLine(i, j, i, bitmap.PixelHeight - j, color);
-                    bitmap.DrawLine(j, i, bitmap.PixelWidth - j, i, color);
-                }
-            }
-
-            for (int i = 0; i < borderThickness; i++)
-            {
-                bitmap.DrawRectangle(0+i, 0+i, bitmap.PixelWidth - i - 1, bitmap.PixelHeight - i - 1, Colors.Black);
-            }
-
-            return bitmap;
-        }
-
-
 
         #endregion Editor
     }

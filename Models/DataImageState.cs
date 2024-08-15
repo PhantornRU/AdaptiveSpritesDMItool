@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using System.Diagnostics;
+using System.IO;
 
 namespace AdaptiveSpritesDMItool.Models
 {
@@ -41,7 +43,9 @@ namespace AdaptiveSpritesDMItool.Models
                 return stateBMPdictOriginal[_stateDirection];
         }
 
+
         #region Image Encoder
+
         private WriteableBitmap GetBMPFromDMIState(DMIState _state, StateDirection _stateDirection)
         {
             using Image<Rgba32>? imgState = _state.GetFrame(_stateDirection, 0);
@@ -88,6 +92,8 @@ namespace AdaptiveSpritesDMItool.Models
             }
             return bmp;
         }
-        #endregion
+
+        #endregion Image Encoder
+
     }
 }
