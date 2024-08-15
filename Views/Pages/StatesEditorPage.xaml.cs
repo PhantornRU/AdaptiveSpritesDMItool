@@ -59,6 +59,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             ViewModel = viewModel;
             DataContext = this;
 
+            // Pre Initializers
+
             InitializeComponent();
             ControllButtonsAvailability();
 
@@ -76,43 +78,88 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             dataImageState = new DataImageState(currentState);
 
+
+            // Post Initializers
             InitializeDictionaries();
+            InitializeSources();
             MakeGrids();
 
             TestFunction();
         }
 
-
-        private Dictionary<StateDirection, System.Windows.Controls.Image> stateSourceOrigDictionary = new Dictionary<StateDirection, System.Windows.Controls.Image>();
-        private Dictionary<StateDirection, System.Windows.Controls.Image> stateSourceEditDictionary = new Dictionary<StateDirection, System.Windows.Controls.Image>();
-
+        private Dictionary<StateDirection, Dictionary<StateImageType, System.Windows.Controls.Image>> stateSourceDictionary;
+        
         private void InitializeDictionaries()
         {
-            // Preview
-            imagePreviewLeftSouth.Source = dataImageState.GetBMPstate(StateDirection.South, false);
-            imagePreviewLeftNorth.Source = dataImageState.GetBMPstate(StateDirection.North, false);
-            imagePreviewLeftEast.Source = dataImageState.GetBMPstate(StateDirection.East, false);
-            imagePreviewLeftWest.Source = dataImageState.GetBMPstate(StateDirection.West, false);
+            stateSourceDictionary = new Dictionary<StateDirection, Dictionary<StateImageType, System.Windows.Controls.Image>>()
+            {
+                { StateDirection.South, new Dictionary<StateImageType, System.Windows.Controls.Image>()
+                    {
+                        { StateImageType.Left, imagePreviewLeftSouth },
+                        { StateImageType.Right, imagePreviewRightSouth },
+                        { StateImageType.BackgroundLeft, imageBackgroundPreviewLeftSouth },
+                        { StateImageType.BackgroundRight, imageBackgroundPreviewRightSouth },
+                        { StateImageType.OverlayLeft, imageOverlayPreviewLeftSouth },
+                        { StateImageType.OverlayRight, imageOverlayPreviewRightSouth },
+                        { StateImageType.SelectionLeft, imageSelectionPreviewLeftSouth },
+                        { StateImageType.SelectionRight, imageSelectionPreviewRightSouth }
+                    }
+                },
 
-            stateSourceOrigDictionary.Add(StateDirection.South, imagePreviewLeftSouth);
-            stateSourceOrigDictionary.Add(StateDirection.North, imagePreviewLeftNorth);
-            stateSourceOrigDictionary.Add(StateDirection.East, imagePreviewLeftEast);
-            stateSourceOrigDictionary.Add(StateDirection.West, imagePreviewLeftWest);
+                { StateDirection.North, new Dictionary<StateImageType, System.Windows.Controls.Image>()
+                    {
+                        { StateImageType.Left, imagePreviewLeftNorth },
+                        { StateImageType.Right, imagePreviewRightNorth },
+                        { StateImageType.BackgroundLeft, imageBackgroundPreviewLeftNorth },
+                        { StateImageType.BackgroundRight, imageBackgroundPreviewRightNorth },
+                        { StateImageType.OverlayLeft, imageOverlayPreviewLeftNorth },
+                        { StateImageType.OverlayRight, imageOverlayPreviewRightNorth },
+                        { StateImageType.SelectionLeft, imageSelectionPreviewLeftNorth },
+                        { StateImageType.SelectionRight, imageSelectionPreviewRightNorth }
+                    }
+                },
 
-            // Edit
-            imagePreviewRightSouth.Source = dataImageState.GetBMPstate(StateDirection.South, true);
-            imagePreviewRightNorth.Source = dataImageState.GetBMPstate(StateDirection.North, true);
-            imagePreviewRightEast.Source = dataImageState.GetBMPstate(StateDirection.East, true);
-            imagePreviewRightWest.Source = dataImageState.GetBMPstate(StateDirection.West, true);
+                { StateDirection.East, new Dictionary<StateImageType, System.Windows.Controls.Image>()
+                    {
+                        { StateImageType.Left, imagePreviewLeftEast },
+                        { StateImageType.Right, imagePreviewRightEast },
+                        { StateImageType.BackgroundLeft, imageBackgroundPreviewLeftEast },
+                        { StateImageType.BackgroundRight, imageBackgroundPreviewRightEast },
+                        { StateImageType.OverlayLeft, imageOverlayPreviewLeftEast },
+                        { StateImageType.OverlayRight, imageOverlayPreviewRightEast },
+                        { StateImageType.SelectionLeft, imageSelectionPreviewLeftEast },
+                        { StateImageType.SelectionRight, imageSelectionPreviewRightEast }
+                    }
+                },
 
-            stateSourceEditDictionary.Add(StateDirection.South, imagePreviewRightSouth);
-            stateSourceEditDictionary.Add(StateDirection.North, imagePreviewRightNorth);
-            stateSourceEditDictionary.Add(StateDirection.East, imagePreviewRightEast);
-            stateSourceEditDictionary.Add(StateDirection.West, imagePreviewRightWest);
+                { StateDirection.West, new Dictionary<StateImageType, System.Windows.Controls.Image>()
+                    {
+                        { StateImageType.Left, imagePreviewLeftWest },
+                        { StateImageType.Right, imagePreviewRightWest },
+                        { StateImageType.BackgroundLeft, imageBackgroundPreviewLeftWest },
+                        { StateImageType.BackgroundRight, imageBackgroundPreviewRightWest },
+                        { StateImageType.OverlayLeft, imageOverlayPreviewLeftWest },
+                        { StateImageType.OverlayRight, imageOverlayPreviewRightWest },
+                        { StateImageType.SelectionLeft, imageSelectionPreviewLeftWest },
+                        { StateImageType.SelectionRight, imageSelectionPreviewRightWest }
+                    }
+                }
+            };
+
+        }
+
+        private void InitializeSources()
+        {
+            foreach (var (stateDirection, images) in stateSourceDictionary)
+            {
+                images[StateImageType.Left].Source = dataImageState.GetBMPstate(stateDirection, false);
+                images[StateImageType.Right].Source = dataImageState.GetBMPstate(stateDirection, true);
+            }
         }
 
         private void TestFunction()
         {
+
         }
 
         #region User Controller
@@ -126,7 +173,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void state_MouseDown(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
-            currentMouseDownPosition = MouseController.GetModifyMousePosition(e, stateSourceEditDictionary[_stateDirection]);
+            currentMouseDownPosition = MouseController.GetModifyMousePosition(e, stateSourceDictionary[_stateDirection][StateImageType.Right]);
             currentMousePosition = currentMouseDownPosition;
             currentStateDirection = _stateDirection;
 
@@ -155,7 +202,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void state_MouseUp(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
-            currentMouseUpPosition = MouseController.GetModifyMousePosition(e, stateSourceEditDictionary[_stateDirection]);
+            currentMouseUpPosition = MouseController.GetModifyMousePosition(e, stateSourceDictionary[_stateDirection][StateImageType.Right]);
             currentMousePosition = currentMouseUpPosition;
             currentStateDirection = _stateDirection;
 
@@ -177,7 +224,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
             if (!mouseIsDown)
                 return;
-            currentMousePosition = MouseController.GetModifyMousePosition(e, stateSourceEditDictionary[_stateDirection]);
+            currentMousePosition = MouseController.GetModifyMousePosition(e, stateSourceDictionary[_stateDirection][StateImageType.Right]);
             currentStateDirection = _stateDirection;
 
             switch (currentStateEditMode)
@@ -519,18 +566,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             isShowGrid = !isShowGrid;
             GridEnvironmentButton.Appearance = isShowGrid ? ControlAppearance.Primary : ControlAppearance.Secondary;
 
-            backgroundImgPreviewLeftSouth.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
-            backgroundImgPreviewRightSouth.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
-
-            backgroundImgPreviewLeftNorth.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
-            backgroundImgPreviewRightNorth.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
-
-            backgroundImgPreviewLeftEast.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
-            backgroundImgPreviewRightEast.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
-
-            backgroundImgPreviewLeftWest.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
-            backgroundImgPreviewRightWest.Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
-
+            foreach (var state in stateSourceDictionary.Values)
+            {
+                state[StateImageType.BackgroundLeft].Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+                state[StateImageType.BackgroundRight].Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+            }
         }
 
         #endregion Buttons Environment Controller
@@ -583,17 +623,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 gridBitmap = new WriteableBitmap(bitmap);
             }
 
-            backgroundImgPreviewLeftSouth.Source = gridBitmap;
-            backgroundImgPreviewRightSouth.Source = gridBitmap;
-
-            backgroundImgPreviewLeftNorth.Source = gridBitmap;
-            backgroundImgPreviewRightNorth.Source = gridBitmap;
-
-            backgroundImgPreviewLeftEast.Source = gridBitmap;
-            backgroundImgPreviewRightEast.Source = gridBitmap;
-
-            backgroundImgPreviewLeftWest.Source = gridBitmap;
-            backgroundImgPreviewRightWest.Source = gridBitmap;
+            foreach (var state in stateSourceDictionary.Values)
+            {
+                state[StateImageType.BackgroundLeft].Source = gridBitmap;
+                state[StateImageType.BackgroundRight].Source = gridBitmap;
+            }
         }
 
         private WriteableBitmap MakeAndGetGrid(int _width = 257, int _height = 257, byte _alpha = 100)

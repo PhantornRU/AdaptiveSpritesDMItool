@@ -139,11 +139,24 @@
                         x:Name="GridEnvironmentButton"
                         Appearance="Primary"
                         IsEnabled="True"
-                        ToolTip="Mirror."
+                        ToolTip="Toggle grid environment."
                         Icon="{ui:SymbolIcon TableSimple24}" Click="GridEnvironmentButton_Click" />
-                
-             
-                
+                <ui:Button
+                        x:Name="OverlayEnvironmentButton"
+                        Appearance="Primary"
+                        IsEnabled="True"
+                        ToolTip="Toggle overlay environment."
+                        Icon="{ui:SymbolIcon TableSimple24}" />
+
+                <Separator Margin="10,0,10,0" />
+                <ui:Button
+                        x:Name="OverlayEnvironmentLoadButton"
+                        Appearance="Primary"
+                        IsEnabled="True"
+                        ToolTip="Mirror."
+                        Icon="{ui:SymbolIcon TableSimple24}" />
+
+
             </ToolBar>
 
         </Grid>
@@ -176,7 +189,7 @@
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
                     <Grid>
-                        <Image x:Name="backgroundImgPreviewLeftSouth"                              
+                        <Image x:Name="imageBackgroundPreviewLeftSouth"                              
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewLeftSouth"                              
@@ -200,7 +213,7 @@
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
                     <Grid>
-                        <Image x:Name="backgroundImgPreviewRightSouth"                              
+                        <Image x:Name="imageBackgroundPreviewRightSouth"                              
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewRightSouth"                              
@@ -241,7 +254,7 @@
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
                     <Grid>
-                        <Image x:Name="backgroundImgPreviewLeftNorth"                              
+                        <Image x:Name="imageBackgroundPreviewLeftNorth"                              
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewLeftNorth"                              
@@ -265,7 +278,7 @@
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
                     <Grid>
-                        <Image x:Name="backgroundImgPreviewRightNorth"                              
+                        <Image x:Name="imageBackgroundPreviewRightNorth"                              
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewRightNorth"                              
@@ -306,7 +319,7 @@
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
                     <Grid>
-                        <Image x:Name="backgroundImgPreviewLeftEast"                              
+                        <Image x:Name="imageBackgroundPreviewLeftEast"                              
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewLeftEast"                              
@@ -330,7 +343,7 @@
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
                     <Grid>
-                        <Image x:Name="backgroundImgPreviewRightEast"                              
+                        <Image x:Name="imageBackgroundPreviewRightEast"                              
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewRightEast"                              
@@ -371,7 +384,7 @@
                 <Viewbox Grid.Row="0" Grid.Column="0"
                     Margin="6,6,6,6">
                     <Grid>
-                        <Image x:Name="backgroundImgPreviewLeftWest"                              
+                        <Image x:Name="imageBackgroundPreviewLeftWest"                              
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewLeftWest"                              
@@ -395,7 +408,7 @@
                 <Viewbox Grid.Row="0" Grid.Column="1"
                     Margin="6,6,6,6">
                     <Grid>
-                        <Image x:Name="backgroundImgPreviewRightWest"                              
+                        <Image x:Name="imageBackgroundPreviewRightWest"                              
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewRightWest"                              
