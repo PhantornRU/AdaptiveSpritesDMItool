@@ -279,7 +279,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void EditSingleMode()
         {
-            SetPixel();
+            EditorController.SetPixel(currentMousePosition, currentStateQuantityMode, currentStateDirection, isCentralizedState, isMirroredState, dataImageState, dataImageStateOverlay);
         }
 
         private void EditFillModeStart()
@@ -325,78 +325,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private void EditMoveMode()
         {
 
-        }
-
-
-        private void SetPixel()
-        {
-            System.Drawing.Point mousePos = currentMousePosition;
-            System.Windows.Media.Color color = GetColorModify();
-
-            var stateDirections = GetStateDirections(mousePos);
-
-            foreach (var stateDirectionToModify in stateDirections)
-            {
-                WriteableBitmap bitmap = dataImageState.GetBMPstate(stateDirectionToModify, true);
-                WriteableBitmap bitmapOverlay = dataImageStateOverlay.GetBMPstate(stateDirectionToModify, true);
-                int bitmapWidth = (int)bitmap.Width;
-                //bitmapWidth = _stateDirection == stateDirectionToModify ? 0 : bitmapWidth;
-                var mousePosXTemp = mousePos.X;
-                mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, bitmapWidth);
-                Debug.WriteLine($"_stateDirection: {currentStateDirection}; stateDirectionToModify: {stateDirectionToModify}; MousePosX: [Orig: {mousePosXTemp} - Mod: {mousePos.X}]");
-                bitmap.SetPixel(mousePos.X, mousePos.Y, color);
-                bitmapOverlay.SetPixel(mousePos.X, mousePos.Y, color);
-            }
-        }
-
-        private IEnumerable<StateDirection> GetStateDirections(System.Drawing.Point _mousePos)
-        {
-            switch (currentStateQuantityMode)
-            {
-                case StateQuantityType.Single:
-                    return new[] { currentStateDirection };
-
-                case StateQuantityType.Parallel:
-                    return GetParallelStates(currentStateDirection);
-
-                case StateQuantityType.All:
-                    int parallValue = ((int)currentStateDirection / 2 == 1) ? -2 : 2;
-                    return GetParallelStates(currentStateDirection).Union(GetParallelStates((StateDirection)((int)currentStateDirection + parallValue)));
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        private StateDirection[] GetParallelStates(StateDirection _stateDirection)
-        {
-            int parallValue = isStateOpposite(_stateDirection) ? 1 : -1;
-            StateDirection parallelState = _stateDirection + parallValue;
-            return new[] { _stateDirection, parallelState };
-        }
-
-        private int CorrectMousePositionX(StateDirection _stateDirection, int _mouseX, int _bitmapWidth)
-        {
-            if (!isMirroredState || currentStateDirection == _stateDirection)
-            {
-                return _mouseX;
-            }
-            //_bitmapWidth = isStateOpposite(_stateDirection) ? 0 : _bitmapWidth;
-            var additionValueX = isCentralizedState ? -1 : 0;
-            int result = _bitmapWidth - _mouseX - 1 + additionValueX; 
-            result = Math.Max(result, 0);
-            result = Math.Min(result, _bitmapWidth - 1);
-            return result;
-
-        }
-
-        private bool isStateOpposite(StateDirection _stateDirection)
-        {
-            return ((int)_stateDirection % 2 == 0);
-        }
-
-        private System.Windows.Media.Color GetColorModify()
-        {
-            return System.Windows.Media.Colors.Red;
         }
 
         #endregion  User Controller
