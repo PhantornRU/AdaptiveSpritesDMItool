@@ -173,7 +173,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void state_MouseDown(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
-            currentMouseDownPosition = MouseController.GetModifyMousePosition(e, stateSourceDictionary[_stateDirection][StateImageType.Right]);
+            var stateImage = stateSourceDictionary[_stateDirection][StateImageType.Right];
+            currentMouseDownPosition = MouseController.GetModifyMousePosition(e, stateImage);
             currentMousePosition = currentMouseDownPosition;
             currentStateDirection = _stateDirection;
 
@@ -202,7 +203,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void state_MouseUp(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
-            currentMouseUpPosition = MouseController.GetModifyMousePosition(e, stateSourceDictionary[_stateDirection][StateImageType.Right]);
+            var stateImage = stateSourceDictionary[_stateDirection][StateImageType.Right];
+            currentMouseUpPosition = MouseController.GetModifyMousePosition(e, stateImage);
             currentMousePosition = currentMouseUpPosition;
             currentStateDirection = _stateDirection;
 
@@ -224,7 +226,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
             if (!mouseIsDown)
                 return;
-            currentMousePosition = MouseController.GetModifyMousePosition(e, stateSourceDictionary[_stateDirection][StateImageType.Right]);
+            var stateImage = stateSourceDictionary[_stateDirection][StateImageType.Right];
+            currentMousePosition = MouseController.GetModifyMousePosition(e, stateImage);
             currentStateDirection = _stateDirection;
 
             switch (currentStateEditMode)
