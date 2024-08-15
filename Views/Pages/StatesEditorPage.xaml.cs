@@ -42,6 +42,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
     {
         public StatesEditorViewModel ViewModel { get; }
         DataImageState dataImageState;
+        DataImageState dataImageStateOverlay;
 
         StateEditType currentStateEditMode = StateEditType.Single;
         StateQuantityType currentStateQuantityMode = StateQuantityType.Single;
@@ -68,15 +69,31 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             // Load File
 
+            Debug.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             string path = "TestImages";
+
+
             string fullpath = $"{path}/testBodyHuman.dmi";
             using DMIFile file = new DMIFile(fullpath);
 
+            DMIState currentState = file.States.First();
+            dataImageState = new DataImageState(currentState);
+
             Debug.WriteLine($"Loaded {file}({file.States.Count}).");
 
-            DMIState currentState = file.States.First();
 
-            dataImageState = new DataImageState(currentState);
+            // Overlay Preview File
+            string fullpathOverlay = $"{path}/testClothingOveralls.dmi";
+            using DMIFile fileOverlay = new DMIFile(fullpathOverlay);
+
+            DMIState currentStateOverlay = fileOverlay.States.First();
+            dataImageStateOverlay = new DataImageState(currentStateOverlay);
+
+            Debug.WriteLine($"Loaded {fileOverlay}({fileOverlay.States.Count}).");
+
+
+
+
 
 
             // Post Initializers
@@ -154,6 +171,12 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             {
                 images[StateImageType.Left].Source = dataImageState.GetBMPstate(stateDirection, false);
                 images[StateImageType.Right].Source = dataImageState.GetBMPstate(stateDirection, true);
+            }
+
+            foreach (var (stateDirection, images) in stateSourceDictionary)
+            {
+                images[StateImageType.OverlayLeft].Source = dataImageStateOverlay.GetBMPstate(stateDirection, false);
+                images[StateImageType.OverlayRight].Source = dataImageStateOverlay.GetBMPstate(stateDirection, true);
             }
         }
 
