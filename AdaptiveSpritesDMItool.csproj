@@ -11,6 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Views\Pages\Images\**" />
+    <EmbeddedResource Remove="Views\Pages\Images\**" />
+    <None Remove="Views\Pages\Images\**" />
+    <Page Remove="Views\Pages\Images\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="wpfui-icon.ico" />
   </ItemGroup>
 
@@ -32,10 +39,6 @@
   <ItemGroup>
     <Resource Include="Assets\wpfui-icon-256.png" />
     <Resource Include="Assets\wpfui-icon-1024.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Views\Pages\Images\" />
   </ItemGroup>
 
 </Project>
