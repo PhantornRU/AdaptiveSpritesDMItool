@@ -42,19 +42,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
     {
         public StatesEditorViewModel ViewModel { get; }
 
-        DataImageState dataImageState;
-        DataImageState dataImageStateOverlay;
-
-        StateEditType currentStateEditMode = StateEditType.Single;
-        StateQuantityType currentStateQuantityMode = StateQuantityType.Single;
-
         /// <summary>
         /// Determines whether the state is centralized - setting the pixel in the middle of the pixel
         /// </summary>
         bool isCentralizedState = true;
         bool isMirroredState = true;
         bool isShowGrid = true;
-        int borderThickness = 2;
+        bool isShowOverlay = true;
 
         public StatesEditorPage(StatesEditorViewModel viewModel)
         {
@@ -64,43 +58,16 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             // Pre Initializers
 
             InitializeComponent();
-            ControllButtonsAvailability();
 
-
-
-            // Load File
-
-            //Debug.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            string path = "TestImages";
-
-
-            string fullpath = $"{path}/testBodyHuman.dmi";
-            using DMIFile file = new DMIFile(fullpath);
-
-            DMIState currentState = file.States.First();
-            dataImageState = new DataImageState(currentState);
-
-            Debug.WriteLine($"Loaded {file}({file.States.Count}).");
-
-
-            // Overlay Preview File
-            string fullpathOverlay = $"{path}/testClothingOveralls.dmi";
-            using DMIFile fileOverlay = new DMIFile(fullpathOverlay);
-
-            DMIState currentStateOverlay = fileOverlay.States.First();
-            dataImageStateOverlay = new DataImageState(currentStateOverlay);
-
-            Debug.WriteLine($"Loaded {fileOverlay}({fileOverlay.States.Count}).");
-
-
-
-
-
+            // Load Files
+            EnvironmentController.LoadEnvironment();
 
             // Post Initializers
             InitializeDictionaries();
             InitializeSources();
+            InitializeGrids();
 
+            ControllButtonsAvailability();
 
             TestFunction();
         }
@@ -170,14 +137,14 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             foreach (var (stateDirection, images) in stateSourceDictionary)
             {
-                images[StateImageType.Left].Source = dataImageState.GetBMPstate(stateDirection, false);
-                images[StateImageType.Right].Source = dataImageState.GetBMPstate(stateDirection, true);
+                images[StateImageType.Left].Source = EnvironmentController.GetEnvironmentImage(stateDirection, false);
+                images[StateImageType.Right].Source = EnvironmentController.GetEnvironmentImage(stateDirection, true);
             }
 
             foreach (var (stateDirection, images) in stateSourceDictionary)
             {
-                images[StateImageType.OverlayLeft].Source = dataImageStateOverlay.GetBMPstate(stateDirection, false);
-                images[StateImageType.OverlayRight].Source = dataImageStateOverlay.GetBMPstate(stateDirection, true);
+                images[StateImageType.OverlayLeft].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, false);
+                images[StateImageType.OverlayRight].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, true);
             }
         }
 
@@ -188,21 +155,14 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region User Controller
 
-
-        System.Drawing.Point currentMouseDownPosition;
-        System.Drawing.Point currentMousePosition;
-        System.Drawing.Point currentMouseUpPosition;
-
-        StateDirection currentStateDirection;
-
         private void state_MouseDown(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
             var stateImage = stateSourceDictionary[_stateDirection][StateImageType.Right];
-            currentMouseDownPosition = MouseController.GetModifyMousePosition(e, stateImage);
-            currentMousePosition = currentMouseDownPosition;
-            currentStateDirection = _stateDirection;
+            EditorController.currentMouseDownPosition = MouseController.GetModifyMousePosition(e, stateImage);
+            EditorController.currentMousePosition = EditorController.currentMouseDownPosition;
+            EditorController.currentStateDirection = _stateDirection;
 
-            switch (currentStateEditMode)
+            switch (EditorController.currentStateEditMode)
             {
                 case StateEditType.Single:
                     EditSingleMode();
@@ -228,11 +188,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private void state_MouseUp(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
             var stateImage = stateSourceDictionary[_stateDirection][StateImageType.Right];
-            currentMouseUpPosition = MouseController.GetModifyMousePosition(e, stateImage);
-            currentMousePosition = currentMouseUpPosition;
-            currentStateDirection = _stateDirection;
+            EditorController.currentMouseUpPosition = MouseController.GetModifyMousePosition(e, stateImage);
+            EditorController.currentMousePosition = EditorController.currentMouseUpPosition;
+            EditorController.currentStateDirection = _stateDirection;
 
-            switch (currentStateEditMode)
+            switch (EditorController.currentStateEditMode)
             {
                 case StateEditType.Fill:
                     EditFillModeEnd();
@@ -251,10 +211,10 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             if (!mouseIsDown)
                 return;
             var stateImage = stateSourceDictionary[_stateDirection][StateImageType.Right];
-            currentMousePosition = MouseController.GetModifyMousePosition(e, stateImage);
-            currentStateDirection = _stateDirection;
+            EditorController.currentMousePosition = MouseController.GetModifyMousePosition(e, stateImage);
+            EditorController.currentStateDirection = _stateDirection;
 
-            switch (currentStateEditMode)
+            switch (EditorController.currentStateEditMode)
             {
                 case StateEditType.Single:
                     EditSingleMode( );
@@ -279,7 +239,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void EditSingleMode()
         {
-            EditorController.SetPixel(currentMousePosition, currentStateQuantityMode, currentStateDirection, isCentralizedState, isMirroredState, dataImageState, dataImageStateOverlay);
+            EditorController.SetPixel(isCentralizedState, isMirroredState);
         }
 
         private void EditFillModeStart()
@@ -421,7 +381,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             ResetEditButtons();
             SingleButton.Appearance = ControlAppearance.Primary;
-            currentStateEditMode = StateEditType.Single;
+            EditorController.currentStateEditMode = StateEditType.Single;
         }
 
         private void FillButton_Click(object sender, RoutedEventArgs e)
@@ -429,21 +389,21 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             ResetEditButtons();
             FillButton.Appearance = ControlAppearance.Primary;
 
-            currentStateEditMode = StateEditType.Fill;
+            EditorController.currentStateEditMode = StateEditType.Fill;
         }
 
         private void PickButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
             PickButton.Appearance = ControlAppearance.Primary;
-            currentStateEditMode = StateEditType.Pick;
+            EditorController.currentStateEditMode = StateEditType.Pick;
         }
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
             DeleteButton.Appearance = ControlAppearance.Primary;
-            currentStateEditMode = StateEditType.Delete;
+            EditorController.currentStateEditMode = StateEditType.Delete;
         }
 
         #endregion Buttons Edit Controller
@@ -455,14 +415,14 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             ResetEditButtons();
             SelectButton.Appearance = ControlAppearance.Primary;
-            currentStateEditMode = StateEditType.Select;
+            EditorController.currentStateEditMode = StateEditType.Select;
         }
 
         private void MoveButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
             MoveButton.Appearance = ControlAppearance.Primary;
-            currentStateEditMode = StateEditType.Move;
+            EditorController.currentStateEditMode = StateEditType.Move;
         }
 
         #endregion Buttons Move Controller
@@ -474,7 +434,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             ResetStatesButtons();
             ChooseSingleStateButton.Appearance = ControlAppearance.Primary;
-            currentStateQuantityMode = StateQuantityType.Single;
+            EditorController.currentStateQuantityMode = StateQuantityType.Single;
             ControllButtonsAvailability();
         }
 
@@ -482,7 +442,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             ResetStatesButtons();
             ChooseParallelStatesButton.Appearance = ControlAppearance.Primary;
-            currentStateQuantityMode = StateQuantityType.Parallel;
+            EditorController.currentStateQuantityMode = StateQuantityType.Parallel;
             ControllButtonsAvailability();
         }
 
@@ -490,7 +450,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             ResetStatesButtons();
             ChooseAllStatesButton.Appearance = ControlAppearance.Primary;
-            currentStateQuantityMode = StateQuantityType.All;
+            EditorController.currentStateQuantityMode = StateQuantityType.All;
             ControllButtonsAvailability();
         }
 
@@ -509,8 +469,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void ControllButtonsAvailability()
         {
-            MirrorStatesButton.IsEnabled = currentStateQuantityMode != StateQuantityType.Single;
-            CentralizeStatesButton.IsEnabled = isMirroredState && (currentStateQuantityMode != StateQuantityType.Single);
+            MirrorStatesButton.IsEnabled = EditorController.currentStateQuantityMode != StateQuantityType.Single;
+            CentralizeStatesButton.IsEnabled = isMirroredState && (EditorController.currentStateQuantityMode != StateQuantityType.Single);
 
         }
 
@@ -527,6 +487,18 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             {
                 state[StateImageType.BackgroundLeft].Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
                 state[StateImageType.BackgroundRight].Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private void OverlayEnvironmentButton_Click(object sender, RoutedEventArgs e)
+        {
+            isShowOverlay = !isShowOverlay;
+            OverlayEnvironmentButton.Appearance = isShowOverlay ? ControlAppearance.Primary : ControlAppearance.Secondary;
+
+            foreach (var state in stateSourceDictionary.Values)
+            {
+                state[StateImageType.OverlayLeft].Visibility = isShowOverlay ? Visibility.Visible : Visibility.Collapsed;
+                state[StateImageType.OverlayRight].Visibility = isShowOverlay ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 
@@ -553,15 +525,20 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region Editor Controller
 
-        private void MakeGrids()
+        private void InitializeGrids()
         {
+            // !!!!!!! Допиши код определяющий pixelSize зависимый от pixelResolution. Например при pixelResolution = 64 pixelSize = 4, а при 32 будет 8, при 16 будет 16
+
+            int pixelResolution = 32;
+            int pixelSize = 8;
+
             // TODO: Make Better File Way
-            string gridBitmapPath = System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", "grid.png");
+            string gridBitmapPath = System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", $"grid{pixelResolution}.png");
             WriteableBitmap gridBitmap;
 
             if (!File.Exists(gridBitmapPath))
             {
-                gridBitmap = EditorController.MakeAndGetGrid();
+                gridBitmap = EditorController.MakeAndGetGrid(pixelSize: pixelSize);
 
                 // Save the bitmap into a file.
                 using (FileStream stream =

@@ -146,15 +146,8 @@
                         Appearance="Primary"
                         IsEnabled="True"
                         ToolTip="Toggle overlay environment."
-                        Icon="{ui:SymbolIcon TableSimple24}" />
+                        Icon="{ui:SymbolIcon AppFolder24}" Click="OverlayEnvironmentButton_Click" />
 
-                <Separator Margin="10,0,10,0" />
-                <ui:Button
-                        x:Name="OverlayEnvironmentLoadButton"
-                        Appearance="Primary"
-                        IsEnabled="True"
-                        ToolTip="Mirror."
-                        Icon="{ui:SymbolIcon TableSimple24}" />
 
 
             </ToolBar>
