@@ -29,9 +29,9 @@ using SixLabors.ImageSharp.Formats.Bmp;
 using System.Runtime.CompilerServices;
 using System.IO;
 using AdaptiveSpritesDMItool.Models;
-using AdaptiveSpritesDMItool.Helpers;
 using System.Drawing;
 using CommunityToolkit.HighPerformance.Helpers;
+using AdaptiveSpritesDMItool.Controllers;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {

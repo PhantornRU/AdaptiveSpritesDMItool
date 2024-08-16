@@ -11,7 +11,7 @@ using System.Windows.Media;
 using System.Windows.Controls;
 using DMISharp;
 
-namespace AdaptiveSpritesDMItool.Helpers
+namespace AdaptiveSpritesDMItool.Controllers
 {
     internal static class EditorController
     {
@@ -28,18 +28,18 @@ namespace AdaptiveSpritesDMItool.Helpers
         public static void SetPixel(bool isCentralizedState, bool isMirroredState)
         {
             System.Drawing.Point mousePos = currentMousePosition;
-            System.Windows.Media.Color color = EditorController.GetColorModify();
+            Color color = GetColorModify();
 
-            var stateDirections = EditorController.GetStateDirections();
+            var stateDirections = GetStateDirections();
 
             foreach (var stateDirectionToModify in stateDirections)
             {
                 WriteableBitmap bitmap = EnvironmentController.GetEnvironmentImage(stateDirectionToModify, true);
-                WriteableBitmap bitmapOverlay = EnvironmentController.GetEnvironmentImage(stateDirectionToModify, true);
+                WriteableBitmap bitmapOverlay = EnvironmentController.GetEnvironmentImageOverlay(stateDirectionToModify, true);
                 int bitmapWidth = (int)bitmap.Width;
                 //bitmapWidth = _stateDirection == stateDirectionToModify ? 0 : bitmapWidth;
                 var mousePosXTemp = mousePos.X;
-                mousePos.X = EditorController.CorrectMousePositionX(stateDirectionToModify, currentStateDirection, mousePos.X, bitmapWidth, isCentralizedState, isMirroredState);
+                mousePos.X = CorrectMousePositionX(stateDirectionToModify, currentStateDirection, mousePos.X, bitmapWidth, isCentralizedState, isMirroredState);
                 //Debug.WriteLine($"_stateDirection: {currentStateDirection}; stateDirectionToModify: {stateDirectionToModify}; MousePosX: [Orig: {mousePosXTemp} - Mod: {mousePos.X}]");
                 bitmap.SetPixel(mousePos.X, mousePos.Y, color);
                 bitmapOverlay.SetPixel(mousePos.X, mousePos.Y, color);
@@ -61,7 +61,7 @@ namespace AdaptiveSpritesDMItool.Helpers
                     return GetParallelStates(currentStateDirection);
 
                 case StateQuantityType.All:
-                    int parallValue = ((int)currentStateDirection / 2 == 1) ? -2 : 2;
+                    int parallValue = (int)currentStateDirection / 2 == 1 ? -2 : 2;
                     return GetParallelStates(currentStateDirection).Union(GetParallelStates((StateDirection)((int)currentStateDirection + parallValue)));
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -92,12 +92,12 @@ namespace AdaptiveSpritesDMItool.Helpers
 
         public static bool isStateOpposite(StateDirection _stateDirection)
         {
-            return ((int)_stateDirection % 2 == 0);
+            return (int)_stateDirection % 2 == 0;
         }
 
-        public static System.Windows.Media.Color GetColorModify()
+        public static Color GetColorModify()
         {
-            return System.Windows.Media.Colors.Red;
+            return Colors.Red;
         }
 
         #endregion States
@@ -107,11 +107,11 @@ namespace AdaptiveSpritesDMItool.Helpers
 
         public static WriteableBitmap MakeAndGetGrid(int width = 257, int height = 257, int pixelSize = 8, byte alpha = 100, int borderThickness = 2)
         {
-            
+
             WriteableBitmap bitmap = new WriteableBitmap(width, height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
 
-            System.Windows.Media.Color colorTemp = System.Windows.Media.Colors.Black;
-            System.Windows.Media.Color color = System.Windows.Media.Color.FromArgb(alpha, colorTemp.R, colorTemp.G, colorTemp.B);
+            Color colorTemp = Colors.Black;
+            Color color = Color.FromArgb(alpha, colorTemp.R, colorTemp.G, colorTemp.B);
 
             for (int i = 0; i < bitmap.PixelWidth; i += pixelSize)
             {
