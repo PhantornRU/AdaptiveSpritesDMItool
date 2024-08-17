@@ -27,10 +27,11 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void state_MouseDown(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
-            var stateImage = StatesController.stateSourceDictionary[_stateDirection][StateImageType.Right];
+            UpdateCurrentStateDirection(_stateDirection);
+            var stateImage = GetRightImage(_stateDirection);
+
             currentMouseDownPosition = MouseController.GetModifyMousePosition(e, stateImage);
             currentMousePosition = currentMouseDownPosition;
-            currentStateDirection = _stateDirection;
 
             switch (StatesController.currentStateEditMode)
             {
@@ -57,10 +58,11 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void state_MouseUp(MouseButtonEventArgs e, StateDirection _stateDirection)
         {
-            var stateImage = StatesController.stateSourceDictionary[_stateDirection][StateImageType.Right];
+            UpdateCurrentStateDirection(_stateDirection);
+            var stateImage = GetRightImage(_stateDirection);
+
             currentMouseUpPosition = MouseController.GetModifyMousePosition(e, stateImage);
             currentMousePosition = currentMouseUpPosition;
-            currentStateDirection = _stateDirection;
 
             switch (StatesController.currentStateEditMode)
             {
@@ -76,13 +78,13 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void state_MouseMove(MouseEventArgs e, StateDirection _stateDirection)
         {
-
             bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
             if (!mouseIsDown)
                 return;
-            var stateImage = StatesController.stateSourceDictionary[_stateDirection][StateImageType.Right];
+            UpdateCurrentStateDirection(_stateDirection);
+            var stateImage = GetRightImage(_stateDirection);
+
             currentMousePosition = MouseController.GetModifyMousePosition(e, stateImage);
-            currentStateDirection = _stateDirection;
 
             switch (StatesController.currentStateEditMode)
             {
@@ -105,6 +107,16 @@ namespace AdaptiveSpritesDMItool.Controllers
                     EditMoveMode();
                     break;
             }
+        }
+
+        private static Image GetRightImage(StateDirection _stateDirection)
+        {
+            return StatesController.stateSourceDictionary[_stateDirection][StateImageType.Right];
+        }
+
+        private static void UpdateCurrentStateDirection(StateDirection _stateDirection)
+        {
+            currentStateDirection = _stateDirection;
         }
 
         #endregion Mouse Controller
@@ -254,22 +266,13 @@ namespace AdaptiveSpritesDMItool.Controllers
             int pixelResolution = EnvironmentController.heightImage;
             int pixelSize = GetPixelSizeFromResolution(pixelResolution);
 
-            // TODO: Make Better File Way
-            string gridBitmapPath = System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", $"grid{pixelResolution}.png");
+            string gridBitmapPath = EnvironmentController.GetGridPath();
             WriteableBitmap gridBitmap;
 
             if (!File.Exists(gridBitmapPath))
             {
                 gridBitmap = MakeAndGetGrid(pixelSize: pixelSize);
-
-                // Save the bitmap into a file.
-                using (FileStream stream =
-                    new FileStream(gridBitmapPath, FileMode.Create))
-                {
-                    PngBitmapEncoder encoder = new PngBitmapEncoder();
-                    encoder.Frames.Add(BitmapFrame.Create(gridBitmap));
-                    encoder.Save(stream);
-                }
+                EnvironmentController.SaveBitmapIntoFile(gridBitmapPath, gridBitmap);
             }
             else
             {

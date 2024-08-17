@@ -19,6 +19,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static int widthImage;
         public static int heightImage;
 
+        #region Loaders
 
         public static void LoadEnvironment()
         {
@@ -50,6 +51,32 @@ namespace AdaptiveSpritesDMItool.Controllers
             Debug.WriteLine($"Loaded {fileOverlay}({fileOverlay.States.Count}).");
         }
 
+        #endregion Loaders
+
+        #region Saves
+
+        public static void SaveBitmapIntoFile(string path, WriteableBitmap _gridBitmap)
+        {
+            using (FileStream stream =
+                new FileStream(path, FileMode.Create))
+            {
+                PngBitmapEncoder encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(_gridBitmap));
+                encoder.Save(stream);
+            }
+        }
+
+        #endregion Saves
+
+        #region Paths
+
+        public static string GetGridPath() => System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", $"grid{EnvironmentController.heightImage}.png");
+
+        #endregion Paths
+
+
+        #region Getters
+
         public static WriteableBitmap GetEnvironmentImage(StateDirection _stateDirection, bool _isEdited = false)
         {
             WriteableBitmap bitmap = dataImageState.GetBMPstate(_stateDirection, _isEdited);
@@ -61,5 +88,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             WriteableBitmap bitmapOverlay = dataImageStateOverlay.GetBMPstate(_stateDirection, _isEdited);
             return bitmapOverlay;
         }
+
+        #endregion Getters
     }
 }

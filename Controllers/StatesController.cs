@@ -31,6 +31,10 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static int backgroundZIndexUnder = 0;
         public static int backgroundZIndexAbove = 2;
 
+        // Initialize in StatesEditorPage.xaml.cs InitializeDictionaries()
+        /// <summary>
+        /// Stores all references to images for their quick calls depending on the state.
+        /// </summary>
         public static Dictionary<StateDirection, Dictionary<StateImageType, System.Windows.Controls.Image>> stateSourceDictionary;
 
         public static void InitializeSources()
@@ -58,6 +62,9 @@ namespace AdaptiveSpritesDMItool.Controllers
                 state[StateImageType.BackgroundRight].Source = gridBitmap;
             }
         }
+
+
+        #region Getters
 
         // Set Modes
 
@@ -119,5 +126,6 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static ControlAppearance GetUnPressedButtonAppearance() => ControlAppearance.Secondary;
 
+        #endregion Getters
     }
 }
