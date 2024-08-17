@@ -7,12 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Wpf.Ui.Controls;
 using DMISharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -21,16 +16,9 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats;
-using static System.Net.Mime.MediaTypeNames;
 using System.Windows.Media.Imaging;
-using System.Windows.Media;
-using System.Reflection;
-using SixLabors.ImageSharp.Formats.Bmp;
-using System.Runtime.CompilerServices;
 using System.IO;
 using AdaptiveSpritesDMItool.Models;
-using System.Drawing;
-using CommunityToolkit.HighPerformance.Helpers;
 using AdaptiveSpritesDMItool.Controllers;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
@@ -527,33 +515,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void InitializeGrids()
         {
-            // !!!!!!! Допиши код определяющий pixelSize зависимый от pixelResolution. Например при pixelResolution = 64 pixelSize = 4, а при 32 будет 8, при 16 будет 16
 
-            int pixelResolution = 32;
-            int pixelSize = 8;
-
-            // TODO: Make Better File Way
-            string gridBitmapPath = System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", $"grid{pixelResolution}.png");
-            WriteableBitmap gridBitmap;
-
-            if (!File.Exists(gridBitmapPath))
-            {
-                gridBitmap = EditorController.MakeAndGetGrid(pixelSize: pixelSize);
-
-                // Save the bitmap into a file.
-                using (FileStream stream =
-                    new FileStream(gridBitmapPath, FileMode.Create))
-                {
-                    PngBitmapEncoder encoder = new PngBitmapEncoder();
-                    encoder.Frames.Add(BitmapFrame.Create(gridBitmap));
-                    encoder.Save(stream);
-                }
-            }
-            else
-            {
-                BitmapImage bitmap = new BitmapImage(new Uri(gridBitmapPath, UriKind.Relative));
-                gridBitmap = new WriteableBitmap(bitmap);
-            }
+            WriteableBitmap gridBitmap = EditorController.GetGridBackground(pixelResolution, pixelSize);
 
             foreach (var state in stateSourceDictionary.Values)
             {

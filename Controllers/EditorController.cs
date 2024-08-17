@@ -105,7 +105,38 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Grids
 
-        public static WriteableBitmap MakeAndGetGrid(int width = 257, int height = 257, int pixelSize = 8, byte alpha = 100, int borderThickness = 2)
+        public static WriteableBitmap GetGridBackground()
+        {
+            int pixelResolution = EnvironmentController.heightImage;
+            int pixelSize = GetPixelSizeFromResolution(pixelResolution);
+
+            // TODO: Make Better File Way
+            string gridBitmapPath = System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", $"grid{pixelResolution}.png");
+            WriteableBitmap gridBitmap;
+
+            if (!File.Exists(gridBitmapPath))
+            {
+                gridBitmap = MakeAndGetGrid(pixelSize: pixelSize);
+
+                // Save the bitmap into a file.
+                using (FileStream stream =
+                    new FileStream(gridBitmapPath, FileMode.Create))
+                {
+                    PngBitmapEncoder encoder = new PngBitmapEncoder();
+                    encoder.Frames.Add(BitmapFrame.Create(gridBitmap));
+                    encoder.Save(stream);
+                }
+            }
+            else
+            {
+                BitmapImage bitmap = new BitmapImage(new Uri(gridBitmapPath, UriKind.Relative));
+                gridBitmap = new WriteableBitmap(bitmap);
+            }
+
+            return gridBitmap;
+        }
+
+        private static WriteableBitmap MakeAndGetGrid(int width = 257, int height = 257, int pixelSize = 8, byte alpha = 100, int borderThickness = 2)
         {
 
             WriteableBitmap bitmap = new WriteableBitmap(width, height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
@@ -129,6 +160,20 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
 
             return bitmap;
+        }
+
+        private static int GetPixelSizeFromResolution(int _pixelResolution)
+        {
+            int pixelSize = 8;
+            if (_pixelResolution == 64)
+            {
+                pixelSize = 4;
+            }
+            else if (_pixelResolution == 16)
+            {
+                pixelSize = 16;
+            }
+            return pixelSize;
         }
 
         #endregion Grids

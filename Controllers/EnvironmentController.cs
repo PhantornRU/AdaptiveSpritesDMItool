@@ -3,6 +3,7 @@ using DMISharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,10 @@ namespace AdaptiveSpritesDMItool.Controllers
     {
         public static DataImageState dataImageState;
         public static DataImageState dataImageStateOverlay;
+
+        public static int widthImage;
+        public static int heightImage;
+
 
         public static void LoadEnvironment()
         {
@@ -28,6 +33,11 @@ namespace AdaptiveSpritesDMItool.Controllers
             dataImageState = new DataImageState(currentState);
 
             Debug.WriteLine($"Loaded {file}({file.States.Count}).");
+
+            widthImage = currentState.Width;
+            heightImage = currentState.Height;
+
+            Debug.WriteLine($"Image - Width: {widthImage}; Height: {heightImage}");
 
 
             // Overlay Preview File
