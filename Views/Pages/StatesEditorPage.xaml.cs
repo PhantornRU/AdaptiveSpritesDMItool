@@ -31,18 +31,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
     {
         public StatesEditorViewModel ViewModel { get; }
 
-        /// <summary>
-        /// Determines whether the state is centralized - setting the pixel in the middle of the pixel
-        /// </summary>
-        bool isCentralizedState = true;
-        bool isMirroredState = true;
-        bool isShowGrid = true;
-        bool isShowAboveGrid = true;
-        bool isShowOverlay = true;
-
-        int backgroundZIndexUnder = 0;
-        int backgroundZIndexAbove = 2;
-
         public StatesEditorPage(StatesEditorViewModel viewModel)
         {
             ViewModel = viewModel;
@@ -57,19 +45,23 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             // Post Initializers
             InitializeDictionaries();
-            InitializeSources();
-            InitializeGrids();
+            StatesController.InitializeSources();
+            StatesController.InitializeGrids();
 
             ControllButtonsAvailability();
 
             TestFunction();
         }
 
-        private Dictionary<StateDirection, Dictionary<StateImageType, System.Windows.Controls.Image>> stateSourceDictionary;
-        
+        private void TestFunction()
+        {
+
+        }
+
+
         private void InitializeDictionaries()
         {
-            stateSourceDictionary = new Dictionary<StateDirection, Dictionary<StateImageType, System.Windows.Controls.Image>>()
+            StatesController.stateSourceDictionary = new Dictionary<StateDirection, Dictionary<StateImageType, System.Windows.Controls.Image>>()
             {
                 { StateDirection.South, new Dictionary<StateImageType, System.Windows.Controls.Image>()
                     {
@@ -126,179 +118,23 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         }
 
-        private void InitializeSources()
-        {
-            foreach (var (stateDirection, images) in stateSourceDictionary)
-            {
-                images[StateImageType.Left].Source = EnvironmentController.GetEnvironmentImage(stateDirection, false);
-                images[StateImageType.Right].Source = EnvironmentController.GetEnvironmentImage(stateDirection, true);
-            }
-
-            foreach (var (stateDirection, images) in stateSourceDictionary)
-            {
-                images[StateImageType.OverlayLeft].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, false);
-                images[StateImageType.OverlayRight].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, true);
-            }
-        }
-
-        private void TestFunction()
-        {
-
-        }
-
-        #region User Controller
-
-        private void state_MouseDown(MouseButtonEventArgs e, StateDirection _stateDirection)
-        {
-            var stateImage = stateSourceDictionary[_stateDirection][StateImageType.Right];
-            EditorController.currentMouseDownPosition = MouseController.GetModifyMousePosition(e, stateImage);
-            EditorController.currentMousePosition = EditorController.currentMouseDownPosition;
-            EditorController.currentStateDirection = _stateDirection;
-
-            switch (EditorController.currentStateEditMode)
-            {
-                case StateEditType.Single:
-                    EditSingleMode();
-                    break;
-                case StateEditType.Fill:
-                    EditFillModeStart();
-                    break;
-                case StateEditType.Pick:
-                    EditPickMode();
-                    break;
-                case StateEditType.Delete:
-                    EditDeleteMode();
-                    break;
-                case StateEditType.Select:
-                    EditSelectModeStart();
-                    break;
-                case StateEditType.Move:
-                    EditMoveMode();
-                    break;
-            }
-        }
-
-        private void state_MouseUp(MouseButtonEventArgs e, StateDirection _stateDirection)
-        {
-            var stateImage = stateSourceDictionary[_stateDirection][StateImageType.Right];
-            EditorController.currentMouseUpPosition = MouseController.GetModifyMousePosition(e, stateImage);
-            EditorController.currentMousePosition = EditorController.currentMouseUpPosition;
-            EditorController.currentStateDirection = _stateDirection;
-
-            switch (EditorController.currentStateEditMode)
-            {
-                case StateEditType.Fill:
-                    EditFillModeEnd();
-                    break;
-                case StateEditType.Select:
-                    EditSelectModeEnd();
-                    break;
-            }
-
-        }
-
-        private void state_MouseMove(MouseEventArgs e, StateDirection _stateDirection)
-        {
-
-            bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
-            if (!mouseIsDown)
-                return;
-            var stateImage = stateSourceDictionary[_stateDirection][StateImageType.Right];
-            EditorController.currentMousePosition = MouseController.GetModifyMousePosition(e, stateImage);
-            EditorController.currentStateDirection = _stateDirection;
-
-            switch (EditorController.currentStateEditMode)
-            {
-                case StateEditType.Single:
-                    EditSingleMode( );
-                    break;
-                case StateEditType.Fill:
-                    EditFillMode();
-                    break;
-                case StateEditType.Pick:
-                    EditPickMode();
-                    break;
-                case StateEditType.Delete:
-                    EditDeleteMode();
-                    break;
-                case StateEditType.Select:
-                    EditSelectMode();
-                    break;
-                case StateEditType.Move:
-                    EditMoveMode();
-                    break;
-            }
-        }
-
-        private void EditSingleMode()
-        {
-            EditorController.SetPixel(isCentralizedState, isMirroredState);
-        }
-
-        private void EditFillModeStart()
-        {
-
-        }
-
-        private void EditFillMode()
-        {
-
-        }
-
-        private void EditFillModeEnd()
-        {
-
-        }
-
-
-        private void EditPickMode()
-        {
-
-        }
-
-        private void EditDeleteMode()
-        {
-
-        }
-
-        private void EditSelectModeStart()
-        {
-
-        }
-
-        private void EditSelectMode()
-        {
-
-        }
-        private void EditSelectModeEnd()
-        {
-
-        }
-
-        private void EditMoveMode()
-        {
-
-        }
-
-        #endregion  User Controller
-
         #region Mouse Controller
 
         #region Mouse Buttons - South Preview
 
         private void imagePreviewRightSouth_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            state_MouseDown(e, StateDirection.South);
+            EditorController.state_MouseDown(e, StateDirection.South);
         }
 
         private void imagePreviewRightSouth_MouseMove(object sender, MouseEventArgs e)
         {
-            state_MouseMove(e, StateDirection.South);
+            EditorController.state_MouseMove(e, StateDirection.South);
         }
 
         private void imagePreviewRightSouth_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            state_MouseUp(e, StateDirection.South);
+            EditorController.state_MouseUp(e, StateDirection.South);
         }
 
         #endregion Mouse Buttons - South Preview
@@ -307,18 +143,18 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void imagePreviewRightNorth_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            state_MouseDown(e, StateDirection.North);
+            EditorController.state_MouseDown(e, StateDirection.North);
         }
 
         private void imagePreviewRightNorth_MouseMove(object sender, MouseEventArgs e)
         {
-            state_MouseMove(e, StateDirection.North);
+            EditorController.state_MouseMove(e, StateDirection.North);
         }
 
         private void imagePreviewRightNorth_MouseUp(object sender, MouseButtonEventArgs e)
         {
 
-            state_MouseUp(e, StateDirection.North);
+            EditorController.state_MouseUp(e, StateDirection.North);
         }
 
         #endregion Mouse Buttons - North Preview
@@ -328,18 +164,18 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void imagePreviewRightEast_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            state_MouseDown(e, StateDirection.East);
+            EditorController.state_MouseDown(e, StateDirection.East);
         }
 
         private void imagePreviewRightEast_MouseMove(object sender, MouseEventArgs e)
         {
-            state_MouseMove(e, StateDirection.East);
+            EditorController.state_MouseMove(e, StateDirection.East);
         }
 
         private void imagePreviewRightEast_MouseUp(object sender, MouseButtonEventArgs e)
         {
 
-            state_MouseUp(e, StateDirection.East);
+            EditorController.state_MouseUp(e, StateDirection.East);
         }
 
         #endregion Mouse Buttons - East Preview
@@ -349,17 +185,17 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void imagePreviewRightWest_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            state_MouseDown(e, StateDirection.West);
+            EditorController.state_MouseDown(e, StateDirection.West);
         }
 
         private void imagePreviewRightWest_MouseMove(object sender, MouseEventArgs e)
         {
-            state_MouseMove(e, StateDirection.West);
+            EditorController.state_MouseMove(e, StateDirection.West);
         }
 
         private void imagePreviewRightWest_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            state_MouseUp(e, StateDirection.West);
+            EditorController.state_MouseUp(e, StateDirection.West);
         }
 
         #endregion Mouse Buttons - West Preview
@@ -373,30 +209,30 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private void SingleButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
-            SingleButton.Appearance = ControlAppearance.Primary;
-            EditorController.currentStateEditMode = StateEditType.Single;
+            SingleButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateEditMode(StateEditType.Single);
         }
 
         private void FillButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
-            FillButton.Appearance = ControlAppearance.Primary;
+            FillButton.Appearance = StatesController.GetPressedButtonAppearance();
 
-            EditorController.currentStateEditMode = StateEditType.Fill;
+            StatesController.SetCurrentStateEditMode(StateEditType.Fill);
         }
 
         private void PickButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
-            PickButton.Appearance = ControlAppearance.Primary;
-            EditorController.currentStateEditMode = StateEditType.Pick;
+            PickButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateEditMode(StateEditType.Pick);
         }
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
-            DeleteButton.Appearance = ControlAppearance.Primary;
-            EditorController.currentStateEditMode = StateEditType.Delete;
+            DeleteButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateEditMode(StateEditType.Delete);
         }
 
         #endregion Buttons Edit Controller
@@ -407,15 +243,15 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private void SelectButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
-            SelectButton.Appearance = ControlAppearance.Primary;
-            EditorController.currentStateEditMode = StateEditType.Select;
+            SelectButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateEditMode(StateEditType.Select);
         }
 
         private void MoveButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
-            MoveButton.Appearance = ControlAppearance.Primary;
-            EditorController.currentStateEditMode = StateEditType.Move;
+            MoveButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateEditMode(StateEditType.Move);
         }
 
         #endregion Buttons Move Controller
@@ -426,46 +262,45 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private void ChooseSingleStateButton_Click(object sender, RoutedEventArgs e)
         {
             ResetStatesButtons();
-            ChooseSingleStateButton.Appearance = ControlAppearance.Primary;
-            EditorController.currentStateQuantityMode = StateQuantityType.Single;
+            ChooseSingleStateButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateQuantityMode(StateQuantityType.Single);
             ControllButtonsAvailability();
         }
 
         private void ChooseParallelStatesButton_Click(object sender, RoutedEventArgs e)
         {
             ResetStatesButtons();
-            ChooseParallelStatesButton.Appearance = ControlAppearance.Primary;
-            EditorController.currentStateQuantityMode = StateQuantityType.Parallel;
+            ChooseParallelStatesButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateQuantityMode(StateQuantityType.Parallel);
             ControllButtonsAvailability();
         }
 
         private void ChooseAllStatesButton_Click(object sender, RoutedEventArgs e)
         {
             ResetStatesButtons();
-            ChooseAllStatesButton.Appearance = ControlAppearance.Primary;
-            EditorController.currentStateQuantityMode = StateQuantityType.All;
+            ChooseAllStatesButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateQuantityMode(StateQuantityType.All);
             ControllButtonsAvailability();
         }
 
         private void CentralizeStatesButton_Click(object sender, RoutedEventArgs e)
         {
-            isCentralizedState = !isCentralizedState;
-            CentralizeStatesButton.Appearance = isCentralizedState ? ControlAppearance.Primary : ControlAppearance.Secondary;
+            StatesController.ToggleCentralizedState();
+            CentralizeStatesButton.Appearance = StatesController.GetControlAppearanceCentralize();
         }
 
         private void MirrorStatesButton_Click(object sender, RoutedEventArgs e)
         {
-            isMirroredState = !isMirroredState;
-            MirrorStatesButton.Appearance = isMirroredState ? ControlAppearance.Primary : ControlAppearance.Secondary;
+            StatesController.ToggleMirroredState();
+            MirrorStatesButton.Appearance = StatesController.GetControlAppearanceMirror();
             ControllButtonsAvailability();
         }
 
         private void ControllButtonsAvailability()
         {
-            MirrorStatesButton.IsEnabled = EditorController.currentStateQuantityMode != StateQuantityType.Single;
-            CentralizeStatesButton.IsEnabled = isMirroredState && (EditorController.currentStateQuantityMode != StateQuantityType.Single);
-
-            GridZIndexEnvironmentButton.IsEnabled = isShowGrid;
+            MirrorStatesButton.IsEnabled = StatesController.GetEnableStateMirrorButton();
+            CentralizeStatesButton.IsEnabled = StatesController.GetEnableStateCentralizeButton();
+            GridZIndexEnvironmentButton.IsEnabled = StatesController.GetEnableStateGridZIndexButton();
             GridZIndexEnvironmentUpdate();
         }
 
@@ -475,48 +310,48 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void GridEnvironmentButton_Click(object sender, RoutedEventArgs e)
         {
-            isShowGrid = !isShowGrid;
+            StatesController.ToggleShowGrid();
             GridEnvironmentUpdate();
         }
 
         private void GridEnvironmentUpdate()
         {
-            GridEnvironmentButton.Appearance = isShowGrid ? ControlAppearance.Primary : ControlAppearance.Secondary;
-            GridZIndexEnvironmentButton.IsEnabled = isShowGrid;
+            GridEnvironmentButton.Appearance = StatesController.GetControlAppearanceGrid();
+            GridZIndexEnvironmentButton.IsEnabled = StatesController.GetEnableStateGridZIndexButton();
 
-            foreach (var state in stateSourceDictionary.Values)
+            foreach (var state in StatesController.stateSourceDictionary.Values)
             {
-                state[StateImageType.BackgroundLeft].Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
-                state[StateImageType.BackgroundRight].Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+                state[StateImageType.BackgroundLeft].Visibility = StatesController.GetVisibilityGrid();
+                state[StateImageType.BackgroundRight].Visibility = StatesController.GetVisibilityGrid();
             }
         }
 
         private void GridZIndexEnvironmentButton_Click(object sender, RoutedEventArgs e)
         {
-            isShowAboveGrid = !isShowAboveGrid;
+            StatesController.ToggleShowAboveGrid();
             GridZIndexEnvironmentUpdate();
         }
 
         private void GridZIndexEnvironmentUpdate()
         {
-            GridZIndexEnvironmentButton.Appearance = isShowAboveGrid ? ControlAppearance.Primary : ControlAppearance.Secondary;
+            GridZIndexEnvironmentButton.Appearance = StatesController.GetControlAppearanceGridZIndex();
 
-            foreach (var state in stateSourceDictionary.Values)
+            foreach (var state in StatesController.stateSourceDictionary.Values)
             {
-                Panel.SetZIndex(state[StateImageType.BackgroundLeft], isShowAboveGrid ? backgroundZIndexAbove : backgroundZIndexUnder);
-                Panel.SetZIndex(state[StateImageType.BackgroundRight], isShowAboveGrid ? backgroundZIndexAbove : backgroundZIndexUnder);
+                Panel.SetZIndex(state[StateImageType.BackgroundLeft], StatesController.GetBackgroundZIndex());
+                Panel.SetZIndex(state[StateImageType.BackgroundRight], StatesController.GetBackgroundZIndex());
             }
         }
 
         private void OverlayEnvironmentButton_Click(object sender, RoutedEventArgs e)
         {
-            isShowOverlay = !isShowOverlay;
-            OverlayEnvironmentButton.Appearance = isShowOverlay ? ControlAppearance.Primary : ControlAppearance.Secondary;
+            StatesController.ToggleShowOverlay();
+            OverlayEnvironmentButton.Appearance = StatesController.GetControlAppearanceOverlay();
 
-            foreach (var state in stateSourceDictionary.Values)
+            foreach (var state in StatesController.stateSourceDictionary.Values)
             {
-                state[StateImageType.OverlayLeft].Visibility = isShowOverlay ? Visibility.Visible : Visibility.Collapsed;
-                state[StateImageType.OverlayRight].Visibility = isShowOverlay ? Visibility.Visible : Visibility.Collapsed;
+                state[StateImageType.OverlayLeft].Visibility = StatesController.GetVisibilityOverlay();
+                state[StateImageType.OverlayRight].Visibility = StatesController.GetVisibilityOverlay();
             }
         }
 
@@ -524,36 +359,22 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void ResetEditButtons()
         {
-            SingleButton.Appearance = ControlAppearance.Secondary;
-            FillButton.Appearance = ControlAppearance.Secondary;
-            PickButton.Appearance = ControlAppearance.Secondary;
-            DeleteButton.Appearance = ControlAppearance.Secondary;
-            SelectButton.Appearance = ControlAppearance.Secondary;
-            MoveButton.Appearance = ControlAppearance.Secondary;
+            SingleButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            FillButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            PickButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            DeleteButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            SelectButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            MoveButton.Appearance = StatesController.GetUnPressedButtonAppearance();
         }
 
         private void ResetStatesButtons()
         {
-            ChooseSingleStateButton.Appearance = ControlAppearance.Secondary;
-            ChooseParallelStatesButton.Appearance = ControlAppearance.Secondary;
-            ChooseAllStatesButton.Appearance = ControlAppearance.Secondary;
+            ChooseSingleStateButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            ChooseParallelStatesButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            ChooseAllStatesButton.Appearance = StatesController.GetUnPressedButtonAppearance();
         }
 
         #endregion Buttons Controller
 
-        #region Editor Controller
-
-        private void InitializeGrids()
-        {
-            WriteableBitmap gridBitmap = EditorController.GetGridBackground();
-
-            foreach (var state in stateSourceDictionary.Values)
-            {
-                state[StateImageType.BackgroundLeft].Source = gridBitmap;
-                state[StateImageType.BackgroundRight].Source = gridBitmap;
-            }
-        }
-
-        #endregion Editor
     }
 }

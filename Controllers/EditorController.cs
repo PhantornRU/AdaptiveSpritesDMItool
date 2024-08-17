@@ -10,25 +10,170 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows.Controls;
 using DMISharp;
+using System.Windows.Input;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
     internal static class EditorController
     {
-        public static StateEditType currentStateEditMode = StateEditType.Single;
-        public static StateQuantityType currentStateQuantityMode = StateQuantityType.Single;
         public static StateDirection currentStateDirection;
 
         public static System.Drawing.Point currentMouseDownPosition;
         public static System.Drawing.Point currentMousePosition;
         public static System.Drawing.Point currentMouseUpPosition;
 
-        #region Editor Instruments
 
-        public static void SetPixel(bool isCentralizedState, bool isMirroredState)
+        #region Mouse Controller
+
+        public static void state_MouseDown(MouseButtonEventArgs e, StateDirection _stateDirection)
+        {
+            var stateImage = StatesController.stateSourceDictionary[_stateDirection][StateImageType.Right];
+            currentMouseDownPosition = MouseController.GetModifyMousePosition(e, stateImage);
+            currentMousePosition = currentMouseDownPosition;
+            currentStateDirection = _stateDirection;
+
+            switch (StatesController.currentStateEditMode)
+            {
+                case StateEditType.Single:
+                    EditSingleMode();
+                    break;
+                case StateEditType.Fill:
+                    EditFillModeStart();
+                    break;
+                case StateEditType.Pick:
+                    EditPickMode();
+                    break;
+                case StateEditType.Delete:
+                    EditDeleteMode();
+                    break;
+                case StateEditType.Select:
+                    EditSelectModeStart();
+                    break;
+                case StateEditType.Move:
+                    EditMoveMode();
+                    break;
+            }
+        }
+
+        public static void state_MouseUp(MouseButtonEventArgs e, StateDirection _stateDirection)
+        {
+            var stateImage = StatesController.stateSourceDictionary[_stateDirection][StateImageType.Right];
+            currentMouseUpPosition = MouseController.GetModifyMousePosition(e, stateImage);
+            currentMousePosition = currentMouseUpPosition;
+            currentStateDirection = _stateDirection;
+
+            switch (StatesController.currentStateEditMode)
+            {
+                case StateEditType.Fill:
+                    EditFillModeEnd();
+                    break;
+                case StateEditType.Select:
+                    EditSelectModeEnd();
+                    break;
+            }
+
+        }
+
+        public static void state_MouseMove(MouseEventArgs e, StateDirection _stateDirection)
+        {
+
+            bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
+            if (!mouseIsDown)
+                return;
+            var stateImage = StatesController.stateSourceDictionary[_stateDirection][StateImageType.Right];
+            currentMousePosition = MouseController.GetModifyMousePosition(e, stateImage);
+            currentStateDirection = _stateDirection;
+
+            switch (StatesController.currentStateEditMode)
+            {
+                case StateEditType.Single:
+                    EditSingleMode();
+                    break;
+                case StateEditType.Fill:
+                    EditFillMode();
+                    break;
+                case StateEditType.Pick:
+                    EditPickMode();
+                    break;
+                case StateEditType.Delete:
+                    EditDeleteMode();
+                    break;
+                case StateEditType.Select:
+                    EditSelectMode();
+                    break;
+                case StateEditType.Move:
+                    EditMoveMode();
+                    break;
+            }
+        }
+
+        #endregion Mouse Controller
+
+        #region  User Controller
+
+        public static void EditSingleMode()
+        {
+            SetPixel();
+        }
+
+        public static void EditFillModeStart()
+        {
+
+        }
+
+        public static void EditFillMode()
+        {
+
+        }
+
+        public static void EditFillModeEnd()
+        {
+
+        }
+
+
+        public static void EditPickMode()
+        {
+
+        }
+
+        public static void EditDeleteMode()
+        {
+
+        }
+
+        public static void EditSelectModeStart()
+        {
+
+        }
+
+        public static void EditSelectMode()
+        {
+
+        }
+        public static void EditSelectModeEnd()
+        {
+
+        }
+
+        public static void EditMoveMode()
+        {
+
+        }
+
+        #endregion  User Controller
+
+        #region Editor Modes
+
+
+        #endregion Editor Modes
+
+        #region Editor Functions
+
+        private static void SetPixel()
         {
             System.Drawing.Point mousePos = currentMousePosition;
-            Color color = GetColorModify();
+            Color color = GetSingleColorModify();
 
             var stateDirections = GetStateDirections();
 
@@ -39,20 +184,25 @@ namespace AdaptiveSpritesDMItool.Controllers
                 int bitmapWidth = (int)bitmap.Width;
                 //bitmapWidth = _stateDirection == stateDirectionToModify ? 0 : bitmapWidth;
                 var mousePosXTemp = mousePos.X;
-                mousePos.X = CorrectMousePositionX(stateDirectionToModify, currentStateDirection, mousePos.X, bitmapWidth, isCentralizedState, isMirroredState);
+                mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, bitmapWidth);
                 //Debug.WriteLine($"_stateDirection: {currentStateDirection}; stateDirectionToModify: {stateDirectionToModify}; MousePosX: [Orig: {mousePosXTemp} - Mod: {mousePos.X}]");
                 bitmap.SetPixel(mousePos.X, mousePos.Y, color);
                 bitmapOverlay.SetPixel(mousePos.X, mousePos.Y, color);
             }
         }
 
-        #endregion Editor Instruments
+        public static Color GetSingleColorModify()
+        {
+            return Colors.Red;
+        }
+
+        #endregion Editor Functions
 
         #region States
 
         private static IEnumerable<StateDirection> GetStateDirections()
         {
-            switch (currentStateQuantityMode)
+            switch (StatesController.currentStateQuantityMode)
             {
                 case StateQuantityType.Single:
                     return new[] { currentStateDirection };
@@ -75,14 +225,14 @@ namespace AdaptiveSpritesDMItool.Controllers
             return new[] { _stateDirection, parallelState };
         }
 
-        private static int CorrectMousePositionX(StateDirection stateDirection, StateDirection currentStateDirection, int mouseX, int bitmapWidth, bool isCentralizedState, bool isMirroredState)
+        private static int CorrectMousePositionX(StateDirection stateDirection, int mouseX, int bitmapWidth)
         {
-            if (!isMirroredState || currentStateDirection == stateDirection)
+            if (!StatesController.isMirroredState || currentStateDirection == stateDirection)
             {
                 return mouseX;
             }
             //bitmapWidth = isStateOpposite(stateDirection) ? 0 : bitmapWidth;
-            var additionValueX = isCentralizedState ? -1 : 0;
+            var additionValueX = StatesController.isCentralizedState ? -1 : 0;
             int result = bitmapWidth - mouseX - 1 + additionValueX;
             result = Math.Max(result, 0);
             result = Math.Min(result, bitmapWidth - 1);
@@ -95,13 +245,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             return (int)_stateDirection % 2 == 0;
         }
 
-        public static Color GetColorModify()
-        {
-            return Colors.Red;
-        }
-
         #endregion States
-
 
         #region Grids
 
