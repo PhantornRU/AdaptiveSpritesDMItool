@@ -142,6 +142,12 @@
                         ToolTip="Toggle grid environment."
                         Icon="{ui:SymbolIcon TableSimple24}" Click="GridEnvironmentButton_Click" />
                 <ui:Button
+                        x:Name="GridZIndexEnvironmentButton"
+                        Appearance="Primary"
+                        IsEnabled="True"
+                        ToolTip="Toggle grid under overlay environment."
+                        Icon="{ui:SymbolIcon SubGrid24}" Click="GridZIndexEnvironmentButton_Click"/>
+                <ui:Button
                         x:Name="OverlayEnvironmentButton"
                         Appearance="Primary"
                         IsEnabled="True"

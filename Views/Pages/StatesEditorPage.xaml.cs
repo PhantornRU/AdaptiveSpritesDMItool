@@ -20,6 +20,7 @@ using System.Windows.Media.Imaging;
 using System.IO;
 using AdaptiveSpritesDMItool.Models;
 using AdaptiveSpritesDMItool.Controllers;
+using System.Windows.Controls;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -36,7 +37,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         bool isCentralizedState = true;
         bool isMirroredState = true;
         bool isShowGrid = true;
+        bool isShowAboveGrid = true;
         bool isShowOverlay = true;
+
+        int backgroundZIndexUnder = 0;
+        int backgroundZIndexAbove = 2;
 
         public StatesEditorPage(StatesEditorViewModel viewModel)
         {
@@ -460,6 +465,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             MirrorStatesButton.IsEnabled = EditorController.currentStateQuantityMode != StateQuantityType.Single;
             CentralizeStatesButton.IsEnabled = isMirroredState && (EditorController.currentStateQuantityMode != StateQuantityType.Single);
 
+            GridZIndexEnvironmentButton.IsEnabled = isShowGrid;
+            GridZIndexEnvironmentUpdate();
         }
 
         #endregion Buttons States Controller
@@ -469,12 +476,35 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private void GridEnvironmentButton_Click(object sender, RoutedEventArgs e)
         {
             isShowGrid = !isShowGrid;
+            GridEnvironmentUpdate();
+        }
+
+        private void GridEnvironmentUpdate()
+        {
             GridEnvironmentButton.Appearance = isShowGrid ? ControlAppearance.Primary : ControlAppearance.Secondary;
+            GridZIndexEnvironmentButton.IsEnabled = isShowGrid;
 
             foreach (var state in stateSourceDictionary.Values)
             {
                 state[StateImageType.BackgroundLeft].Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
                 state[StateImageType.BackgroundRight].Visibility = isShowGrid ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private void GridZIndexEnvironmentButton_Click(object sender, RoutedEventArgs e)
+        {
+            isShowAboveGrid = !isShowAboveGrid;
+            GridZIndexEnvironmentUpdate();
+        }
+
+        private void GridZIndexEnvironmentUpdate()
+        {
+            GridZIndexEnvironmentButton.Appearance = isShowAboveGrid ? ControlAppearance.Primary : ControlAppearance.Secondary;
+
+            foreach (var state in stateSourceDictionary.Values)
+            {
+                Panel.SetZIndex(state[StateImageType.BackgroundLeft], isShowAboveGrid ? backgroundZIndexAbove : backgroundZIndexUnder);
+                Panel.SetZIndex(state[StateImageType.BackgroundRight], isShowAboveGrid ? backgroundZIndexAbove : backgroundZIndexUnder);
             }
         }
 
@@ -515,8 +545,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void InitializeGrids()
         {
-
-            WriteableBitmap gridBitmap = EditorController.GetGridBackground(pixelResolution, pixelSize);
+            WriteableBitmap gridBitmap = EditorController.GetGridBackground();
 
             foreach (var state in stateSourceDictionary.Values)
             {
