@@ -16,6 +16,7 @@ namespace AdaptiveSpritesDMItool.Controllers
     {
         public static StateEditType currentStateEditMode = StateEditType.Single;
         public static StateQuantityType currentStateQuantityMode = StateQuantityType.Single;
+        public static StateDirection currentStateDirection;
 
         /// <summary>
         /// Determines whether the state is centralized - setting the pixel in the middle of the pixel
@@ -37,43 +38,69 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// </summary>
         public static Dictionary<StateDirection, Dictionary<StateImageType, System.Windows.Controls.Image>> stateSourceDictionary;
 
-        public static void InitializeSources()
-        {
-            foreach (var (stateDirection, images) in stateSourceDictionary)
-            {
-                images[StateImageType.Left].Source = EnvironmentController.GetEnvironmentImage(stateDirection, false);
-                images[StateImageType.Right].Source = EnvironmentController.GetEnvironmentImage(stateDirection, true);
-            }
+        #region Helpers
 
-            foreach (var (stateDirection, images) in stateSourceDictionary)
-            {
-                images[StateImageType.OverlayLeft].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, false);
-                images[StateImageType.OverlayRight].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, true);
-            }
-        }
+        public static bool isStateOpposite(StateDirection _stateDirection) => (int)_stateDirection % 2 == 0;
 
-        public static void InitializeGrids()
-        {
-            WriteableBitmap gridBitmap = EditorController.GetGridBackground();
+        #endregion Helpers
 
-            foreach (var state in stateSourceDictionary.Values)
-            {
-                state[StateImageType.BackgroundLeft].Source = gridBitmap;
-                state[StateImageType.BackgroundRight].Source = gridBitmap;
-            }
-        }
+
+        #region Updaters
+
+        public static void UpdateCurrentStateDirection(StateDirection _stateDirection) => currentStateDirection = _stateDirection;
+
+        #endregion Updaters
 
 
         #region Getters
 
-        // Set Modes
+        #region States
+
+        public static IEnumerable<StateDirection> GetStateDirections()
+        {
+            switch (currentStateQuantityMode)
+            {
+                case StateQuantityType.Single:
+                    return new[] { currentStateDirection };
+
+                case StateQuantityType.Parallel:
+                    return GetParallelStates(currentStateDirection);
+
+                case StateQuantityType.All:
+                    int parallValue = (int)currentStateDirection / 2 == 1 ? -2 : 2;
+                    return GetParallelStates(currentStateDirection).Union(GetParallelStates((StateDirection)((int)currentStateDirection + parallValue)));
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private static StateDirection[] GetParallelStates(StateDirection _stateDirection)
+        {
+            int parallValue = isStateOpposite(_stateDirection) ? 1 : -1;
+            StateDirection parallelState = _stateDirection + parallValue;
+            return new[] { _stateDirection, parallelState };
+        }
+
+        #endregion States
+
+
+        #region Images
+
+        public static System.Windows.Controls.Image GetRightImage(StateDirection _stateDirection) => stateSourceDictionary[_stateDirection][StateImageType.Right];
+
+        #endregion Images
+
+
+        #region Set Modes
 
         public static void SetCurrentStateQuantityMode(StateQuantityType _currentStateQuantityMode) => currentStateQuantityMode = _currentStateQuantityMode;
 
         public static void SetCurrentStateEditMode(StateEditType _currentStateEditMode) => currentStateEditMode = _currentStateEditMode;
 
+        #endregion Set Modes
 
-        // Toggles
+
+        #region Toggles
 
         public static void ToggleCentralizedState() => isCentralizedState = !isCentralizedState;
 
@@ -85,8 +112,10 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void ToggleShowOverlay() => isShowOverlay = !isShowOverlay;
 
+        #endregion Toggles
 
-        // Enabled Buttons
+
+        #region Enabled Buttons
 
         public static bool GetEnableStateMirrorButton() => currentStateQuantityMode != StateQuantityType.Single;
 
@@ -94,12 +123,17 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static bool GetEnableStateGridZIndexButton() => isShowGrid;
 
-        // Z Indexes
+        #endregion Enabled Buttons
+
+
+        #region Z Indexes
 
         public static int GetBackgroundZIndex() => isShowAboveGrid ? backgroundZIndexAbove : backgroundZIndexUnder;
 
-        
-        // Visibility
+        #endregion Z Indexes
+
+
+        #region Visibility
 
         public static Visibility GetVisibilityOverlay() => GetVisibility(isShowOverlay);
 
@@ -107,8 +141,10 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         private static Visibility GetVisibility(bool isValue) => isValue ? Visibility.Visible : Visibility.Collapsed;
 
+        #endregion Visibility
 
-        // ControlAppearance
+
+        #region ControlAppearance
 
         public static ControlAppearance GetControlAppearanceOverlay() => GetControlAppearance(isShowOverlay);
 
@@ -125,6 +161,8 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static ControlAppearance GetPressedButtonAppearance() => ControlAppearance.Primary;
 
         public static ControlAppearance GetUnPressedButtonAppearance() => ControlAppearance.Secondary;
+
+        #endregion ControlAppearance
 
         #endregion Getters
     }

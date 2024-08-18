@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace AdaptiveSpritesDMItool.Controllers
@@ -16,16 +17,37 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static DataImageState dataImageState;
         public static DataImageState dataImageStateOverlay;
 
-        public static int widthImage;
-        public static int heightImage;
+        public static WriteableBitmap gridCell;
+        public static WriteableBitmap gridCellSelect;
+
+        public static int widthStateImage;
+        public static int heightStateImage;
+
+        //The dimensions of the bitmap on which the interface elements are drawn.
+        public static int widthBitmapUI = 257;
+        public static int heightBitmapUI = 257;
+        public static int pixelSize = 8;
 
         #region Loaders
 
-        public static void LoadEnvironment()
+        /// <summary>
+        /// Load files and initialize Environment
+        /// </summary>
+        public static void InitializeEnvironment()
         {
-            //Debug.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            string path = "TestImages";
+            LoadDataImageFiles();
+            LoadGridCell();
 
+        }
+
+        private static void SetData()
+        {
+            pixelSize = GetPixelSizeFromResolution(heightStateImage);
+        }
+
+        private static void LoadDataImageFiles()
+        {
+            string path = "TestImages";
 
             string fullpath = $"{path}/testBodyHuman.dmi";
             using DMIFile file = new DMIFile(fullpath);
@@ -35,10 +57,10 @@ namespace AdaptiveSpritesDMItool.Controllers
 
             Debug.WriteLine($"Loaded {file}({file.States.Count}).");
 
-            widthImage = currentState.Width;
-            heightImage = currentState.Height;
+            widthStateImage = currentState.Width;
+            heightStateImage = currentState.Height;
 
-            Debug.WriteLine($"Image - Width: {widthImage}; Height: {heightImage}");
+            Debug.WriteLine($"Image - Width: {widthStateImage}; Height: {heightStateImage}");
 
 
             // Overlay Preview File
@@ -49,6 +71,18 @@ namespace AdaptiveSpritesDMItool.Controllers
             dataImageStateOverlay = new DataImageState(currentStateOverlay);
 
             Debug.WriteLine($"Loaded {fileOverlay}({fileOverlay.States.Count}).");
+        }
+
+        private static void LoadGridCell()
+        {
+            string path = "Resources";
+            string fullPath = $"{path}/grid1.png";
+            string fullPathSelect = $"{path}/grid1_select.png";
+
+            gridCell = new WriteableBitmap(new BitmapImage(new Uri(fullPath, UriKind.Relative)));
+            gridCellSelect = new WriteableBitmap(new BitmapImage(new Uri(fullPathSelect, UriKind.Relative)));
+
+            //Debug.WriteLine($"Loaded {fullPath} - gridCell {gridCell}, {gridCell.Width}, {gridCell.PixelWidth}");
         }
 
         #endregion Loaders
@@ -70,7 +104,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Paths
 
-        public static string GetGridPath() => System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", $"grid{EnvironmentController.heightImage}.png");
+        public static string GetGridPath() => System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", $"grid{EnvironmentController.heightStateImage}.png");
 
         #endregion Paths
 
@@ -87,6 +121,30 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             WriteableBitmap bitmapOverlay = dataImageStateOverlay.GetBMPstate(_stateDirection, _isEdited);
             return bitmapOverlay;
+        }
+
+        public static System.Windows.Media.Color GetSelectorColor() => Colors.Black;
+
+        public static System.Windows.Media.Color GetGridColor()
+        {
+            Color colorTemp = Colors.Black;
+            byte alpha = 100;
+            Color color = System.Windows.Media.Color.FromArgb(alpha, colorTemp.R, colorTemp.G, colorTemp.B);
+            return color;
+        }
+
+        private static int GetPixelSizeFromResolution(int _pixelResolution)
+        {
+            int pixelSize = 8;
+            if (_pixelResolution == 64)
+            {
+                pixelSize = 4;
+            }
+            else if (_pixelResolution == 16)
+            {
+                pixelSize = 16;
+            }
+            return pixelSize;
         }
 
         #endregion Getters
