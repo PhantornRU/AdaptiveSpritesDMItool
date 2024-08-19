@@ -123,16 +123,6 @@ namespace AdaptiveSpritesDMItool.Controllers
             return bitmapOverlay;
         }
 
-        public static System.Windows.Media.Color GetSelectorColor() => Colors.Black;
-
-        public static System.Windows.Media.Color GetGridColor()
-        {
-            Color colorTemp = Colors.Black;
-            byte alpha = 100;
-            Color color = System.Windows.Media.Color.FromArgb(alpha, colorTemp.R, colorTemp.G, colorTemp.B);
-            return color;
-        }
-
         private static int GetPixelSizeFromResolution(int _pixelResolution)
         {
             int pixelSize = 8;
@@ -146,6 +136,26 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
             return pixelSize;
         }
+
+
+        #region Get Colors
+
+        public static System.Windows.Media.Color GetSelectorColor() => Colors.Black;
+
+        public static System.Windows.Media.Color GetGridColor()
+        {
+            Color colorTemp = Colors.Black;
+            byte alpha = 100;
+            Color color = System.Windows.Media.Color.FromArgb(alpha, colorTemp.R, colorTemp.G, colorTemp.B);
+            return color;
+        }
+
+        public static System.Windows.Media.Color GetGridBorderColor()
+        {
+            return Colors.Black;
+        }
+
+        #endregion Get Colors
 
         #endregion Getters
     }

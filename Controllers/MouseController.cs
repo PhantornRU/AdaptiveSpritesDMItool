@@ -108,6 +108,10 @@ namespace AdaptiveSpritesDMItool.Controllers
             StatesController.UpdateCurrentStateDirection(_stateDirection);
             isMouseInImage = true;
 
+            bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
+            if (!mouseIsDown)
+                return;
+            EditorController.EditWhenEnterImage();
         }
 
         public static void state_MouseLeave(MouseEventArgs e, StateDirection _stateDirection)

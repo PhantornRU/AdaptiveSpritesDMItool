@@ -19,6 +19,7 @@ using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats;
 using System.Windows.Media.Media3D;
 using System.Windows;
+using System.Drawing;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
@@ -38,6 +39,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void EditFillModeStart()
         {
+            ClearSelectors();
             ViewMultSelectorAtCurrentToMDownPosition();
         }
 
@@ -64,6 +66,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void EditSelectModeStart()
         {
+            ClearSelectors();
             ViewSingleSelectorAtCurrentPosition();
         }
 
@@ -80,6 +83,11 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static void EditMoveMode()
         {
             ViewSingleSelectorAtCurrentPosition();
+        }
+
+        public static void EditWhenEnterImage()
+        {
+            ClearSelectors();
         }
 
         #endregion Editor Modes
@@ -190,7 +198,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
             for (int i = 0; i < borderThickness; i++)
             {
-                bitmap.DrawRectangle(0 + i, 0 + i, bitmap.PixelWidth - i - 1, bitmap.PixelHeight - i - 1, Colors.Black);
+                bitmap.DrawRectangle(0 + i, 0 + i, bitmap.PixelWidth - i - 1, bitmap.PixelHeight - i - 1, EnvironmentController.GetGridBorderColor());
             }
 
             return bitmap;
@@ -214,8 +222,8 @@ namespace AdaptiveSpritesDMItool.Controllers
 
             foreach (var stateDirectionToModify in stateDirections)
             {
-                mousePos1.X = CorrectMousePositionX(stateDirectionToModify, mousePos1.X, bitmapWidth);
-                mousePos2.X = CorrectMousePositionX(stateDirectionToModify, mousePos2.X, bitmapWidth);
+                //mousePos1.X = CorrectMousePositionX(stateDirectionToModify, mousePos1.X, bitmapWidth);
+                //mousePos2.X = CorrectMousePositionX(stateDirectionToModify, mousePos2.X, bitmapWidth);
                 DrawSelectionRect(bitmap, mousePos1, mousePos2, pixelSize);
                 StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionLeft].Source = bitmap;
                 StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionRight].Source = bitmap;
@@ -223,6 +231,7 @@ namespace AdaptiveSpritesDMItool.Controllers
                 Debug.WriteLine($"stateDirectionToModify: {stateDirectionToModify}; mousePos1: {mousePos1}; mousePos2: {mousePos2}");
             }
         }
+
         public static void ClearSelectors()
         {
             int pixelSize = EnvironmentController.pixelSize;
@@ -298,6 +307,19 @@ namespace AdaptiveSpritesDMItool.Controllers
                 }
             }
 
+            // Draw points for debugging
+            VisualizePoints(bitmap, point1, point2, pixelSize);
+        }
+
+        private static void VisualizePoints(WriteableBitmap bitmap, System.Drawing.Point point1, System.Drawing.Point point2, int pixelSize)
+        {
+            byte alpha = 150;
+            System.Windows.Media.Color redColor = System.Windows.Media.Colors.Red;
+            redColor.A = alpha;
+            System.Windows.Media.Color greenColor = System.Windows.Media.Colors.Green;
+            greenColor.A = alpha;
+            bitmap.FillRectangle(point1.X * pixelSize, point1.Y * pixelSize, point1.X * pixelSize + pixelSize, point1.Y * pixelSize + pixelSize, redColor);
+            bitmap.FillRectangle(point2.X * pixelSize, point2.Y * pixelSize, point2.X * pixelSize + pixelSize, point2.Y * pixelSize + pixelSize, greenColor);
         }
 
         #endregion Selector
