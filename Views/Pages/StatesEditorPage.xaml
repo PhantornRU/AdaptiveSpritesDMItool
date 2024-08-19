@@ -80,15 +80,15 @@
                 <!--Move pixels of the edited part-->
                 <Separator Margin="6,0,6,0" />
                 <ui:Button
-                        x:Name="SelectButton"
-                        Appearance="Secondary"
-                        ToolTip="Select cells."
-                        Icon="{ui:SymbolIcon SquareHintApps24}" Click="SelectButton_Click" />
-                <ui:Button
                         x:Name="MoveButton"
                         Appearance="Secondary"
                         ToolTip="Move cell."
                         Icon="{ui:SymbolIcon ArrowMove24}" Click="MoveButton_Click" />
+                <ui:Button
+                        x:Name="SelectButton"
+                        Appearance="Secondary"
+                        ToolTip="Select cells."
+                        Icon="{ui:SymbolIcon SquareHintApps24}" Click="SelectButton_Click" />
 
                 <!--Switches "One, Horizontal, Vertical, All" states-->
                 <Separator Margin="10,0,10,0" />

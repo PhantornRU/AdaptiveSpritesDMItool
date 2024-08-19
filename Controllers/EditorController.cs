@@ -17,6 +17,8 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats;
+using System.Windows.Media.Media3D;
+using System.Windows;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
@@ -24,68 +26,81 @@ namespace AdaptiveSpritesDMItool.Controllers
     {
         #region  User Controller
 
+        #endregion  User Controller
+
+        #region Editor Modes
+
         public static void EditSingleMode()
         {
             //SetPixel();
-
-            if (MouseController.isMouseInImage)
-            {
-                //EditorController.SetGridCellSelector();
-                SetSelectors(MouseController.currentMouseDownPosition, MouseController.currentMousePosition);
-            }
+            ViewSingleSelectorAtCurrentPosition();
         }
 
         public static void EditFillModeStart()
         {
-
+            ViewMultSelectorAtCurrentToMDownPosition();
         }
 
         public static void EditFillMode()
         {
-
+            ViewMultSelectorAtCurrentToMDownPosition();
         }
 
         public static void EditFillModeEnd()
         {
-
+            ClearSelectors();
         }
 
 
         public static void EditPickMode()
         {
-
+            ViewSingleSelectorAtCurrentPosition();
         }
 
         public static void EditDeleteMode()
         {
-
+            ClearSelectors();
         }
 
         public static void EditSelectModeStart()
         {
-
+            ViewSingleSelectorAtCurrentPosition();
         }
 
         public static void EditSelectMode()
         {
-
+            ViewMultSelectorAtCurrentToMDownPosition();
         }
+
         public static void EditSelectModeEnd()
         {
-
+            //ClearSelectors();
         }
 
         public static void EditMoveMode()
         {
-
+            ViewSingleSelectorAtCurrentPosition();
         }
 
-        #endregion  User Controller
-
-        #region Editor Modes
-
-
         #endregion Editor Modes
+
+
+        #region Editor View
+
+        private static void ViewMultSelectorAtCurrentToMDownPosition()
+        {
+            if (MouseController.isMouseInImage)
+                SetSelectors(MouseController.currentMouseDownPosition, MouseController.currentMousePosition);
+        }
+
+        private static void ViewSingleSelectorAtCurrentPosition()
+        {
+            if (MouseController.isMouseInImage)
+                SetSelectors(MouseController.currentMousePosition);
+        }
+
+        #endregion Editor View
+
 
         #region Editor Functions
 
@@ -126,6 +141,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             int result = bitmapWidth - mouseX - 1 + additionValueX;
             result = Math.Max(result, 0);
             result = Math.Min(result, bitmapWidth - 1);
+            Debug.WriteLine($"[Orig: {mouseX} - Mod: {result}]");
             return result;
 
         }
@@ -201,75 +217,87 @@ namespace AdaptiveSpritesDMItool.Controllers
                 mousePos1.X = CorrectMousePositionX(stateDirectionToModify, mousePos1.X, bitmapWidth);
                 mousePos2.X = CorrectMousePositionX(stateDirectionToModify, mousePos2.X, bitmapWidth);
                 DrawSelectionRect(bitmap, mousePos1, mousePos2, pixelSize);
-                //StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionLeft].Source = bitmap;
+                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionLeft].Source = bitmap;
+                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionRight].Source = bitmap;
+
+                Debug.WriteLine($"stateDirectionToModify: {stateDirectionToModify}; mousePos1: {mousePos1}; mousePos2: {mousePos2}");
+            }
+        }
+        public static void ClearSelectors()
+        {
+            int pixelSize = EnvironmentController.pixelSize;
+            System.Windows.Media.Color color = EnvironmentController.GetGridColor();
+            int width = EnvironmentController.widthBitmapUI;
+            int height = EnvironmentController.heightBitmapUI;
+            WriteableBitmap bitmap = new WriteableBitmap(width, height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
+            var stateDirections = StatesController.GetAllStates();
+            foreach (var stateDirectionToModify in stateDirections)
+            {
+                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionLeft].Source = bitmap;
                 StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionRight].Source = bitmap;
             }
         }
+
         static void DrawSelectionRect(WriteableBitmap bitmap, System.Drawing.Point point, int pixelSize) => DrawSelectionRect(bitmap, point, point, pixelSize);
         static void DrawSelectionRect(WriteableBitmap bitmap, System.Drawing.Point point1, System.Drawing.Point point2, int pixelSize)
         {
             int lineLength = 3;
             int lineThickness = 2;
 
-            if (point1.X == point2.X)
-                point2.X += 1;
-            if (point1.Y == point2.Y)
-                point2.Y += 1;
-
             int minX = Math.Min(point1.X, point2.X) * pixelSize;
             int minY = Math.Min(point1.Y, point2.Y) * pixelSize;
-            int maxX = Math.Max(point1.X, point2.X) * pixelSize;
-            int maxY = Math.Max(point1.Y, point2.Y) * pixelSize;
+            int maxX = Math.Max(point1.X + 1, point2.X + 1) * pixelSize;
+            int maxY = Math.Max(point1.Y + 1, point2.Y + 1) * pixelSize;
 
-            for (int i = minX; i <= maxX; i += pixelSize)
+            for (int thickness = 0; thickness < lineThickness; thickness++)
             {
-                for (int lengthHorizontal = 0; lengthHorizontal < lineLength; lengthHorizontal++)
+                for (int i = minX; i <= maxX; i += pixelSize)
                 {
-                    int tAdd = i + lengthHorizontal;
-                    if (tAdd <= maxX)
+                    for (int lengthHorizontal = 0; lengthHorizontal < lineLength; lengthHorizontal++)
                     {
-                        for (int thickness = 0; thickness < lineThickness; thickness++)
+                        int tAdd = i + lengthHorizontal;
+                        if (tAdd <= maxX)
                         {
-                            bitmap.SetPixel(tAdd, minY - thickness, EnvironmentController.GetSelectorColor());
-                            bitmap.SetPixel(tAdd, maxY + thickness, EnvironmentController.GetSelectorColor());
+                            if(minY - thickness >= 0)
+                                bitmap.SetPixel(tAdd, minY - thickness, EnvironmentController.GetSelectorColor());
+                            if(maxY + thickness <= bitmap.Height)
+                                bitmap.SetPixel(tAdd, maxY + thickness, EnvironmentController.GetSelectorColor());
+                        }
+                        int tMin = i - lengthHorizontal;
+                        if (tMin >= minX)
+                        {
+                            if(minY - thickness >= 0)
+                                bitmap.SetPixel(tMin, minY - thickness, EnvironmentController.GetSelectorColor());
+                            if(maxY + thickness <= bitmap.Height)
+                                bitmap.SetPixel(tMin, maxY + thickness, EnvironmentController.GetSelectorColor());
                         }
                     }
-                    int tMin = i - lengthHorizontal;
-                    if (tMin >= minX)
+                }
+
+                for (int j = minY; j <= maxY; j += pixelSize)
+                {
+                    for (int lengthVertical = 0; lengthVertical < lineLength; lengthVertical++)
                     {
-                        for (int thickness = 0; thickness < lineThickness; thickness++)
+                        int tAdd = j + lengthVertical;
+                        if (tAdd <= maxY)
                         {
-                            bitmap.SetPixel(tMin, minY - thickness, EnvironmentController.GetSelectorColor());
-                            bitmap.SetPixel(tMin, maxY + thickness, EnvironmentController.GetSelectorColor());
+                            if(minX - thickness >= 0)
+                                bitmap.SetPixel(minX - thickness, tAdd, EnvironmentController.GetSelectorColor());
+                            if(maxX + thickness <= bitmap.Width)
+                                bitmap.SetPixel(maxX + thickness, tAdd, EnvironmentController.GetSelectorColor());
+                        }
+                        int tMin = j - lengthVertical;
+                        if (tMin >= minY)
+                        {
+                            if(minX - thickness >= 0)
+                                bitmap.SetPixel(minX - thickness, tMin, EnvironmentController.GetSelectorColor());
+                            if(maxX + thickness <= bitmap.Width)
+                                bitmap.SetPixel(maxX + thickness, tMin, EnvironmentController.GetSelectorColor());
                         }
                     }
                 }
             }
 
-            for (int j = minY; j <= maxY; j += pixelSize)
-            {
-                for (int lengthVertical = 0; lengthVertical < lineLength; lengthVertical++)
-                {
-                    int tAdd = j + lengthVertical;
-                    if (tAdd <= maxY)
-                    {
-                        for (int thickness = 0; thickness < lineThickness; thickness++)
-                        {
-                            bitmap.SetPixel(minX - thickness, tAdd, EnvironmentController.GetSelectorColor());
-                            bitmap.SetPixel(maxX + thickness, tAdd, EnvironmentController.GetSelectorColor());
-                        }
-                    }
-                    int tMin = j - lengthVertical;
-                    if (tMin >= minY)
-                    {
-                        for (int thickness = 0; thickness < lineThickness; thickness++)
-                        {
-                            bitmap.SetPixel(minX - thickness, tMin, EnvironmentController.GetSelectorColor());
-                            bitmap.SetPixel(maxX + thickness, tMin, EnvironmentController.GetSelectorColor());
-                        }
-                    }
-                }
-            }
         }
 
         #endregion Selector
