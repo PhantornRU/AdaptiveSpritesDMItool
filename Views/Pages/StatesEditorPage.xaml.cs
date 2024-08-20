@@ -217,57 +217,108 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void imagePreviewRightSouth_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            MouseController.state_MouseDown(e, StateDirection.South);
+            MouseController.state_MouseDown(e, StateDirection.South, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftSouth_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            MouseController.state_MouseDown(e, StateDirection.South, StateImageSideType.Left);
         }
 
         private void imagePreviewRightSouth_MouseMove(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseMove(e, StateDirection.South);
+            MouseController.state_MouseMove(e, StateDirection.South, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftSouth_MouseMove(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseMove(e, StateDirection.South, StateImageSideType.Left);
         }
 
         private void imagePreviewRightSouth_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            MouseController.state_MouseUp(e, StateDirection.South);
+            MouseController.state_MouseUp(e, StateDirection.South, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftSouth_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MouseController.state_MouseUp(e, StateDirection.South, StateImageSideType.Left);
         }
 
         private void imagePreviewRightSouth_MouseEnter(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseEnter(e, StateDirection.South);
+            MouseController.state_MouseEnter(e, StateDirection.South, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftSouth_MouseEnter(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseEnter(e, StateDirection.South, StateImageSideType.Left);
         }
 
         private void imagePreviewRightSouth_MouseLeave(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseLeave(e, StateDirection.South);
+            MouseController.state_MouseLeave(e, StateDirection.South, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftSouth_MouseLeave(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseLeave(e, StateDirection.South, StateImageSideType.Left);
         }
 
         #endregion Mouse Buttons - South Preview
+
 
         #region Mouse Buttons - North Preview
 
         private void imagePreviewRightNorth_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            MouseController.state_MouseDown(e, StateDirection.North);
+            MouseController.state_MouseDown(e, StateDirection.North, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftNorth_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            MouseController.state_MouseDown(e, StateDirection.North, StateImageSideType.Left);
         }
 
         private void imagePreviewRightNorth_MouseMove(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseMove(e, StateDirection.North);
+            MouseController.state_MouseMove(e, StateDirection.North, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftNorth_MouseMove(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseMove(e, StateDirection.North, StateImageSideType.Left);
         }
 
         private void imagePreviewRightNorth_MouseUp(object sender, MouseButtonEventArgs e)
         {
 
-            MouseController.state_MouseUp(e, StateDirection.North);
+            MouseController.state_MouseUp(e, StateDirection.North, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftNorth_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MouseController.state_MouseUp(e, StateDirection.North, StateImageSideType.Left);
         }
 
         private void imagePreviewRightNorth_MouseEnter(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseEnter(e, StateDirection.North);
+            MouseController.state_MouseEnter(e, StateDirection.North, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftNorth_MouseEnter(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseEnter(e, StateDirection.North, StateImageSideType.Left);
         }
 
         private void imagePreviewRightNorth_MouseLeave(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseLeave(e, StateDirection.North);
+            MouseController.state_MouseLeave(e, StateDirection.North, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftNorth_MouseLeave(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseLeave(e, StateDirection.North, StateImageSideType.Left);
         }
 
 
@@ -278,28 +329,53 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void imagePreviewRightEast_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            MouseController.state_MouseDown(e, StateDirection.East);
+            MouseController.state_MouseDown(e, StateDirection.East, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftEast_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            MouseController.state_MouseDown(e, StateDirection.East, StateImageSideType.Left);
         }
 
         private void imagePreviewRightEast_MouseMove(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseMove(e, StateDirection.East);
+            MouseController.state_MouseMove(e, StateDirection.East, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftEast_MouseMove(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseMove(e, StateDirection.East, StateImageSideType.Left);
         }
 
         private void imagePreviewRightEast_MouseUp(object sender, MouseButtonEventArgs e)
         {
 
-            MouseController.state_MouseUp(e, StateDirection.East);
+            MouseController.state_MouseUp(e, StateDirection.East, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftEast_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MouseController.state_MouseUp(e, StateDirection.East, StateImageSideType.Left);
         }
 
         private void imagePreviewRightWest_MouseEnter(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseEnter(e, StateDirection.East);
+            MouseController.state_MouseEnter(e, StateDirection.East, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftEast_MouseEnter(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseEnter(e, StateDirection.East, StateImageSideType.Left);
         }
 
         private void imagePreviewRightWest_MouseLeave(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseLeave(e, StateDirection.East);
+            MouseController.state_MouseLeave(e, StateDirection.East, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftEast_MouseLeave(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseLeave(e, StateDirection.East, StateImageSideType.Left);
         }
 
         #endregion Mouse Buttons - East Preview
@@ -309,27 +385,52 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void imagePreviewRightWest_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            MouseController.state_MouseDown(e, StateDirection.West);
+            MouseController.state_MouseDown(e, StateDirection.West, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftWest_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            MouseController.state_MouseDown(e, StateDirection.West, StateImageSideType.Left);
         }
 
         private void imagePreviewRightWest_MouseMove(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseMove(e, StateDirection.West);
+            MouseController.state_MouseMove(e, StateDirection.West, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftWest_MouseMove(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseMove(e, StateDirection.West, StateImageSideType.Left);
         }
 
         private void imagePreviewRightWest_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            MouseController.state_MouseUp(e, StateDirection.West);
+            MouseController.state_MouseUp(e, StateDirection.West, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftWest_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MouseController.state_MouseUp(e, StateDirection.West, StateImageSideType.Left);
         }
 
         private void imagePreviewRightEast_MouseEnter(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseEnter(e, StateDirection.West);
+            MouseController.state_MouseEnter(e, StateDirection.West, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftWest_MouseEnter(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseEnter(e, StateDirection.West, StateImageSideType.Left);
         }
 
         private void imagePreviewRightEast_MouseLeave(object sender, MouseEventArgs e)
         {
-            MouseController.state_MouseLeave(e, StateDirection.West);
+            MouseController.state_MouseLeave(e, StateDirection.West, StateImageSideType.Right);
+        }
+
+        private void imagePreviewLeftWest_MouseLeave(object sender, MouseEventArgs e)
+        {
+            MouseController.state_MouseLeave(e, StateDirection.West, StateImageSideType.Left);
         }
 
         #endregion Mouse Buttons - West Preview

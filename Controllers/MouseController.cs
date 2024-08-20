@@ -21,9 +21,9 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Buttons
 
-        public static void state_MouseDown(MouseButtonEventArgs e, StateDirection _stateDirection)
+        public static void state_MouseDown(MouseButtonEventArgs e, StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
-            var stateImage = StatesController.GetRightImage(_stateDirection);
+            var stateImage = StatesController.GetImage(_stateDirection, _stateImageSideType);
 
             currentMouseDownPosition = GetModifyMousePosition(e, stateImage);
             currentMousePosition = currentMouseDownPosition;
@@ -54,9 +54,9 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
-        public static void state_MouseUp(MouseButtonEventArgs e, StateDirection _stateDirection)
+        public static void state_MouseUp(MouseButtonEventArgs e, StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
-            var stateImage = StatesController.GetRightImage(_stateDirection);
+            var stateImage = StatesController.GetImage(_stateDirection, _stateImageSideType);
 
             currentMouseUpPosition = GetModifyMousePosition(e, stateImage);
             currentMousePosition = currentMouseUpPosition;
@@ -76,12 +76,12 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         }
 
-        public static void state_MouseMove(MouseEventArgs e, StateDirection _stateDirection)
+        public static void state_MouseMove(MouseEventArgs e, StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
             bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
             if (!mouseIsDown)
                 return;
-            var stateImage = StatesController.GetRightImage(_stateDirection);
+            var stateImage = StatesController.GetImage(_stateDirection, _stateImageSideType);
             StatesController.UpdateCurrentStateDirection(_stateDirection);
 
             currentMousePosition = GetModifyMousePosition(e, stateImage);
@@ -112,7 +112,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
-        public static void state_MouseEnter(MouseEventArgs e, StateDirection _stateDirection)
+        public static void state_MouseEnter(MouseEventArgs e, StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
             StatesController.UpdateCurrentStateDirection(_stateDirection);
             isMouseInImage = true;
@@ -123,7 +123,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             EditorController.EditWhenEnterImage();
         }
 
-        public static void state_MouseLeave(MouseEventArgs e, StateDirection _stateDirection)
+        public static void state_MouseLeave(MouseEventArgs e, StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
             isMouseInImage = false;
         }

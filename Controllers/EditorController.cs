@@ -31,18 +31,18 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static void EditSingleMode()
         {
             //SetPixel();
-            ViewSingleSelectorAtCurrentPosition();
+            ViewSingleSelectorAtCurrentPosition(StateImageSideType.Left);
         }
 
         public static void EditFillModeStart()
         {
             ClearSelectors();
-            ViewMultSelectorAtCurrentToMDownPosition();
+            ViewMultSelectorAtCurrentToMDownPosition(StateImageSideType.Left);
         }
 
         public static void EditFillMode()
         {
-            ViewMultSelectorAtCurrentToMDownPosition();
+            ViewMultSelectorAtCurrentToMDownPosition(StateImageSideType.Left);
         }
 
         public static void EditFillModeEnd()
@@ -78,12 +78,12 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static void EditSelectModeStart()
         {
             ClearSelectors();
-            ViewSingleSelectorAtCurrentPosition();
+            ViewSingleSelectorAtCurrentPosition(StateImageSideType.Right);
         }
 
         public static void EditSelectMode()
         {
-            ViewMultSelectorAtCurrentToMDownPosition();
+            ViewMultSelectorAtCurrentToMDownPosition(StateImageSideType.Right);
         }
 
         public static void EditSelectModeEnd()
@@ -93,7 +93,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void EditMoveMode()
         {
-            ViewSingleSelectorAtCurrentPosition();
+            ViewSingleSelectorAtCurrentPosition(StateImageSideType.Right);
         }
 
         public static void EditWhenEnterImage()
@@ -106,16 +106,16 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Editor View
 
-        private static void ViewMultSelectorAtCurrentToMDownPosition()
+        private static void ViewMultSelectorAtCurrentToMDownPosition(StateImageSideType stateImageSideType)
         {
             if (MouseController.isMouseInImage)
-                SetSelectors(MouseController.currentMouseDownPosition, MouseController.currentMousePosition);
+                SetSelectors(stateImageSideType, MouseController.currentMouseDownPosition, MouseController.currentMousePosition);
         }
 
-        private static void ViewSingleSelectorAtCurrentPosition()
+        private static void ViewSingleSelectorAtCurrentPosition(StateImageSideType stateImageSideType)
         {
             if (MouseController.isMouseInImage)
-                SetSelectors(MouseController.currentMousePosition);
+                SetSelectors(stateImageSideType, MouseController.currentMousePosition);
         }
 
         #endregion Editor View
@@ -123,32 +123,6 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Editor Functions
 
-        #region Draw Functions
-
-        private static void SetPixel()
-        {
-            System.Drawing.Point mousePos = MouseController.GetCurrentMousePosition();
-            System.Windows.Media.Color color = GetSingleColorModify();
-
-            var stateDirections = StatesController.GetStateDirections();
-
-            foreach (var stateDirectionToModify in stateDirections)
-            {
-                WriteableBitmap bitmap = EnvironmentController.GetEnvironmentImage(stateDirectionToModify, true);
-                WriteableBitmap bitmapOverlay = EnvironmentController.GetEnvironmentImageOverlay(stateDirectionToModify, true);
-                int bitmapWidth = (int)bitmap.Width;
-                mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, bitmapWidth);
-                bitmap.SetPixel(mousePos.X, mousePos.Y, color);
-                bitmapOverlay.SetPixel(mousePos.X, mousePos.Y, color);
-            }
-        }
-
-        public static System.Windows.Media.Color GetSingleColorModify()
-        {
-            return Colors.Red;
-        }
-
-        #endregion Draw Functions
 
         #region Helpers
 
@@ -243,10 +217,36 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #endregion Grids
 
+        #region
+
+        private static void SetPixel()
+        {
+            System.Drawing.Point mousePos = MouseController.GetCurrentMousePosition();
+            System.Windows.Media.Color color = GetSingleColorModify();
+
+            var stateDirections = StatesController.GetStateDirections();
+
+            foreach (var stateDirectionToModify in stateDirections)
+            {
+                WriteableBitmap bitmap = EnvironmentController.GetEnvironmentImage(stateDirectionToModify, true);
+                WriteableBitmap bitmapOverlay = EnvironmentController.GetEnvironmentImageOverlay(stateDirectionToModify, true);
+                int bitmapWidth = (int)bitmap.Width;
+                mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, bitmapWidth);
+                bitmap.SetPixel(mousePos.X, mousePos.Y, color);
+                bitmapOverlay.SetPixel(mousePos.X, mousePos.Y, color);
+            }
+        }
+
+        public static System.Windows.Media.Color GetSingleColorModify()
+        {
+            return Colors.Red;
+        }
+
+        #endregion Draw
 
         #region Selector
-        public static void SetSelectors(System.Drawing.Point mousePos1) => SetSelectors(mousePos1, mousePos1);
-        public static void SetSelectors(System.Drawing.Point mousePoint1, System.Drawing.Point mousePoint2)
+        public static void SetSelectors(StateImageSideType stateImageSideType, System.Drawing.Point mousePos1) => SetSelectors(stateImageSideType, mousePos1, mousePos1);
+        public static void SetSelectors(StateImageSideType stateImageSideType, System.Drawing.Point mousePoint1, System.Drawing.Point mousePoint2)
         {
             int pixelSize = EnvironmentController.pixelSize;
             System.Windows.Media.Color color = EnvironmentController.GetGridColor();
@@ -263,7 +263,7 @@ namespace AdaptiveSpritesDMItool.Controllers
                 mousePoint1 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint1, imageSize);
                 mousePoint2 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint2, imageSize);
                 DrawSelectionRect(bitmap, mousePoint1, mousePoint2, pixelSize);
-                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.Selection][StateImageSideType.Right].Source = bitmap;
+                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.Selection][stateImageSideType].Source = bitmap;
             }
         }
 

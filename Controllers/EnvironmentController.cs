@@ -38,12 +38,12 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// </summary>
         public static void InitializeEnvironment()
         {
+            InitializeData();
             LoadDataImageFiles();
             LoadGridCell();
-
         }
 
-        private static void SetData()
+        private static void InitializeData()
         {
             pixelSize = GetPixelSizeFromResolution(heightStateImage);
         }

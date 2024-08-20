@@ -201,7 +201,12 @@
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewLeftSouth"                              
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                                RenderOptions.EdgeMode="Aliased">
+                                RenderOptions.EdgeMode="Aliased"
+                                MouseDown="imagePreviewLeftSouth_MouseDown" 
+                                MouseUp="imagePreviewLeftSouth_MouseUp" 
+                                MouseMove="imagePreviewLeftSouth_MouseMove" 
+                                MouseEnter="imagePreviewLeftSouth_MouseEnter" 
+                                MouseLeave="imagePreviewLeftSouth_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewLeftSouth"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -229,8 +234,8 @@
                                 MouseDown="imagePreviewRightSouth_MouseDown" 
                                 MouseUp="imagePreviewRightSouth_MouseUp" 
                                 MouseMove="imagePreviewRightSouth_MouseMove" 
-                               MouseEnter="imagePreviewRightSouth_MouseEnter" 
-                               MouseLeave="imagePreviewRightSouth_MouseLeave">
+                                MouseEnter="imagePreviewRightSouth_MouseEnter" 
+                                MouseLeave="imagePreviewRightSouth_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewRightSouth"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -268,7 +273,12 @@
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewLeftNorth"                              
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                                RenderOptions.EdgeMode="Aliased">
+                                RenderOptions.EdgeMode="Aliased"
+                                MouseDown="imagePreviewLeftNorth_MouseDown" 
+                                MouseUp="imagePreviewLeftNorth_MouseUp" 
+                                MouseMove="imagePreviewLeftNorth_MouseMove" 
+                                MouseEnter="imagePreviewLeftNorth_MouseEnter" 
+                                MouseLeave="imagePreviewLeftNorth_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewLeftNorth"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -295,7 +305,9 @@
                                 RenderOptions.EdgeMode="Aliased" 
                                 MouseDown="imagePreviewRightNorth_MouseDown" 
                                 MouseUp="imagePreviewRightNorth_MouseUp" 
-                                MouseMove="imagePreviewRightNorth_MouseMove" MouseEnter="imagePreviewRightNorth_MouseEnter" MouseLeave="imagePreviewRightNorth_MouseLeave">
+                                MouseMove="imagePreviewRightNorth_MouseMove" 
+                                MouseEnter="imagePreviewRightNorth_MouseEnter" 
+                                MouseLeave="imagePreviewRightNorth_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewRightNorth"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -333,7 +345,12 @@
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewLeftEast"                              
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                                RenderOptions.EdgeMode="Aliased">
+                                RenderOptions.EdgeMode="Aliased"
+                                MouseDown="imagePreviewLeftEast_MouseDown" 
+                                MouseUp="imagePreviewLeftEast_MouseUp" 
+                                MouseMove="imagePreviewLeftEast_MouseMove" 
+                                MouseEnter="imagePreviewLeftEast_MouseEnter" 
+                                MouseLeave="imagePreviewLeftEast_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewLeftEast"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -361,8 +378,8 @@
                                 MouseDown="imagePreviewRightEast_MouseDown" 
                                 MouseUp="imagePreviewRightEast_MouseUp" 
                                 MouseMove="imagePreviewRightEast_MouseMove" 
-                               MouseEnter="imagePreviewRightEast_MouseEnter" 
-                               MouseLeave="imagePreviewRightEast_MouseLeave">
+                                MouseEnter="imagePreviewRightEast_MouseEnter" 
+                                MouseLeave="imagePreviewRightEast_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewRightEast"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -400,7 +417,12 @@
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imagePreviewLeftWest"                              
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                                RenderOptions.EdgeMode="Aliased">
+                                RenderOptions.EdgeMode="Aliased"
+                                MouseDown="imagePreviewLeftWest_MouseDown" 
+                                MouseUp="imagePreviewLeftWest_MouseUp" 
+                                MouseMove="imagePreviewLeftWest_MouseMove" 
+                                MouseEnter="imagePreviewLeftWest_MouseEnter" 
+                                MouseLeave="imagePreviewLeftWest_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewLeftWest"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -427,7 +449,9 @@
                                 RenderOptions.EdgeMode="Aliased" 
                                 MouseDown="imagePreviewRightWest_MouseDown" 
                                 MouseUp="imagePreviewRightWest_MouseUp" 
-                                MouseMove="imagePreviewRightWest_MouseMove" MouseEnter="imagePreviewRightWest_MouseEnter" MouseLeave="imagePreviewRightWest_MouseLeave">
+                                MouseMove="imagePreviewRightWest_MouseMove" 
+                                MouseEnter="imagePreviewRightWest_MouseEnter" 
+                                MouseLeave="imagePreviewRightWest_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewRightWest"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 

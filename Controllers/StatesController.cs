@@ -97,7 +97,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Images
 
-        public static System.Windows.Controls.Image GetRightImage(StateDirection _stateDirection) => stateSourceDictionary[_stateDirection][StateImageType.Preview][StateImageSideType.Right];
+        public static System.Windows.Controls.Image GetImage(StateDirection _stateDirection, StateImageSideType _stateImageSideType) => stateSourceDictionary[_stateDirection][StateImageType.Preview][_stateImageSideType];
 
         #endregion Images
 
