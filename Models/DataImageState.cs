@@ -116,8 +116,9 @@ namespace AdaptiveSpritesDMItool.Models
             foreach (StateDirection direction in stateDirections)
             {
                 WriteableBitmap bitmap = GetBMPFromDMIState(currentStateOverlay, direction);
-                foreach(StateImageSideType imageSideType in Enum.GetValues(typeof(StateImageSideType)))
-                    stateBMPdict[direction][StateImageType.Overlay].Add(imageSideType, bitmap);
+                stateBMPdict[direction][StateImageType.Overlay].Add(StateImageSideType.Left, bitmap);
+                stateBMPdict[direction][StateImageType.Overlay].Add(StateImageSideType.Right, bitmap.Clone());
+                //foreach (StateImageSideType imageSideType in Enum.GetValues(typeof(StateImageSideType)))
             }
         }
 

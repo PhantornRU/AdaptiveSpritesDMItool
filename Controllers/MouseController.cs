@@ -31,7 +31,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             switch (StatesController.currentStateEditMode)
             {
                 case StateEditType.Single:
-                    EditorController.EditSingleMode();
+                    EditorController.EditSingleMode(_stateImageSideType);
                     break;
                 case StateEditType.Fill:
                     EditorController.EditFillModeStart();
@@ -89,7 +89,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             switch (StatesController.currentStateEditMode)
             {
                 case StateEditType.Single:
-                    EditorController.EditSingleMode();
+                    EditorController.EditSingleMode(_stateImageSideType);
                     break;
                 case StateEditType.Fill:
                     EditorController.EditFillMode();

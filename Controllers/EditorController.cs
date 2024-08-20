@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
-using System.Windows.Controls;
 using DMISharp;
 using System.Windows.Input;
 using SixLabors.ImageSharp.PixelFormats;
@@ -17,21 +16,36 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats;
+using System.Drawing;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
     internal static class EditorController
     {
+        private static System.Drawing.Point pickedPoint;
+
         #region  User Controller
 
         #endregion  User Controller
 
         #region Editor Modes
 
-        public static void EditSingleMode()
+        public static void EditSingleMode(StateImageSideType _stateImageSideType)
         {
             //SetPixel();
-            ViewSingleSelectorAtCurrentPosition(StateImageSideType.Left);
+            if(!MouseController.isMouseInImage)
+                return;
+
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    ViewSingleSelectorAtCurrentPosition(StateImageSideType.Left);
+                    PickPointAtCurrentPosition();
+                    break;
+                case StateImageSideType.Right:
+                    SetPickedPoint();
+                    break;
+            }
         }
 
         public static void EditFillModeStart()
@@ -116,6 +130,12 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             if (MouseController.isMouseInImage)
                 SetSelectors(stateImageSideType, MouseController.currentMousePosition);
+        }
+
+        private static void PickPointAtCurrentPosition()
+        {
+            if (MouseController.isMouseInImage)
+                pickedPoint = MouseController.currentMousePosition;
         }
 
         #endregion Editor View
@@ -218,27 +238,31 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region
 
-        private static void SetPixel()
+        private static void SetPickedPoint()
         {
             System.Drawing.Point mousePos = MouseController.GetCurrentMousePosition();
-            System.Windows.Media.Color color = GetSingleColorModify();
 
             var stateDirections = StatesController.GetStateDirections();
 
             foreach (var stateDirectionToModify in stateDirections)
             {
+                WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Left);
+                System.Windows.Media.Color color = GetPickedPointColor(bitmapPreview);
+                WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Left);
+                System.Windows.Media.Color colorOverlay = GetPickedPointColor(bitmapOverlayPreview);
+
                 WriteableBitmap bitmap = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Right);
                 WriteableBitmap bitmapOverlay = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Right);
                 int bitmapWidth = (int)bitmap.Width;
                 mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, bitmapWidth);
                 bitmap.SetPixel(mousePos.X, mousePos.Y, color);
-                bitmapOverlay.SetPixel(mousePos.X, mousePos.Y, color);
+                bitmapOverlay.SetPixel(mousePos.X, mousePos.Y, colorOverlay);
             }
         }
 
-        public static System.Windows.Media.Color GetSingleColorModify()
+        public static System.Windows.Media.Color GetPickedPointColor(WriteableBitmap bitmap)
         {
-            return Colors.Red;
+            return bitmap.GetPixel(pickedPoint.X, pickedPoint.Y);
         }
 
         #endregion Draw
