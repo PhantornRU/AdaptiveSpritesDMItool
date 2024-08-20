@@ -81,16 +81,12 @@ namespace AdaptiveSpritesDMItool.Controllers
             return new[] { _stateDirection, parallelState };
         }
 
-        public static StateDirection[] GetAllStates()
-        {
-            return new[] 
-            { 
-                StateDirection.South, 
-                StateDirection.North, 
-                StateDirection.East, 
-                StateDirection.West 
-            };
-        }
+
+        /// <summary>
+        /// The main states directions we work with
+        /// </summary>
+        /// <returns></returns>
+        public static StateDirection[] allStateDirections = { StateDirection.South, StateDirection.North, StateDirection.East, StateDirection.West };
 
         #endregion States
 

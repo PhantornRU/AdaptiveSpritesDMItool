@@ -15,21 +15,9 @@ namespace AdaptiveSpritesDMItool.Controllers
     internal static class EnvironmentController
     {
         public static DataImageState dataImageState;
-        public static DataImageState dataImageStateOverlay;
 
         public static WriteableBitmap gridCell;
         public static WriteableBitmap gridCellSelect;
-
-        public static int widthStateImage;
-        public static int heightStateImage;
-        public static System.Drawing.Size imageStateSize => new System.Drawing.Size(widthStateImage, heightStateImage);
-
-        //The dimensions of the bitmap on which the interface elements are drawn.
-        public static int widthBitmapUI = 257;
-        public static int heightBitmapUI = 257;
-        public static int pixelSize = 8;
-
-        public static System.Drawing.Size bitmapUISize => new System.Drawing.Size(widthBitmapUI, heightBitmapUI);
 
         #region Loaders
 
@@ -40,52 +28,36 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             InitializeData();
             LoadDataImageFiles();
-            LoadGridCell();
         }
 
         private static void InitializeData()
         {
-            pixelSize = GetPixelSizeFromResolution(heightStateImage);
         }
 
         private static void LoadDataImageFiles()
         {
             string path = "TestImages";
 
+            // Main Preview File
             string fullpath = $"{path}/testBodyHuman.dmi";
             using DMIFile file = new DMIFile(fullpath);
-
             DMIState currentState = file.States.First();
-            dataImageState = new DataImageState(currentState);
-
-            Debug.WriteLine($"Loaded {file}({file.States.Count}).");
-
-            widthStateImage = currentState.Width;
-            heightStateImage = currentState.Height;
-
-            Debug.WriteLine($"Image - Width: {widthStateImage}; Height: {heightStateImage}");
-
 
             // Overlay Preview File
             string fullpathOverlay = $"{path}/testClothingOveralls.dmi";
             using DMIFile fileOverlay = new DMIFile(fullpathOverlay);
 
-            DMIState currentStateOverlay = fileOverlay.States.First();
-            dataImageStateOverlay = new DataImageState(currentStateOverlay);
+            if(fileOverlay != null)
+            {
+                DMIState currentStateOverlay = fileOverlay.States.First();
+                dataImageState = new DataImageState(currentState, currentStateOverlay);
+            }
+            else
+            {
+                dataImageState = new DataImageState(currentState);
+            }
 
-            Debug.WriteLine($"Loaded {fileOverlay}({fileOverlay.States.Count}).");
-        }
-
-        private static void LoadGridCell()
-        {
-            string path = "Resources";
-            string fullPath = $"{path}/grid1.png";
-            string fullPathSelect = $"{path}/grid1_select.png";
-
-            gridCell = new WriteableBitmap(new BitmapImage(new Uri(fullPath, UriKind.Relative)));
-            gridCellSelect = new WriteableBitmap(new BitmapImage(new Uri(fullPathSelect, UriKind.Relative)));
-
-            //Debug.WriteLine($"Loaded {fullPath} - gridCell {gridCell}, {gridCell.Width}, {gridCell.PixelWidth}");
+            Debug.WriteLine($"Loaded {file}({file.States.Count}).");
         }
 
         #endregion Loaders
@@ -107,37 +79,29 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Paths
 
-        public static string GetGridPath() => System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", $"grid{EnvironmentController.heightStateImage}.png");
+        public static string GetGridPath() => System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", $"grid{dataImageState.imageCellsSize.Height}.png");
 
         #endregion Paths
 
 
         #region Getters
 
-        public static WriteableBitmap GetEnvironmentImage(StateDirection _stateDirection, bool _isEdited = false)
+        public static WriteableBitmap GetPreviewBMP(StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
-            WriteableBitmap bitmap = dataImageState.GetBMPstate(_stateDirection, _isEdited);
+            WriteableBitmap bitmap = dataImageState.stateBMPdict[_stateDirection][StateImageType.Preview][_stateImageSideType];
             return bitmap;
         }
 
-        public static WriteableBitmap GetEnvironmentImageOverlay(StateDirection _stateDirection, bool _isEdited = false)
+        public static WriteableBitmap GetOverlayBMP(StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
-            WriteableBitmap bitmapOverlay = dataImageStateOverlay.GetBMPstate(_stateDirection, _isEdited);
-            return bitmapOverlay;
+            WriteableBitmap bitmap = dataImageState.stateBMPdict[_stateDirection][StateImageType.Overlay][_stateImageSideType];
+            return bitmap;
         }
 
-        private static int GetPixelSizeFromResolution(int _pixelResolution)
+        public static WriteableBitmap GetSelectorBMP(StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
-            int pixelSize = 8;
-            if (_pixelResolution == 64)
-            {
-                pixelSize = 4;
-            }
-            else if (_pixelResolution == 16)
-            {
-                pixelSize = 16;
-            }
-            return pixelSize;
+            WriteableBitmap bitmap = dataImageState.stateBMPdict[_stateDirection][StateImageType.Selection][_stateImageSideType];
+            return bitmap;
         }
 
 

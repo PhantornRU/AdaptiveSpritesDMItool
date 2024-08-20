@@ -186,14 +186,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             foreach (var (stateDirection, images) in StatesController.stateSourceDictionary)
             {
-                images[StateImageType.Preview][StateImageSideType.Left].Source = EnvironmentController.GetEnvironmentImage(stateDirection, false);
-                images[StateImageType.Preview][StateImageSideType.Right].Source = EnvironmentController.GetEnvironmentImage(stateDirection, true);
-            }
+                images[StateImageType.Preview][StateImageSideType.Left].Source = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Left);
+                images[StateImageType.Preview][StateImageSideType.Right].Source = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Right);
 
-            foreach (var (stateDirection, images) in StatesController.stateSourceDictionary)
-            {
-                images[StateImageType.Overlay][StateImageSideType.Left].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, false);
-                images[StateImageType.Overlay][StateImageSideType.Right].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, true);
+                images[StateImageType.Overlay][StateImageSideType.Left].Source = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Left);
+                images[StateImageType.Overlay][StateImageSideType.Right].Source = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Right);
             }
         }
 

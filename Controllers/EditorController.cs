@@ -191,11 +191,10 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         private static WriteableBitmap MakeAndGetGrid(int borderThickness = 2)
         {
-            int pixelSize = EnvironmentController.pixelSize;
+            int pixelSize = EnvironmentController.dataImageState.pixelSize;
             System.Windows.Media.Color color = EnvironmentController.GetGridColor();
-            int width = EnvironmentController.widthBitmapUI;
-            int height = EnvironmentController.heightBitmapUI;
-            WriteableBitmap bitmap = new WriteableBitmap(width, height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
+            System.Drawing.Size bitmapSize = EnvironmentController.dataImageState.bitmapUISize;
+            WriteableBitmap bitmap = new WriteableBitmap(bitmapSize.Width, bitmapSize.Height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
 
             for (int i = 0; i < bitmap.PixelWidth; i += pixelSize)
             {
@@ -228,8 +227,8 @@ namespace AdaptiveSpritesDMItool.Controllers
 
             foreach (var stateDirectionToModify in stateDirections)
             {
-                WriteableBitmap bitmap = EnvironmentController.GetEnvironmentImage(stateDirectionToModify, true);
-                WriteableBitmap bitmapOverlay = EnvironmentController.GetEnvironmentImageOverlay(stateDirectionToModify, true);
+                WriteableBitmap bitmap = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Right);
+                WriteableBitmap bitmapOverlay = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Right);
                 int bitmapWidth = (int)bitmap.Width;
                 mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, bitmapWidth);
                 bitmap.SetPixel(mousePos.X, mousePos.Y, color);
@@ -248,17 +247,15 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static void SetSelectors(StateImageSideType stateImageSideType, System.Drawing.Point mousePos1) => SetSelectors(stateImageSideType, mousePos1, mousePos1);
         public static void SetSelectors(StateImageSideType stateImageSideType, System.Drawing.Point mousePoint1, System.Drawing.Point mousePoint2)
         {
-            int pixelSize = EnvironmentController.pixelSize;
-            System.Windows.Media.Color color = EnvironmentController.GetGridColor();
-
-            System.Drawing.Size bitmapSize = EnvironmentController.bitmapUISize;
-            System.Drawing.Size imageSize = EnvironmentController.imageStateSize;
+            int pixelSize = EnvironmentController.dataImageState.pixelSize;
+            System.Drawing.Size imageSize = EnvironmentController.dataImageState.imageCellsSize;
             var stateDirections = StatesController.GetStateDirections();
             //bitmapWidth = _stateDirection == stateDirectionToModify ? 0 : bitmapWidth;
 
             foreach (var stateDirectionToModify in stateDirections)
             {
-                WriteableBitmap bitmap = new WriteableBitmap(bitmapSize.Width, bitmapSize.Height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
+                WriteableBitmap bitmap = EnvironmentController.GetSelectorBMP(stateDirectionToModify, stateImageSideType);
+                bitmap.Clear();
                 Debug.WriteLine($"stateDirectionToModify: {stateDirectionToModify} - mousePoint1: {mousePoint1} - mousePoint2: {mousePoint2} - bitmapSize: {imageSize}");
                 mousePoint1 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint1, imageSize);
                 mousePoint2 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint2, imageSize);
@@ -269,16 +266,14 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void ClearSelectors()
         {
-            int pixelSize = EnvironmentController.pixelSize;
-            System.Windows.Media.Color color = EnvironmentController.GetGridColor();
-            int width = EnvironmentController.widthBitmapUI;
-            int height = EnvironmentController.heightBitmapUI;
-            WriteableBitmap bitmap = new WriteableBitmap(width, height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
-            var stateDirections = StatesController.GetAllStates();
+            var stateDirections = StatesController.allStateDirections;
             foreach (var stateDirectionToModify in stateDirections)
             {
-                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.Selection][StateImageSideType.Left].Source = bitmap;
-                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.Selection][StateImageSideType.Right].Source = bitmap;
+                foreach (StateImageSideType imageSideType in Enum.GetValues(typeof(StateImageSideType)))
+                {
+                    WriteableBitmap bitmap = EnvironmentController.dataImageState.stateBMPdict[stateDirectionToModify][StateImageType.Selection][imageSideType];
+                    bitmap.Clear();
+                }
             }
         }
 
