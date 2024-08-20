@@ -13,10 +13,11 @@ namespace AdaptiveSpritesDMItool.Models
     {
         Single,
         Fill,
-        Pick,
-        Delete,
         Select,
-        Move
+        Move,
+        Delete,
+        Undo,
+        UndoArea
     }
 
     /// <summary>
@@ -44,4 +45,18 @@ namespace AdaptiveSpritesDMItool.Models
         SelectionLeft,
         SelectionRight,
     }
+
+    //public enum StateImageType
+    //{
+    //    Preview,
+    //    Background,
+    //    Overlay,
+    //    Selection,
+    //}
+
+    //public enum StateImageSideType
+    //{
+    //    Left,
+    //    Right
+    //}
 }

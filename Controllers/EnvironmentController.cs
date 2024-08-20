@@ -22,11 +22,14 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static int widthStateImage;
         public static int heightStateImage;
+        public static System.Drawing.Size imageStateSize => new System.Drawing.Size(widthStateImage, heightStateImage);
 
         //The dimensions of the bitmap on which the interface elements are drawn.
         public static int widthBitmapUI = 257;
         public static int heightBitmapUI = 257;
         public static int pixelSize = 8;
+
+        public static System.Drawing.Size bitmapUISize => new System.Drawing.Size(widthBitmapUI, heightBitmapUI);
 
         #region Loaders
 

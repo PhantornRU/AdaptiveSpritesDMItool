@@ -50,13 +50,27 @@ namespace AdaptiveSpritesDMItool.Controllers
             ClearSelectors();
         }
 
-
-        public static void EditPickMode()
+        public static void EditDeleteMode()
         {
-            ViewSingleSelectorAtCurrentPosition();
+            ClearSelectors();
         }
 
-        public static void EditDeleteMode()
+        public static void EditUndoMode()
+        {
+            ClearSelectors();
+        }
+
+        public static void EditUndoAreaModeStart()
+        {
+            ClearSelectors();
+        }
+
+        public static void EditUndoAreaMode()
+        {
+            //ClearSelectors();
+        }
+
+        public static void EditUndoAreaModeEnd()
         {
             ClearSelectors();
         }
@@ -236,30 +250,21 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             int pixelSize = EnvironmentController.pixelSize;
             System.Windows.Media.Color color = EnvironmentController.GetGridColor();
-            int widthUI = EnvironmentController.widthBitmapUI;
-            int heightUI = EnvironmentController.heightBitmapUI;
 
-            int widthImage = EnvironmentController.widthStateImage;
-            int heightImage = EnvironmentController.heightStateImage;
-            System.Drawing.Size imageSize = new System.Drawing.Size(widthImage, heightImage);
+            System.Drawing.Size bitmapSize = EnvironmentController.bitmapUISize;
+            System.Drawing.Size imageSize = EnvironmentController.imageStateSize;
             var stateDirections = StatesController.GetStateDirections();
             //bitmapWidth = _stateDirection == stateDirectionToModify ? 0 : bitmapWidth;
 
-            Debug.WriteLine("=======================================");
-            string allDirections = string.Join(", ", stateDirections);
-            Debug.WriteLine(allDirections);
-            Debug.WriteLine("=======================================");
-
             foreach (var stateDirectionToModify in stateDirections)
             {
-                WriteableBitmap bitmap = new WriteableBitmap(widthUI, heightUI, pixelSize, pixelSize, PixelFormats.Bgra32, null);
+                WriteableBitmap bitmap = new WriteableBitmap(bitmapSize.Width, bitmapSize.Height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
                 Debug.WriteLine($"stateDirectionToModify: {stateDirectionToModify} - mousePoint1: {mousePoint1} - mousePoint2: {mousePoint2} - bitmapSize: {imageSize}");
                 mousePoint1 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint1, imageSize);
                 mousePoint2 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint2, imageSize);
                 DrawSelectionRect(bitmap, mousePoint1, mousePoint2, pixelSize);
                 StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionRight].Source = bitmap;
             }
-            Debug.WriteLine("=======================================");
         }
 
         public static void ClearSelectors()

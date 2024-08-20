@@ -59,37 +59,45 @@
                 <ui:Button
                         x:Name="SingleButton"
                         Appearance="Primary"
-                        ToolTip="Add single cell."
+                        ToolTip="Create a single cell on the right preview using the selected cell from the left preview."
                         Icon="{ui:SymbolIcon AddSquare24}" Click="SingleButton_Click" />
                 <ui:Button
                         x:Name="FillButton"
                         Appearance="Secondary"
-                        ToolTip="Fill area."
+                        ToolTip="Fill the area on the right preview with the selected cell from the left preview"
                         Icon="{ui:SymbolIcon Grid24}" Click="FillButton_Click" />
-                <ui:Button
-                        x:Name="PickButton"
-                        Appearance="Secondary"
-                        ToolTip="Pick cell."
-                        Icon="{ui:SymbolIcon EyeDropper24}" Click="PickButton_Click" />
-                <ui:Button
-                        x:Name="DeleteButton"
-                        Appearance="Secondary"
-                        ToolTip="Erase."
-                        Icon="{ui:SymbolIcon Eraser24}" Click="DeleteButton_Click" />
 
                 <!--Move pixels of the edited part-->
                 <Separator Margin="6,0,6,0" />
                 <ui:Button
                         x:Name="MoveButton"
                         Appearance="Secondary"
-                        ToolTip="Move cell."
+                        ToolTip="Move a single cell on the right preview."
                         Icon="{ui:SymbolIcon ArrowMove24}" Click="MoveButton_Click" />
                 <ui:Button
                         x:Name="SelectButton"
                         Appearance="Secondary"
-                        ToolTip="Select cells."
+                        ToolTip="Move the selected area of ​​cells on the right preview."
                         Icon="{ui:SymbolIcon SquareHintApps24}" Click="SelectButton_Click" />
 
+                <!--Clear pixels of the edited part-->
+                <Separator Margin="6,0,6,0" />
+                <ui:Button
+                        x:Name="DeleteButton"
+                        Appearance="Secondary"
+                        ToolTip="Delete a pixel on the right preview, creating an empty cell."
+                        Icon="{ui:SymbolIcon Eraser24}" Click="DeleteButton_Click" />
+                <ui:Button
+                        x:Name="UndoButton"                        
+                        Appearance="Secondary"
+                        ToolTip="Undo changes to a single cell in the right preview."
+                        Icon="{ui:SymbolIcon SquareEraser20}" Click="UndoButton_Click"/>
+                <ui:Button
+                        x:Name="UndoAreaButton"
+                        Appearance="Secondary"
+                        ToolTip="Undo changes to the area of ​​selected cells in the right preview."
+                        Icon="{ui:SymbolIcon SquareHintArrowBack16}" Click="UndoAreaButton_Click"/>
+                
                 <!--Switches "One, Horizontal, Vertical, All" states-->
                 <Separator Margin="10,0,10,0" />
                 <TextBlock Text="States: " VerticalAlignment="Center"/>

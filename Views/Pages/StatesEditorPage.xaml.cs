@@ -291,18 +291,24 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             StatesController.SetCurrentStateEditMode(StateEditType.Fill);
         }
 
-        private void PickButton_Click(object sender, RoutedEventArgs e)
-        {
-            ResetEditButtons();
-            PickButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateEditMode(StateEditType.Pick);
-        }
-
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
             DeleteButton.Appearance = StatesController.GetPressedButtonAppearance();
             StatesController.SetCurrentStateEditMode(StateEditType.Delete);
+        }
+        private void UndoButton_Click(object sender, RoutedEventArgs e)
+        {
+            ResetEditButtons();
+            UndoButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateEditMode(StateEditType.Undo);
+        }
+
+        private void UndoAreaButton_Click(object sender, RoutedEventArgs e)
+        {
+            ResetEditButtons();
+            UndoAreaButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateEditMode(StateEditType.UndoArea);
         }
 
         #endregion Buttons Edit Controller
@@ -433,10 +439,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             SingleButton.Appearance = StatesController.GetUnPressedButtonAppearance();
             FillButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-            PickButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-            DeleteButton.Appearance = StatesController.GetUnPressedButtonAppearance();
             SelectButton.Appearance = StatesController.GetUnPressedButtonAppearance();
             MoveButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            DeleteButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            UndoButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            UndoAreaButton.Appearance = StatesController.GetUnPressedButtonAppearance();
         }
 
         private void ResetStatesButtons()
@@ -449,6 +456,5 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         #endregion Buttons Helpers
 
         #endregion Buttons Controller
-
     }
 }

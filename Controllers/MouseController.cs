@@ -36,17 +36,20 @@ namespace AdaptiveSpritesDMItool.Controllers
                 case StateEditType.Fill:
                     EditorController.EditFillModeStart();
                     break;
-                case StateEditType.Pick:
-                    EditorController.EditPickMode();
-                    break;
-                case StateEditType.Delete:
-                    EditorController.EditDeleteMode();
+                case StateEditType.Move:
+                    EditorController.EditMoveMode();
                     break;
                 case StateEditType.Select:
                     EditorController.EditSelectModeStart();
                     break;
-                case StateEditType.Move:
-                    EditorController.EditMoveMode();
+                case StateEditType.Delete:
+                    EditorController.EditDeleteMode();
+                    break;
+                case StateEditType.Undo:
+                    EditorController.EditUndoMode();
+                    break;
+                case StateEditType.UndoArea:
+                    EditorController.EditUndoAreaModeStart();
                     break;
             }
         }
@@ -65,6 +68,9 @@ namespace AdaptiveSpritesDMItool.Controllers
                     break;
                 case StateEditType.Select:
                     EditorController.EditSelectModeEnd();
+                    break;
+                case StateEditType.UndoArea:
+                    EditorController.EditUndoAreaModeEnd();
                     break;
             }
 
@@ -88,17 +94,20 @@ namespace AdaptiveSpritesDMItool.Controllers
                 case StateEditType.Fill:
                     EditorController.EditFillMode();
                     break;
-                case StateEditType.Pick:
-                    EditorController.EditPickMode();
-                    break;
-                case StateEditType.Delete:
-                    EditorController.EditDeleteMode();
+                case StateEditType.Move:
+                    EditorController.EditMoveMode();
                     break;
                 case StateEditType.Select:
                     EditorController.EditSelectMode();
                     break;
-                case StateEditType.Move:
-                    EditorController.EditMoveMode();
+                case StateEditType.Delete:
+                    EditorController.EditDeleteMode();
+                    break;
+                case StateEditType.Undo:
+                    EditorController.EditUndoMode();
+                    break;
+                case StateEditType.UndoArea:
+                    EditorController.EditUndoAreaMode();
                     break;
             }
         }
