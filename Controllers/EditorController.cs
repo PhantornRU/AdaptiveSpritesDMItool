@@ -17,9 +17,6 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats;
-using System.Windows.Media.Media3D;
-using System.Windows;
-using System.Drawing;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
@@ -112,6 +109,8 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Editor Functions
 
+        #region Draw Functions
+
         private static void SetPixel()
         {
             System.Drawing.Point mousePos = MouseController.GetCurrentMousePosition();
@@ -124,10 +123,7 @@ namespace AdaptiveSpritesDMItool.Controllers
                 WriteableBitmap bitmap = EnvironmentController.GetEnvironmentImage(stateDirectionToModify, true);
                 WriteableBitmap bitmapOverlay = EnvironmentController.GetEnvironmentImageOverlay(stateDirectionToModify, true);
                 int bitmapWidth = (int)bitmap.Width;
-                //bitmapWidth = _stateDirection == stateDirectionToModify ? 0 : bitmapWidth;
-                var mousePosXTemp = mousePos.X;
                 mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, bitmapWidth);
-                //Debug.WriteLine($"_stateDirection: {currentStateDirection}; stateDirectionToModify: {stateDirectionToModify}; MousePosX: [Orig: {mousePosXTemp} - Mod: {mousePos.X}]");
                 bitmap.SetPixel(mousePos.X, mousePos.Y, color);
                 bitmapOverlay.SetPixel(mousePos.X, mousePos.Y, color);
             }
@@ -137,6 +133,10 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             return Colors.Red;
         }
+
+        #endregion Draw Functions
+
+        #region Helpers
 
         private static int CorrectMousePositionX(StateDirection stateDirection, int mouseX, int bitmapWidth)
         {
@@ -153,6 +153,29 @@ namespace AdaptiveSpritesDMItool.Controllers
             return result;
 
         }
+
+
+        private static System.Drawing.Point CorrectMousePositionPoint(StateDirection stateDirection, System.Drawing.Point mousePoint, System.Drawing.Size bitmapSize)
+        {
+            if (!StatesController.isMirroredState || StatesController.currentStateDirection == stateDirection)
+            {
+                return mousePoint;
+            }
+            //bitmapWidth = isStateOpposite(stateDirection) ? 0 : bitmapWidth;
+            var additionValueX = StatesController.isCentralizedState ? -1 : 0;
+            int result = bitmapSize.Width - mousePoint.X - 1 + additionValueX;
+            result = Math.Max(result, 0);
+            result = Math.Min(result, bitmapSize.Width - 1);
+            System.Drawing.Point newMousePoint = new System.Drawing.Point(result, mousePoint.Y);
+
+            Debug.WriteLine($"stateDirection: {stateDirection} - [Orig: {mousePoint} - Mod: {newMousePoint}]");
+
+
+            return newMousePoint;
+
+        }
+
+        #endregion Helpers
 
         #endregion Editor Functions
 
@@ -209,27 +232,34 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Selector
         public static void SetSelectors(System.Drawing.Point mousePos1) => SetSelectors(mousePos1, mousePos1);
-        public static void SetSelectors(System.Drawing.Point mousePos1, System.Drawing.Point mousePos2)
+        public static void SetSelectors(System.Drawing.Point mousePoint1, System.Drawing.Point mousePoint2)
         {
             int pixelSize = EnvironmentController.pixelSize;
             System.Windows.Media.Color color = EnvironmentController.GetGridColor();
-            int width = EnvironmentController.widthBitmapUI;
-            int height = EnvironmentController.heightBitmapUI;
-            WriteableBitmap bitmap = new WriteableBitmap(width, height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
+            int widthUI = EnvironmentController.widthBitmapUI;
+            int heightUI = EnvironmentController.heightBitmapUI;
 
-            int bitmapWidth = (int)bitmap.Width;
+            int widthImage = EnvironmentController.widthStateImage;
+            int heightImage = EnvironmentController.heightStateImage;
+            System.Drawing.Size imageSize = new System.Drawing.Size(widthImage, heightImage);
             var stateDirections = StatesController.GetStateDirections();
+            //bitmapWidth = _stateDirection == stateDirectionToModify ? 0 : bitmapWidth;
+
+            Debug.WriteLine("=======================================");
+            string allDirections = string.Join(", ", stateDirections);
+            Debug.WriteLine(allDirections);
+            Debug.WriteLine("=======================================");
 
             foreach (var stateDirectionToModify in stateDirections)
             {
-                //mousePos1.X = CorrectMousePositionX(stateDirectionToModify, mousePos1.X, bitmapWidth);
-                //mousePos2.X = CorrectMousePositionX(stateDirectionToModify, mousePos2.X, bitmapWidth);
-                DrawSelectionRect(bitmap, mousePos1, mousePos2, pixelSize);
-                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionLeft].Source = bitmap;
+                WriteableBitmap bitmap = new WriteableBitmap(widthUI, heightUI, pixelSize, pixelSize, PixelFormats.Bgra32, null);
+                Debug.WriteLine($"stateDirectionToModify: {stateDirectionToModify} - mousePoint1: {mousePoint1} - mousePoint2: {mousePoint2} - bitmapSize: {imageSize}");
+                mousePoint1 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint1, imageSize);
+                mousePoint2 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint2, imageSize);
+                DrawSelectionRect(bitmap, mousePoint1, mousePoint2, pixelSize);
                 StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionRight].Source = bitmap;
-
-                Debug.WriteLine($"stateDirectionToModify: {stateDirectionToModify}; mousePos1: {mousePos1}; mousePos2: {mousePos2}");
             }
+            Debug.WriteLine("=======================================");
         }
 
         public static void ClearSelectors()
