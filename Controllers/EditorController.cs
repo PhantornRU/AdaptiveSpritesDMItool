@@ -263,7 +263,7 @@ namespace AdaptiveSpritesDMItool.Controllers
                 mousePoint1 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint1, imageSize);
                 mousePoint2 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint2, imageSize);
                 DrawSelectionRect(bitmap, mousePoint1, mousePoint2, pixelSize);
-                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionRight].Source = bitmap;
+                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.Selection][StateImageSideType.Right].Source = bitmap;
             }
         }
 
@@ -277,8 +277,8 @@ namespace AdaptiveSpritesDMItool.Controllers
             var stateDirections = StatesController.GetAllStates();
             foreach (var stateDirectionToModify in stateDirections)
             {
-                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionLeft].Source = bitmap;
-                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.SelectionRight].Source = bitmap;
+                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.Selection][StateImageSideType.Left].Source = bitmap;
+                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.Selection][StateImageSideType.Right].Source = bitmap;
             }
         }
 

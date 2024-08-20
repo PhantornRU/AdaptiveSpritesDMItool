@@ -36,7 +36,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// <summary>
         /// Stores all references to images for their quick calls depending on the state.
         /// </summary>
-        public static Dictionary<StateDirection, Dictionary<StateImageType, System.Windows.Controls.Image>> stateSourceDictionary;
+        public static Dictionary<StateDirection, Dictionary<StateImageType, Dictionary<StateImageSideType, System.Windows.Controls.Image>>> stateSourceDictionary{ get; set; } = new();
 
         #region Helpers
 
@@ -97,7 +97,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Images
 
-        public static System.Windows.Controls.Image GetRightImage(StateDirection _stateDirection) => stateSourceDictionary[_stateDirection][StateImageType.Right];
+        public static System.Windows.Controls.Image GetRightImage(StateDirection _stateDirection) => stateSourceDictionary[_stateDirection][StateImageType.Preview][StateImageSideType.Right];
 
         #endregion Images
 

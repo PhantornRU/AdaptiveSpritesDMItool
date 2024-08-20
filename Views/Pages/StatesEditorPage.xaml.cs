@@ -61,57 +61,121 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void InitializeDictionaries()
         {
-            StatesController.stateSourceDictionary = new Dictionary<StateDirection, Dictionary<StateImageType, System.Windows.Controls.Image>>()
+            StatesController.stateSourceDictionary = new Dictionary<StateDirection, Dictionary<StateImageType, Dictionary<StateImageSideType, System.Windows.Controls.Image>>>()
             {
-                { StateDirection.South, new Dictionary<StateImageType, System.Windows.Controls.Image>()
+                { StateDirection.South, new Dictionary<StateImageType, Dictionary<StateImageSideType, System.Windows.Controls.Image>>()
                     {
-                        { StateImageType.Left, imagePreviewLeftSouth },
-                        { StateImageType.Right, imagePreviewRightSouth },
-                        { StateImageType.BackgroundLeft, imageBackgroundPreviewLeftSouth },
-                        { StateImageType.BackgroundRight, imageBackgroundPreviewRightSouth },
-                        { StateImageType.OverlayLeft, imageOverlayPreviewLeftSouth },
-                        { StateImageType.OverlayRight, imageOverlayPreviewRightSouth },
-                        { StateImageType.SelectionLeft, imageSelectionPreviewLeftSouth },
-                        { StateImageType.SelectionRight, imageSelectionPreviewRightSouth }
+                        { StateImageType.Preview, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imagePreviewLeftSouth },
+                                { StateImageSideType.Right, imagePreviewRightSouth }
+                            }
+                        },
+                        { StateImageType.Background, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageBackgroundPreviewLeftSouth },
+                                { StateImageSideType.Right, imageBackgroundPreviewRightSouth }
+                            }
+                        },
+                        { StateImageType.Overlay, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageOverlayPreviewLeftSouth },
+                                { StateImageSideType.Right, imageOverlayPreviewRightSouth }
+                            }
+                        },
+                        { StateImageType.Selection, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageSelectionPreviewLeftSouth },
+                                { StateImageSideType.Right, imageSelectionPreviewRightSouth }
+                            }
+                        }
                     }
                 },
 
-                { StateDirection.North, new Dictionary<StateImageType, System.Windows.Controls.Image>()
+                { StateDirection.North, new Dictionary<StateImageType, Dictionary<StateImageSideType, System.Windows.Controls.Image>>()
                     {
-                        { StateImageType.Left, imagePreviewLeftNorth },
-                        { StateImageType.Right, imagePreviewRightNorth },
-                        { StateImageType.BackgroundLeft, imageBackgroundPreviewLeftNorth },
-                        { StateImageType.BackgroundRight, imageBackgroundPreviewRightNorth },
-                        { StateImageType.OverlayLeft, imageOverlayPreviewLeftNorth },
-                        { StateImageType.OverlayRight, imageOverlayPreviewRightNorth },
-                        { StateImageType.SelectionLeft, imageSelectionPreviewLeftNorth },
-                        { StateImageType.SelectionRight, imageSelectionPreviewRightNorth }
+                        { StateImageType.Preview, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imagePreviewLeftNorth },
+                                { StateImageSideType.Right, imagePreviewRightNorth }
+                            }
+                        },
+                        { StateImageType.Background, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageBackgroundPreviewLeftNorth },
+                                { StateImageSideType.Right, imageBackgroundPreviewRightNorth }
+                            }
+                        },
+                        { StateImageType.Overlay, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageOverlayPreviewLeftNorth },
+                                { StateImageSideType.Right, imageOverlayPreviewRightNorth }
+                            }
+                        },
+                        { StateImageType.Selection, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageSelectionPreviewLeftNorth },
+                                { StateImageSideType.Right, imageSelectionPreviewRightNorth }
+                            }
+                        }
                     }
                 },
 
-                { StateDirection.East, new Dictionary<StateImageType, System.Windows.Controls.Image>()
+                { StateDirection.East, new Dictionary<StateImageType, Dictionary<StateImageSideType, System.Windows.Controls.Image>>()
                     {
-                        { StateImageType.Left, imagePreviewLeftEast },
-                        { StateImageType.Right, imagePreviewRightEast },
-                        { StateImageType.BackgroundLeft, imageBackgroundPreviewLeftEast },
-                        { StateImageType.BackgroundRight, imageBackgroundPreviewRightEast },
-                        { StateImageType.OverlayLeft, imageOverlayPreviewLeftEast },
-                        { StateImageType.OverlayRight, imageOverlayPreviewRightEast },
-                        { StateImageType.SelectionLeft, imageSelectionPreviewLeftEast },
-                        { StateImageType.SelectionRight, imageSelectionPreviewRightEast }
+                        { StateImageType.Preview, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imagePreviewLeftEast },
+                                { StateImageSideType.Right, imagePreviewRightEast }
+                            }
+                        },
+                        { StateImageType.Background, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageBackgroundPreviewLeftEast },
+                                { StateImageSideType.Right, imageBackgroundPreviewRightEast }
+                            }
+                        },
+                        { StateImageType.Overlay, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageOverlayPreviewLeftEast },
+                                { StateImageSideType.Right, imageOverlayPreviewRightEast }
+                            }
+                        },
+                        { StateImageType.Selection, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageSelectionPreviewLeftEast },
+                                { StateImageSideType.Right, imageSelectionPreviewRightEast }
+                            }
+                        }
                     }
                 },
 
-                { StateDirection.West, new Dictionary<StateImageType, System.Windows.Controls.Image>()
+                { StateDirection.West, new Dictionary<StateImageType, Dictionary<StateImageSideType, System.Windows.Controls.Image>>()
                     {
-                        { StateImageType.Left, imagePreviewLeftWest },
-                        { StateImageType.Right, imagePreviewRightWest },
-                        { StateImageType.BackgroundLeft, imageBackgroundPreviewLeftWest },
-                        { StateImageType.BackgroundRight, imageBackgroundPreviewRightWest },
-                        { StateImageType.OverlayLeft, imageOverlayPreviewLeftWest },
-                        { StateImageType.OverlayRight, imageOverlayPreviewRightWest },
-                        { StateImageType.SelectionLeft, imageSelectionPreviewLeftWest },
-                        { StateImageType.SelectionRight, imageSelectionPreviewRightWest }
+                        { StateImageType.Preview, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imagePreviewLeftWest },
+                                { StateImageSideType.Right, imagePreviewRightWest }
+                            }
+                        },
+                        { StateImageType.Background, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageBackgroundPreviewLeftWest },
+                                { StateImageSideType.Right, imageBackgroundPreviewRightWest }
+                            }
+                        },
+                        { StateImageType.Overlay, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageOverlayPreviewLeftWest },
+                                { StateImageSideType.Right, imageOverlayPreviewRightWest }
+                            }
+                        },
+                        { StateImageType.Selection, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageSelectionPreviewLeftWest },
+                                { StateImageSideType.Right, imageSelectionPreviewRightWest }
+                            }
+                        }
                     }
                 }
             };
@@ -122,14 +186,14 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             foreach (var (stateDirection, images) in StatesController.stateSourceDictionary)
             {
-                images[StateImageType.Left].Source = EnvironmentController.GetEnvironmentImage(stateDirection, false);
-                images[StateImageType.Right].Source = EnvironmentController.GetEnvironmentImage(stateDirection, true);
+                images[StateImageType.Preview][StateImageSideType.Left].Source = EnvironmentController.GetEnvironmentImage(stateDirection, false);
+                images[StateImageType.Preview][StateImageSideType.Right].Source = EnvironmentController.GetEnvironmentImage(stateDirection, true);
             }
 
             foreach (var (stateDirection, images) in StatesController.stateSourceDictionary)
             {
-                images[StateImageType.OverlayLeft].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, false);
-                images[StateImageType.OverlayRight].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, true);
+                images[StateImageType.Overlay][StateImageSideType.Left].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, false);
+                images[StateImageType.Overlay][StateImageSideType.Right].Source = EnvironmentController.GetEnvironmentImageOverlay(stateDirection, true);
             }
         }
 
@@ -139,8 +203,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             foreach (var state in StatesController.stateSourceDictionary.Values)
             {
-                state[StateImageType.BackgroundLeft].Source = gridBitmap;
-                state[StateImageType.BackgroundRight].Source = gridBitmap;
+                state[StateImageType.Background][StateImageSideType.Left].Source = gridBitmap;
+                state[StateImageType.Background][StateImageSideType.Right].Source = gridBitmap;
             }
         }
 
@@ -397,8 +461,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             foreach (var state in StatesController.stateSourceDictionary.Values)
             {
-                state[StateImageType.BackgroundLeft].Visibility = StatesController.GetVisibilityGrid();
-                state[StateImageType.BackgroundRight].Visibility = StatesController.GetVisibilityGrid();
+                state[StateImageType.Background][StateImageSideType.Left].Visibility = StatesController.GetVisibilityGrid();
+                state[StateImageType.Background][StateImageSideType.Right].Visibility = StatesController.GetVisibilityGrid();
             }
         }
 
@@ -414,8 +478,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             foreach (var state in StatesController.stateSourceDictionary.Values)
             {
-                Panel.SetZIndex(state[StateImageType.BackgroundLeft], StatesController.GetBackgroundZIndex());
-                Panel.SetZIndex(state[StateImageType.BackgroundRight], StatesController.GetBackgroundZIndex());
+                Panel.SetZIndex(state[StateImageType.Background][StateImageSideType.Left], StatesController.GetBackgroundZIndex());
+                Panel.SetZIndex(state[StateImageType.Background][StateImageSideType.Right], StatesController.GetBackgroundZIndex());
             }
         }
 
@@ -426,8 +490,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             foreach (var state in StatesController.stateSourceDictionary.Values)
             {
-                state[StateImageType.OverlayLeft].Visibility = StatesController.GetVisibilityOverlay();
-                state[StateImageType.OverlayRight].Visibility = StatesController.GetVisibilityOverlay();
+                state[StateImageType.Overlay][StateImageSideType.Left].Visibility = StatesController.GetVisibilityOverlay();
+                state[StateImageType.Overlay][StateImageSideType.Right].Visibility = StatesController.GetVisibilityOverlay();
             }
         }
 

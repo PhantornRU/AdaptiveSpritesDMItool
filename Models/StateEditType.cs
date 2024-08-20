@@ -34,29 +34,18 @@ namespace AdaptiveSpritesDMItool.Models
     /// <summary>
     /// Type of state image
     /// </summary>
+
     public enum StateImageType
     {
-        Left,
-        Right,
-        BackgroundLeft,
-        BackgroundRight,
-        OverlayLeft,
-        OverlayRight,
-        SelectionLeft,
-        SelectionRight,
+        Preview,
+        Background,
+        Overlay,
+        Selection,
     }
 
-    //public enum StateImageType
-    //{
-    //    Preview,
-    //    Background,
-    //    Overlay,
-    //    Selection,
-    //}
-
-    //public enum StateImageSideType
-    //{
-    //    Left,
-    //    Right
-    //}
+    public enum StateImageSideType
+    {
+        Left,
+        Right
+    }
 }
