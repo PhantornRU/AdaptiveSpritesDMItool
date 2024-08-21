@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AdaptiveSpritesDMItool.Controllers;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +13,24 @@ namespace AdaptiveSpritesDMItool.Models
     {
         private ConcurrentDictionary<(int x, int y), (int x, int y)> pixelStorage = new ConcurrentDictionary<(int x, int y), (int x, int y)>();
 
-        public DataPixelStorage((int x, int y)[] initialPoints)
+        public DataPixelStorage(string path, int width, int height)
+        {
+            if (!File.Exists($"{path}.csv"))
+            {
+                var initialPoints = Enumerable.Range(0, width * height)
+                    .Select(i => (x: i % width, y: i / width))
+                    .ToArray();
+                CreateNewPixelStorage(initialPoints);
+
+                // !!!!!!! TEST !!!!!!!!!!!!!!!
+                //ChangePoint(new(15, 15), new(22, 22));
+                //ExportPixelStorageToCSV(path + "Test");
+                return;
+            }
+            ImportPixelStorageFromCSV(path);
+        }
+
+        private void CreateNewPixelStorage((int x, int y)[] initialPoints)
         {
             foreach (var point in initialPoints)
             {
@@ -20,20 +38,27 @@ namespace AdaptiveSpritesDMItool.Models
             }
         }
 
-        public void ExportPixelStorageToCSV()
+        public void ChangePoint((int x, int y) point, (int x, int y) pointMod)
+        {
+            pixelStorage[point] = pointMod;
+        }
+
+        #region File IO
+
+        public void ExportPixelStorageToCSV(string path)
         {
             var csv = pixelStorage
                 .Select(kvp => $"{kvp.Key.x},{kvp.Key.y},{kvp.Value.x},{kvp.Value.y}")
                 .Aggregate((a, b) => $"{a}\n{b}");
 
-            File.WriteAllText("pixel_storage.csv", csv);
+            File.WriteAllText($"{path}.csv", csv);
         }
 
-        public void ImportPixelStorageFromCSV()
+        public void ImportPixelStorageFromCSV(string path)
         {
             pixelStorage.Clear();
 
-            var lines = File.ReadAllLines("pixel_storage.csv");
+            var lines = File.ReadAllLines($"{path}.csv");
 
             foreach (var line in lines)
             {
@@ -46,6 +71,8 @@ namespace AdaptiveSpritesDMItool.Models
                 pixelStorage[(x1, y1)] = (x2, y2);
             }
         }
+
+        #endregion File IO
 
         //public void ExportPixelStorageToJson()
         //{

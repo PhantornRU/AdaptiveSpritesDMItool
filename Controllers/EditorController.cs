@@ -24,10 +24,6 @@ namespace AdaptiveSpritesDMItool.Controllers
     {
         private static System.Drawing.Point pickedPoint = new System.Drawing.Point(-1, -1);
 
-        #region  User Controller
-
-        #endregion  User Controller
-
         #region Editor Modes
 
         public static void EditSingleMode(StateImageSideType _stateImageSideType)

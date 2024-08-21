@@ -19,6 +19,10 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static WriteableBitmap gridCell;
         public static WriteableBitmap gridCellSelect;
 
+        //public static Point[,] cellsData;// = new Point[dataImageState.imageCellsSize.Width, dataImageState.imageCellsSize.Height];
+
+        public static DataPixelStorage dataPixelStorage;
+
         #region Loaders
 
         /// <summary>
@@ -27,11 +31,12 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static void InitializeEnvironment()
         {
             InitializeData();
-            LoadDataImageFiles();
+            InitializeCellsData();
         }
 
         private static void InitializeData()
         {
+            LoadDataImageFiles();
         }
 
         private static void LoadDataImageFiles()
@@ -60,6 +65,25 @@ namespace AdaptiveSpritesDMItool.Controllers
             Debug.WriteLine($"Loaded {file}({file.States.Count}).");
         }
 
+        private static void InitializeCellsData()
+        {
+            int width = dataImageState.imageCellsSize.Width;
+            int height = dataImageState.imageCellsSize.Height;
+
+            dataPixelStorage = new DataPixelStorage(GetPixelStoragePath(), width, height);
+
+            //dataPixelStorage = new DataPixelStorage((width, height)[] points);
+
+            //cellsData = new Point[width, height];
+            //for (int i = 0; i < width; i++)
+            //{
+            //    for (int j = 0; j < height; j++)
+            //    {
+            //        cellsData[i, j] = new Point(i, j);
+            //    }
+            //}
+        }
+
         #endregion Loaders
 
         #region Saves
@@ -75,11 +99,20 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
+        public static void ExportDataPixelStorage()
+        {
+            dataPixelStorage.ExportPixelStorageToCSV(GetPixelStoragePath());
+        }
+
         #endregion Saves
 
         #region Paths
 
+        public static string ChoosenStorageName = "Default";
+
         public static string GetGridPath() => System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", $"grid{dataImageState.imageCellsSize.Height}.png");
+
+        public static string GetPixelStoragePath() => System.IO.Path.Combine(Environment.CurrentDirectory, "Storage", $"{ChoosenStorageName}");
 
         #endregion Paths
 
