@@ -454,7 +454,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void ClearSelectors(StateImageSideType _stateImageSideType)
         {
-            var stateDirections = StatesController.allStateDirections;
+            var stateDirections = StatesController.allStateDirection(DirectionDepth.Four);
             foreach (var stateDirectionToModify in stateDirections)
             {
                 WriteableBitmap bitmap = EnvironmentController.dataImageState.stateBMPdict[stateDirectionToModify][StateImageType.Selection][_stateImageSideType];
@@ -464,7 +464,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void ClearSelectors()
         {
-            var stateDirections = StatesController.allStateDirections;
+            var stateDirections = StatesController.allStateDirection(DirectionDepth.Four);
 
             foreach (var stateDirectionToModify in stateDirections)
             {

@@ -86,7 +86,18 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// The main states directions we work with
         /// </summary>
         /// <returns></returns>
-        public static StateDirection[] allStateDirections = { StateDirection.South, StateDirection.North, StateDirection.East, StateDirection.West };
+        public static StateDirection[] allStateDirection(DirectionDepth directionDepth = DirectionDepth.Four)
+        {
+            switch (directionDepth)
+            {
+                case DirectionDepth.Four:
+                    return new StateDirection[] { StateDirection.South, StateDirection.North, StateDirection.East, StateDirection.West };
+                case DirectionDepth.Eight:
+                    return new StateDirection[] { StateDirection.South, StateDirection.North, StateDirection.East, StateDirection.West, 
+                                StateDirection.SouthEast, StateDirection.SouthWest, StateDirection.NorthEast, StateDirection.NorthWest };
+            }
+            return new StateDirection[] { StateDirection.South };
+        }
 
         #endregion States
 
