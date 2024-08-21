@@ -99,9 +99,9 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
-        public static void ExportDataPixelStorage()
+        public static void SavePixelStorage()
         {
-            dataPixelStorage.ExportPixelStorageToCSV(GetPixelStoragePath());
+            dataPixelStorage.SavePixelStorage(GetPixelStoragePath());
         }
 
         #endregion Saves

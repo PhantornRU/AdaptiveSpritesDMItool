@@ -21,6 +21,7 @@ using System.IO;
 using AdaptiveSpritesDMItool.Models;
 using AdaptiveSpritesDMItool.Controllers;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -49,11 +50,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             ControllButtonsAvailability();
 
             TestFunction();
-        }
-
-        private void TestFunction()
-        {
-
         }
 
 
@@ -618,5 +614,25 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         #endregion Buttons Helpers
 
         #endregion Buttons Controller
+
+
+        #region Testing
+
+        private void TestFunction()
+        {
+
+        }
+
+        private void TestButton_Click(object sender, RoutedEventArgs e)
+        {
+            EnvironmentController.dataPixelStorage.SavePixelStorage(EnvironmentController.GetPixelStoragePath() + "Test");
+        }
+
+        private void TestButton2_Click(object sender, RoutedEventArgs e)
+        {
+            EnvironmentController.dataPixelStorage.LoadPixelStorageToEnvironment(EnvironmentController.GetPixelStoragePath() + "Test");
+        }
+
+        #endregion Testing
     }
 }

@@ -7,12 +7,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
 
 namespace AdaptiveSpritesDMItool.Models
 {
     public class DataPixelStorage
     {
-        private ConcurrentDictionary<StateDirection, ConcurrentDictionary<(int x, int y), (int x, int y)>> pixelStorages = 
+        public ConcurrentDictionary<StateDirection, ConcurrentDictionary<(int x, int y), (int x, int y)>> pixelStorages = 
             new ConcurrentDictionary<StateDirection, ConcurrentDictionary<(int x, int y), (int x, int y)>>();
 
         public DataPixelStorage(string path, int width, int height)
@@ -35,17 +37,44 @@ namespace AdaptiveSpritesDMItool.Models
                 //ExportPixelStorageToCSV(path + "Test");
                 return;
             }
-            ImportPixelStorageFromCSV(path);
+            LoadPixelStorageToEnvironment(path);
         }
+
+
+        #region Edit
 
         public void ChangePoint(StateDirection direction, (int x, int y) point, (int x, int y) pointMod)
         {
             pixelStorages[direction][point] = pointMod;
         }
 
+        #endregion Edit
+
+
         #region File IO
 
-        public void ExportPixelStorageToCSV(string path)
+
+
+        public void SavePixelStorage(string path)
+        {
+            ExportPixelStorageToCSV(path);
+        }
+
+        public void LoadPixelStorageToEnvironment(string path)
+        {
+            ImportPixelStorageFromCSV(path);
+            DrawPixelStorageAtBitmaps();
+        }
+
+        public void DrawPixelStorageAtBitmaps()
+        {
+            var points = pixelStorages.SelectMany(p => p.Value.Select(p2 => (p.Key, p2.Key, p2.Value)));
+            EditorController.DrawPixelStorageAtBitmaps(points);
+        }
+
+        #region Data table
+
+        private void ExportPixelStorageToCSV(string path)
         {
             var csv = string.Join(
                 Environment.NewLine,
@@ -63,7 +92,7 @@ namespace AdaptiveSpritesDMItool.Models
             File.WriteAllText($"{path}.csv", csv);
         }
 
-        public void ImportPixelStorageFromCSV(string path)
+        private void ImportPixelStorageFromCSV(string path)
         {
             var lines = File.ReadAllLines($"{path}.csv");
 
@@ -79,6 +108,8 @@ namespace AdaptiveSpritesDMItool.Models
                 pixelStorages[direction][(x1, y1)] = (x2, y2);
             }
         }
+
+        #endregion Data table
 
         #endregion File IO
     }

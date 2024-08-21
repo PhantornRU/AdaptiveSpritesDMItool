@@ -17,6 +17,7 @@ using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats;
 using System.Drawing;
+using System.Collections.Concurrent;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
@@ -232,6 +233,8 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             if (MouseController.isMouseInImage)
                 pickedPoint = MouseController.currentMousePosition;
+
+            Debug.WriteLine($"[Picked: {pickedPoint}]");
         }
 
         #endregion Editor View
@@ -336,7 +339,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         private static void SetPickedPoints(System.Drawing.Point[]? points = null)
         {
-            if (pickedPoint.X <= 0) return;
+            if (pickedPoint.X < 0 || pickedPoint.Y < 0) return;
 
             int bitmapWidth = EnvironmentController.dataImageState.imageCellsSize.Width;
             var stateDirections = StatesController.GetStateDirections();
@@ -358,8 +361,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                 {
                     var tempPoint = point;
                     tempPoint.X = CorrectMousePositionX(stateDirectionToModify, point.X, bitmapWidth);
-                    bitmapEditable.SetPixel(tempPoint.X, tempPoint.Y, color);
-                    bitmapOverlayEditable.SetPixel(tempPoint.X, tempPoint.Y, colorOverlay);
+                    UpdatePixel(stateDirectionToModify, bitmapEditable, tempPoint, color);
+                    UpdatePixel(stateDirectionToModify, bitmapOverlayEditable, tempPoint, colorOverlay);
                 }
             }
 
@@ -393,18 +396,61 @@ namespace AdaptiveSpritesDMItool.Controllers
                         colorOverlay = bitmapOverlayPreview.GetPixel(tempPoint.X, tempPoint.Y);
                     }
                     tempPoint.X = CorrectMousePositionX(stateDirectionToModify, point.X, bitmapWidth);
-                    bitmapEditable.SetPixel(tempPoint.X, tempPoint.Y, color);
-                    bitmapOverlayEditable.SetPixel(tempPoint.X, tempPoint.Y, colorOverlay);
+                    UpdatePixel(stateDirectionToModify, bitmapEditable, tempPoint, color, !isUndo);
+                    UpdatePixel(stateDirectionToModify, bitmapOverlayEditable, tempPoint, colorOverlay, !isUndo);
                 }
             }
         }
 
-        private static (WriteableBitmap, WriteableBitmap) GetBitmaps(StateDirection stateDirection) =>
-            (EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Right),
-             EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Right));
+        public static void DrawPixelStorageAtBitmaps(IEnumerable<(StateDirection, (int x, int y), (int x, int y))> points)
+        {
+            foreach (var (stateDirection, point, pointForColor) in points)
+            {
+                // Skip it to avoid unnecessary operations
+                if (point == pointForColor) continue;
 
-        private static (System.Windows.Media.Color, System.Windows.Media.Color) GetColors(WriteableBitmap previewBitmap, WriteableBitmap overlayBitmap) =>
-            (GetPickedPointColor(previewBitmap), GetPickedPointColor(overlayBitmap));
+                // Bitmaps from which we take pixels
+                WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Left);
+                WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Left);
+
+                // Bitmaps we edit
+                WriteableBitmap bitmapEditable = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Right);
+                WriteableBitmap bitmapOverlayEditable = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Right);
+
+                if (pointForColor.x < 0 || pointForColor.y < 0)
+                {
+                    bitmapEditable.SetPixel(point.x, point.y, Colors.Transparent);
+                    bitmapOverlayEditable.SetPixel(point.x, point.y, Colors.Transparent);
+                }
+                else
+                {
+                    var pixel = bitmapPreview.GetPixel(pointForColor.x, pointForColor.y);
+                    var pixelOverlay = bitmapOverlayPreview.GetPixel(pointForColor.x, pointForColor.y);
+                    bitmapEditable.SetPixel(point.x, point.y, pixel);
+                    bitmapOverlayEditable.SetPixel(point.x, point.y, pixelOverlay);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Change the point and update the storage.
+        /// </summary>
+        /// <param name="stateDirection"></param>
+        /// <param name="bitmapEditable"></param>
+        /// <param name="point"></param>
+        /// <param name="color"></param>
+        private static void UpdatePixel(StateDirection stateDirection, WriteableBitmap bitmapEditable, System.Drawing.Point point, System.Windows.Media.Color color, bool isRemove = false)
+        {
+            bitmapEditable.SetPixel(point.X, point.Y, color);
+            System.Drawing.Point newPoint = pickedPoint;
+            //if (color == Colors.Transparent)
+            if(isRemove)
+            {
+                newPoint.X = -1;
+                newPoint.Y = -1;
+            }
+            EnvironmentController.dataPixelStorage.ChangePoint(stateDirection, (point.X, point.Y), (newPoint.X, newPoint.Y));
+        }
 
         public static System.Windows.Media.Color GetPickedPointColor(WriteableBitmap bitmap) => bitmap.GetPixel(pickedPoint.X, pickedPoint.Y);
 
@@ -444,7 +490,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             {
                 WriteableBitmap bitmap = EnvironmentController.GetSelectorBMP(stateDirectionToModify, stateImageSideType);
                 bitmap.Clear();
-                Debug.WriteLine($"stateDirectionToModify: {stateDirectionToModify} - mousePoint1: {mousePoint1} - mousePoint2: {mousePoint2} - bitmapSize: {imageSize}");
+                //Debug.WriteLine($"stateDirectionToModify: {stateDirectionToModify} - mousePoint1: {mousePoint1} - mousePoint2: {mousePoint2} - bitmapSize: {imageSize}");
                 mousePoint1 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint1, imageSize);
                 mousePoint2 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint2, imageSize);
                 DrawSelectionRect(bitmap, mousePoint1, mousePoint2, pixelSize);

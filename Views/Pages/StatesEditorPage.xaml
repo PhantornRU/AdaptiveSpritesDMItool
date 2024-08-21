@@ -23,6 +23,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!--<ScrollViewer
@@ -52,7 +53,7 @@
 
 
 
-            <ToolBar Grid.Row="0" VerticalAlignment="Top">
+            <ToolBar Grid.Row="0" VerticalAlignment="Top" Margin="0,12,0,0">
 
                 <!--Take pixels from the preview and move them to the editable part-->
                 <Separator Margin="6,0,10,0" />
@@ -169,7 +170,6 @@
         </Grid>
 
         <!--Edit State Windows-->
-        
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
@@ -469,6 +469,34 @@
 
             </Grid>
 
+
+        </Grid>
+
+
+
+        <!--ToolBar-->
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+
+
+            <ToolBar Grid.Row="0" VerticalAlignment="Top" Margin="0,12,0,0">
+
+                <!--Take pixels from the preview and move them to the editable part-->
+                <Separator Margin="6,0,10,0" />
+                <ui:Button
+                        x:Name="TestButton"
+                        ToolTip="Test button. You shouldn't see it, if you did, the developer screwed up. Please let him know."
+                        Icon="{ui:SymbolIcon AddSquare24}" Click="TestButton_Click" />
+                <ui:Button
+                        x:Name="TestButton2"
+                        ToolTip="Test button. You shouldn't see it, if you did, the developer screwed up. Please let him know."
+                        Icon="{ui:SymbolIcon AddSquare24}" Click="TestButton2_Click" />
+                
+            </ToolBar>
 
         </Grid>
 
