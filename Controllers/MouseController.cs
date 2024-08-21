@@ -34,22 +34,22 @@ namespace AdaptiveSpritesDMItool.Controllers
                     EditorController.EditSingleMode(_stateImageSideType);
                     break;
                 case StateEditType.Fill:
-                    EditorController.EditFillModeStart();
+                    EditorController.EditFillModeStart(_stateImageSideType);
                     break;
                 case StateEditType.Move:
-                    EditorController.EditMoveMode();
+                    EditorController.EditMoveMode(_stateImageSideType);
                     break;
                 case StateEditType.Select:
-                    EditorController.EditSelectModeStart();
+                    EditorController.EditSelectModeStart(_stateImageSideType);
                     break;
                 case StateEditType.Delete:
-                    EditorController.EditDeleteMode();
+                    EditorController.EditDeleteMode(_stateImageSideType);
                     break;
                 case StateEditType.Undo:
-                    EditorController.EditUndoMode();
+                    EditorController.EditUndoMode(_stateImageSideType);
                     break;
                 case StateEditType.UndoArea:
-                    EditorController.EditUndoAreaModeStart();
+                    EditorController.EditUndoAreaModeStart(_stateImageSideType);
                     break;
             }
         }
@@ -64,13 +64,13 @@ namespace AdaptiveSpritesDMItool.Controllers
             switch (StatesController.currentStateEditMode)
             {
                 case StateEditType.Fill:
-                    EditorController.EditFillModeEnd();
+                    EditorController.EditFillModeEnd(_stateImageSideType);
                     break;
                 case StateEditType.Select:
-                    EditorController.EditSelectModeEnd();
+                    EditorController.EditSelectModeEnd(_stateImageSideType);
                     break;
                 case StateEditType.UndoArea:
-                    EditorController.EditUndoAreaModeEnd();
+                    EditorController.EditUndoAreaModeEnd(_stateImageSideType);
                     break;
             }
 
@@ -92,22 +92,22 @@ namespace AdaptiveSpritesDMItool.Controllers
                     EditorController.EditSingleMode(_stateImageSideType);
                     break;
                 case StateEditType.Fill:
-                    EditorController.EditFillMode();
+                    EditorController.EditFillMode(_stateImageSideType);
                     break;
                 case StateEditType.Move:
-                    EditorController.EditMoveMode();
+                    EditorController.EditMoveMode(_stateImageSideType);
                     break;
                 case StateEditType.Select:
-                    EditorController.EditSelectMode();
+                    EditorController.EditSelectMode(_stateImageSideType);
                     break;
                 case StateEditType.Delete:
-                    EditorController.EditDeleteMode();
+                    EditorController.EditDeleteMode(_stateImageSideType);
                     break;
                 case StateEditType.Undo:
-                    EditorController.EditUndoMode();
+                    EditorController.EditUndoMode(_stateImageSideType);
                     break;
                 case StateEditType.UndoArea:
-                    EditorController.EditUndoAreaMode();
+                    EditorController.EditUndoAreaMode(_stateImageSideType);
                     break;
             }
         }
@@ -120,7 +120,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
             if (!mouseIsDown)
                 return;
-            EditorController.EditWhenEnterImage();
+            EditorController.EditWhenEnterImage(_stateImageSideType);
         }
 
         public static void state_MouseLeave(MouseEventArgs e, StateDirection _stateDirection, StateImageSideType _stateImageSideType)

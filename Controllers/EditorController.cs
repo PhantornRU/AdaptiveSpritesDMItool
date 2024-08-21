@@ -39,78 +39,179 @@ namespace AdaptiveSpritesDMItool.Controllers
             switch (_stateImageSideType)
             {
                 case StateImageSideType.Left:
-                    ViewSingleSelectorAtCurrentPosition(StateImageSideType.Left);
+                    ViewSingleSelectorAtCurrentPosition(_stateImageSideType);
                     PickPointAtCurrentPosition();
                     break;
                 case StateImageSideType.Right:
-                    SetPickedPoint();
+                    SetPickedPoints();
                     break;
             }
         }
 
-        public static void EditFillModeStart()
+        public static void EditFillModeStart(StateImageSideType _stateImageSideType)
+        {
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    ViewSingleSelectorAtCurrentPosition(_stateImageSideType);
+                    PickPointAtCurrentPosition();
+                    break;
+                case StateImageSideType.Right:
+                    ViewMultSelectorAtCurrentToMDownPosition(_stateImageSideType);
+                    break;
+            }
+        }
+
+        public static void EditFillMode(StateImageSideType _stateImageSideType)
+        {
+            if (!MouseController.isMouseInImage)
+                return;
+
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    ViewSingleSelectorAtCurrentPosition(_stateImageSideType);
+                    PickPointAtCurrentPosition();
+                    break;
+                case StateImageSideType.Right:
+                    ViewMultSelectorAtCurrentToMDownPosition(_stateImageSideType);
+                    break;
+            }
+
+        }
+
+        public static void EditFillModeEnd(StateImageSideType _stateImageSideType)
+        {
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    break;
+                case StateImageSideType.Right:
+                    if (MouseController.currentMouseDownPosition != MouseController.currentMousePosition)
+                    {
+                        var points = GetPointsFromMouseDownToUp();
+                        SetPickedPoints(points);
+                    }
+                    break;
+            }
+        }
+
+        public static void EditDeleteMode(StateImageSideType _stateImageSideType)
+        {
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    break;
+                case StateImageSideType.Right:
+                    ClearSelectors();
+                    ClearCurrentPoints();
+                    break;
+            }
+        }
+
+        public static void EditUndoMode(StateImageSideType _stateImageSideType)
+        {
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    break;
+                case StateImageSideType.Right:
+                    ClearSelectors();
+                    ClearCurrentPoints(isUndo: true);
+                    break;
+            }
+        }
+
+        public static void EditUndoAreaModeStart(StateImageSideType _stateImageSideType)
+        {
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    break;
+                case StateImageSideType.Right:
+                    ClearSelectors();
+                    ViewSingleSelectorAtCurrentPosition(_stateImageSideType);
+                    ClearCurrentPoints(isUndo: true);
+                    break;
+            }
+        }
+
+        public static void EditUndoAreaMode(StateImageSideType _stateImageSideType)
+        {
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    break;
+                case StateImageSideType.Right:
+                    ViewMultSelectorAtCurrentToMDownPosition(_stateImageSideType);
+                    break;
+            }
+        }
+
+        public static void EditUndoAreaModeEnd(StateImageSideType _stateImageSideType)
         {
             ClearSelectors();
-            ViewMultSelectorAtCurrentToMDownPosition(StateImageSideType.Left);
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    break;
+                case StateImageSideType.Right:
+                    var points = GetPointsFromMouseDownToUp();
+                    ClearCurrentPoints(points, true);
+                    break;
+            }
         }
 
-        public static void EditFillMode()
+        public static void EditSelectModeStart(StateImageSideType _stateImageSideType)
         {
-            ViewMultSelectorAtCurrentToMDownPosition(StateImageSideType.Left);
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    break;
+                case StateImageSideType.Right:
+                    ClearSelectors();
+                    ViewSingleSelectorAtCurrentPosition(_stateImageSideType);
+                    break;
+            }
         }
 
-        public static void EditFillModeEnd()
+        public static void EditSelectMode(StateImageSideType _stateImageSideType)
         {
-            ClearSelectors();
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    break;
+                case StateImageSideType.Right:
+                    ViewMultSelectorAtCurrentToMDownPosition(_stateImageSideType);
+                    break;
+            }
         }
 
-        public static void EditDeleteMode()
-        {
-            ClearSelectors();
-        }
-
-        public static void EditUndoMode()
-        {
-            ClearSelectors();
-        }
-
-        public static void EditUndoAreaModeStart()
-        {
-            ClearSelectors();
-        }
-
-        public static void EditUndoAreaMode()
+        public static void EditSelectModeEnd(StateImageSideType _stateImageSideType)
         {
             //ClearSelectors();
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    break;
+                case StateImageSideType.Right:
+                    break;
+            }
         }
 
-        public static void EditUndoAreaModeEnd()
+        public static void EditMoveMode(StateImageSideType _stateImageSideType)
         {
-            ClearSelectors();
+            switch (_stateImageSideType)
+            {
+                case StateImageSideType.Left:
+                    break;
+                case StateImageSideType.Right:
+                    ViewSingleSelectorAtCurrentPosition(_stateImageSideType);
+                    break;
+            }
         }
 
-        public static void EditSelectModeStart()
-        {
-            ClearSelectors();
-            ViewSingleSelectorAtCurrentPosition(StateImageSideType.Right);
-        }
-
-        public static void EditSelectMode()
-        {
-            ViewMultSelectorAtCurrentToMDownPosition(StateImageSideType.Right);
-        }
-
-        public static void EditSelectModeEnd()
-        {
-            //ClearSelectors();
-        }
-
-        public static void EditMoveMode()
-        {
-            ViewSingleSelectorAtCurrentPosition(StateImageSideType.Right);
-        }
-
-        public static void EditWhenEnterImage()
+        public static void EditWhenEnterImage(StateImageSideType _stateImageSideType)
         {
             ClearSelectors();
         }
@@ -236,33 +337,100 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #endregion Grids
 
-        #region
+        #region Draw
 
-        private static void SetPickedPoint()
+        private static void SetPickedPoints(System.Drawing.Point[]? points = null)
         {
-            System.Drawing.Point mousePos = MouseController.GetCurrentMousePosition();
-
+            int bitmapWidth = EnvironmentController.dataImageState.imageCellsSize.Width;
             var stateDirections = StatesController.GetStateDirections();
+            System.Drawing.Point mousePos = MouseController.GetCurrentMousePosition();
+            if (points == null) points = new System.Drawing.Point[] { mousePos };
 
             foreach (var stateDirectionToModify in stateDirections)
             {
                 WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Left);
-                System.Windows.Media.Color color = GetPickedPointColor(bitmapPreview);
                 WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Left);
+
+                WriteableBitmap bitmapEditable = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Right);
+                WriteableBitmap bitmapOverlayEditable = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Right);
+
+                System.Windows.Media.Color color = GetPickedPointColor(bitmapPreview);
                 System.Windows.Media.Color colorOverlay = GetPickedPointColor(bitmapOverlayPreview);
 
-                WriteableBitmap bitmap = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Right);
-                WriteableBitmap bitmapOverlay = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Right);
-                int bitmapWidth = (int)bitmap.Width;
-                mousePos.X = CorrectMousePositionX(stateDirectionToModify, mousePos.X, bitmapWidth);
-                bitmap.SetPixel(mousePos.X, mousePos.Y, color);
-                bitmapOverlay.SetPixel(mousePos.X, mousePos.Y, colorOverlay);
+                foreach (System.Drawing.Point point in points)
+                {
+                    var tempPoint = point;
+                    tempPoint.X = CorrectMousePositionX(stateDirectionToModify, point.X, bitmapWidth);
+                    bitmapEditable.SetPixel(tempPoint.X, tempPoint.Y, color);
+                    bitmapOverlayEditable.SetPixel(tempPoint.X, tempPoint.Y, colorOverlay);
+                }
             }
         }
+
+        private static void ClearCurrentPoints(System.Drawing.Point[]? points = null, bool isUndo = false)
+        {
+            int bitmapWidth = EnvironmentController.dataImageState.imageCellsSize.Width;
+            var stateDirections = StatesController.GetStateDirections();
+            System.Drawing.Point mousePos = MouseController.GetCurrentMousePosition();
+            if (points == null) points = new System.Drawing.Point[] { mousePos };
+
+            foreach (var stateDirectionToModify in stateDirections)
+            {
+                WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Left);
+                WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Left);
+
+                WriteableBitmap bitmapEditable = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Right);
+                WriteableBitmap bitmapOverlayEditable = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Right);
+
+                System.Windows.Media.Color color = Colors.Transparent;
+                System.Windows.Media.Color colorOverlay = Colors.Transparent;
+
+                foreach (System.Drawing.Point point in points)
+                {
+                    var tempPoint = point;
+                    if (isUndo)
+                    {
+                        color = bitmapPreview.GetPixel(tempPoint.X, tempPoint.Y);
+                        colorOverlay = bitmapOverlayPreview.GetPixel(tempPoint.X, tempPoint.Y);
+                    }
+                    tempPoint.X = CorrectMousePositionX(stateDirectionToModify, point.X, bitmapWidth);
+                    bitmapEditable.SetPixel(tempPoint.X, tempPoint.Y, color);
+                    bitmapOverlayEditable.SetPixel(tempPoint.X, tempPoint.Y, colorOverlay);
+                }
+            }
+        }
+
+        private static (WriteableBitmap, WriteableBitmap) GetBitmaps(StateDirection stateDirection) =>
+            (EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Right),
+             EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Right));
+
+        private static (System.Windows.Media.Color, System.Windows.Media.Color) GetColors(WriteableBitmap previewBitmap, WriteableBitmap overlayBitmap) =>
+            (GetPickedPointColor(previewBitmap), GetPickedPointColor(overlayBitmap));
 
         public static System.Windows.Media.Color GetPickedPointColor(WriteableBitmap bitmap)
         {
             return bitmap.GetPixel(pickedPoint.X, pickedPoint.Y);
+        }
+
+        private static System.Drawing.Point[] GetPointsFromMouseDownToUp()
+        {
+            int x1 = Math.Min(MouseController.currentMouseDownPosition.X, MouseController.currentMousePosition.X);
+            int x2 = Math.Max(MouseController.currentMouseDownPosition.X, MouseController.currentMousePosition.X);
+            int y1 = Math.Min(MouseController.currentMouseDownPosition.Y, MouseController.currentMousePosition.Y);
+            int y2 = Math.Max(MouseController.currentMouseDownPosition.Y, MouseController.currentMousePosition.Y);
+
+            var points = new System.Drawing.Point[(x2 - x1 + 1) * (y2 - y1 + 1)];
+            int pointIndex = 0;
+            for (int y = y1; y <= y2; y++)
+            {
+                for (int x = x1; x <= x2; x++)
+                {
+                    points[pointIndex].X = x;
+                    points[pointIndex].Y = y;
+                    pointIndex++;
+                }
+            }
+            return points;
         }
 
         #endregion Draw
@@ -288,18 +456,31 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
-        public static void ClearSelectors()
+        public static void ClearSelectors(StateImageSideType _stateImageSideType)
         {
             var stateDirections = StatesController.allStateDirections;
             foreach (var stateDirectionToModify in stateDirections)
             {
-                foreach (StateImageSideType imageSideType in Enum.GetValues(typeof(StateImageSideType)))
+                WriteableBitmap bitmap = EnvironmentController.dataImageState.stateBMPdict[stateDirectionToModify][StateImageType.Selection][_stateImageSideType];
+                bitmap.Clear();
+            }
+        }
+
+        public static void ClearSelectors()
+        {
+            var stateDirections = StatesController.allStateDirections;
+
+            foreach (var stateDirectionToModify in stateDirections)
+            {
+                foreach (StateImageSideType stateImageSideType in Enum.GetValues(typeof(StateImageSideType)))
                 {
-                    WriteableBitmap bitmap = EnvironmentController.dataImageState.stateBMPdict[stateDirectionToModify][StateImageType.Selection][imageSideType];
+                    WriteableBitmap bitmap = EnvironmentController.dataImageState.stateBMPdict[stateDirectionToModify][StateImageType.Selection][stateImageSideType];
                     bitmap.Clear();
                 }
             }
         }
+
+        #region Visualize
 
         static void DrawSelectionRect(WriteableBitmap bitmap, System.Drawing.Point point, int pixelSize) => DrawSelectionRect(bitmap, point, point, pixelSize);
         static void DrawSelectionRect(WriteableBitmap bitmap, System.Drawing.Point point1, System.Drawing.Point point2, int pixelSize)
@@ -375,6 +556,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             bitmap.FillRectangle(point1.X * pixelSize, point1.Y * pixelSize, point1.X * pixelSize + pixelSize, point1.Y * pixelSize + pixelSize, redColor);
             bitmap.FillRectangle(point2.X * pixelSize, point2.Y * pixelSize, point2.X * pixelSize + pixelSize, point2.Y * pixelSize + pixelSize, greenColor);
         }
+        #endregion Visualize
 
         #endregion Selector
     }
