@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 
-namespace AdaptiveSpritesDMItool.Models
+namespace AdaptiveSpritesDMItool.Resources
 {
     public class DataPixelStorage
     {
-        public ConcurrentDictionary<StateDirection, ConcurrentDictionary<(int x, int y), (int x, int y)>> pixelStorages = 
+        public ConcurrentDictionary<StateDirection, ConcurrentDictionary<(int x, int y), (int x, int y)>> pixelStorages =
             new ConcurrentDictionary<StateDirection, ConcurrentDictionary<(int x, int y), (int x, int y)>>();
 
         public DataPixelStorage(string path, int width, int height)

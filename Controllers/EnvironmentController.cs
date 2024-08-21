@@ -1,4 +1,5 @@
 ﻿using AdaptiveSpritesDMItool.Models;
+using AdaptiveSpritesDMItool.Resources;
 using DMISharp;
 using System;
 using System.Collections.Generic;
