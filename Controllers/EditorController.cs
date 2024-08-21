@@ -22,7 +22,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 {
     internal static class EditorController
     {
-        private static System.Drawing.Point pickedPoint;
+        private static System.Drawing.Point pickedPoint = new System.Drawing.Point(-1, -1);
 
         #region  User Controller
 
@@ -71,7 +71,6 @@ namespace AdaptiveSpritesDMItool.Controllers
             {
                 case StateImageSideType.Left:
                     ViewSingleSelectorAtCurrentPosition(_stateImageSideType);
-                    PickPointAtCurrentPosition();
                     break;
                 case StateImageSideType.Right:
                     ViewMultSelectorAtCurrentToMDownPosition(_stateImageSideType);
@@ -341,6 +340,8 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         private static void SetPickedPoints(System.Drawing.Point[]? points = null)
         {
+            if (pickedPoint.X <= 0) return;
+
             int bitmapWidth = EnvironmentController.dataImageState.imageCellsSize.Width;
             var stateDirections = StatesController.GetStateDirections();
             System.Drawing.Point mousePos = MouseController.GetCurrentMousePosition();
@@ -365,6 +366,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                     bitmapOverlayEditable.SetPixel(tempPoint.X, tempPoint.Y, colorOverlay);
                 }
             }
+
+            //pickedPoint = new System.Drawing.Point(-1, -1);
         }
 
         private static void ClearCurrentPoints(System.Drawing.Point[]? points = null, bool isUndo = false)
@@ -407,10 +410,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         private static (System.Windows.Media.Color, System.Windows.Media.Color) GetColors(WriteableBitmap previewBitmap, WriteableBitmap overlayBitmap) =>
             (GetPickedPointColor(previewBitmap), GetPickedPointColor(overlayBitmap));
 
-        public static System.Windows.Media.Color GetPickedPointColor(WriteableBitmap bitmap)
-        {
-            return bitmap.GetPixel(pickedPoint.X, pickedPoint.Y);
-        }
+        public static System.Windows.Media.Color GetPickedPointColor(WriteableBitmap bitmap) => bitmap.GetPixel(pickedPoint.X, pickedPoint.Y);
 
         private static System.Drawing.Point[] GetPointsFromMouseDownToUp()
         {
@@ -543,10 +543,10 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
 
             // Draw points for debugging
-            VisualizePoints(bitmap, point1, point2, pixelSize);
+            //VisualizeMousePoints(bitmap, point1, point2, pixelSize);
         }
 
-        private static void VisualizePoints(WriteableBitmap bitmap, System.Drawing.Point point1, System.Drawing.Point point2, int pixelSize)
+        private static void VisualizeMousePoints(WriteableBitmap bitmap, System.Drawing.Point point1, System.Drawing.Point point2, int pixelSize)
         {
             byte alpha = 150;
             System.Windows.Media.Color redColor = System.Windows.Media.Colors.Red;
@@ -556,6 +556,17 @@ namespace AdaptiveSpritesDMItool.Controllers
             bitmap.FillRectangle(point1.X * pixelSize, point1.Y * pixelSize, point1.X * pixelSize + pixelSize, point1.Y * pixelSize + pixelSize, redColor);
             bitmap.FillRectangle(point2.X * pixelSize, point2.Y * pixelSize, point2.X * pixelSize + pixelSize, point2.Y * pixelSize + pixelSize, greenColor);
         }
+
+        public static void VisualizeSelectedPoint(StateDirection stateDirection, WriteableBitmap bitmap, System.Drawing.Point point, int pixelSize)
+        {
+            WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Left);
+            WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Left);
+            byte alpha = 100;
+            System.Windows.Media.Color color = bitmapOverlayPreview.GetPixel(point.X, point.Y);
+            color.A = alpha;
+            bitmap.FillRectangle(point.X * pixelSize, point.Y * pixelSize, point.X * pixelSize + pixelSize, point.Y * pixelSize + pixelSize, color);
+        }
+
         #endregion Visualize
 
         #endregion Selector
