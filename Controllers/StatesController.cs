@@ -58,19 +58,29 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region States
 
-        public static IEnumerable<StateDirection> GetStateDirections()
+        public static IEnumerable<StateDirection> GetStateDirections() => GetStateDirections(currentStateQuantityMode, currentStateDirection);
+        public static IEnumerable<StateDirection> GetStateDirections(StateQuantityType _stateQuantityMode, StateDirection _stateDirection)
         {
-            switch (currentStateQuantityMode)
+            switch (_stateQuantityMode)
             {
                 case StateQuantityType.Single:
-                    return new[] { currentStateDirection };
+                    return new[] { _stateDirection };
 
                 case StateQuantityType.Parallel:
-                    return GetParallelStates(currentStateDirection);
+                    return GetParallelStates(_stateDirection);
 
                 case StateQuantityType.All:
-                    int parallValue = (int)currentStateDirection / 2 == 1 ? -2 : 2;
-                    return GetParallelStates(currentStateDirection).Union(GetParallelStates((StateDirection)((int)currentStateDirection + parallValue)));
+
+                    StateDirection verticalOppositeState = GetVerticalOppositeState(_stateDirection);
+
+                    var parallelStates = GetParallelStates(_stateDirection);
+                    var parallelStatesOpposite = GetParallelStates(verticalOppositeState);
+
+                    return parallelStates.Concat(parallelStatesOpposite);
+
+                    // int parallValue = (int)_stateDirection / 2 == 1 ? -2 : 2;
+                    // StateDirection verticalOppositeState = GetVerticalOppositeState(_stateDirection);
+                    // return GetParallelStates(_stateDirection).Union(GetParallelStates(verticalOppositeState));
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -79,14 +89,35 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static StateDirection[] GetParallelStates() => GetParallelStates(currentStateDirection);
         public static StateDirection[] GetParallelStates(StateDirection _stateDirection)
         {
-            int parallValue = isStateOpposite(_stateDirection) ? -1 : 1;
-            StateDirection parallelState = _stateDirection + parallValue;
+            //int parallValue = isStateOpposite(_stateDirection) ? -1 : 1;
+            //StateDirection parallelState = _stateDirection + parallValue;
+            StateDirection parallelState = GetHorizontalOppositeState(_stateDirection);
             return new[] { _stateDirection, parallelState };
         }
 
-        public static StateDirection GetVerticalOppositeState()
+
+        public static StateDirection GetVerticalOppositeState() => GetVerticalOppositeState(currentStateDirection);
+        public static StateDirection GetVerticalOppositeState(StateDirection _stateDirection)
         {
-            switch (currentStateDirection)
+            switch (_stateDirection)
+            {
+                case StateDirection.South:
+                    return StateDirection.East;
+                case StateDirection.North:
+                    return StateDirection.West;
+                case StateDirection.East:
+                    return StateDirection.South;
+                case StateDirection.West:
+                    return StateDirection.North;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public static StateDirection GetHorizontalOppositeState() => GetHorizontalOppositeState(currentStateDirection);
+        public static StateDirection GetHorizontalOppositeState(StateDirection _stateDirection)
+        {
+            switch (_stateDirection)
             {
                 case StateDirection.South:
                     return StateDirection.North;

@@ -250,17 +250,10 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             bool isMirroredState = StatesController.isMirroredState;
             bool isStateOpposite = StatesController.isStateOpposite(stateDirection);
-
-            // bool isStateVerticalOpposite = StatesController.isStateVerticalOpposite(stateDirection);
-            // bool isCurrentRow = ((int)stateDirection  / 2) == (int)StatesController.currentStateDirection / 2;
-
-            // Debug.WriteLine($"{(int)stateDirection} {(int)stateDirection % 2} {(int)stateDirection / 2}");
-            // bool isCurrentDirection = StatesController.currentStateDirection == stateDirection;
-            // Debug.WriteLine($"stateDirection: {stateDirection}({(int)stateDirection}) - current: [{isCurrentDirection}; {isCurrentRow}], Opposite: [{isStateOpposite}; {isStateVerticalOpposite}]");
+            //bool isStateVerticalOpposite = StatesController.isStateVerticalOpposite(stateDirection);
             if (!isMirroredState
                 || !isStateOpposite
                 //|| isStateVerticalOpposite
-                //|| !isCurrentRow
                 )
             {
                 return mousePoint;
@@ -352,7 +345,6 @@ namespace AdaptiveSpritesDMItool.Controllers
 
                 foreach (Point point in points)
                 {
-                    //tempPoint.X = CorrectMousePositionX(stateDirection, point.X, bitmapWidth);
                     var tempPoint = CorrectMousePositionPoint(stateDirection, point, bitmapSize);
                     UpdatePixel(stateDirection, bitmapEditable, tempPoint, color);
                     UpdatePixel(stateDirection, bitmapOverlayEditable, tempPoint, colorOverlay);
@@ -383,12 +375,12 @@ namespace AdaptiveSpritesDMItool.Controllers
                 foreach (Point point in points)
                 {
                     var pointToColor = point;
+                    pointToColor = CorrectMousePositionPoint(stateDirection, point, bitmapSize);
                     if (isUndo)
                     {
                         color = bitmapPreview.GetPixel(pointToColor.X, pointToColor.Y);
                         colorOverlay = bitmapOverlayPreview.GetPixel(pointToColor.X, pointToColor.Y);
                     }
-                    pointToColor = CorrectMousePositionPoint(stateDirection, point, bitmapSize);
                     UpdatePixel(stateDirection, bitmapEditable, pointToColor, color, !isUndo);
                     UpdatePixel(stateDirection, bitmapOverlayEditable, pointToColor, colorOverlay, !isUndo);
                 }
