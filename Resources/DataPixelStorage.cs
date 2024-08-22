@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using System.Windows.Media.Media3D;
 
 namespace AdaptiveSpritesDMItool.Resources
 {
@@ -21,20 +22,7 @@ namespace AdaptiveSpritesDMItool.Resources
         {
             if (!File.Exists($"{path}.csv"))
             {
-                var initialPoints = Enumerable.Range(0, width * height)
-                    .Select(i => (x: i % width, y: i / width))
-                    .ToArray();
-
-                foreach (var direction in StatesController.allStateDirection(DirectionDepth.Four).Cast<StateDirection>())
-                {
-                    pixelStorages[direction] = new ConcurrentDictionary<(int x, int y), (int x, int y)>(
-                        initialPoints.Select(point => new KeyValuePair<(int x, int y), (int x, int y)>(point, point))
-                    );
-                }
-
-                // !!!!!!!TEST!!!!!!!!!!!!!!!
-                //ChangePoint(StateDirection.South, new(15, 15), new(22, 22));
-                //ExportPixelStorageToCSV(path + "Test");
+                FillDataSimilarPoints(width, height);
                 return;
             }
             LoadPixelStorageToEnvironment(path);
@@ -46,6 +34,21 @@ namespace AdaptiveSpritesDMItool.Resources
         public void ChangePoint(StateDirection direction, (int x, int y) point, (int x, int y) pointMod)
         {
             pixelStorages[direction][point] = pointMod;
+        }
+
+        private void FillDataSimilarPoints(int width, int height)
+        {
+            var initialPoints = Enumerable.Range(0, width * height)
+                .Select(i => (x: i % width, y: i / width))
+                .ToArray();
+
+            foreach (var direction in StatesController.allStateDirection(DirectionDepth.Four).Cast<StateDirection>())
+            {
+                pixelStorages[direction] = new ConcurrentDictionary<(int x, int y), (int x, int y)>(
+                    initialPoints.Select(point => new KeyValuePair<(int x, int y), (int x, int y)>(point, point))
+                );
+            }
+
         }
 
         #endregion Edit
