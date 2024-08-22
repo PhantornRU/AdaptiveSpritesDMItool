@@ -351,7 +351,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             MouseController.state_MouseUp(e, StateDirection.East, StateImageSideType.Left);
         }
 
-        private void imagePreviewRightWest_MouseEnter(object sender, MouseEventArgs e)
+        private void imagePreviewRightEast_MouseEnter(object sender, MouseEventArgs e)
         {
             MouseController.state_MouseEnter(e, StateDirection.East, StateImageSideType.Right);
         }
@@ -361,7 +361,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             MouseController.state_MouseEnter(e, StateDirection.East, StateImageSideType.Left);
         }
 
-        private void imagePreviewRightWest_MouseLeave(object sender, MouseEventArgs e)
+        private void imagePreviewRightEast_MouseLeave(object sender, MouseEventArgs e)
         {
             MouseController.state_MouseLeave(e, StateDirection.East, StateImageSideType.Right);
         }
@@ -406,7 +406,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             MouseController.state_MouseUp(e, StateDirection.West, StateImageSideType.Left);
         }
 
-        private void imagePreviewRightEast_MouseEnter(object sender, MouseEventArgs e)
+        private void imagePreviewRightWest_MouseEnter(object sender, MouseEventArgs e)
         {
             MouseController.state_MouseEnter(e, StateDirection.West, StateImageSideType.Right);
         }
@@ -416,7 +416,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             MouseController.state_MouseEnter(e, StateDirection.West, StateImageSideType.Left);
         }
 
-        private void imagePreviewRightEast_MouseLeave(object sender, MouseEventArgs e)
+        private void imagePreviewRightWest_MouseLeave(object sender, MouseEventArgs e)
         {
             MouseController.state_MouseLeave(e, StateDirection.West, StateImageSideType.Right);
         }

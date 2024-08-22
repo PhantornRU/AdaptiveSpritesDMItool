@@ -18,12 +18,13 @@ using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats;
 using System.Drawing;
 using System.Collections.Concurrent;
+using Point = System.Drawing.Point;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
     internal static class EditorController
     {
-        private static System.Drawing.Point pickedPoint = new System.Drawing.Point(-1, -1);
+        private static Point pickedPoint = new Point(-1, -1);
 
         #region Editor Modes
 
@@ -245,39 +246,31 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Helpers
 
-        private static int CorrectMousePositionX(StateDirection stateDirection, int mouseX, int bitmapWidth)
+        private static Point CorrectMousePositionPoint(StateDirection stateDirection, Point mousePoint, System.Drawing.Size bitmapSize)
         {
-            if (!StatesController.isMirroredState || StatesController.currentStateDirection == stateDirection)
-            {
-                return mouseX;
-            }
-            //bitmapWidth = isStateOpposite(stateDirection) ? 0 : bitmapWidth;
-            var additionValueX = StatesController.isCentralizedState ? -1 : 0;
-            int result = bitmapWidth - mouseX - 1 + additionValueX;
-            result = Math.Max(result, 0);
-            result = Math.Min(result, bitmapWidth - 1);
-            Debug.WriteLine($"[Orig: {mouseX} - Mod: {result}]");
-            return result;
+            bool isMirroredState = StatesController.isMirroredState;
+            bool isStateOpposite = StatesController.isStateOpposite(stateDirection);
 
-        }
+            // bool isStateVerticalOpposite = StatesController.isStateVerticalOpposite(stateDirection);
+            // bool isCurrentRow = ((int)stateDirection  / 2) == (int)StatesController.currentStateDirection / 2;
 
-
-        private static System.Drawing.Point CorrectMousePositionPoint(StateDirection stateDirection, System.Drawing.Point mousePoint, System.Drawing.Size bitmapSize)
-        {
-            if (!StatesController.isMirroredState || StatesController.currentStateDirection == stateDirection)
+            // Debug.WriteLine($"{(int)stateDirection} {(int)stateDirection % 2} {(int)stateDirection / 2}");
+            // bool isCurrentDirection = StatesController.currentStateDirection == stateDirection;
+            // Debug.WriteLine($"stateDirection: {stateDirection}({(int)stateDirection}) - current: [{isCurrentDirection}; {isCurrentRow}], Opposite: [{isStateOpposite}; {isStateVerticalOpposite}]");
+            if (!isMirroredState
+                || !isStateOpposite
+                //|| isStateVerticalOpposite
+                //|| !isCurrentRow
+                )
             {
                 return mousePoint;
             }
-            //bitmapWidth = isStateOpposite(stateDirection) ? 0 : bitmapWidth;
             var additionValueX = StatesController.isCentralizedState ? -1 : 0;
             int result = bitmapSize.Width - mousePoint.X - 1 + additionValueX;
             result = Math.Max(result, 0);
             result = Math.Min(result, bitmapSize.Width - 1);
-            System.Drawing.Point newMousePoint = new System.Drawing.Point(result, mousePoint.Y);
-
-            Debug.WriteLine($"stateDirection: {stateDirection} - [Orig: {mousePoint} - Mod: {newMousePoint}]");
-
-
+            Point newMousePoint = new Point(result, mousePoint.Y);
+            //Debug.WriteLine($"stateDirection: {stateDirection}: [Orig: {mousePoint} - Mod: {newMousePoint}]");
             return newMousePoint;
 
         }
@@ -337,67 +330,67 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Draw
 
-        private static void SetPickedPoints(System.Drawing.Point[]? points = null)
+        private static void SetPickedPoints(Point[]? points = null)
         {
             if (pickedPoint.X < 0 || pickedPoint.Y < 0) return;
 
-            int bitmapWidth = EnvironmentController.dataImageState.imageCellsSize.Width;
+            var bitmapSize = EnvironmentController.dataImageState.imageCellsSize;
             var stateDirections = StatesController.GetStateDirections();
-            System.Drawing.Point mousePos = MouseController.GetCurrentMousePosition();
-            if (points == null) points = new System.Drawing.Point[] { mousePos };
+            Point mousePos = MouseController.GetCurrentMousePosition();
+            if (points == null) points = new Point[] { mousePos };
 
-            foreach (var stateDirectionToModify in stateDirections)
+            foreach (var stateDirection in stateDirections)
             {
-                WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Left);
-                WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Left);
+                WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Left);
+                WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Left);
 
-                WriteableBitmap bitmapEditable = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Right);
-                WriteableBitmap bitmapOverlayEditable = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Right);
+                WriteableBitmap bitmapEditable = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Right);
+                WriteableBitmap bitmapOverlayEditable = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Right);
 
                 System.Windows.Media.Color color = GetPickedPointColor(bitmapPreview);
                 System.Windows.Media.Color colorOverlay = GetPickedPointColor(bitmapOverlayPreview);
 
-                foreach (System.Drawing.Point point in points)
+                foreach (Point point in points)
                 {
-                    var tempPoint = point;
-                    tempPoint.X = CorrectMousePositionX(stateDirectionToModify, point.X, bitmapWidth);
-                    UpdatePixel(stateDirectionToModify, bitmapEditable, tempPoint, color);
-                    UpdatePixel(stateDirectionToModify, bitmapOverlayEditable, tempPoint, colorOverlay);
+                    //tempPoint.X = CorrectMousePositionX(stateDirection, point.X, bitmapWidth);
+                    var tempPoint = CorrectMousePositionPoint(stateDirection, point, bitmapSize);
+                    UpdatePixel(stateDirection, bitmapEditable, tempPoint, color);
+                    UpdatePixel(stateDirection, bitmapOverlayEditable, tempPoint, colorOverlay);
                 }
             }
 
-            //pickedPoint = new System.Drawing.Point(-1, -1);
+            //pickedPoint = new Point(-1, -1);
         }
 
-        private static void ClearCurrentPoints(System.Drawing.Point[]? points = null, bool isUndo = false)
+        private static void ClearCurrentPoints(Point[]? points = null, bool isUndo = false)
         {
-            int bitmapWidth = EnvironmentController.dataImageState.imageCellsSize.Width;
+            var bitmapSize = EnvironmentController.dataImageState.imageCellsSize;
             var stateDirections = StatesController.GetStateDirections();
-            System.Drawing.Point mousePos = MouseController.GetCurrentMousePosition();
-            if (points == null) points = new System.Drawing.Point[] { mousePos };
+            Point mousePos = MouseController.GetCurrentMousePosition();
+            if (points == null) points = new Point[] { mousePos };
 
-            foreach (var stateDirectionToModify in stateDirections)
+            foreach (var stateDirection in stateDirections)
             {
-                WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Left);
-                WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Left);
+                WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Left);
+                WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Left);
 
-                WriteableBitmap bitmapEditable = EnvironmentController.GetPreviewBMP(stateDirectionToModify, StateImageSideType.Right);
-                WriteableBitmap bitmapOverlayEditable = EnvironmentController.GetOverlayBMP(stateDirectionToModify, StateImageSideType.Right);
+                WriteableBitmap bitmapEditable = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Right);
+                WriteableBitmap bitmapOverlayEditable = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Right);
 
                 System.Windows.Media.Color color = Colors.Transparent;
                 System.Windows.Media.Color colorOverlay = Colors.Transparent;
 
-                foreach (System.Drawing.Point point in points)
+                foreach (Point point in points)
                 {
-                    var tempPoint = point;
+                    var pointToColor = point;
                     if (isUndo)
                     {
-                        color = bitmapPreview.GetPixel(tempPoint.X, tempPoint.Y);
-                        colorOverlay = bitmapOverlayPreview.GetPixel(tempPoint.X, tempPoint.Y);
+                        color = bitmapPreview.GetPixel(pointToColor.X, pointToColor.Y);
+                        colorOverlay = bitmapOverlayPreview.GetPixel(pointToColor.X, pointToColor.Y);
                     }
-                    tempPoint.X = CorrectMousePositionX(stateDirectionToModify, point.X, bitmapWidth);
-                    UpdatePixel(stateDirectionToModify, bitmapEditable, tempPoint, color, !isUndo);
-                    UpdatePixel(stateDirectionToModify, bitmapOverlayEditable, tempPoint, colorOverlay, !isUndo);
+                    pointToColor = CorrectMousePositionPoint(stateDirection, point, bitmapSize);
+                    UpdatePixel(stateDirection, bitmapEditable, pointToColor, color, !isUndo);
+                    UpdatePixel(stateDirection, bitmapOverlayEditable, pointToColor, colorOverlay, !isUndo);
                 }
             }
         }
@@ -439,10 +432,10 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// <param name="bitmapEditable"></param>
         /// <param name="point"></param>
         /// <param name="color"></param>
-        private static void UpdatePixel(StateDirection stateDirection, WriteableBitmap bitmapEditable, System.Drawing.Point point, System.Windows.Media.Color color, bool isRemove = false)
+        private static void UpdatePixel(StateDirection stateDirection, WriteableBitmap bitmapEditable, Point point, System.Windows.Media.Color color, bool isRemove = false)
         {
             bitmapEditable.SetPixel(point.X, point.Y, color);
-            System.Drawing.Point newPoint = pickedPoint;
+            Point newPoint = pickedPoint;
             //if (color == Colors.Transparent)
             if(isRemove)
             {
@@ -454,14 +447,14 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static System.Windows.Media.Color GetPickedPointColor(WriteableBitmap bitmap) => bitmap.GetPixel(pickedPoint.X, pickedPoint.Y);
 
-        private static System.Drawing.Point[] GetPointsFromMouseDownToUp()
+        private static Point[] GetPointsFromMouseDownToUp()
         {
             int x1 = Math.Min(MouseController.currentMouseDownPosition.X, MouseController.currentMousePosition.X);
             int x2 = Math.Max(MouseController.currentMouseDownPosition.X, MouseController.currentMousePosition.X);
             int y1 = Math.Min(MouseController.currentMouseDownPosition.Y, MouseController.currentMousePosition.Y);
             int y2 = Math.Max(MouseController.currentMouseDownPosition.Y, MouseController.currentMousePosition.Y);
 
-            var points = new System.Drawing.Point[(x2 - x1 + 1) * (y2 - y1 + 1)];
+            var points = new Point[(x2 - x1 + 1) * (y2 - y1 + 1)];
             int pointIndex = 0;
             for (int y = y1; y <= y2; y++)
             {
@@ -478,32 +471,32 @@ namespace AdaptiveSpritesDMItool.Controllers
         #endregion Draw
 
         #region Selector
-        public static void SetSelectors(StateImageSideType stateImageSideType, System.Drawing.Point mousePos1) => SetSelectors(stateImageSideType, mousePos1, mousePos1);
-        public static void SetSelectors(StateImageSideType stateImageSideType, System.Drawing.Point mousePoint1, System.Drawing.Point mousePoint2)
+        public static void SetSelectors(StateImageSideType stateImageSideType, Point mousePoint) => SetSelectors(stateImageSideType, mousePoint, mousePoint);
+        public static void SetSelectors(StateImageSideType stateImageSideType, Point mousePoint1, Point mousePoint2)
         {
             int pixelSize = EnvironmentController.dataImageState.pixelSize;
             System.Drawing.Size imageSize = EnvironmentController.dataImageState.imageCellsSize;
-            var stateDirections = StatesController.GetStateDirections();
-            //bitmapWidth = _stateDirection == stateDirectionToModify ? 0 : bitmapWidth;
+            var stateDirectionsAll = StatesController.GetStateDirections();
 
-            foreach (var stateDirectionToModify in stateDirections)
+            foreach (StateDirection stateDirection in stateDirectionsAll)
             {
-                WriteableBitmap bitmap = EnvironmentController.GetSelectorBMP(stateDirectionToModify, stateImageSideType);
+                WriteableBitmap bitmap = EnvironmentController.GetSelectorBMP(stateDirection, stateImageSideType);
                 bitmap.Clear();
-                //Debug.WriteLine($"stateDirectionToModify: {stateDirectionToModify} - mousePoint1: {mousePoint1} - mousePoint2: {mousePoint2} - bitmapSize: {imageSize}");
-                mousePoint1 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint1, imageSize);
-                mousePoint2 = CorrectMousePositionPoint(stateDirectionToModify, mousePoint2, imageSize);
-                DrawSelectionRect(bitmap, mousePoint1, mousePoint2, pixelSize);
-                StatesController.stateSourceDictionary[stateDirectionToModify][StateImageType.Selection][stateImageSideType].Source = bitmap;
+
+                var mousePoint1Temp = CorrectMousePositionPoint(stateDirection, mousePoint1, imageSize);
+                var mousePoint2Temp = CorrectMousePositionPoint(stateDirection, mousePoint2, imageSize);
+
+                DrawSelectionRect(bitmap, mousePoint1Temp, mousePoint2Temp, pixelSize);
+                StatesController.stateSourceDictionary[stateDirection][StateImageType.Selection][stateImageSideType].Source = bitmap;
             }
         }
 
         public static void ClearSelectors(StateImageSideType _stateImageSideType)
         {
             var stateDirections = StatesController.allStateDirection(DirectionDepth.Four);
-            foreach (var stateDirectionToModify in stateDirections)
+            foreach (StateDirection stateDirection in stateDirections)
             {
-                WriteableBitmap bitmap = EnvironmentController.dataImageState.stateBMPdict[stateDirectionToModify][StateImageType.Selection][_stateImageSideType];
+                WriteableBitmap bitmap = EnvironmentController.dataImageState.stateBMPdict[stateDirection][StateImageType.Selection][_stateImageSideType];
                 bitmap.Clear();
             }
         }
@@ -512,11 +505,11 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             var stateDirections = StatesController.allStateDirection(DirectionDepth.Four);
 
-            foreach (var stateDirectionToModify in stateDirections)
+            foreach (StateDirection stateDirection in stateDirections)
             {
                 foreach (StateImageSideType stateImageSideType in Enum.GetValues(typeof(StateImageSideType)))
                 {
-                    WriteableBitmap bitmap = EnvironmentController.dataImageState.stateBMPdict[stateDirectionToModify][StateImageType.Selection][stateImageSideType];
+                    WriteableBitmap bitmap = EnvironmentController.dataImageState.stateBMPdict[stateDirection][StateImageType.Selection][stateImageSideType];
                     bitmap.Clear();
                 }
             }
@@ -524,8 +517,8 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Visualize
 
-        static void DrawSelectionRect(WriteableBitmap bitmap, System.Drawing.Point point, int pixelSize) => DrawSelectionRect(bitmap, point, point, pixelSize);
-        static void DrawSelectionRect(WriteableBitmap bitmap, System.Drawing.Point point1, System.Drawing.Point point2, int pixelSize)
+        static void DrawSelectionRect(WriteableBitmap bitmap, Point point, int pixelSize) => DrawSelectionRect(bitmap, point, point, pixelSize);
+        static void DrawSelectionRect(WriteableBitmap bitmap, Point point1, Point point2, int pixelSize)
         {
             int lineLength = 3;
             int lineThickness = 2;
@@ -588,7 +581,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             //VisualizeMousePoints(bitmap, point1, point2, pixelSize);
         }
 
-        private static void VisualizeMousePoints(WriteableBitmap bitmap, System.Drawing.Point point1, System.Drawing.Point point2, int pixelSize)
+        private static void VisualizeMousePoints(WriteableBitmap bitmap, Point point1, Point point2, int pixelSize)
         {
             byte alpha = 150;
             System.Windows.Media.Color redColor = System.Windows.Media.Colors.Red;
@@ -599,7 +592,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             bitmap.FillRectangle(point2.X * pixelSize, point2.Y * pixelSize, point2.X * pixelSize + pixelSize, point2.Y * pixelSize + pixelSize, greenColor);
         }
 
-        public static void VisualizeSelectedPoint(StateDirection stateDirection, WriteableBitmap bitmap, System.Drawing.Point point, int pixelSize)
+        public static void VisualizeSelectedPoint(StateDirection stateDirection, WriteableBitmap bitmap, Point point, int pixelSize)
         {
             WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Left);
             WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Left);

@@ -40,7 +40,9 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Helpers
 
-        public static bool isStateOpposite(StateDirection _stateDirection) => (int)_stateDirection % 2 == 0;
+        public static bool isStateOpposite(StateDirection _stateDirection) => ((int)_stateDirection % 2 != 0) && !(_stateDirection == currentStateDirection);
+
+        public static bool isStateVerticalOpposite(StateDirection _stateDirection) => ((int)_stateDirection % 2 == 0) && !(_stateDirection == currentStateDirection);
 
         #endregion Helpers
 
@@ -74,13 +76,30 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
-        private static StateDirection[] GetParallelStates(StateDirection _stateDirection)
+        public static StateDirection[] GetParallelStates() => GetParallelStates(currentStateDirection);
+        public static StateDirection[] GetParallelStates(StateDirection _stateDirection)
         {
-            int parallValue = isStateOpposite(_stateDirection) ? 1 : -1;
+            int parallValue = isStateOpposite(_stateDirection) ? -1 : 1;
             StateDirection parallelState = _stateDirection + parallValue;
             return new[] { _stateDirection, parallelState };
         }
 
+        public static StateDirection GetVerticalOppositeState()
+        {
+            switch (currentStateDirection)
+            {
+                case StateDirection.South:
+                    return StateDirection.North;
+                case StateDirection.North:
+                    return StateDirection.South;
+                case StateDirection.East:
+                    return StateDirection.West;
+                case StateDirection.West:
+                    return StateDirection.East;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
 
         /// <summary>
         /// The main states directions we work with

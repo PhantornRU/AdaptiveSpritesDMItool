@@ -16,6 +16,7 @@ using static System.Formats.Asn1.AsnWriter;
 using System.Windows.Media.Media3D;
 using System.Windows.Media;
 using System.Drawing;
+using Point = System.Drawing.Point;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -143,12 +144,12 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             Debug.WriteLine(GetMouseCoordinates(e, imgTest2));
         }
 
-        private System.Drawing.Point GetMouseCoordinates(System.Windows.Input.MouseButtonEventArgs _e, System.Windows.Controls.Image _img)
+        private Point GetMouseCoordinates(System.Windows.Input.MouseButtonEventArgs _e, System.Windows.Controls.Image _img)
         {
             System.Windows.Point pos = _e.GetPosition(_img);
             int x = (int)Math.Floor(pos.X * _img.Source.Width / _img.ActualWidth);
             int y = (int)Math.Floor(pos.Y * _img.Source.Height / _img.ActualHeight);
-            return new System.Drawing.Point(x, y);
+            return new Point(x, y);
             
         }
 

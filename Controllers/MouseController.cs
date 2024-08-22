@@ -6,15 +6,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Point = System.Drawing.Point;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
     internal static class MouseController
     {
 
-        public static System.Drawing.Point currentMouseDownPosition;
-        public static System.Drawing.Point currentMousePosition;
-        public static System.Drawing.Point currentMouseUpPosition;
+        public static Point currentMouseDownPosition;
+        public static Point currentMousePosition;
+        public static Point currentMouseUpPosition;
 
         public static bool isMouseInImage = false;
 
@@ -133,31 +134,31 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Helpers
 
-        public static System.Drawing.Point GetModifyMousePosition(System.Windows.Input.MouseButtonEventArgs _e, System.Windows.Controls.Image _img)
+        public static Point GetModifyMousePosition(System.Windows.Input.MouseButtonEventArgs _e, System.Windows.Controls.Image _img)
         {
-            Point pos = _e.GetPosition(_img);
+            System.Windows.Point pos = _e.GetPosition(_img);
             return GetModifyPosition(pos, _img);
         }
 
-        public static System.Drawing.Point GetModifyMousePosition(System.Windows.Input.MouseEventArgs _e, System.Windows.Controls.Image _img)
+        public static Point GetModifyMousePosition(System.Windows.Input.MouseEventArgs _e, System.Windows.Controls.Image _img)
         {
-            Point pos = _e.GetPosition(_img);
+            System.Windows.Point pos = _e.GetPosition(_img);
             return GetModifyPosition(pos, _img);
 
         }
 
-        private static System.Drawing.Point GetModifyPosition(Point _pos, System.Windows.Controls.Image _img)
+        private static Point GetModifyPosition(System.Windows.Point _pos, System.Windows.Controls.Image _img)
         {
             int x = (int)Math.Floor(_pos.X * _img.Source.Width / _img.ActualWidth);
             int y = (int)Math.Floor(_pos.Y * _img.Source.Height / _img.ActualHeight);
-            return new System.Drawing.Point(x, y);
+            return new Point(x, y);
         }
 
         #endregion Helpers
 
         #region Getters
 
-        public static System.Drawing.Point GetCurrentMousePosition() => currentMousePosition;
+        public static Point GetCurrentMousePosition() => currentMousePosition;
 
         #endregion Getters
     }
