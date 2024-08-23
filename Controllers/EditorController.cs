@@ -239,6 +239,10 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Editor Functions
 
+        /// <summary>
+        /// Get background mesh from saved file or create new one and save.
+        /// </summary>
+        /// <returns></returns>
         public static WriteableBitmap GetGridBackground()
         {
             string gridBitmapPath = EnvironmentController.GetGridPath();
@@ -258,6 +262,10 @@ namespace AdaptiveSpritesDMItool.Controllers
             return bitmap;
         }
 
+        /// <summary>
+        /// Get points from mouse down position to mouse up position
+        /// </summary>
+        /// <returns></returns>
         private static Point[] GetPointsFromMouseDownToUp()
         {
             int x1 = Math.Min(MouseController.currentMouseDownPosition.X, MouseController.currentMousePosition.X);

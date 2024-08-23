@@ -16,11 +16,18 @@ namespace AdaptiveSpritesDMItool.Controllers
 {
     internal static class DrawController
     {
+        /// <summary>
+        /// Selected point for drawing on canvases.
+        /// </summary>
         public static Point pickedPoint = new Point(-1, -1);
 
 
         #region Draw
 
+        /// <summary>
+        /// Set selected points using picked point and update the Data Pixel Storage.
+        /// </summary>
+        /// <param name="points"></param>
         public static void SetPickedPoints(Point[]? points = null)
         {
             if (pickedPoint.X < 0 || pickedPoint.Y < 0) return;
@@ -52,6 +59,11 @@ namespace AdaptiveSpritesDMItool.Controllers
             //pickedPoint = new Point(-1, -1);
         }
 
+        /// <summary>
+        /// Clear or undo changes to selected points and update the Data Pixel Storage.
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="isUndo"></param>
         public static void ClearCurrentPoints(Point[]? points = null, bool isUndo = false)
         {
             var bitmapSize = EnvironmentController.dataImageState.imageCellsSize;
@@ -85,6 +97,10 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
+        /// <summary>
+        /// Drawing a large number of dots across all canvases. Used in DataPixelStorage
+        /// </summary>
+        /// <param name="points"></param>
         public static void DrawPixelStorageAtBitmaps(IEnumerable<(StateDirection, (int x, int y), (int x, int y))> points)
         {
             foreach (var (stateDirection, point, pointForColor) in points)
@@ -116,7 +132,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         }
 
         /// <summary>
-        /// Change the point and update the storage.
+        /// Change the point and update the Data Pixel Storage.
         /// </summary>
         /// <param name="stateDirection"></param>
         /// <param name="bitmapEditable"></param>
@@ -135,6 +151,11 @@ namespace AdaptiveSpritesDMItool.Controllers
             EnvironmentController.dataPixelStorage.ChangePoint(stateDirection, (point.X, point.Y), (newPoint.X, newPoint.Y));
         }
 
+        /// <summary>
+        /// Get color from a pixel in the selected bitmap.
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <returns></returns>
         public static Color GetPickedPointColor(WriteableBitmap bitmap) => bitmap.GetPixel(pickedPoint.X, pickedPoint.Y);
 
 
@@ -142,7 +163,11 @@ namespace AdaptiveSpritesDMItool.Controllers
 
 
         #region Grids
-
+        /// <summary>
+        /// Create and get a completely new grid of pixelSize and bitmapUISize parameters.
+        /// </summary>
+        /// <param name="borderThickness"></param>
+        /// <returns></returns>
         public static WriteableBitmap GetNewGrid(int borderThickness = 2)
         {
             int pixelSize = EnvironmentController.dataImageState.pixelSize;
@@ -172,8 +197,21 @@ namespace AdaptiveSpritesDMItool.Controllers
 
 
         #region Selector
+        // Dotted selection
 
+        /// <summary>
+        /// Dotted line selector for one point.
+        /// </summary>
+        /// <param name="stateImageSideType"></param>
+        /// <param name="mousePoint"></param>
         public static void SetSelectors(StateImageSideType stateImageSideType, Point mousePoint) => SetSelectors(stateImageSideType, mousePoint, mousePoint);
+
+        /// <summary>
+        /// Selector with dotted lines.
+        /// </summary>
+        /// <param name="stateImageSideType"></param>
+        /// <param name="mousePoint1"></param>
+        /// <param name="mousePoint2"></param>
         public static void SetSelectors(StateImageSideType stateImageSideType, Point mousePoint1, Point mousePoint2)
         {
             int pixelSize = EnvironmentController.dataImageState.pixelSize;
@@ -193,6 +231,10 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
+        /// <summary>
+        /// Clearing the selection bitmap canvas.
+        /// </summary>
+        /// <param name="_stateImageSideType"></param>
         public static void ClearSelectors(StateImageSideType _stateImageSideType)
         {
             var stateDirections = StatesController.allStateDirection(DirectionDepth.Four);
@@ -203,6 +245,9 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
+        /// <summary>
+        /// Clearing all bitmap canvases of the selection.
+        /// </summary>
         public static void ClearSelectors()
         {
             var stateDirections = StatesController.allStateDirection(DirectionDepth.Four);
@@ -222,7 +267,21 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Visualize
 
+        /// <summary>
+        /// Draw a dotted line around one point.
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <param name="point"></param>
+        /// <param name="pixelSize"></param>
         static void DrawSelectionRect(WriteableBitmap bitmap, Point point, int pixelSize) => DrawSelectionRect(bitmap, point, point, pixelSize);
+
+        /// <summary>
+        /// Draw a dotted line around the coordinates of the points.
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <param name="point1"></param>
+        /// <param name="point2"></param>
+        /// <param name="pixelSize"></param>
         static void DrawSelectionRect(WriteableBitmap bitmap, Point point1, Point point2, int pixelSize)
         {
             int lineLength = 3;
@@ -286,6 +345,13 @@ namespace AdaptiveSpritesDMItool.Controllers
             //VisualizeMousePoints(bitmap, point1, point2, pixelSize);
         }
 
+        /// <summary>
+        /// Display corner points to better represent the start and end of a selection.
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <param name="point1"></param>
+        /// <param name="point2"></param>
+        /// <param name="pixelSize"></param>
         private static void VisualizeMousePoints(WriteableBitmap bitmap, Point point1, Point point2, int pixelSize)
         {
             byte alpha = 150;
@@ -297,8 +363,16 @@ namespace AdaptiveSpritesDMItool.Controllers
             bitmap.FillRectangle(point2.X * pixelSize, point2.Y * pixelSize, point2.X * pixelSize + pixelSize, point2.Y * pixelSize + pixelSize, greenColor);
         }
 
+        /// <summary>
+        /// Display all points for better representation of the area coloring.
+        /// </summary>
+        /// <param name="stateDirection"></param>
+        /// <param name="bitmap"></param>
+        /// <param name="point"></param>
+        /// <param name="pixelSize"></param>
         public static void VisualizeSelectedPoint(StateDirection stateDirection, WriteableBitmap bitmap, Point point, int pixelSize)
         {
+            // TODO: It needs to be redone.
             WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Left);
             WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Left);
             byte alpha = 100;
@@ -313,6 +387,13 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Helpers
 
+        /// <summary>
+        /// The main function of correcting points for correct placement taking into account mirroring and centralization.
+        /// </summary>
+        /// <param name="stateDirection"></param>
+        /// <param name="mousePoint"></param>
+        /// <param name="bitmapSize"></param>
+        /// <returns></returns>
         private static Point CorrectMousePositionPoint(StateDirection stateDirection, Point mousePoint, System.Drawing.Size bitmapSize)
         {
             bool isMirroredState = StatesController.isMirroredState;
