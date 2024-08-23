@@ -72,7 +72,7 @@ namespace AdaptiveSpritesDMItool.Resources
         public void DrawPixelStorageAtBitmaps()
         {
             var points = pixelStorages.SelectMany(p => p.Value.Select(p2 => (p.Key, p2.Key, p2.Value)));
-            EditorController.DrawPixelStorageAtBitmaps(points);
+            DrawController.DrawPixelStorageAtBitmaps(points);
         }
 
         #region Data table
