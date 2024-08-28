@@ -422,6 +422,8 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             bitmapEditable.SetPixel(point.X, point.Y, color);
             Point newPoint = pickedPointFromPreview;
+            if(StatesController.currentStateEditMode == StateEditType.Undo || StatesController.currentStateEditMode == StateEditType.UndoArea)
+                newPoint = point;
             //if (color == Colors.Transparent)
             if (isRemove)
             {
