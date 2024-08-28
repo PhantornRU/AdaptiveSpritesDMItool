@@ -20,6 +20,7 @@ namespace AdaptiveSpritesDMItool.Controllers
     internal static class DrawController
     {
         static int borderThickness = 2;
+        static byte alphaSelectedPoint = 175;
 
         /// <summary>
         /// Selected point for drawing on canvases.
@@ -262,34 +263,47 @@ namespace AdaptiveSpritesDMItool.Controllers
 
             //pointColorStorage 
 
-            //byte alpha = 100;
-
             foreach (var stateDirection in stateDirections)
             {
                 WriteableBitmap bitmap = EnvironmentController.GetSelectorBMP(stateDirection, StateImageSideType.Right);
+                bitmap.Clear();
 
                 WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Left);
                 WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Left);
 
                 foreach (Point point in points)
                 {
-                    Point tempPoint = EnvironmentController.dataPixelStorage.GetPointStorage(stateDirection, point);
-                    tempPoint = CorrectMousePositionPoint(stateDirection, tempPoint, cellsSize);
-                    //Debug.WriteLine($"point: {point}, tempPoint: {tempPoint} --- offset: {pointOffset}, offsetDown: {pointOffsetDown}, offsetMin: {pointOffsetMin}, offsetMax: {pointOffsetMax}");
+                    //Point tempPoint = EnvironmentController.dataPixelStorage.GetPointStorage(stateDirection, point);
 
-                    Color color = bitmapOverlayPreview != null ? GetPointColor(bitmapOverlayPreview, tempPoint) : GetPointColor(bitmapPreview, tempPoint);
+                    // Pixel Shift
+                    Point tempPoint = CorrectMousePositionPoint(stateDirection, point, cellsSize);
+                    Debug.WriteLine($"point: {point}, tempPoint: {tempPoint} --- offset: {pointOffset}");
+
+                    // Storage Pixel
+                    Point selectedPoint = new Point(point.X - pointOffset.X, point.Y - pointOffset.Y);
+                    selectedPoint = CorrectMousePositionPoint(stateDirection, selectedPoint, cellsSize);
+                    Point storagePoint = pointsStorage[stateDirection][selectedPoint];
+
+                    // Pixel Color
+                    Color color = bitmapOverlayPreview != null ? GetPointColor(bitmapOverlayPreview, storagePoint) : GetPointColor(bitmapPreview, storagePoint);
                     if (color.A == 0 || color == Colors.Transparent)
-                        color = GetPointColor(bitmapPreview, tempPoint);
-                    //color.A = Math.Min(alpha, color.A);
+                        color = GetPointColor(bitmapPreview, storagePoint);
+                    color.A = Math.Min(alphaSelectedPoint, color.A);
+                    // If the point is still transparent
+                    if (color.A == 0 || color == Colors.Transparent)
+                    {
+                        color = Colors.White;
+                        color.A = 100;
+                    }
                     //color = Colors.Aqua;
 
                     //tempPoint.X += stateDirection == StateDirection.North ? -5 : 5; // !!!!!!!!! TEST
 
                     bitmap.FillRectangle(
-                        tempPoint.X * pixelSize + 1, 
-                        tempPoint.Y * pixelSize + 1, 
-                        tempPoint.X * pixelSize + pixelSize, 
-                        tempPoint.Y * pixelSize + pixelSize, 
+                        tempPoint.X * pixelSize + 1,
+                        tempPoint.Y * pixelSize + 1,
+                        tempPoint.X * pixelSize + pixelSize,
+                        tempPoint.Y * pixelSize + pixelSize,
                         color);
                 }
             }
@@ -310,29 +324,6 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         //if(StatesController.currentStateEditMode == StateEditType.Move || StatesController.currentStateEditMode == StateEditType.Select)
         //    VisualizeSelectedPoints(stateDirection, bitmap, mousePoint1Temp, pixelSize);
-
-        /// <summary>
-        /// Display all points for better representation of the area coloring.
-        /// </summary>
-        /// <param name="stateDirection"></param>
-        /// <param name="bitmap"></param>
-        /// <param name="point"></param>
-        /// <param name="pixelSize"></param>
-        public static void VisualizeSelectedPoints(StateDirection stateDirection, WriteableBitmap bitmap, Point point, int pixelSize)
-        {
-            // TODO: It needs to be redone.
-            WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Left);
-            WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Left);
-            byte alpha = 100;
-            Color color = bitmapOverlayPreview.GetPixel(point.X, point.Y);
-            color.A = alpha;
-            bitmap.FillRectangle(
-                point.X * pixelSize, 
-                point.Y * pixelSize, 
-                point.X * pixelSize + pixelSize, 
-                point.Y * pixelSize + pixelSize, 
-                color);
-        }
 
         #endregion Move Selected Area
 
@@ -651,11 +642,10 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// <param name="pixelSize"></param>
         private static void VisualizeMousePoints(WriteableBitmap bitmap, Point point1, Point point2, int pixelSize)
         {
-            byte alpha = 150;
             Color redColor = Colors.Red;
-            redColor.A = alpha;
+            redColor.A = alphaSelectedPoint;
             Color greenColor = Colors.Green;
-            greenColor.A = alpha;
+            greenColor.A = alphaSelectedPoint;
             bitmap.FillRectangle(point1.X * pixelSize, point1.Y * pixelSize, point1.X * pixelSize + pixelSize, point1.Y * pixelSize + pixelSize, redColor);
             bitmap.FillRectangle(point2.X * pixelSize, point2.Y * pixelSize, point2.X * pixelSize + pixelSize, point2.Y * pixelSize + pixelSize, greenColor);
         }

@@ -358,23 +358,17 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         private static void ViewSelectedPoints(StateImageSideType _stateImageSideType, Point[] points)
         {
-            DrawController.ClearSelectors();
             switch (selectMode)
             {
                 case SelectMode.None:
                     break;
                 case SelectMode.Select:
-                    if(points.Length <= 1)
-                        ViewSingleSelectorAtCurrentPosition(_stateImageSideType, false);
+                    if (points.Length <= 1)
+                        ViewSingleSelectorAtCurrentPosition(_stateImageSideType);
                     else
-                        ViewMultSelectorAtCurrentToMDownPosition(_stateImageSideType, false);
+                        ViewMultSelectorAtCurrentToMDownPosition(_stateImageSideType);
                     break;
                 case SelectMode.Move:
-                    //if (points.Length <= 1)
-                    //    ViewSingleSelectorAtCurrentPosition(_stateImageSideType, false);
-                    //else
-                    //{
-                    //}
                     Point point1 = DrawController.pointOffsetMin;
                     point1.X += DrawController.pointOffset.X;
                     point1.Y += DrawController.pointOffset.Y;
