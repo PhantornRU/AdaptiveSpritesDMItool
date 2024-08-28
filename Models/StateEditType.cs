@@ -13,8 +13,8 @@ namespace AdaptiveSpritesDMItool.Models
     {
         Single,
         Fill,
-        Select,
         Move,
+        Select,
         Delete,
         Undo,
         UndoArea
@@ -47,5 +47,12 @@ namespace AdaptiveSpritesDMItool.Models
     {
         Left,
         Right
+    }
+
+    public enum SelectMode
+    {
+        None,
+        Select,
+        Move
     }
 }

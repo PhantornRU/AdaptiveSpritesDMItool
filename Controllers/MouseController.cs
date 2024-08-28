@@ -158,7 +158,17 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Getters
 
-        public static Point GetCurrentMousePosition() => currentMousePosition;
+        public static bool isMouseInPoints(Point[] _points)
+        {
+            if (_points == null || _points.Length == 0)
+                return false;
+
+            var x = currentMousePosition.X;
+            var y = currentMousePosition.Y;
+
+            return _points.Any(p => p.X == x && p.Y == y);
+        }
+
 
         #endregion Getters
     }

@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using Point = System.Drawing.Point;
+using Color = System.Windows.Media.Color;
 
 namespace AdaptiveSpritesDMItool.Resources
 {
@@ -49,6 +51,29 @@ namespace AdaptiveSpritesDMItool.Resources
                 );
             }
 
+        }
+
+
+
+        public Point GetPointStorage(StateDirection direction, Point point)
+        {
+            var storagePoint = ConvertToStoragePoint(point);
+            return ConvertFromStoragePoint(pixelStorages[direction][storagePoint]);
+        }
+
+        public (int x, int y) GetPointStorage(StateDirection direction, (int x, int y) point)
+        {
+            return pixelStorages[direction][point];
+        }
+
+        private Point ConvertFromStoragePoint((int x, int y) point)
+        {
+            return new Point(point.x, point.y);
+        }
+
+        private (int x, int y) ConvertToStoragePoint(Point point)
+        {
+            return (point.X, point.Y);
         }
 
         #endregion Edit
