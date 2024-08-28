@@ -30,7 +30,6 @@
             x:Name="RootNavigation"
             Grid.Row="1"
             Padding="42,0,42,0"
-            BreadcrumbBar="{Binding ElementName=BreadcrumbBar}"
             FooterMenuItemsSource="{Binding ViewModel.FooterMenuItems, Mode=OneWay}"
             FrameMargin="0"
             IsBackButtonVisible="Visible"
@@ -38,6 +37,7 @@
             MenuItemsSource="{Binding ViewModel.MenuItems, Mode=OneWay}"
             PaneDisplayMode="LeftFluent">
             <!--Commented out to not show the top selected one-->
+            <!--BreadcrumbBar="{Binding ElementName=BreadcrumbBar}">-->
             <!--<ui:NavigationView.Header>
                 <ui:BreadcrumbBar x:Name="BreadcrumbBar" Margin="42,32,42,20" />
             </ui:NavigationView.Header>-->

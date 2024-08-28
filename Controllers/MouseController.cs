@@ -38,7 +38,7 @@ namespace AdaptiveSpritesDMItool.Controllers
                     EditorController.EditFillModeStart(_stateImageSideType);
                     break;
                 case StateEditType.Move:
-                    EditorController.EditMoveMode(_stateImageSideType);
+                    EditorController.EditMoveModeStart(_stateImageSideType);
                     break;
                 case StateEditType.Select:
                     EditorController.EditSelectModeStart(_stateImageSideType);
@@ -66,6 +66,9 @@ namespace AdaptiveSpritesDMItool.Controllers
             {
                 case StateEditType.Fill:
                     EditorController.EditFillModeEnd(_stateImageSideType);
+                    break;
+                case StateEditType.Move:
+                    EditorController.EditMoveModeEnd(_stateImageSideType);
                     break;
                 case StateEditType.Select:
                     EditorController.EditSelectModeEnd(_stateImageSideType);
@@ -158,7 +161,17 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Getters
 
-        public static Point GetCurrentMousePosition() => currentMousePosition;
+        public static bool isMouseInPoints(Point[] _points)
+        {
+            if (_points == null || _points.Length == 0)
+                return false;
+
+            var x = currentMousePosition.X;
+            var y = currentMousePosition.Y;
+
+            return _points.Any(p => p.X == x && p.Y == y);
+        }
+
 
         #endregion Getters
     }
