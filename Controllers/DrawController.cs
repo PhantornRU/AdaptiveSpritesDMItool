@@ -140,8 +140,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                     //Debug.WriteLine($"offset: {pointOffset}, down: {pointOffsetDown}, mouse: {MouseController.currentMousePosition}");
 
                     // Update Data Pixel Storage
-                    UpdatePixel(stateDirection, bitmapEditable, selectedPoint, storagePoint);
-                    UpdatePixel(stateDirection, bitmapOverlayEditable, selectedPoint, storagePoint);
+                    UpdatePixel(stateDirection, bitmapPreview, bitmapEditable, selectedPoint, storagePoint);
+                    UpdatePixel(stateDirection, bitmapOverlayPreview, bitmapOverlayEditable, selectedPoint, storagePoint);
                 }
             }
 
@@ -352,9 +352,9 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// <param name="bitmapEditable"></param>
         /// <param name="pointKey"></param>
         /// <param name="pointValue"></param>
-        private static void UpdatePixel(StateDirection stateDirection, WriteableBitmap bitmapEditable, Point pointKey, Point pointValue)
+        private static void UpdatePixel(StateDirection stateDirection, WriteableBitmap bitmapPreview, WriteableBitmap bitmapEditable, Point pointKey, Point pointValue)
         {
-            Color color = GetPointColor(bitmapEditable, pointValue);
+            Color color = GetPointColor(bitmapPreview, pointValue);
             bitmapEditable.SetPixel(pointKey.X, pointKey.Y, color);
             EnvironmentController.dataPixelStorage.ChangePoint(stateDirection, (pointKey.X, pointKey.Y), (pointValue.X, pointValue.Y));
         }
