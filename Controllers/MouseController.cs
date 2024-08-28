@@ -38,7 +38,7 @@ namespace AdaptiveSpritesDMItool.Controllers
                     EditorController.EditFillModeStart(_stateImageSideType);
                     break;
                 case StateEditType.Move:
-                    EditorController.EditMoveMode(_stateImageSideType);
+                    EditorController.EditMoveModeStart(_stateImageSideType);
                     break;
                 case StateEditType.Select:
                     EditorController.EditSelectModeStart(_stateImageSideType);
@@ -66,6 +66,9 @@ namespace AdaptiveSpritesDMItool.Controllers
             {
                 case StateEditType.Fill:
                     EditorController.EditFillModeEnd(_stateImageSideType);
+                    break;
+                case StateEditType.Move:
+                    EditorController.EditMoveModeEnd(_stateImageSideType);
                     break;
                 case StateEditType.Select:
                     EditorController.EditSelectModeEnd(_stateImageSideType);

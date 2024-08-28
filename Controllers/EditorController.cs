@@ -163,22 +163,51 @@ namespace AdaptiveSpritesDMItool.Controllers
 
 
 
+        public static void EditMoveModeStart(StateImageSideType _stateImageSideType)
+        {
+            if (_stateImageSideType != StateImageSideType.Right) return;
+
+            selectMode = SelectMode.Move;
+            Point currPos = MouseController.currentMousePosition;
+            DrawController.pointOffsetDown = currPos;
+            DrawController.pointOffsetMin = currPos;
+            DrawController.pointOffsetMax = currPos;
+            DrawController.pointOffset = new Point(0, 0);
+
+            Point[] selectedPoints = new Point[] { MouseController.currentMousePosition };
+            DrawController.UpdateStoragePoints(selectedPoints);
+            //DrawController.SetStoragePoints();
+
+            ViewSelectedPoints(_stateImageSideType);
+        }
+
         public static void EditMoveMode(StateImageSideType _stateImageSideType)
         {
-            switch (_stateImageSideType)
-            {
-                case StateImageSideType.Left:
-                    break;
-                case StateImageSideType.Right:
-                    //ViewSelectedPoints(_stateImageSideType);
-                    //DrawController.ClearSelectors();
-                    //DrawController.ViewSelectedPoints(points);
-                    //ViewSingleSelectorAtCurrentPosition(_stateImageSideType, false);
-                    
-                    //EditSelectModeStart(_stateImageSideType);
-                    break;
-            }
+            if (_stateImageSideType != StateImageSideType.Right) return;
+
+            //var direction = StatesController.currentStateDirection;
+            //var pointsDirection = DrawController.GetStoragePoints(direction);
+            //Point currPos = MouseController.currentMousePosition;
+
+            DrawController.UpdatePointOffset();
+            ViewSelectedPoints(_stateImageSideType);
         }
+
+        public static void EditMoveModeEnd(StateImageSideType _stateImageSideType)
+        {
+            if (_stateImageSideType != StateImageSideType.Right) return;
+
+            Debug.WriteLine("Select Start - Out Points => Select");
+            // Начинаем вновь выделять
+            DrawController.SetStoragePoints();
+            DrawController.ClearSelectors();
+
+        }
+
+
+
+
+
 
 
 
@@ -209,40 +238,12 @@ namespace AdaptiveSpritesDMItool.Controllers
                         break;
                     }
 
-                    // Если нажата мышь ЗА пределами - то режим:
-                    //      Устанавливаем Select для создания новой выборки
-
-                    // Делаем сброс и очищаем полотно. Всё заного.
-                    // !!!!!! Сделать потом проверку нажато ли 1 раз и только тогда сбрасывать, иначе разрешить выделение !!!!!!
-                    //if (selectMode == SelectMode.Select)
-                    //{
-                    //    Debug.WriteLine("Select Start - Out Points - Select => None");
-                    //    selectMode = SelectMode.None;
-                    //    DrawController.ClearSelectors();
-                    //    break;
-                    //}
-
-                    // Завершаем двигание объекта. Сохраняем перемещенные точки на полотно.
-                    //if (selectMode == SelectMode.Move)
-                    //{
-                    //    Debug.WriteLine("Select Start - Out Points - Move");
-                    //    // !!!!!!!! УСТАНАВЛИВАЕМ ПЕРЕМЕЩЕННОЕ ИЗОБРАЖЕНИЕ И ПОИНТЫ !!!!!!
-                    //    // !!!!! COPY PIXELS !!!!!
-                    //    // Делаем сброс и очищаем полотно.
-                    //    selectMode = SelectMode.None;
-                    //    DrawController.ClearSelectors();
-                    //    DrawController.ShiftOffset();
-                    //    break;
-                    //}
-
                     Debug.WriteLine("Select Start - Out Points => Select");
                     // Начинаем вновь выделять
                     selectMode = SelectMode.Select;
                     ViewSelectedPoints(_stateImageSideType);
                     DrawController.SetStoragePoints();
                     DrawController.ResetOffset();
-                    //UpdatePixel
-
                     break;
             }
         }
@@ -309,9 +310,9 @@ namespace AdaptiveSpritesDMItool.Controllers
                         case SelectMode.Select:
                             Debug.WriteLine("Select End - Select");
                             // Select - Завершаем выделение области, сохраняем Picked Points
-                            var direction = StatesController.currentStateDirection;
-                            string pointsString = string.Join(", ", selectedPoints.Select(x => x.ToString()));
-                            Debug.WriteLine($"UpdateStoragePoints[{direction}][{selectedPoints.Length}]: {pointsString}");
+                            //var direction = StatesController.currentStateDirection;
+                            //string pointsString = string.Join(", ", selectedPoints.Select(x => x.ToString()));
+                            //Debug.WriteLine($"UpdateStoragePoints[{direction}][{selectedPoints.Length}]: {pointsString}");
                             DrawController.UpdateStoragePoints(selectedPoints);
                             // Определяем границы оффсета для SelectMode.Move
                             DrawController.UpdatePointOffsetBounds(MouseController.currentMouseDownPosition, MouseController.currentMousePosition);
@@ -326,15 +327,6 @@ namespace AdaptiveSpritesDMItool.Controllers
                     break;
             }
         }
-
-
-
-
-        //private static void 
-
-
-
-
 
 
 
@@ -357,6 +349,15 @@ namespace AdaptiveSpritesDMItool.Controllers
                         ViewMultSelectorAtCurrentToMDownPosition(_stateImageSideType);
                     break;
                 case SelectMode.Move:
+                    var pointsDirection = DrawController.GetStoragePoints(StatesController.currentStateDirection);
+                    DrawController.ViewSelectedPoints(pointsDirection);
+
+                    if (points.Length <= 1 && (DrawController.pointOffsetMin == DrawController.pointOffsetMax))
+                    {
+                        ViewSingleSelectorAtCurrentPosition(_stateImageSideType, false);
+                        break;
+                    }
+
                     Point point1 = DrawController.pointOffsetMin;
                     point1.X += DrawController.pointOffset.X;
                     point1.Y += DrawController.pointOffset.Y;
@@ -364,8 +365,6 @@ namespace AdaptiveSpritesDMItool.Controllers
                     point2.X += DrawController.pointOffset.X;
                     point2.Y += DrawController.pointOffset.Y;
 
-                    var pointsDirection = DrawController.GetStoragePoints(StatesController.currentStateDirection);
-                    DrawController.ViewSelectedPoints(pointsDirection);
                     ViewMultSelectorAtPoints(_stateImageSideType, point1, point2, false);
                     break;
             }

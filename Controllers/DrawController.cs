@@ -59,7 +59,6 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static void UpdatePointOffset()
         {
             var cellsSize = EnvironmentController.dataImageState.imageCellsSize;
-            StateDirection stateDirection = StatesController.currentStateDirection;
             Point mousePos = MouseController.currentMousePosition;
 
             pointOffset.X = mousePos.X - pointOffsetDown.X;
@@ -178,13 +177,15 @@ namespace AdaptiveSpritesDMItool.Controllers
 
             foreach (var stateDirection in stateDirections)
             {
+                if (pointsStorage.ContainsKey(stateDirection) == false) continue;
+                Point[] points = GetStoragePoints(stateDirection);
+
                 WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Left);
                 WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Left);
 
                 WriteableBitmap bitmapEditable = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Right);
                 WriteableBitmap bitmapOverlayEditable = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Right);
 
-                Point[] points = GetStoragePoints(stateDirection);
                 foreach (var point in pointsStorage[stateDirection])
                 {
                     //var tempPoint = CorrectMousePositionPoint(stateDirection, point.Key, cellsSize);
@@ -267,7 +268,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             //if (pickedPoint.X < 0 || pickedPoint.Y < 0) return;
 
-            if (pointOffset.X == 0 && pointOffset.Y == 0) return;
+            if (points.Length > 1 && pointOffset.X == 0 && pointOffset.Y == 0) return;
             if (pointOffsetLast.X == pointOffset.X && pointOffsetLast.Y == pointOffset.Y) return;
             pointOffsetLast = pointOffset;
 
@@ -290,17 +291,17 @@ namespace AdaptiveSpritesDMItool.Controllers
 
                 foreach (Point point in points)
                 {
-                    //Point tempPoint = EnvironmentController.dataPixelStorage.GetPointStorage(stateDirection, point);
-
                     // Pixel Shift
                     Point tempPoint = CorrectMousePositionPoint(stateDirection, point, cellsSize);
-                    Debug.WriteLine($"point: {point}, tempPoint: {tempPoint} --- offset: {pointOffset}");
 
                     // Storage Pixel
                     Point selectedPoint = new Point(point.X - pointOffset.X, point.Y - pointOffset.Y);
                     selectedPoint = CorrectMousePositionPoint(stateDirection, selectedPoint, cellsSize);
                     Point storagePoint = pointsStorage[stateDirection][selectedPoint];
                     storagePoint = CorrectMousePositionPoint(stateDirection, storagePoint, cellsSize);
+
+                    //Point curPos = MouseController.currentMousePosition;
+                    //Debug.WriteLine($"curPos: {curPos}, point: {point}, temp: {tempPoint}, selected: {selectedPoint}, storage: {storagePoint}, --- offset: {pointOffset}");
 
                     // Pixel Color
                     Color color = bitmapOverlayPreview != null ? GetPointColor(bitmapOverlayPreview, storagePoint) : GetPointColor(bitmapPreview, storagePoint);
@@ -313,7 +314,9 @@ namespace AdaptiveSpritesDMItool.Controllers
                         color = Colors.White;
                         color.A = 100;
                     }
-                    //color = Colors.Aqua;
+
+                    //color = Colors.Red;
+                    //color.A = 255;
 
                     //tempPoint.X += stateDirection == StateDirection.North ? -5 : 5; // !!!!!!!!! TEST
 
@@ -327,21 +330,6 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
-        //public static void MoveSelectedPoints()
-        //{
-        //    if (pointOffset.X == 0 && pointOffset.Y == 0) return;
-        //}
-
-        //public static void SetSelectedPoints()
-        //{
-        //    if (pointOffset.X == 0 && pointOffset.Y == 0) return;
-        //}
-
-
-
-
-        //if(StatesController.currentStateEditMode == StateEditType.Move || StatesController.currentStateEditMode == StateEditType.Select)
-        //    VisualizeSelectedPoints(stateDirection, bitmap, mousePoint1Temp, pixelSize);
 
         #endregion Move Selected Area
 
@@ -379,8 +367,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                     pointToColor = CorrectMousePositionPoint(stateDirection, point, cellsSize);
                     if (isUndo)
                     {
-                        color = bitmapPreview.GetPixel(pointToColor.X, pointToColor.Y);
-                        colorOverlay = bitmapOverlayPreview.GetPixel(pointToColor.X, pointToColor.Y);
+                        color = GetPointColor(bitmapPreview, pointToColor);
+                        colorOverlay = GetPointColor(bitmapOverlayPreview, pointToColor);
                     }
                     UpdatePixelPickedPoint(stateDirection, bitmapEditable, pointToColor, color, !isUndo);
                     UpdatePixelPickedPoint(stateDirection, bitmapOverlayEditable, pointToColor, colorOverlay, !isUndo);
@@ -414,8 +402,9 @@ namespace AdaptiveSpritesDMItool.Controllers
                 }
                 else
                 {
-                    var pixel = bitmapPreview.GetPixel(pointForColor.x, pointForColor.y);
-                    var pixelOverlay = bitmapOverlayPreview.GetPixel(pointForColor.x, pointForColor.y);
+                    Point tempPointForColor = new Point(pointForColor.x, pointForColor.y);
+                    var pixel = GetPointColor(bitmapPreview, tempPointForColor);
+                    var pixelOverlay = GetPointColor(bitmapOverlayPreview, tempPointForColor);
                     bitmapEditable.SetPixel(point.x, point.y, pixel);
                     bitmapOverlayEditable.SetPixel(point.x, point.y, pixelOverlay);
                 }
@@ -445,7 +434,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         private static void UpdatePixel(StateDirection stateDirection, WriteableBitmap bitmapEditable, Point pointKey, Point pointValue)
         {
-            Color color = bitmapEditable.GetPixel(pointValue.X, pointValue.Y);
+            Color color = GetPointColor(bitmapEditable, pointValue);
             bitmapEditable.SetPixel(pointKey.X, pointKey.Y, color);
             EnvironmentController.dataPixelStorage.ChangePoint(stateDirection, (pointKey.X, pointKey.Y), (pointValue.X, pointValue.Y));
         }
@@ -463,8 +452,12 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// </summary>
         /// <param name="bitmap"></param>
         /// <returns></returns>
-        public static Color GetPointColor(WriteableBitmap bitmap, Point point) => bitmap.GetPixel(point.X, point.Y);
-
+        public static Color GetPointColor(WriteableBitmap bitmap, Point point)
+        {
+            if (point.X == -1 || point.Y == -1)
+                return Colors.Transparent;
+            return bitmap.GetPixel(point.X, point.Y);
+        }
 
         #endregion Draw
 
