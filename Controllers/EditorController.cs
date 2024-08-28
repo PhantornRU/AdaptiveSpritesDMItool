@@ -239,8 +239,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                     // Начинаем вновь выделять
                     selectMode = SelectMode.Select;
                     ViewSelectedPoints(_stateImageSideType);
-                    DrawController.ShiftOffset();
-
+                    DrawController.SetStoragePoints();
+                    DrawController.ResetOffset();
                     //UpdatePixel
 
                     break;
@@ -272,20 +272,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                         case SelectMode.Move:
                             // Move - двигаем изображение
                             //Debug.WriteLine("Select - Move");
-
-                            // Обновляем оффсет точку
                             DrawController.UpdatePointOffset();
                             ViewSelectedPoints(_stateImageSideType);
-                            //DrawController.WriteSelectedOffsetPoints();
-
-
-                            // Показываем выделенные поинты
-                            //Point[] pickedPoints = DrawController.GetStoragePoints(StatesController.currentStateDirection);
-                            //ViewSelectedPoints(_stateImageSideType, pickedPoints);
-
-
-                            // !!!!!!!!!! ДВИГАЕМ БИТМАП ИЗОБРАЖЕНИЕ !!!!!!!!!!!!
-                            // !!!!! WRITE PIXELS !!!!!
                             break;
                     }
 
