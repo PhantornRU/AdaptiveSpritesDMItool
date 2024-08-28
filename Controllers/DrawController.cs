@@ -38,79 +38,24 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static Point pointOffset;
 
         /// <summary>
-        /// the mouse clicked on it while moving.
+        /// location of mouse click in the selected area
         /// </summary>
         public static Point pointOffsetDown;
+
+        /// <summary>
+        /// Coordinates of the smallest point of the offset boundaries
+        /// </summary>
         public static Point pointOffsetMin;
+
+        /// <summary>
+        /// Coordinates of the largest point of the offset boundaries
+        /// </summary>
         public static Point pointOffsetMax;
 
-        public static void UpdatePointOffsetBounds(Point point1, Point point2)
-        {
-            pointOffsetMin.X = Math.Min(point1.X, point2.X);
-            pointOffsetMin.Y = Math.Min(point1.Y, point2.Y);
-
-            pointOffsetMax.X = Math.Max(point1.X, point2.X);
-            pointOffsetMax.Y = Math.Max(point1.Y, point2.Y);
-
-            Debug.WriteLine($"Update Point Offset Bounds, min: {pointOffsetMin}, max: {pointOffsetMax}. pointOffset: {pointOffset}, Down: {pointOffsetDown}, Last: {pointOffsetLast}");
-        }
-
-
-        public static void UpdatePointOffset()
-        {
-            var cellsSize = EnvironmentController.dataImageState.imageCellsSize;
-            Point mousePos = MouseController.currentMousePosition;
-
-            pointOffset.X = mousePos.X - pointOffsetDown.X;
-            pointOffset.Y = mousePos.Y - pointOffsetDown.Y;
-
-            int XBeyondMin = pointOffset.X + pointOffsetMin.X;
-            int YBeyondMin = pointOffset.Y + pointOffsetMin.Y;
-            // Прибавляем остаток, тем самым выравнивая точку по и оффсет по краям и границам, чтобы не перейти их.
-            if (XBeyondMin < 0) 
-                pointOffset.X -= XBeyondMin;
-            if (YBeyondMin < 0) 
-                pointOffset.Y -= YBeyondMin;
-
-            //Debug.WriteLine($"pointOffset: {pointOffset}, XbeyondMin: {XBeyondMin}, YBeyondMin: {YBeyondMin}");
-
-            int xMax = cellsSize.Width - 1;
-            int yMax = cellsSize.Height - 1;
-            // расстояние от max до границы
-            int Xdist = xMax - pointOffsetMax.X;
-            int Ydist = yMax - pointOffsetMax.Y;
-            // максимум куда (коорд) можно сместить выбранный
-            int XdistMax = pointOffsetDown.X + Xdist;
-            int YdistMax = pointOffsetDown.Y + Ydist;
-            // допустимо смещать ВЫБРАННЫЙ на расстояние MAX до данной границы
-            if (mousePos.X > XdistMax) 
-                pointOffset.X = Xdist;
-            if (mousePos.Y > YdistMax) 
-                pointOffset.Y = Ydist;
-
-            //Debug.WriteLine($"Update Point Offset, where Down {pointOffsetDown}, offset: {pointOffset}, min: {pointOffsetMin}, max: {pointOffsetMax}, mousePos: {mousePos}");
-        }
-
-        public static void UpdatePointOffsetDown()
-        {
-            pointOffsetDown = MouseController.currentMousePosition;
-            pointOffsetDown.X -= pointOffset.X;
-            pointOffsetDown.Y -= pointOffset.Y;
-        }
-
-        public static void ResetOffset()
-        {
-            pointOffsetMin.X += pointOffset.X;
-            pointOffsetMin.Y += pointOffset.Y;
-
-            pointOffsetMax.X += pointOffset.X;
-            pointOffsetMax.Y += pointOffset.Y;
-
-            pointOffset = new Point(0, 0);
-            pointOffsetDown = new Point(0, 0);
-            pointOffsetLast = new Point(0, 0);
-        }
-
+        /// <summary>
+        /// The point showing what the previous offset was
+        /// </summary>
+        private static Point pointOffsetLast = new Point(0, 0);
 
 
         #region Draw
@@ -151,23 +96,11 @@ namespace AdaptiveSpritesDMItool.Controllers
         }
 
 
-
-
-
-
-
-
-
-
-
-
-
         #region Move Selected Area
 
-
-
-
-
+        /// <summary>
+        /// Updating data storage with saving new coordinates and references to values.
+        /// </summary>
         public static void SetStoragePoints()
         {
             if (pointsStorage.Count == 0) return;
@@ -198,14 +131,13 @@ namespace AdaptiveSpritesDMItool.Controllers
                     Point selectedPoint = new Point(tempPoint.X + pointOffset.X, tempPoint.Y + pointOffset.Y);
                     selectedPoint = CorrectMousePositionPoint(stateDirection, selectedPoint, cellsSize);
 
-                    //Point storagePoint = pointsStorage[stateDirection][point.Key];
                     Point storagePoint = pointsStorage[stateDirection][point.Key];
                     storagePoint = CorrectMousePositionPoint(stateDirection, storagePoint, cellsSize);
 
-                    Debug.WriteLine("======================================");
-                    Debug.WriteLine($"point: {point}, tempPoint: {tempPoint}");
-                    Debug.WriteLine($"selectedPoint: {selectedPoint}, storagePoint: {storagePoint}");
-                    Debug.WriteLine($"offset: {pointOffset}, down: {pointOffsetDown}, mouse: {MouseController.currentMousePosition}");
+                    //Debug.WriteLine("======================================");
+                    //Debug.WriteLine($"point: {point}, tempPoint: {tempPoint}");
+                    //Debug.WriteLine($"selectedPoint: {selectedPoint}, storagePoint: {storagePoint}");
+                    //Debug.WriteLine($"offset: {pointOffset}, down: {pointOffsetDown}, mouse: {MouseController.currentMousePosition}");
 
                     // Update Data Pixel Storage
                     UpdatePixel(stateDirection, bitmapEditable, selectedPoint, storagePoint);
@@ -215,25 +147,6 @@ namespace AdaptiveSpritesDMItool.Controllers
 
 
             pointsStorage = new Dictionary<StateDirection, Dictionary<Point, Point>>();
-        }
-
-
-
-
-
-
-
-
-
-
-        /// <summary>
-        /// Get an array of keys from pointStorage with pointOffset.
-        /// </summary>
-        public static Point[] GetStoragePoints(StateDirection stateDirection)
-        {
-            if(pointsStorage.Count == 0)
-                return new Point[0];
-            return pointsStorage[stateDirection].Keys.Select(point => new Point(point.X + pointOffset.X, point.Y + pointOffset.Y)).ToArray();
         }
 
         /// <summary>
@@ -261,13 +174,12 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
-
-        private static Point pointOffsetLast = new Point(0, 0);
-
+        /// <summary>
+        /// Visualization of selected points with each pixel.
+        /// </summary>
+        /// <param name="points"></param>
         public static void ViewSelectedPoints(Point[] points)
         {
-            //if (pickedPoint.X < 0 || pickedPoint.Y < 0) return;
-
             if (points.Length > 1 && pointOffset.X == 0 && pointOffset.Y == 0) return;
             if (pointOffsetLast.X == pointOffset.X && pointOffsetLast.Y == pointOffset.Y) return;
             pointOffsetLast = pointOffset;
@@ -275,8 +187,6 @@ namespace AdaptiveSpritesDMItool.Controllers
             var cellsSize = EnvironmentController.dataImageState.imageCellsSize;
             int pixelSize = EnvironmentController.dataImageState.pixelSize;
             var stateDirections = StatesController.GetStateDirections();
-
-            //pointColorStorage 
 
             foreach (var stateDirection in stateDirections)
             {
@@ -317,9 +227,6 @@ namespace AdaptiveSpritesDMItool.Controllers
 
                     //color = Colors.Red;
                     //color.A = 255;
-
-                    //tempPoint.X += stateDirection == StateDirection.North ? -5 : 5; // !!!!!!!!! TEST
-
                     bitmap.FillRectangle(
                         tempPoint.X * pixelSize + 1,
                         tempPoint.Y * pixelSize + 1,
@@ -330,12 +237,17 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
+        /// <summary>
+        /// Get an array of keys from pointStorage with pointOffset.
+        /// </summary>
+        public static Point[] GetStoragePoints(StateDirection stateDirection)
+        {
+            if (pointsStorage.Count == 0)
+                return new Point[0];
+            return pointsStorage[stateDirection].Keys.Select(point => new Point(point.X + pointOffset.X, point.Y + pointOffset.Y)).ToArray();
+        }
 
         #endregion Move Selected Area
-
-
-
-
 
 
         /// <summary>
@@ -433,7 +345,13 @@ namespace AdaptiveSpritesDMItool.Controllers
             EnvironmentController.dataPixelStorage.ChangePoint(stateDirection, (point.X, point.Y), (newPoint.X, newPoint.Y));
         }
 
-
+        /// <summary>
+        /// Change the point and update the Data Pixel Storage.
+        /// </summary>
+        /// <param name="stateDirection"></param>
+        /// <param name="bitmapEditable"></param>
+        /// <param name="pointKey"></param>
+        /// <param name="pointValue"></param>
         private static void UpdatePixel(StateDirection stateDirection, WriteableBitmap bitmapEditable, Point pointKey, Point pointValue)
         {
             Color color = GetPointColor(bitmapEditable, pointValue);
@@ -697,6 +615,93 @@ namespace AdaptiveSpritesDMItool.Controllers
             return newMousePoint;
 
         }
+
+
+
+        #region Offsets
+
+        /// <summary>
+        /// Update when the smallest and largest points within the selected area are found.
+        /// </summary>
+        /// <param name="point1"></param>
+        /// <param name="point2"></param>
+        public static void UpdatePointOffsetBounds(Point point1, Point point2)
+        {
+            pointOffsetMin.X = Math.Min(point1.X, point2.X);
+            pointOffsetMin.Y = Math.Min(point1.Y, point2.Y);
+
+            pointOffsetMax.X = Math.Max(point1.X, point2.X);
+            pointOffsetMax.Y = Math.Max(point1.Y, point2.Y);
+
+            Debug.WriteLine($"Update Point Offset Bounds, min: {pointOffsetMin}, max: {pointOffsetMax}. pointOffset: {pointOffset}, Down: {pointOffsetDown}, Last: {pointOffsetLast}");
+        }
+
+        /// <summary>
+        /// Finding the current offset and preventing it from going beyond the boundaries.
+        /// </summary>
+        public static void UpdatePointOffset()
+        {
+            var cellsSize = EnvironmentController.dataImageState.imageCellsSize;
+            Point mousePos = MouseController.currentMousePosition;
+
+            pointOffset.X = mousePos.X - pointOffsetDown.X;
+            pointOffset.Y = mousePos.Y - pointOffsetDown.Y;
+
+            int XBeyondMin = pointOffset.X + pointOffsetMin.X;
+            int YBeyondMin = pointOffset.Y + pointOffsetMin.Y;
+            // Прибавляем остаток, тем самым выравнивая точку по и оффсет по краям и границам, чтобы не перейти их.
+            if (XBeyondMin < 0)
+                pointOffset.X -= XBeyondMin;
+            if (YBeyondMin < 0)
+                pointOffset.Y -= YBeyondMin;
+
+            //Debug.WriteLine($"pointOffset: {pointOffset}, XbeyondMin: {XBeyondMin}, YBeyondMin: {YBeyondMin}");
+
+            int xMax = cellsSize.Width - 1;
+            int yMax = cellsSize.Height - 1;
+            // расстояние от max до границы
+            int Xdist = xMax - pointOffsetMax.X;
+            int Ydist = yMax - pointOffsetMax.Y;
+            // максимум куда (коорд) можно сместить выбранный
+            int XdistMax = pointOffsetDown.X + Xdist;
+            int YdistMax = pointOffsetDown.Y + Ydist;
+            // допустимо смещать ВЫБРАННЫЙ на расстояние MAX до данной границы
+            if (mousePos.X > XdistMax)
+                pointOffset.X = Xdist;
+            if (mousePos.Y > YdistMax)
+                pointOffset.Y = Ydist;
+
+            //Debug.WriteLine($"Update Point Offset, where Down {pointOffsetDown}, offset: {pointOffset}, min: {pointOffsetMin}, max: {pointOffsetMax}, mousePos: {mousePos}");
+        }
+
+        /// <summary>
+        /// Determining the location of the offsetDown when the offset itself and the mouse are shifted.
+        /// </summary>
+        public static void UpdatePointOffsetDown()
+        {
+            pointOffsetDown = MouseController.currentMousePosition;
+            pointOffsetDown.X -= pointOffset.X;
+            pointOffsetDown.Y -= pointOffset.Y;
+        }
+
+        /// <summary>
+        /// Reset all offsets.
+        /// </summary>
+        public static void ResetOffset()
+        {
+            pointOffsetMin.X += pointOffset.X;
+            pointOffsetMin.Y += pointOffset.Y;
+
+            pointOffsetMax.X += pointOffset.X;
+            pointOffsetMax.Y += pointOffset.Y;
+
+            pointOffset = new Point(0, 0);
+            pointOffsetDown = new Point(0, 0);
+            pointOffsetLast = new Point(0, 0);
+        }
+
+        #endregion Offsets
+
 
         #endregion Helpers
     }

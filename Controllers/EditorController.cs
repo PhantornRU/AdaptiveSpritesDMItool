@@ -24,7 +24,11 @@ namespace AdaptiveSpritesDMItool.Controllers
 {
     internal static class EditorController
     {
+        static SelectMode selectMode = SelectMode.None;
+
         #region Editor Modes
+
+        #region Draw
 
         public static void EditSingleMode(StateImageSideType _stateImageSideType)
         {
@@ -91,6 +95,11 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
+        #endregion Draw
+
+
+        #region Clear
+
         public static void EditDeleteMode(StateImageSideType _stateImageSideType)
         {
             switch (_stateImageSideType)
@@ -156,12 +165,10 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
+        #endregion Clear
 
 
-
-
-
-
+        #region Select
 
         public static void EditMoveModeStart(StateImageSideType _stateImageSideType)
         {
@@ -176,18 +183,12 @@ namespace AdaptiveSpritesDMItool.Controllers
 
             Point[] selectedPoints = new Point[] { MouseController.currentMousePosition };
             DrawController.UpdateStoragePoints(selectedPoints);
-            //DrawController.SetStoragePoints();
-
             ViewSelectedPoints(_stateImageSideType);
         }
 
         public static void EditMoveMode(StateImageSideType _stateImageSideType)
         {
             if (_stateImageSideType != StateImageSideType.Right) return;
-
-            //var direction = StatesController.currentStateDirection;
-            //var pointsDirection = DrawController.GetStoragePoints(direction);
-            //Point currPos = MouseController.currentMousePosition;
 
             DrawController.UpdatePointOffset();
             ViewSelectedPoints(_stateImageSideType);
@@ -197,23 +198,10 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             if (_stateImageSideType != StateImageSideType.Right) return;
 
-            Debug.WriteLine("Select Start - Out Points => Select");
-            // Начинаем вновь выделять
             DrawController.SetStoragePoints();
             DrawController.ClearSelectors();
 
         }
-
-
-
-
-
-
-
-
-
-
-        static SelectMode selectMode = SelectMode.None;
 
         public static void EditSelectModeStart(StateImageSideType _stateImageSideType)
         {
@@ -223,8 +211,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                     break;
                 case StateImageSideType.Right:
 
-                    // Если нажата мышь в пределах УЖЕ выделенной области - то
-                    //      Устанавливаем Move - режим перемещения
+                    // If the mouse is pressed within the ALREADY selected area - then:
+                    // Set Move - the movement mode
                     var direction = StatesController.currentStateDirection;
                     var pointsDirection = DrawController.GetStoragePoints(direction);
                     //string pointsString = string.Join(", ", pointsDirection.Select(x => x.ToString()));
@@ -232,14 +220,13 @@ namespace AdaptiveSpritesDMItool.Controllers
                     if (MouseController.isMouseInPoints(pointsDirection))
                     {
                         selectMode = SelectMode.Move;
-                        Debug.WriteLine("Select Start - In Points => Move");
+                        //Debug.WriteLine("Select Start - In Points => Move");
                         DrawController.UpdatePointOffsetDown();
-                        //DrawController.CopySelectedOffsetPoints();
                         break;
                     }
 
-                    Debug.WriteLine("Select Start - Out Points => Select");
-                    // Начинаем вновь выделять
+                    //Debug.WriteLine("Select Start - Out Points => Select");
+                    // Select again
                     selectMode = SelectMode.Select;
                     ViewSelectedPoints(_stateImageSideType);
                     DrawController.SetStoragePoints();
@@ -257,21 +244,16 @@ namespace AdaptiveSpritesDMItool.Controllers
                 case StateImageSideType.Left:
                     break;
                 case StateImageSideType.Right:
-                    //var points = GetPointsFromMouseDownToUp();
-                    //ViewSelectedPoints(_stateImageSideType, points);
-
-                    // Зависимость от режима
-
                     switch(selectMode)
                     {
                         case SelectMode.Select:
-                            // Select - продолжаем выделять область
+                            // Select - continue to select the area
                             //Debug.WriteLine("Select - Select");
                             var points = GetPointsFromMouseDownToUp();
                             ViewSelectedPoints(_stateImageSideType, points);
                             break;
                         case SelectMode.Move:
-                            // Move - двигаем изображение
+                            // Move - move the area
                             //Debug.WriteLine("Select - Move");
                             DrawController.UpdatePointOffset();
                             ViewSelectedPoints(_stateImageSideType);
@@ -282,19 +264,12 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
-
-
-
-
-
-
-
         public static void EditSelectModeEnd(StateImageSideType _stateImageSideType)
         {
             Point[] selectedPoints = GetPointsFromMouseDownToUp();
             if (selectedPoints.Length <= 1)
             {
-                Debug.WriteLine("Select End - Finish");
+                //Debug.WriteLine("Select End - Finish");
                 selectMode = SelectMode.None;
                 DrawController.ClearSelectors();
                 return;
@@ -308,19 +283,17 @@ namespace AdaptiveSpritesDMItool.Controllers
                     switch (selectMode)
                     {
                         case SelectMode.Select:
-                            Debug.WriteLine("Select End - Select");
-                            // Select - Завершаем выделение области, сохраняем Picked Points
+                            //Debug.WriteLine("Select End - Select");
+                            // Select - Complete the selection of the area, save the Picked Points
                             //var direction = StatesController.currentStateDirection;
                             //string pointsString = string.Join(", ", selectedPoints.Select(x => x.ToString()));
                             //Debug.WriteLine($"UpdateStoragePoints[{direction}][{selectedPoints.Length}]: {pointsString}");
                             DrawController.UpdateStoragePoints(selectedPoints);
-                            // Определяем границы оффсета для SelectMode.Move
+                            // Define offset boundaries for SelectMode.Move
                             DrawController.UpdatePointOffsetBounds(MouseController.currentMouseDownPosition, MouseController.currentMousePosition);
                             break;
                         case SelectMode.Move:
-                            Debug.WriteLine("Select End - Move");
-                            // Move - Отпускаем изображение
-                            //Point[] checkPoints = DrawController.GetStoragePoints(StatesController.currentStateDirection);
+                            //Debug.WriteLine("Select End - Move");
                             break;
                     }
 
@@ -328,11 +301,37 @@ namespace AdaptiveSpritesDMItool.Controllers
             }
         }
 
+        #endregion Select
 
 
+        public static void EditWhenEnterImage(StateImageSideType _stateImageSideType)
+        {
+            DrawController.ClearSelectors();
+        }
+
+        #endregion Editor Modes
 
 
+        #region Editor View
 
+        private static void ViewMultSelectorAtCurrentToMDownPosition(StateImageSideType stateImageSideType, bool isNeedClear = true)
+        {
+            ViewMultSelectorAtPoints(stateImageSideType, MouseController.currentMouseDownPosition, MouseController.currentMousePosition, isNeedClear);
+        }
+
+        private static void ViewSingleSelectorAtCurrentPosition(StateImageSideType stateImageSideType, bool isNeedClear = true)
+        {
+            ViewMultSelectorAtPoints(stateImageSideType, MouseController.currentMousePosition, MouseController.currentMousePosition, isNeedClear);
+        }
+
+        private static void ViewMultSelectorAtPoints(StateImageSideType stateImageSideType, Point point1, Point point2, bool isNeedClear = true)
+        {
+            if (!MouseController.isMouseInImage)
+                return;
+            if (isNeedClear)
+                DrawController.ClearSelectors(stateImageSideType);
+            DrawController.ViewSelectors(stateImageSideType, point1, point2);
+        }
 
         private static void ViewSelectedPoints(StateImageSideType _stateImageSideType) => ViewSelectedPoints(_stateImageSideType, new Point[] { MouseController.currentMousePosition });
 
@@ -368,40 +367,6 @@ namespace AdaptiveSpritesDMItool.Controllers
                     ViewMultSelectorAtPoints(_stateImageSideType, point1, point2, false);
                     break;
             }
-        }
-
-
-
-
-
-
-        public static void EditWhenEnterImage(StateImageSideType _stateImageSideType)
-        {
-            DrawController.ClearSelectors();
-        }
-
-        #endregion Editor Modes
-
-
-        #region Editor View
-
-        private static void ViewMultSelectorAtCurrentToMDownPosition(StateImageSideType stateImageSideType, bool isNeedClear = true)
-        {
-            ViewMultSelectorAtPoints(stateImageSideType, MouseController.currentMouseDownPosition, MouseController.currentMousePosition, isNeedClear);
-        }
-
-        private static void ViewSingleSelectorAtCurrentPosition(StateImageSideType stateImageSideType, bool isNeedClear = true)
-        {
-            ViewMultSelectorAtPoints(stateImageSideType, MouseController.currentMousePosition, MouseController.currentMousePosition, isNeedClear);
-        }
-
-        private static void ViewMultSelectorAtPoints(StateImageSideType stateImageSideType, Point point1, Point point2, bool isNeedClear = true)
-        {
-            if (!MouseController.isMouseInImage)
-                return;
-            if (isNeedClear)
-                DrawController.ClearSelectors(stateImageSideType);
-            DrawController.ViewSelectors(stateImageSideType, point1, point2);
         }
 
         private static void PickPointAtCurrentPosition()

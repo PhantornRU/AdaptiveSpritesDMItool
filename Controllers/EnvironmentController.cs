@@ -72,17 +72,6 @@ namespace AdaptiveSpritesDMItool.Controllers
             int height = dataImageState.imageCellsSize.Height;
 
             dataPixelStorage = new DataPixelStorage(GetPixelStoragePath(), width, height);
-
-            //dataPixelStorage = new DataPixelStorage((width, height)[] points);
-
-            //cellsData = new Point[width, height];
-            //for (int i = 0; i < width; i++)
-            //{
-            //    for (int j = 0; j < height; j++)
-            //    {
-            //        cellsData[i, j] = new Point(i, j);
-            //    }
-            //}
         }
 
         #endregion Loaders
