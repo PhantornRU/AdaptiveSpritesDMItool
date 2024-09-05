@@ -9,53 +9,76 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using Point = System.Drawing.Point;
 using Color = System.Windows.Media.Color;
+using Brushes = System.Windows.Media.Brushes;
+using Pen = System.Windows.Media.Pen;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Collections;
 using System.Windows.Controls;
+using SixLabors.ImageSharp.Drawing.Processing;
+using System.Globalization;
+using System.Windows;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
     internal static class DrawController
     {
+
+        #region Properties of points
+
+        /// <summary> Selected point for drawing on canvases. </summary>
+        public static Point pickedPointFromPreview = new Point(-1, -1);
+
+        /// <summary> Storage of selected points for moving to a new area. </summary>
+        static Dictionary<StateDirection, Dictionary<Point, Point>> pointsStorage = new Dictionary<StateDirection, Dictionary<Point, Point>>();
+
+        /// <summary> Offset from the original selected coordinate area. </summary>
+        public static Point pointOffset;
+
+        /// <summary> location of mouse click in the selected area </summary>
+        public static Point pointOffsetDown;
+
+        /// <summary> Coordinates of the smallest point of the offset boundaries </summary>
+        public static Point pointOffsetMin;
+
+        /// <summary> Coordinates of the largest point of the offset boundaries </summary>
+        public static Point pointOffsetMax;
+
+        /// <summary> The point showing what the previous offset was </summary>
+        private static Point pointOffsetLast = new Point(0, 0);
+
+        #endregion Properties of points
+
+
+        #region Drawing properties
+
         static int borderThickness = 2;
         static byte alphaSelectedPoint = 175;
 
-        /// <summary>
-        /// Selected point for drawing on canvases.
-        /// </summary>
-        public static Point pickedPointFromPreview = new Point(-1, -1);
 
-        /// <summary>
-        /// Storage of selected points for moving to a new area.
-        /// </summary>
-        static Dictionary<StateDirection, Dictionary<Point, Point>> pointsStorage = new Dictionary<StateDirection, Dictionary<Point, Point>>();
+        #region Properties of the coordinate grid
 
-        /// <summary>
-        /// Offset from the original selected coordinate area.
-        /// </summary>
-        public static Point pointOffset;
+        /// <summary> Left preview grid </summary>
+        private static DrawingGroup dGroupTextGrid = new DrawingGroup();
+        /// <summary> Right preview editable grid </summary>
+        private static Dictionary<StateDirection, DrawingGroup> dGroupTextGridDictionary = new Dictionary<StateDirection, DrawingGroup>();
 
-        /// <summary>
-        /// location of mouse click in the selected area
-        /// </summary>
-        public static Point pointOffsetDown;
+        private static SolidColorBrush brush = Brushes.Black;
+        private static double fontSize = 1.25;
+        private static Typeface typeface = new Typeface("Arial Narrow");
+        private static FlowDirection flowDirection = FlowDirection.LeftToRight;
+        private static CultureInfo cultureInfo = CultureInfo.GetCultureInfo("en-us");
 
-        /// <summary>
-        /// Coordinates of the smallest point of the offset boundaries
-        /// </summary>
-        public static Point pointOffsetMin;
+        /// <summary> Coordinate grid canvas size </summary>
+        private static int textGridSize = 127;
 
-        /// <summary>
-        /// Coordinates of the largest point of the offset boundaries
-        /// </summary>
-        public static Point pointOffsetMax;
+        private static Size pointSize;
+        private static double pixelsPerDip;
 
-        /// <summary>
-        /// The point showing what the previous offset was
-        /// </summary>
-        private static Point pointOffsetLast = new Point(0, 0);
+        #endregion Properties of the coordinate grid
+
+        #endregion Drawing properties
 
 
         #region Draw
@@ -92,6 +115,7 @@ namespace AdaptiveSpritesDMItool.Controllers
                 }
             }
 
+            EnvironmentController.dataPixelStorage.UpdateAfterStorage();
             //pickedPoint = new Point(-1, -1);
         }
 
@@ -145,8 +169,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                 }
             }
 
-
             pointsStorage = new Dictionary<StateDirection, Dictionary<Point, Point>>();
+            EnvironmentController.dataPixelStorage.UpdateAfterStorage();
         }
 
         /// <summary>
@@ -286,6 +310,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                     UpdatePixelPickedPoint(stateDirection, bitmapOverlayEditable, pointToColor, colorOverlay, !isUndo);
                 }
             }
+
+            EnvironmentController.dataPixelStorage.UpdateAfterStorage();
         }
 
         /// <summary>
@@ -412,6 +438,105 @@ namespace AdaptiveSpritesDMItool.Controllers
             return bitmap;
         }
 
+        /// <summary>
+        /// Draw a text grid with coordinates for the left previews and update the right preview according to the currently loaded data for each point.
+        /// </summary>
+        /// <param name="_pixelsPerDip"></param>
+        public static void InitializeTextGrids(double _pixelsPerDip)
+        {
+            Pen shapeOutlinePen = new Pen(Brushes.Black, 2);
+            shapeOutlinePen.Freeze();
+
+            DrawingImage dImageSource = new DrawingImage(dGroupTextGrid);
+            var stateDirections = StatesController.GetAllStateDirections();
+            foreach (StateDirection stateDirection in stateDirections)
+            {
+                StatesController.stateSourceDictionary[stateDirection][StateImageType.TextGrid][StateImageSideType.Left].Source = dImageSource;
+
+                dGroupTextGridDictionary[stateDirection] = new DrawingGroup();
+                DrawingImage dImageSourceEditable = new DrawingImage(dGroupTextGridDictionary[stateDirection]);
+                StatesController.stateSourceDictionary[stateDirection][StateImageType.TextGrid][StateImageSideType.Right].Source = dImageSourceEditable;
+            }
+
+            var cellsSize = EnvironmentController.dataImageState.imageCellsSize;
+            pointSize = new Size(
+                textGridSize / cellsSize.Width,
+                textGridSize / cellsSize.Height);
+            pixelsPerDip = _pixelsPerDip;
+
+            // Obtain a DrawingContext from the DrawingGroup.
+            using (DrawingContext dc = dGroupTextGrid.Open())
+            {
+                for (int i = 0; i < cellsSize.Width; i++)
+                {
+                    for (int j = 0; j < cellsSize.Height; j++)
+                    {
+                        System.Windows.Point point = new System.Windows.Point(i * pointSize.Width, j * pointSize.Height);
+                        string text = $"{i}:{j}";
+
+                        FormattedText formattedText = new FormattedText(
+                            text,
+                            cultureInfo,
+                        flowDirection,
+                            typeface,
+                            fontSize,
+                            brush,
+                            pixelsPerDip);
+
+                        dc.DrawText(formattedText, point);
+                    }
+                }
+
+            }
+
+            var allStateDirections = StatesController.GetAllStateDirections();
+            RenderTextGrids(allStateDirections);
+
+        }
+
+        /// <summary>
+        /// Update the right preview of the coordinate grid text according to the currently loaded data for each point.
+        /// </summary>
+        public static void RenderTextGrids(IEnumerable<StateDirection>? stateDirections = null)
+        {
+            if(stateDirections == null)
+                stateDirections = StatesController.GetStateDirections();
+            var cellsSize = EnvironmentController.dataImageState.imageCellsSize;
+
+            foreach (StateDirection stateDirection in stateDirections)
+            {
+                // Obtain a DrawingContext from 
+                // the DrawingGroup.
+                DrawingGroup dGroup = dGroupTextGridDictionary[stateDirection];
+                using (DrawingContext dc = dGroup.Open())
+                {
+                    for (int i = 0; i < cellsSize.Width; i++)
+                    {
+                        for (int j = 0; j < cellsSize.Height; j++)
+                        {
+                            System.Windows.Point pointPos = new System.Windows.Point(i * pointSize.Width, j * pointSize.Height);
+                            Point point = new Point(i, j);
+                            Point storagePoint = EnvironmentController.dataPixelStorage.GetPointStorage(stateDirection, point);
+
+                            string text = $"{storagePoint.X}:{storagePoint.Y}";
+
+                            FormattedText formattedText = new FormattedText(
+                                text,
+                                cultureInfo,
+                            flowDirection,
+                                typeface,
+                                fontSize,
+                                brush,
+                                pixelsPerDip);
+
+                            dc.DrawText(formattedText, pointPos);
+                        }
+                    }
+                }
+            }
+
+        }
+
         #endregion Grids
 
 
@@ -456,7 +581,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// <param name="_stateImageSideType"></param>
         public static void ClearSelectors(StateImageSideType _stateImageSideType)
         {
-            var stateDirections = StatesController.allStateDirection();
+            var stateDirections = StatesController.GetAllStateDirections();
             foreach (StateDirection stateDirection in stateDirections)
             {
                 WriteableBitmap bitmap = EnvironmentController.dataImageState.stateBMPdict[stateDirection][StateImageType.Selection][_stateImageSideType];
@@ -469,7 +594,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// </summary>
         public static void ClearSelectors()
         {
-            var stateDirections = StatesController.allStateDirection();
+            var stateDirections = StatesController.GetAllStateDirections();
 
             foreach (StateDirection stateDirection in stateDirections)
             {

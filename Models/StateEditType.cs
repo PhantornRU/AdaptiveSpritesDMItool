@@ -41,6 +41,7 @@ namespace AdaptiveSpritesDMItool.Models
         Background,
         Overlay,
         Selection,
+        TextGrid
     }
 
     public enum StateImageSideType

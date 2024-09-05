@@ -141,9 +141,9 @@
                         ToolTip="Shift pixels to the left to centralize."
                         Icon="{ui:SymbolIcon TableInsertColumn24}" Click="CentralizeStatesButton_Click" />
 
-
                 <!--Environment Settings-->
                 <Separator Margin="10,0,10,0" />
+                <TextBlock Text="Grids: " VerticalAlignment="Center"/>
                 <ui:Button
                         x:Name="GridEnvironmentButton"
                         Appearance="Primary"
@@ -157,14 +157,20 @@
                         ToolTip="Toggle grid under overlay environment."
                         Icon="{ui:SymbolIcon SubGrid24}" Click="GridZIndexEnvironmentButton_Click"/>
                 <ui:Button
-                        x:Name="OverlayEnvironmentButton"
+                        x:Name="TextGridEnvironmentButton"
+                        Appearance="Secondary"
+                        IsEnabled="True"
+                        ToolTip="Toggle view of text coordinates on points."
+                        Icon="{ui:SymbolIcon NumberRow24}" Click="TextGridEnvironmentButton_Click" />
+
+                <Separator Margin="10,0,10,0" />
+                <ui:Button
+                        x:Name="OverlayButton"
                         Appearance="Primary"
                         IsEnabled="True"
                         ToolTip="Toggle overlay environment."
-                        Icon="{ui:SymbolIcon AppFolder24}" Click="OverlayEnvironmentButton_Click" />
-
-
-
+                        Icon="{ui:SymbolIcon BorderTop24}" Click="OverlayButton_Click" />
+                <!--Icon="{ui:SymbolIcon AppFolder24}"-->
             </ToolBar>
 
         </Grid>
@@ -212,6 +218,10 @@
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
+                        <Image x:Name="imageTextGridPreviewLeftSouth"
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
                         <Border BorderBrush="Black" BorderThickness="0.5"
                             MinWidth="100" MinHeight="100">
                             <Image x:Name="imageSelectionPreviewLeftSouth"                             
@@ -219,6 +229,7 @@
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
                         </Border>
+                        
                     </Grid>
                 </Viewbox>
 
@@ -238,6 +249,10 @@
                                 MouseLeave="imagePreviewRightSouth_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewRightSouth"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Image x:Name="imageTextGridPreviewRightSouth"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
@@ -284,6 +299,10 @@
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
+                        <Image x:Name="imageTextGridPreviewLeftNorth"
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
                         <Border BorderBrush="Black" BorderThickness="0.5"
                             MinWidth="100" MinHeight="100">
                             <Image x:Name="imageSelectionPreviewLeftNorth"                             
@@ -310,6 +329,10 @@
                                 MouseLeave="imagePreviewRightNorth_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewRightNorth"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Image x:Name="imageTextGridPreviewRightNorth"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
@@ -356,6 +379,10 @@
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
+                        <Image x:Name="imageTextGridPreviewLeftEast"
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
                         <Border BorderBrush="Black" BorderThickness="0.5"
                             MinWidth="100" MinHeight="100">
                             <Image x:Name="imageSelectionPreviewLeftEast"                             
@@ -382,6 +409,10 @@
                                 MouseLeave="imagePreviewRightEast_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewRightEast"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Image x:Name="imageTextGridPreviewRightEast"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
@@ -428,6 +459,10 @@
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>
+                        <Image x:Name="imageTextGridPreviewLeftWest"
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
                         <Border BorderBrush="Black" BorderThickness="0.5"
                             MinWidth="100" MinHeight="100">
                             <Image x:Name="imageSelectionPreviewLeftWest"                             
@@ -454,6 +489,10 @@
                                 MouseLeave="imagePreviewRightWest_MouseLeave">
                         </Image>
                         <Image x:Name="imageOverlayPreviewRightWest"                             
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased" 
+                                IsHitTestVisible="False"/>
+                        <Image x:Name="imageTextGridPreviewRightWest"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
                                 IsHitTestVisible="False"/>

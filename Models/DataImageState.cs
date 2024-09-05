@@ -78,7 +78,7 @@ namespace AdaptiveSpritesDMItool.Models
 
             Dictionary<StateImageSideType, WriteableBitmap> backgroundDict = new Dictionary<StateImageSideType, WriteableBitmap>();
 
-            StateDirection[] stateDirections = StatesController.allStateDirection(DirectionDepth.Four);
+            StateDirection[] stateDirections = StatesController.GetAllStateDirections(DirectionDepth.Four);
             foreach (StateDirection direction in stateDirections)
             {
                 stateBMPdict.Add(direction, new Dictionary<StateImageType, Dictionary<StateImageSideType, WriteableBitmap>>());
@@ -112,7 +112,7 @@ namespace AdaptiveSpritesDMItool.Models
                 throw new Exception("Overlay DMIState has different dimensions than main DMIState");
             currentStateOverlay = _state;
 
-            StateDirection[] stateDirections = StatesController.allStateDirection(DirectionDepth.Four);
+            StateDirection[] stateDirections = StatesController.GetAllStateDirections(DirectionDepth.Four);
             foreach (StateDirection direction in stateDirections)
             {
                 WriteableBitmap bitmap = GetBMPFromDMIState(currentStateOverlay, direction);

@@ -20,6 +20,8 @@ namespace AdaptiveSpritesDMItool.Resources
         public ConcurrentDictionary<StateDirection, ConcurrentDictionary<(int x, int y), (int x, int y)>> pixelStorages =
             new ConcurrentDictionary<StateDirection, ConcurrentDictionary<(int x, int y), (int x, int y)>>();
 
+        bool wasUpdated = false;
+
         public DataPixelStorage(string path, int width, int height)
         {
             if (!File.Exists($"{path}.csv"))
@@ -36,6 +38,7 @@ namespace AdaptiveSpritesDMItool.Resources
         public void ChangePoint(StateDirection direction, (int x, int y) point, (int x, int y) pointMod)
         {
             pixelStorages[direction][point] = pointMod;
+            wasUpdated = true;
         }
 
         private void FillDataSimilarPoints(int width, int height)
@@ -44,13 +47,13 @@ namespace AdaptiveSpritesDMItool.Resources
                 .Select(i => (x: i % width, y: i / width))
                 .ToArray();
 
-            foreach (var direction in StatesController.allStateDirection(DirectionDepth.Four).Cast<StateDirection>())
+            foreach (var direction in StatesController.GetAllStateDirections(DirectionDepth.Four).Cast<StateDirection>())
             {
                 pixelStorages[direction] = new ConcurrentDictionary<(int x, int y), (int x, int y)>(
                     initialPoints.Select(point => new KeyValuePair<(int x, int y), (int x, int y)>(point, point))
                 );
             }
-
+            wasUpdated = true;
         }
 
 
@@ -79,6 +82,20 @@ namespace AdaptiveSpritesDMItool.Resources
         #endregion Edit
 
 
+        #region Visualize
+
+        public void UpdateAfterStorage()
+        {
+            if (!wasUpdated) return;
+
+            var stateDirections = StatesController.GetStateDirections();
+            DrawController.RenderTextGrids(stateDirections);
+            wasUpdated = false;
+        }
+
+        #endregion Visualize
+
+
         #region File IO
 
 
@@ -98,6 +115,8 @@ namespace AdaptiveSpritesDMItool.Resources
         {
             var points = pixelStorages.SelectMany(p => p.Value.Select(p2 => (p.Key, p2.Key, p2.Value)));
             DrawController.DrawPixelStorageAtBitmaps(points);
+            wasUpdated = true;
+            UpdateAfterStorage();
         }
 
         #region Data table
@@ -106,7 +125,7 @@ namespace AdaptiveSpritesDMItool.Resources
         {
             var csv = string.Join(
                 Environment.NewLine,
-                StatesController.allStateDirection(DirectionDepth.Four).Cast<StateDirection>().Select(direction =>
+                StatesController.GetAllStateDirections(DirectionDepth.Four).Cast<StateDirection>().Select(direction =>
                 {
                     var csvForDirection = string.Join(
                         Environment.NewLine,

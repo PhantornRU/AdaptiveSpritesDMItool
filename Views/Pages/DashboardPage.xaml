@@ -65,22 +65,24 @@
 
 
             </Border>
+
         </Viewbox>
-        
-        <Viewbox  Grid.Row="0" Grid.Column="2"
+
+        <Viewbox  Grid.Row="0" Grid.Column="3"
                           Margin="12,12,12,12"
                             Stretch="Uniform">
-            <Border BorderBrush="Black" BorderThickness="0.5"
+            <Grid>
+                <Border BorderBrush="Black" BorderThickness="0.5"
                                 MinWidth="100" MinHeight="100">
 
+                    <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTestText"></Image>
+                    <!--<Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
+
+
+                </Border>
                 <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTest2" MouseMove="imgTest2_MouseMove" MouseUp="imgTest2_MouseUp"></Image>
-                <!--<Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
 
-
-            </Border>
+            </Grid>
         </Viewbox>
-        
-        
-        
     </Grid>
 </Page>

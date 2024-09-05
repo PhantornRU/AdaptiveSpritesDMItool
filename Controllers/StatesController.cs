@@ -26,6 +26,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static bool isShowGrid = true;
         public static bool isShowAboveGrid = true;
         public static bool isShowOverlay = true;
+        public static bool isShowTextGrid = false;
 
 
         // Display Z indices background grid on top of overlays.
@@ -136,7 +137,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// The main states directions we work with
         /// </summary>
         /// <returns></returns>
-        public static StateDirection[] allStateDirection(DirectionDepth directionDepth = DirectionDepth.Four)
+        public static StateDirection[] GetAllStateDirections(DirectionDepth directionDepth = DirectionDepth.Four)
         {
             switch (directionDepth)
             {
@@ -180,6 +181,8 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void ToggleShowOverlay() => isShowOverlay = !isShowOverlay;
 
+        public static void ToggleShowTextGrid() => isShowTextGrid = !isShowTextGrid;
+
         #endregion Toggles
 
 
@@ -190,6 +193,8 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static bool GetEnableStateCentralizeButton() => isMirroredState && (currentStateQuantityMode != StateQuantityType.Single);
 
         public static bool GetEnableStateGridZIndexButton() => isShowGrid;
+
+        public static bool GetEnableStateTextGridButton() => isShowGrid;
 
         #endregion Enabled Buttons
 
@@ -205,7 +210,10 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static Visibility GetVisibilityOverlay() => GetVisibility(isShowOverlay);
 
+
         public static Visibility GetVisibilityGrid() => GetVisibility(isShowGrid);
+
+        public static Visibility GetVisibilityTextGrid() => GetVisibility(isShowTextGrid && isShowGrid);
 
         private static Visibility GetVisibility(bool isValue) => isValue ? Visibility.Visible : Visibility.Collapsed;
 
@@ -223,6 +231,8 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static ControlAppearance GetControlAppearanceCentralize() => GetControlAppearance(isCentralizedState);
 
         public static ControlAppearance GetControlAppearanceMirror() => GetControlAppearance(isMirroredState);
+
+        public static ControlAppearance GetControlAppearanceTextGrid() => GetControlAppearance(isShowTextGrid);
 
         private static ControlAppearance GetControlAppearance(bool isValue) => isValue ? GetPressedButtonAppearance() : GetUnPressedButtonAppearance();
 

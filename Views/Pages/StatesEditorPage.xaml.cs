@@ -52,7 +52,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             TestFunction();
         }
 
-
         #region Initializers
 
         private void InitializeDictionaries()
@@ -84,6 +83,12 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                                 { StateImageSideType.Left, imageSelectionPreviewLeftSouth },
                                 { StateImageSideType.Right, imageSelectionPreviewRightSouth }
                             }
+                        },
+                        { StateImageType.TextGrid, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageTextGridPreviewLeftSouth },
+                                { StateImageSideType.Right, imageTextGridPreviewRightSouth }
+                            }
                         }
                     }
                 },
@@ -112,6 +117,12 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                             {
                                 { StateImageSideType.Left, imageSelectionPreviewLeftNorth },
                                 { StateImageSideType.Right, imageSelectionPreviewRightNorth }
+                            }
+                        },
+                        { StateImageType.TextGrid, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageTextGridPreviewLeftNorth },
+                                { StateImageSideType.Right, imageTextGridPreviewRightNorth }
                             }
                         }
                     }
@@ -142,6 +153,12 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                                 { StateImageSideType.Left, imageSelectionPreviewLeftEast },
                                 { StateImageSideType.Right, imageSelectionPreviewRightEast }
                             }
+                        },
+                        { StateImageType.TextGrid, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageTextGridPreviewLeftEast },
+                                { StateImageSideType.Right, imageTextGridPreviewRightEast }
+                            }
                         }
                     }
                 },
@@ -171,6 +188,12 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                                 { StateImageSideType.Left, imageSelectionPreviewLeftWest },
                                 { StateImageSideType.Right, imageSelectionPreviewRightWest }
                             }
+                        },
+                        { StateImageType.TextGrid, new Dictionary<StateImageSideType, System.Windows.Controls.Image>()
+                            {
+                                { StateImageSideType.Left, imageTextGridPreviewLeftWest },
+                                { StateImageSideType.Right, imageTextGridPreviewRightWest }
+                            }
                         }
                     }
                 }
@@ -178,7 +201,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         }
 
-        public static void InitializeSources()
+        public void InitializeSources()
         {
             foreach (var (stateDirection, images) in StatesController.stateSourceDictionary)
             {
@@ -190,7 +213,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             }
         }
 
-        public static void InitializeGrids()
+        public void InitializeGrids()
         {
             WriteableBitmap gridBitmap = EditorController.GetGridBackground();
 
@@ -199,6 +222,9 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 state[StateImageType.Background][StateImageSideType.Left].Source = gridBitmap;
                 state[StateImageType.Background][StateImageSideType.Right].Source = gridBitmap;
             }
+
+            double pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+            DrawController.InitializeTextGrids(pixelsPerDip);
         }
 
         #endregion Initializers
@@ -432,6 +458,15 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region Buttons Controller
 
+        private void ControllButtonsAvailability()
+        {
+            MirrorStatesButton.IsEnabled = StatesController.GetEnableStateMirrorButton();
+            CentralizeStatesButton.IsEnabled = StatesController.GetEnableStateCentralizeButton();
+            GridZIndexEnvironmentButton.IsEnabled = StatesController.GetEnableStateGridZIndexButton();
+            GridZIndexEnvironmentUpdate();
+            GridEnvironmentUpdate();
+        }
+
         #region Buttons Edit Controller
 
         private void SingleButton_Click(object sender, RoutedEventArgs e)
@@ -530,15 +565,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             ControllButtonsAvailability();
         }
 
-        private void ControllButtonsAvailability()
-        {
-            MirrorStatesButton.IsEnabled = StatesController.GetEnableStateMirrorButton();
-            CentralizeStatesButton.IsEnabled = StatesController.GetEnableStateCentralizeButton();
-            GridZIndexEnvironmentButton.IsEnabled = StatesController.GetEnableStateGridZIndexButton();
-            GridZIndexEnvironmentUpdate();
-        }
-
         #endregion Buttons States Controller
+
 
         #region Buttons Environment Controller
 
@@ -552,11 +580,15 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             GridEnvironmentButton.Appearance = StatesController.GetControlAppearanceGrid();
             GridZIndexEnvironmentButton.IsEnabled = StatesController.GetEnableStateGridZIndexButton();
+            TextGridEnvironmentButton.IsEnabled = StatesController.GetEnableStateTextGridButton();
 
             foreach (var state in StatesController.stateSourceDictionary.Values)
             {
                 state[StateImageType.Background][StateImageSideType.Left].Visibility = StatesController.GetVisibilityGrid();
                 state[StateImageType.Background][StateImageSideType.Right].Visibility = StatesController.GetVisibilityGrid();
+
+                state[StateImageType.TextGrid][StateImageSideType.Left].Visibility = StatesController.GetVisibilityTextGrid();
+                state[StateImageType.TextGrid][StateImageSideType.Right].Visibility = StatesController.GetVisibilityTextGrid();
             }
         }
 
@@ -577,15 +609,29 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             }
         }
 
-        private void OverlayEnvironmentButton_Click(object sender, RoutedEventArgs e)
+        private void OverlayButton_Click(object sender, RoutedEventArgs e)
         {
             StatesController.ToggleShowOverlay();
-            OverlayEnvironmentButton.Appearance = StatesController.GetControlAppearanceOverlay();
+            OverlayButton.Appearance = StatesController.GetControlAppearanceOverlay();
 
             foreach (var state in StatesController.stateSourceDictionary.Values)
             {
                 state[StateImageType.Overlay][StateImageSideType.Left].Visibility = StatesController.GetVisibilityOverlay();
                 state[StateImageType.Overlay][StateImageSideType.Right].Visibility = StatesController.GetVisibilityOverlay();
+            }
+        }
+
+        private void TextGridEnvironmentButton_Click(object sender, RoutedEventArgs e)
+        {
+            StatesController.ToggleShowTextGrid();
+            TextGridEnvironmentButton.Appearance = StatesController.GetControlAppearanceTextGrid();
+
+            EnvironmentController.dataPixelStorage.UpdateAfterStorage();
+
+            foreach (var state in StatesController.stateSourceDictionary.Values)
+            {
+                state[StateImageType.TextGrid][StateImageSideType.Left].Visibility = StatesController.GetVisibilityTextGrid();
+                state[StateImageType.TextGrid][StateImageSideType.Right].Visibility = StatesController.GetVisibilityTextGrid();
             }
         }
 
@@ -634,5 +680,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         }
 
         #endregion Testing
+
     }
 }

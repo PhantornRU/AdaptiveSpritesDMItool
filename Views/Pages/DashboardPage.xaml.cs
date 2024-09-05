@@ -17,6 +17,9 @@ using System.Windows.Media.Media3D;
 using System.Windows.Media;
 using System.Drawing;
 using Point = System.Drawing.Point;
+using System.Globalization;
+using System.Windows.Media.Effects;
+using System.Windows.Interop;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -130,11 +133,264 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             //using SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(bitmap);
             //image.Save("output.jpg");
+
+
+
+            //// Display the drawing using an image control.
+            //System.Windows.Controls.Image theImage = new System.Windows.Controls.Image();
+            //DrawingImage dImageSource = new DrawingImage(dGroup);
+            //theImage.Source = dImageSource;
+
+            ////this.Content = theImage;
+            //imgTestText = theImage;
+
+            InitializeTextGrid();
         }
+
+
+
+        //private static Dictionary<ushort, double> _glyphWidths = new Dictionary<ushort, double>();
+        //private static GlyphTypeface _glyphTypeface;
+        //public static GlyphRun CreateGlyphRun(string text, double size, Point position)
+        //{
+        //    if (_glyphTypeface == null)
+        //    {
+        //        Typeface typeface = new Typeface("Arial");
+        //        if (!typeface.TryGetGlyphTypeface(out _glyphTypeface))
+        //            throw new InvalidOperationException("No glyphtypeface found");
+        //    }
+
+        //    ushort[] glyphIndexes = new ushort[text.Length];
+        //    double[] advanceWidths = new double[text.Length];
+
+        //    var totalWidth = 0d;
+        //    double glyphWidth;
+
+        //    for (int n = 0; n < text.Length; n++)
+        //    {
+        //        ushort glyphIndex = (ushort)(text[n] - 29);
+        //        glyphIndexes[n] = glyphIndex;
+
+        //        if (!_glyphWidths.TryGetValue(glyphIndex, out glyphWidth))
+        //        {
+        //            glyphWidth = _glyphTypeface.AdvanceWidths[glyphIndex] * size;
+        //            _glyphWidths.Add(glyphIndex, glyphWidth);
+        //        }
+        //        advanceWidths[n] = glyphWidth;
+        //        totalWidth += glyphWidth;
+        //    }
+
+        //    var offsetPosition = new System.Windows.Point(position.X - (totalWidth / 2), position.Y - 10 - size);
+
+        //    GlyphRun glyphRun = new GlyphRun(_glyphTypeface, 0, false, size, glyphIndexes, offsetPosition, advanceWidths, null, null, null, null, null, null);
+
+        //    return glyphRun;
+        //}
+
+
+
+
+
+
+        System.Windows.Point currentMousePosition = new System.Windows.Point(0, 0);
 
         private void imgTest2_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
+            currentMousePosition = e.GetPosition(imgTest2);
+            RenderTextGrid();
+        }
 
+
+
+        DrawingGroup dGroup = new DrawingGroup();
+
+        System.Windows.Size sizeCells;
+        System.Windows.Size pointSize;
+        SolidColorBrush brush;
+        double fontSize;
+        Typeface typeface;
+        double pixelsPerDip;
+        FlowDirection flowDirection;
+        CultureInfo cultureInfo;
+
+        private void InitializeTextGrid()
+        {
+
+            System.Windows.Media.Pen shapeOutlinePen = new System.Windows.Media.Pen(System.Windows.Media.Brushes.Black, 2);
+            shapeOutlinePen.Freeze();
+
+            DrawingImage dImageSource = new DrawingImage(dGroup);
+            imgTestText.Source = dImageSource;
+
+            sizeCells = new System.Windows.Size(32, 32);
+            pointSize = new System.Windows.Size(
+                127 / sizeCells.Width,
+                127 / sizeCells.Height);
+            pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+            typeface = new Typeface("Arial Narrow");
+            fontSize = 1.8;
+            brush = System.Windows.Media.Brushes.Black;
+            flowDirection = FlowDirection.LeftToRight;
+            cultureInfo = CultureInfo.GetCultureInfo("en-us");
+
+
+            // Obtain a DrawingContext from 
+            // the DrawingGroup.
+            using (DrawingContext dc = dGroup.Open())
+            {
+                //Debug.WriteLine($"pointSize: {pointSize}, sizeCells: {sizeCells}, pixelsPerDip: {pixelsPerDip}, currentMousePosition: {currentMousePosition}");
+
+                for (int i = 0; i < sizeCells.Width; i++)
+                {
+                    for (int j = 0; j < sizeCells.Height; j++)
+                    {
+                        //Debug.WriteLine($"i: {i}, j: {j}");
+                        System.Windows.Point point = new System.Windows.Point(i * pointSize.Width, j * pointSize.Height);
+                        string text = $"{i}:{j}";
+
+                        FormattedText formattedText = new FormattedText(
+                            text,
+                            cultureInfo,
+                            flowDirection,
+                            typeface,
+                            fontSize,
+                            brush,
+                            pixelsPerDip);
+
+                        dc.DrawText(formattedText, point);
+                    }
+                }
+
+                //dc.PushOpacity(0.5);
+
+
+
+                // Draw a rectangle at full opacity.
+                //dc.DrawRectangle(System.Windows.Media.Brushes.Blue, shapeOutlinePen, new Rect(0, 0, 25, 25));
+
+                //// Push an opacity change of 0.5. 
+                //// The opacity of each subsequent drawing will
+                //// will be multiplied by 0.5.
+                //dc.PushOpacity(0.5);
+
+                //// This rectangle is drawn at 50% opacity.
+                //dc.DrawRectangle(System.Windows.Media.Brushes.Blue, shapeOutlinePen, new Rect(25, 25, 25, 25));
+
+                //// Blurs subsquent drawings. 
+                //dc.PushEffect(new BlurBitmapEffect(), null);
+
+                //// This rectangle is blurred and drawn at 50% opacity (0.5 x 0.5). 
+                //dc.DrawRectangle(System.Windows.Media.Brushes.Blue, shapeOutlinePen, new Rect(50, 50, 25, 25));
+
+                //// This rectangle is also blurred and drawn at 50% opacity.
+                //dc.DrawRectangle(System.Windows.Media.Brushes.Blue, shapeOutlinePen, new Rect(75, 75, 25, 25));
+
+                // Stop applying the blur to subsquent drawings.
+                //dc.Pop();
+
+
+
+
+                //var rect = new Rect(0, 0, 127, 127);
+                //var cb = new CombinedGeometry(GeometryCombineMode.Xor,
+                //                              new RectangleGeometry(rect),
+                //                             new EllipseGeometry(new System.Windows.Point(32, 16), 32, 16));
+
+                //var mask = new DrawingBrush(new GeometryDrawing(System.Windows.Media.Brushes.Blue, null, cb));
+                //dc.PushOpacityMask(mask);
+                //dc.DrawImage(imgTestText.Source, rect);
+
+
+
+
+                //// This rectangle is drawn at 50% opacity with no blur effect.
+                //dc.DrawRectangle(System.Windows.Media.Brushes.Blue, shapeOutlinePen, new Rect(100, 100, 25, 25));
+
+
+
+                //prepare the geometry, which can be considered as the puncher.
+                //var rect = new Rect(0, 0, 127, 127);
+                //var cb = new CombinedGeometry(GeometryCombineMode.Xor,
+                //                              new RectangleGeometry(rect),
+                //                             new EllipseGeometry(new System.Windows.Point(16, 2), 6, 8));
+                //punch the DrawingVisual
+                //yourDrawingVisual.Clip = cb;
+
+            }
+
+
+
+            //using (DrawingContext dc = dGroup.Open())
+            //{
+            //    currentMousePosition = new System.Windows.Point(8, 2);
+            //    System.Windows.Point point = new System.Windows.Point((int)(currentMousePosition.X / pointSize.Width), (int)(currentMousePosition.Y / pointSize.Height));
+            //    string text = $"{point.X}:{point.Y}";
+
+            //    var rect = new Rect(0, 0, 127, 127);
+            //    var cb = new CombinedGeometry(GeometryCombineMode.Xor,
+            //                                  new RectangleGeometry(rect),
+            //                                 new EllipseGeometry(point, pointSize.Width, pointSize.Height));
+
+            //    var mask = new DrawingBrush(new GeometryDrawing(System.Windows.Media.Brushes.Blue, null, cb));
+            //    dc.PushOpacityMask(mask);
+            //    dc.DrawImage(imgTestText.Source, rect);
+
+            //    FormattedText formattedText = new FormattedText(
+            //        text,
+            //        cultureInfo,
+            //        flowDirection,
+            //        typeface,
+            //        fontSize,
+            //        brush,
+            //        pixelsPerDip);
+
+            //    dc.DrawText(formattedText, point);
+            //}
+            //Debug.WriteLine($"Width: {dImageSource.Width}, Height: {dImageSource.Height}");
+
+
+
+
+        }
+
+        private void RenderTextGrid()
+        {
+
+            // Obtain a DrawingContext from 
+            // the DrawingGroup.
+            using (DrawingContext dc = dGroup.Open())
+            {
+
+                for (int i = 0; i < sizeCells.Width; i++)
+                {
+                    for (int j = 0; j < sizeCells.Height; j++)
+                    {
+                        //Debug.WriteLine($"i: {i}, j: {j}");
+                        System.Windows.Point point = new System.Windows.Point(i * pointSize.Width, j * pointSize.Height);
+                        string text = $"{i}:{j}";
+
+                        System.Windows.Point pointCurrent = new System.Windows.Point((int)(currentMousePosition.X / pointSize.Width), (int)(currentMousePosition.Y / pointSize.Height));
+                        //System.Windows.Point pointCurrent = new System.Windows.Point((int)(currentMousePosition.X), (int)(currentMousePosition.Y));
+                        if(pointCurrent.X == i && pointCurrent.Y == j)
+                        {
+                            //text = $"{pointCurrent.X}:{pointCurrent.Y}";
+                            text = $"???";
+
+                        }
+
+                        FormattedText formattedText = new FormattedText(
+                            text,
+                            cultureInfo,
+                            flowDirection,
+                            typeface,
+                            fontSize,
+                            brush,
+                            pixelsPerDip);
+
+                        dc.DrawText(formattedText, point);
+                    }
+                }
+            }
         }
 
         private void imgTest2_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
