@@ -64,6 +64,9 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void UpdateStatusMultiPoints()
         {
+            if (StatesController.currentStateDirection != StatesController.selectedStateDirection)
+                return;
+
             if (!MouseController.isMouseInImage)
                 return;
 

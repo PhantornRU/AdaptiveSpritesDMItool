@@ -26,6 +26,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             var stateImage = StatesController.GetImage(_stateDirection, _stateImageSideType);
             StatusBarController.UpdateStatus(e, stateImage, _stateDirection);
+            StatesController.UpdateSelectedStateDirection(_stateDirection);
 
             currentMouseDownPosition = GetModifyMousePosition(e, stateImage);
             currentMousePosition = currentMouseDownPosition;
@@ -91,6 +92,9 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void state_MouseMove(MouseEventArgs e, StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
+            if (StatesController.currentStateDirection != StatesController.selectedStateDirection)
+                return;
+
             var stateImage = StatesController.GetImage(_stateDirection, _stateImageSideType);
             StatusBarController.UpdateStatus(e, stateImage, _stateDirection);
 

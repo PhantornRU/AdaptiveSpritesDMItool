@@ -268,6 +268,12 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             if (pointsStorage.Count == 0)
                 return new Point[0];
+            if (pointsStorage.ContainsKey(stateDirection) == false)
+            {
+                if (stateDirection == StatesController.selectedStateDirection)
+                    return new Point[0];
+                stateDirection = StatesController.selectedStateDirection;
+            }
             return pointsStorage[stateDirection].Keys.Select(point => new Point(point.X + pointOffset.X, point.Y + pointOffset.Y)).ToArray();
         }
 

@@ -200,7 +200,6 @@ namespace AdaptiveSpritesDMItool.Controllers
 
             DrawController.SetStoragePoints();
             DrawController.ClearSelectors();
-
         }
 
         public static void EditSelectModeStart(StateImageSideType _stateImageSideType)
@@ -215,6 +214,7 @@ namespace AdaptiveSpritesDMItool.Controllers
                     // Set Move - the movement mode
                     var direction = StatesController.currentStateDirection;
                     var pointsDirection = DrawController.GetStoragePoints(direction);
+                    if(direction != StatesController.selectedStateDirection && pointsDirection.Length == 0) break;
                     //string pointsString = string.Join(", ", pointsDirection.Select(x => x.ToString()));
                     //Debug.WriteLine($"pointsDirection[{direction}][{pointsDirection.Length}]: {pointsString}");
                     if (MouseController.isMouseInPoints(pointsDirection))
