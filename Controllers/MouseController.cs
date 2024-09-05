@@ -25,6 +25,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static void state_MouseDown(MouseButtonEventArgs e, StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
             var stateImage = StatesController.GetImage(_stateDirection, _stateImageSideType);
+            StatusBarController.UpdateStatus(e, stateImage, _stateDirection);
 
             currentMouseDownPosition = GetModifyMousePosition(e, stateImage);
             currentMousePosition = currentMouseDownPosition;
@@ -36,12 +37,14 @@ namespace AdaptiveSpritesDMItool.Controllers
                     break;
                 case StateEditType.Fill:
                     EditorController.EditFillModeStart(_stateImageSideType);
+                    StatusBarController.UpdateStatusMultiPoints();
                     break;
                 case StateEditType.Move:
                     EditorController.EditMoveModeStart(_stateImageSideType);
                     break;
                 case StateEditType.Select:
                     EditorController.EditSelectModeStart(_stateImageSideType);
+                    StatusBarController.UpdateStatusMultiPoints();
                     break;
                 case StateEditType.Delete:
                     EditorController.EditDeleteMode(_stateImageSideType);
@@ -51,13 +54,16 @@ namespace AdaptiveSpritesDMItool.Controllers
                     break;
                 case StateEditType.UndoArea:
                     EditorController.EditUndoAreaModeStart(_stateImageSideType);
+                    StatusBarController.UpdateStatusMultiPoints();
                     break;
             }
+
         }
 
         public static void state_MouseUp(MouseButtonEventArgs e, StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
             var stateImage = StatesController.GetImage(_stateDirection, _stateImageSideType);
+            StatusBarController.UpdateStatus(e, stateImage, _stateDirection);
 
             currentMouseUpPosition = GetModifyMousePosition(e, stateImage);
             currentMousePosition = currentMouseUpPosition;
@@ -66,15 +72,18 @@ namespace AdaptiveSpritesDMItool.Controllers
             {
                 case StateEditType.Fill:
                     EditorController.EditFillModeEnd(_stateImageSideType);
+                    StatusBarController.UpdateStatusMultiPoints();
                     break;
                 case StateEditType.Move:
                     EditorController.EditMoveModeEnd(_stateImageSideType);
                     break;
                 case StateEditType.Select:
                     EditorController.EditSelectModeEnd(_stateImageSideType);
+                    StatusBarController.UpdateStatusMultiPoints();
                     break;
                 case StateEditType.UndoArea:
                     EditorController.EditUndoAreaModeEnd(_stateImageSideType);
+                    StatusBarController.UpdateStatusMultiPoints();
                     break;
             }
 
@@ -82,10 +91,12 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void state_MouseMove(MouseEventArgs e, StateDirection _stateDirection, StateImageSideType _stateImageSideType)
         {
+            var stateImage = StatesController.GetImage(_stateDirection, _stateImageSideType);
+            StatusBarController.UpdateStatus(e, stateImage, _stateDirection);
+
             bool mouseIsDown = System.Windows.Input.Mouse.LeftButton == MouseButtonState.Pressed;
             if (!mouseIsDown)
                 return;
-            var stateImage = StatesController.GetImage(_stateDirection, _stateImageSideType);
             StatesController.UpdateCurrentStateDirection(_stateDirection);
 
             currentMousePosition = GetModifyMousePosition(e, stateImage);

@@ -16,7 +16,7 @@ namespace AdaptiveSpritesDMItool.Controllers
     {
         public static StateEditType currentStateEditMode = StateEditType.Single;
         public static StateQuantityType currentStateQuantityMode = StateQuantityType.Single;
-        public static StateDirection currentStateDirection;
+        public static StateDirection currentStateDirection = StateDirection.South;
 
         /// <summary>
         /// Determines whether the state is centralized - setting the pixel in the middle of the pixel
@@ -38,6 +38,11 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// Stores all references to images for their quick calls depending on the state.
         /// </summary>
         public static Dictionary<StateDirection, Dictionary<StateImageType, Dictionary<StateImageSideType, System.Windows.Controls.Image>>> stateSourceDictionary{ get; set; } = new();
+
+        /// <summary>
+        /// Links to status bar text blocks for editing and displaying them.
+        /// </summary>
+        public static Dictionary<StatusBarType, System.Windows.Controls.TextBlock> stateStatusBarDictionary { get; set; } = new();
 
         #region Helpers
 
@@ -243,5 +248,6 @@ namespace AdaptiveSpritesDMItool.Controllers
         #endregion ControlAppearance
 
         #endregion Getters
+
     }
 }

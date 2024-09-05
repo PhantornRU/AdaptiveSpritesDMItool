@@ -56,4 +56,11 @@ namespace AdaptiveSpritesDMItool.Models
         Select,
         Move
     }
+
+    public enum StatusBarType
+    {
+        State,
+        SinglePoint,
+        MultiPoint
+    }
 }

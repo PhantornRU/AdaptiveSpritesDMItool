@@ -43,6 +43,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             // Initializers
             InitializeDictionaries();
+            InitializeStatusBar();
             InitializeSources();
             InitializeGrids();
 
@@ -201,7 +202,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         }
 
-        public void InitializeSources()
+        private void InitializeSources()
         {
             foreach (var (stateDirection, images) in StatesController.stateSourceDictionary)
             {
@@ -213,7 +214,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             }
         }
 
-        public void InitializeGrids()
+        private void InitializeGrids()
         {
             WriteableBitmap gridBitmap = EditorController.GetGridBackground();
 
@@ -225,6 +226,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             double pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
             DrawController.InitializeTextGrids(pixelsPerDip);
+        }
+
+        private void InitializeStatusBar()
+        {
+            StatesController.stateStatusBarDictionary[StatusBarType.State] = StatusBarStateText;
+            StatesController.stateStatusBarDictionary[StatusBarType.SinglePoint] = StatusBarSinglePointText;
+            StatesController.stateStatusBarDictionary[StatusBarType.MultiPoint] = StatusBarMultiPointText;
         }
 
         #endregion Initializers
