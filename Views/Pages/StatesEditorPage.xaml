@@ -21,9 +21,9 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!--<ScrollViewer
@@ -37,82 +37,67 @@
             </StackPanel>
         </ScrollViewer>-->
 
-
-
-
-        <!--<Viewbox x:Name="imageViewbox" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,-109,156" Grid.RowSpan="2" >
-            <Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center" OpacityMask="#FF332222"/>
-        </Viewbox>-->
-
         <!--ToolBar-->
-        <Grid Grid.Row="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <ToolBar Grid.Row="0" VerticalAlignment="Top" Margin="0,12,0,0">
 
-
-
-            <ToolBar Grid.Row="0" VerticalAlignment="Top" Margin="0,12,0,0">
-
-                <!--Take pixels from the preview and move them to the editable part-->
-                <Separator Margin="6,0,10,0" />
-                <ui:Button
+            <!--Take pixels from the preview and move them to the editable part-->
+            <Separator Margin="6,0,10,0" />
+            <ui:Button
                         x:Name="SingleButton"
                         Appearance="Primary"
                         ToolTip="Create a single cell on the right preview using the selected cell from the left preview."
                         Icon="{ui:SymbolIcon AddSquare24}" Click="SingleButton_Click" />
-                <ui:Button
+            <ui:Button
                         x:Name="FillButton"
                         Appearance="Secondary"
                         ToolTip="Fill the area on the right preview with the selected cell from the left preview"
                         Icon="{ui:SymbolIcon Grid24}" Click="FillButton_Click" />
 
-                <!--Move pixels of the edited part-->
-                <Separator Margin="6,0,6,0" />
-                <ui:Button
+            <!--Move pixels of the edited part-->
+            <Separator Margin="6,0,6,0" />
+            <ui:Button
                         x:Name="MoveButton"
                         Appearance="Secondary"
                         ToolTip="Move a single cell on the right preview."
                         Icon="{ui:SymbolIcon ArrowMove24}" Click="MoveButton_Click" />
-                <ui:Button
+            <ui:Button
                         x:Name="SelectButton"
                         Appearance="Secondary"
                         ToolTip="Move the selected area of ​​cells on the right preview."
                         Icon="{ui:SymbolIcon SquareHintApps24}" Click="SelectButton_Click" />
 
-                <!--Clear pixels of the edited part-->
-                <Separator Margin="6,0,6,0" />
-                <ui:Button
+            <!--Clear pixels of the edited part-->
+            <Separator Margin="6,0,6,0" />
+            <ui:Button
                         x:Name="DeleteButton"
                         Appearance="Secondary"
                         ToolTip="Delete a pixel on the right preview, creating an empty cell."
                         Icon="{ui:SymbolIcon Eraser24}" Click="DeleteButton_Click" />
-                <ui:Button
+            <ui:Button
                         x:Name="UndoButton"                        
                         Appearance="Secondary"
                         ToolTip="Undo changes to a single cell in the right preview."
                         Icon="{ui:SymbolIcon SquareEraser20}" Click="UndoButton_Click"/>
-                <ui:Button
+            <ui:Button
                         x:Name="UndoAreaButton"
                         Appearance="Secondary"
                         ToolTip="Undo changes to the area of ​​selected cells in the right preview."
                         Icon="{ui:SymbolIcon SquareHintArrowBack16}" Click="UndoAreaButton_Click"/>
-                
-                <!--Switches "One, Horizontal, Vertical, All" states-->
-                <Separator Margin="10,0,10,0" />
-                <TextBlock Text="States: " VerticalAlignment="Center"/>
-                <ui:Button
+
+            <!--Switches "One, Horizontal, Vertical, All" states-->
+            <Separator Margin="10,0,10,0" />
+            <TextBlock Text="States: " VerticalAlignment="Center"/>
+            <ui:Button
                         x:Name="ChooseSingleStateButton"
                         Appearance="Primary"
                         ToolTip="Edit single state."
                         Icon="{ui:SymbolIcon Square24}" Click="ChooseSingleStateButton_Click" />
-                <ui:Button
+            <ui:Button
                         x:Name="ChooseParallelStatesButton"
                         Appearance="Secondary"
                         ToolTip="Edit parallel states."
                         Icon="{ui:SymbolIcon TableCellsMerge24}" Click="ChooseParallelStatesButton_Click" />
-                <!--<ui:Button
+            <!--<ui:Button
                         x:Name="ChooseTwoVerticalStatesButton"
                         Appearance="Secondary"
                         Icon="{ui:SymbolIcon SplitVertical24}" />
@@ -120,60 +105,58 @@
                         x:Name="ChooseTwoHorizontalStatesButton"
                         Appearance="Secondary"
                         Icon="{ui:SymbolIcon SplitHorizontal24}" />-->
-                <ui:Button
+            <ui:Button
                         x:Name="ChooseAllStatesButton"
                         Appearance="Secondary"
                         ToolTip="Edit all states."
                         Icon="{ui:SymbolIcon Grid24}" Click="ChooseAllStatesButton_Click" />
 
-                <!--States Conditions-->
-                <Separator Margin="10,0,10,0" />
-                <ui:Button
+            <!--States Conditions-->
+            <Separator Margin="10,0,10,0" />
+            <ui:Button
                         x:Name="MirrorStatesButton"
                         Appearance="Primary"
                         IsEnabled="True"
                         ToolTip="Mirror."
                         Icon="{ui:SymbolIcon DualScreenMirror24}" Click="MirrorStatesButton_Click" />
-                <ui:Button
+            <ui:Button
                         x:Name="CentralizeStatesButton"
                         Appearance="Primary"
                         IsEnabled="True"
                         ToolTip="Shift pixels to the left to centralize."
                         Icon="{ui:SymbolIcon TableInsertColumn24}" Click="CentralizeStatesButton_Click" />
 
-                <!--Environment Settings-->
-                <Separator Margin="10,0,10,0" />
-                <TextBlock Text="Grids: " VerticalAlignment="Center"/>
-                <ui:Button
+            <!--Environment Settings-->
+            <Separator Margin="10,0,10,0" />
+            <TextBlock Text="Grids: " VerticalAlignment="Center"/>
+            <ui:Button
                         x:Name="GridEnvironmentButton"
                         Appearance="Primary"
                         IsEnabled="True"
                         ToolTip="Toggle grid environment."
                         Icon="{ui:SymbolIcon TableSimple24}" Click="GridEnvironmentButton_Click" />
-                <ui:Button
+            <ui:Button
                         x:Name="GridZIndexEnvironmentButton"
                         Appearance="Primary"
                         IsEnabled="True"
                         ToolTip="Toggle grid under overlay environment."
                         Icon="{ui:SymbolIcon SubGrid24}" Click="GridZIndexEnvironmentButton_Click"/>
-                <ui:Button
+            <ui:Button
                         x:Name="TextGridEnvironmentButton"
                         Appearance="Secondary"
                         IsEnabled="True"
                         ToolTip="Toggle view of text coordinates on points."
                         Icon="{ui:SymbolIcon NumberRow24}" Click="TextGridEnvironmentButton_Click" />
 
-                <Separator Margin="10,0,10,0" />
-                <ui:Button
+            <Separator Margin="10,0,10,0" />
+            <ui:Button
                         x:Name="OverlayButton"
                         Appearance="Primary"
                         IsEnabled="True"
                         ToolTip="Toggle overlay environment."
                         Icon="{ui:SymbolIcon BorderTop24}" Click="OverlayButton_Click" />
-                <!--Icon="{ui:SymbolIcon AppFolder24}"-->
-            </ToolBar>
-
-        </Grid>
+            <!--Icon="{ui:SymbolIcon AppFolder24}"-->
+        </ToolBar>
 
         <!--Edit State Windows-->
         <Grid Grid.Row="1">
@@ -510,21 +493,58 @@
 
 
         </Grid>
+        
+        <StatusBar
+            x:Name="RootStatusBar"
+            Grid.Row="2"
+            MinHeight="0"
+            Margin="0"
+            Padding="8,2">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <StatusBarItem>
+                <ui:SymbolIcon Foreground="{DynamicResource TextFillColorSecondaryBrush}" Symbol="BranchFork24" />
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="1" Margin="0,0,4,0">
+                <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Development *" />
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="2" Margin="4,0,4,0">
+                <ui:SymbolIcon Foreground="{DynamicResource TextFillColorSecondaryBrush}" Symbol="Home24" />
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="3" Margin="4,0,4,0">
+                <ui:SymbolIcon Foreground="{DynamicResource TextFillColorSecondaryBrush}" Symbol="Fire24" />
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="4" Margin="4,0,4,0">
+                <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Wpf.Ui.sln" />
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="6">
+                <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Ln 45, Col 30  Spaces: 2 UTF8 with BOM C#" />
+            </StatusBarItem>
+        </StatusBar>
 
-
-
-        <!--ToolBar-->
-        <Grid Grid.Row="2">
+        <!--Overlay Panel-->
+        <!--<Grid Grid.Row="3">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-
-
             <ToolBar Grid.Row="0" VerticalAlignment="Top" Margin="0,12,0,0">
 
-                <!--Take pixels from the preview and move them to the editable part-->
+                Take pixels from the preview and move them to the editable part
                 <Separator Margin="6,0,10,0" />
                 <ui:Button
                         x:Name="TestButton"
@@ -537,7 +557,8 @@
                 
             </ToolBar>
 
-        </Grid>
+        </Grid>-->
 
     </Grid>
+    
 </Page>
