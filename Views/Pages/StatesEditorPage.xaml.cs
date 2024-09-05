@@ -517,18 +517,18 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region Buttons Move Controller
 
-        private void SelectButton_Click(object sender, RoutedEventArgs e)
-        {
-            ResetEditButtons();
-            SelectButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateEditMode(StateEditType.Select);
-        }
-
         private void MoveButton_Click(object sender, RoutedEventArgs e)
         {
             ResetEditButtons();
             MoveButton.Appearance = StatesController.GetPressedButtonAppearance();
             StatesController.SetCurrentStateEditMode(StateEditType.Move);
+        }
+
+        private void SelectButton_Click(object sender, RoutedEventArgs e)
+        {
+            ResetEditButtons();
+            SelectButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateEditMode(StateEditType.Select);
         }
 
         #endregion Buttons Move Controller
@@ -669,6 +669,44 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #endregion Buttons Controller
 
+        #region Hotkeys
+
+        public void ToolAdd1_Shortcut(Object sender, ExecutedRoutedEventArgs e)
+        {
+            SingleButton_Click(sender, e);
+        }
+
+        public void ToolAdd2_Shortcut(Object sender, ExecutedRoutedEventArgs e)
+        {
+            FillButton_Click(sender, e);
+        }
+
+        public void ToolSelect1_Shortcut(Object sender, ExecutedRoutedEventArgs e)
+        {
+            MoveButton_Click(sender, e);
+        }
+
+        public void ToolSelect2_Shortcut(Object sender, ExecutedRoutedEventArgs e)
+        {
+            SelectButton_Click(sender, e);
+        }
+
+        public void ToolUndo1_Shortcut(Object sender, ExecutedRoutedEventArgs e)
+        {
+            DeleteButton_Click(sender, e);
+        }
+
+        public void ToolUndo2_Shortcut(Object sender, ExecutedRoutedEventArgs e)
+        {
+            UndoButton_Click(sender, e);
+        }
+
+        public void ToolUndo3_Shortcut(Object sender, ExecutedRoutedEventArgs e)
+        {
+            UndoAreaButton_Click(sender, e);
+        }
+
+        #endregion Hotkeys
 
         #region Testing
 
