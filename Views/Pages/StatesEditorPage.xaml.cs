@@ -35,7 +35,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         public StatesEditorPage(StatesEditorViewModel viewModel)
         {
             ViewModel = viewModel;
-            DataContext = this;
 
             // Pre Initializers
             InitializeComponent();
@@ -51,6 +50,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             ControllButtonsAvailability();
 
             TestFunction();
+
+            DataContext = this;
         }
 
         #region Initializers

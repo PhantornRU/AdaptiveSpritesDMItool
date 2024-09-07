@@ -161,7 +161,13 @@ namespace AdaptiveSpritesDMItool.Controllers
                     //Debug.WriteLine("======================================");
                     //Debug.WriteLine($"point: {point}, tempPoint: {tempPoint}");
                     //Debug.WriteLine($"selectedPoint: {selectedPoint}, storagePoint: {storagePoint}");
-                    //Debug.WriteLine($"offset: {pointOffset}, down: {pointOffsetDown}, mouse: {MouseController.currentMousePosition}");
+                    //Debug.WriteLine($"offset: {pointOffset},
+                    //
+                    //
+                    //
+                    //
+                    //
+                    //: {pointOffsetDown}, mouse: {MouseController.currentMousePosition}");
 
                     // Update Data Pixel Storage
                     UpdatePixel(stateDirection, bitmapPreview, bitmapEditable, selectedPoint, storagePoint);
@@ -412,6 +418,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         }
 
         #endregion Draw
+
 
         #region Grids
         /// <summary>
@@ -713,7 +720,6 @@ namespace AdaptiveSpritesDMItool.Controllers
         }
 
         #endregion Visualize
-
 
 
         #region Helpers

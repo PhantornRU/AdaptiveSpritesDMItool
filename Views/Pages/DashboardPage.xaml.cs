@@ -30,11 +30,12 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         public DashboardPage(DashboardViewModel viewModel)
         {
             ViewModel = viewModel;
-            DataContext = this;
 
             InitializeComponent();
 
             TestFunction();
+
+            DataContext = this;
         }
 
 
@@ -145,8 +146,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             //imgTestText = theImage;
 
             InitializeTextGrid();
+            InitializeListTemplate();
         }
-
 
 
         //private static Dictionary<ushort, double> _glyphWidths = new Dictionary<ushort, double>();
@@ -353,6 +354,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         }
 
+
+
         private void RenderTextGrid()
         {
 
@@ -393,12 +396,26 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             }
         }
 
+
+
+
+
+
         private void imgTest2_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             //Debug.WriteLine(e.GetPosition(imgTest2));
 
             Debug.WriteLine(GetMouseCoordinates(e, imgTest2));
         }
+
+
+
+
+
+
+
+
+
 
         private Point GetMouseCoordinates(System.Windows.Input.MouseButtonEventArgs _e, System.Windows.Controls.Image _img)
         {
@@ -408,6 +425,14 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             return new Point(x, y);
             
         }
+
+
+
+
+
+
+
+
 
         private WriteableBitmap GetBMP(Image<Rgba32> _imgState)
         {
@@ -476,5 +501,46 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             image.Freeze();
             return image;
         }
+
+
+
+
+
+
+
+
+        private List<Employee> employees;
+
+        private void InitializeListTemplate()
+        {
+
+            employees = new List<Employee>();
+            employees.Add(new Employee { Id = 1, Name = "Kapil Malhotra", Age = 30 });
+            employees.Add(new Employee { Id = 2, Name = "Raj Kundra", Age = 34 });
+            employees.Add(new Employee { Id = 3, Name = "Amitabh Bachan", Age = 80 });
+            employees.Add(new Employee { Id = 4, Name = "Deepak Khanna", Age = 72 });
+
+        }
+
+        public List<Employee> Employees
+        {
+            get
+            {
+                return employees;
+            }
+        }
+
+        public class Employee
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public int Age { get; set; }
+        }
+
+
+
+
+
+
     }
 }

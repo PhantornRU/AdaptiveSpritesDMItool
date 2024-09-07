@@ -24,6 +24,11 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static DataPixelStorage dataPixelStorage;
 
+        public static string defaultPath = "TestImages";
+        public static string defaultFileName = "testBodies"; // "testBodyHuman";
+        public static string lastPath = "TestImages";
+
+
         #region Loaders
 
         /// <summary>
@@ -42,18 +47,13 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         private static void LoadDataImageFiles()
         {
-            string path = "TestImages";
-
-            // Main Preview File
-            string fullpath = $"{path}/testBodyHuman.dmi";
-            using DMIFile file = new DMIFile(fullpath);
-            DMIState currentState = file.States.First();
+            DMIState currentState = LoadDMIState(defaultPath, defaultFileName);
 
             // Overlay Preview File
-            string fullpathOverlay = $"{path}/testClothingOveralls.dmi";
+            string fullpathOverlay = $"{defaultPath}/testClothingOveralls.dmi";
             using DMIFile fileOverlay = new DMIFile(fullpathOverlay);
 
-            if(fileOverlay != null)
+            if (fileOverlay != null)
             {
                 DMIState currentStateOverlay = fileOverlay.States.First();
                 dataImageState = new DataImageState(currentState, currentStateOverlay);
@@ -62,8 +62,6 @@ namespace AdaptiveSpritesDMItool.Controllers
             {
                 dataImageState = new DataImageState(currentState);
             }
-
-            Debug.WriteLine($"Loaded {file}({file.States.Count}).");
         }
 
         private static void InitializeCellsData()
@@ -72,6 +70,30 @@ namespace AdaptiveSpritesDMItool.Controllers
             int height = dataImageState.imageCellsSize.Height;
 
             dataPixelStorage = new DataPixelStorage(GetPixelStoragePath(), width, height);
+        }
+
+        public static DMIState LoadDMIState(string path, string fileName, int? index = null)
+        {
+            if (!Directory.Exists(path))
+            {
+                throw new Exception("Cant find path to dmi files.");
+                //Directory.CreateDirectory(path);
+            }
+
+            string fullpath = $"{path}/{fileName}.dmi";
+            if (!File.Exists(fullpath))
+            {
+                throw new Exception("Cant find file: " + fullpath);
+            }
+
+            DMIFile fileDmi = new DMIFile(fullpath);
+            Debug.WriteLine($"Loaded {fileName}({fileDmi.States.Count}).");
+
+            if (index == null || fileDmi.States.Count <= 1)
+                return fileDmi.States.First();
+
+            DMIState state = fileDmi.States.ElementAt((int)index);
+            return state;
         }
 
         #endregion Loaders
