@@ -465,7 +465,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #endregion Mouse Controller
 
-        #region Buttons Controller
+
+        #region Buttons Toolbar Controller
 
         private void ControllButtonsAvailability()
         {
@@ -668,7 +669,45 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #endregion Buttons Helpers
 
-        #endregion Buttons Controller
+        #endregion Buttons Toolbar Controller
+
+
+        #region Buttons Preview Toolbar Controller
+
+        private void LeftPreviewButton_Click(object sender, RoutedEventArgs e)
+        {
+            ResetPreviewButtons();
+            LeftPreviewButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStatePreviewMode(StatePreviewType.Left);
+        }
+
+        private void RightPreviewButton_Click(object sender, RoutedEventArgs e)
+        {
+            ResetPreviewButtons();
+            RightPreviewButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStatePreviewMode(StatePreviewType.Right);
+        }
+
+        private void OverlayPreviewButton_Click(object sender, RoutedEventArgs e)
+        {
+            ResetPreviewButtons();
+            OverlayPreviewButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStatePreviewMode(StatePreviewType.Overlay);
+        }
+
+        #region Buttons Helpers
+
+        private void ResetPreviewButtons()
+        {
+            LeftPreviewButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            RightPreviewButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            OverlayPreviewButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+        }
+
+        #endregion Buttons Helpers
+
+        #endregion Buttons Preview Toolbar Controller
+
 
         #region Hotkeys
 
@@ -708,6 +747,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         }
 
         #endregion Hotkeys
+
 
         #region Testing
 

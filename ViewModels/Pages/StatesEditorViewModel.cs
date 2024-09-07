@@ -6,6 +6,7 @@ using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
@@ -138,5 +139,111 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         public void OnClearList() => BasicListViewItems.Clear(); //BasicListViewItems.Clear();
 
         #endregion Files
+
+
+        #region Config
+
+        [ObservableProperty]
+        private string _fileToSaveName = string.Empty;
+
+        [ObservableProperty]
+        private string _fileToSaveContents = string.Empty;
+
+        [ObservableProperty]
+        private Visibility _savedConfigNoticeVisibility = Visibility.Collapsed;
+
+        [ObservableProperty]
+        private string _savedConfigNotice = string.Empty;
+
+        [RelayCommand]
+        public async Task OnSaveConfig(CancellationToken cancellation)
+        {
+            SavedConfigNoticeVisibility = Visibility.Collapsed;
+            string path = EnvironmentController.GetPixelStoragePath();
+            string configFormat = EnvironmentController.configFormat;
+            SaveFileDialog saveFileDialog =
+                new()
+                {
+                    Filter = $"Config Files (*{configFormat})|*{configFormat}",
+                    InitialDirectory = path
+                };
+
+            if (!string.IsNullOrEmpty(FileToSaveName))
+            {
+                var invalidChars =
+                    new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+
+                saveFileDialog.FileName = string.Join(
+                        "_",
+                        FileToSaveName.Split(invalidChars.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+                    )
+                    .Trim();
+            }
+
+            if (saveFileDialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            if (File.Exists(saveFileDialog.FileName))
+            {
+                // Protect the user from accidental writes
+                return;
+            }
+
+            try
+            {
+                string fileName = saveFileDialog.FileName;
+                EnvironmentController.dataPixelStorage.SavePixelStorage(fileName);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+
+                return;
+            }
+
+            SavedConfigNoticeVisibility = Visibility.Visible;
+            SavedConfigNotice = $"File {saveFileDialog.FileName} was saved.";
+        }
+
+
+        [ObservableProperty]
+        private Visibility _openedLoadConfigVisibility = Visibility.Collapsed;
+
+        [ObservableProperty]
+        private string _openedLoadConfig = string.Empty;
+
+        [RelayCommand]
+        public void OnLoadConfig()
+        {
+            OpenedLoadConfigVisibility = Visibility.Collapsed;
+            string path = EnvironmentController.GetPixelStoragePath();
+            string configFormat = EnvironmentController.configFormat;
+
+            OpenFileDialog openFileDialog =
+                new()
+                {
+                    InitialDirectory = path,
+                    Filter = $"Config Files (*{configFormat})|*{configFormat};*{configFormat}"
+                };
+
+            if (openFileDialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            if (!File.Exists(openFileDialog.FileName))
+            {
+                return;
+            }
+
+            OpenedLoadConfig = openFileDialog.FileName;
+            OpenedLoadConfigVisibility = Visibility.Visible;
+            EnvironmentController.dataPixelStorage.LoadPixelStorageToEnvironment(OpenedLoadConfig);
+        }
+
+
+        #endregion Config
     }
 }

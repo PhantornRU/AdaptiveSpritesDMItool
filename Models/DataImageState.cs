@@ -109,6 +109,7 @@ namespace AdaptiveSpritesDMItool.Models
 
         public void InitializeOverlayData(DMIState _state)
         {
+            Debug.WriteLine("Initializing overlay data");
             if(_state.Width != currentState.Width || _state.Height != currentState.Height)
                 throw new Exception("Overlay DMIState has different dimensions than main DMIState");
             currentStateOverlay = _state;

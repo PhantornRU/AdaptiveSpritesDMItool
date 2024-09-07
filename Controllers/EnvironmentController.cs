@@ -28,6 +28,9 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static string defaultFileName = "testBodies"; // "testBodyHuman";
         public static string lastPath = "TestImages";
 
+        public static string defaultFileFormat = ".dmi";
+        public static string configFormat = ".csv";
+
 
         #region Loaders
 
@@ -49,19 +52,16 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             DMIState currentState = LoadDMIState(defaultPath, defaultFileName);
 
+            //dataImageState = new DataImageState(currentState);
+
+            // !!!!!! test
             // Overlay Preview File
-            string fullpathOverlay = $"{defaultPath}/testClothingOveralls.dmi";
+            string fullpathOverlay = $"{defaultPath}/testClothingOveralls{defaultFileFormat}";
             using DMIFile fileOverlay = new DMIFile(fullpathOverlay);
 
-            if (fileOverlay != null)
-            {
-                DMIState currentStateOverlay = fileOverlay.States.First();
-                dataImageState = new DataImageState(currentState, currentStateOverlay);
-            }
-            else
-            {
-                dataImageState = new DataImageState(currentState);
-            }
+            DMIState currentStateOverlay = fileOverlay.States.First();
+            dataImageState = new DataImageState(currentState, currentStateOverlay);
+
         }
 
         private static void InitializeCellsData()

@@ -18,6 +18,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static StateQuantityType currentStateQuantityMode = StateQuantityType.Single;
         public static StateDirection currentStateDirection = StateDirection.South;
         public static StateDirection selectedStateDirection = StateDirection.South;
+        public static StatePreviewType currentStatePreviewMode = StatePreviewType.Left;
 
         /// <summary>
         /// Determines whether the state is centralized - setting the pixel in the middle of the pixel
@@ -173,6 +174,8 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static void SetCurrentStateQuantityMode(StateQuantityType _currentStateQuantityMode) => currentStateQuantityMode = _currentStateQuantityMode;
 
         public static void SetCurrentStateEditMode(StateEditType _currentStateEditMode) => currentStateEditMode = _currentStateEditMode;
+
+        public static void SetCurrentStatePreviewMode(StatePreviewType _currentStatePreviewMode) => currentStatePreviewMode = _currentStatePreviewMode;
 
         #endregion Set Modes
 

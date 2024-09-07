@@ -597,7 +597,6 @@
                 Content="Load DMI files" 
                 Icon="{ui:SymbolIcon AppFolder24}"/>
             <ui:Button
-                x:Name="ClearButton"
                 Command="{Binding ViewModel.ClearListCommand}"
                 Icon="{ui:SymbolIcon Delete24}" />
 
@@ -607,17 +606,17 @@
                     x:Name="LeftPreviewButton"
                     ToolTip="Setting images to the left preview."
                     Appearance="Primary"
-                    Icon="{ui:SymbolIcon TableStackRight24}" />
+                    Icon="{ui:SymbolIcon TableStackRight24}" Click="LeftPreviewButton_Click" />
             <ui:Button
                     x:Name="RightPreviewButton"
                     ToolTip="Setting images to the right preview."
                     Appearance="Secondary"
-                    Icon="{ui:SymbolIcon TableStackLeft24}" />
+                    Icon="{ui:SymbolIcon TableStackLeft24}" Click="RightPreviewButton_Click" />
             <ui:Button
                     x:Name="OverlayPreviewButton"
                     ToolTip="Setting images as overlay."
                     Appearance="Secondary"
-                    Icon="{ui:SymbolIcon BorderBottomDouble24}" />
+                    Icon="{ui:SymbolIcon BorderBottomDouble24}" Click="OverlayPreviewButton_Click" />
             <ComboBox x:Name="SelectionModeComboBox" 
                       SelectedIndex="{Binding ViewModel.ListViewSelectionModeComboBoxSelectedIndex, Mode=TwoWay}" 
                       MinWidth="70">
@@ -629,17 +628,15 @@
             <Separator Margin="12,0,12,0" />
             <TextBlock Text="Config: " VerticalAlignment="Center"/>
             <ui:Button
-                x:Name="TestButton"
                 Content="Load"
-                ToolTip="Test button. You shouldn't see it, if you did, the developer screwed up. Please let him know."
+                ToolTip="Upload a new config to replace the current one."
                 Icon="{ui:SymbolIcon FolderOpen24}" 
-                Click="TestButton_Click" />
+                Command="{Binding ViewModel.LoadConfigCommand}" />
             <ui:Button
-                x:Name="TestButton2"
                 Content="Save" 
-                ToolTip="Test button. You shouldn't see it, if you did, the developer screwed up. Please let him know."
+                ToolTip="Save current config."
                 Icon="{ui:SymbolIcon Save24}" 
-                Click="TestButton2_Click" />
+                Command="{Binding ViewModel.SaveConfigCommand}" />
             
             <Separator Margin="12,0,12,0" />
         </ToolBar>
