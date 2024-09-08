@@ -8,7 +8,10 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using Wpf.Ui.Controls;
+
 
 namespace AdaptiveSpritesDMItool.ViewModels.Pages
 {
@@ -17,27 +20,33 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
         #region List View
 
-        private int _listViewSelectionModeComboBoxSelectedIndex = 0;
+        #region Preview
 
-        public int ListViewSelectionModeComboBoxSelectedIndex
+        #region Preview Select
+
+        private int _ListViewPreviewSelectionModeComboBoxSelectedIndex = 0;
+
+        public int ListViewPreviewSelectionModeComboBoxSelectedIndex
         {
-            get => _listViewSelectionModeComboBoxSelectedIndex;
+            get => _ListViewPreviewSelectionModeComboBoxSelectedIndex;
             set
             {
-                _ = SetProperty(ref _listViewSelectionModeComboBoxSelectedIndex, value);
-                UpdateListViewSelectionMode(value);
+                _ = SetProperty(ref _ListViewPreviewSelectionModeComboBoxSelectedIndex, value);
+                UpdateListViewPreviewSelectionMode(value);
             }
         }
 
-        [ObservableProperty]
-        private SelectionMode _listViewSelectionMode = SelectionMode.Single;
+        #endregion Preview Select
 
         [ObservableProperty]
-        private ObservableCollection<StateItem> _basicListViewItems = GenerateStateItems();
+        private SelectionMode _ListViewPreviewSelectionMode = SelectionMode.Single;
 
-        private void UpdateListViewSelectionMode(int selectionModeIndex)
+        [ObservableProperty]
+        private ObservableCollection<StateItem> _BasicListPreviewViewItems = GenerateStateItems();
+
+        private void UpdateListViewPreviewSelectionMode(int selectionModeIndex)
         {
-            ListViewSelectionMode = selectionModeIndex switch
+            ListViewPreviewSelectionMode = selectionModeIndex switch
             {
                 1 => SelectionMode.Multiple,
                 2 => SelectionMode.Extended,
@@ -81,6 +90,9 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             return StateItems;
         }
 
+        #endregion Preview
+
+
         #endregion List View
 
 
@@ -89,8 +101,8 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         [ObservableProperty]
         private Visibility _openedMultiplePathVisibility = Visibility.Collapsed;
 
-        //[ObservableProperty]
-        //private string _openedMultiplePath = string.Empty;
+        [ObservableProperty]
+        private string _openedMultiplePath = string.Empty;
 
         [RelayCommand]
         public void OnOpenMultiple()
@@ -118,8 +130,8 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
             var fileNames = openFileDialog.FileNames;
 
-            if(BasicListViewItems == null)
-                BasicListViewItems = new ObservableCollection<StateItem>();
+            if(BasicListPreviewViewItems == null)
+                BasicListPreviewViewItems = new ObservableCollection<StateItem>();
 
             foreach (var path in fileNames)
             {
@@ -127,27 +139,75 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
                 var states = GetListStateItems(fileDmi);
                 foreach (var state in states)
                 {
-                    BasicListViewItems.Add(state);
+                    BasicListPreviewViewItems.Add(state);
                 }
             }
 
-            //OpenedMultiplePath = string.Join("\n", fileNames);
+            OpenedMultiplePath = string.Join("\n", fileNames);
             OpenedMultiplePathVisibility = Visibility.Visible;
         }
 
         [RelayCommand]
-        public void OnClearList() => BasicListViewItems.Clear(); //BasicListViewItems.Clear();
+        public void OnClearList()
+        {
+            BasicListPreviewViewItems.Clear(); //BasicListPreviewViewItems.Clear();
+            OpenedMultiplePath = string.Empty;
+            OpenedMultiplePathVisibility = Visibility.Collapsed;
+        }
 
         #endregion Files
 
 
         #region Config
 
-        [ObservableProperty]
-        private string _fileToSaveName = string.Empty;
+        /// <summary> Selected config item in the list </summary>
+        ConfigItem? currentConfig;
 
         [ObservableProperty]
-        private string _fileToSaveContents = string.Empty;
+        private ObservableCollection<ConfigItem> _BasicListConfigViewItems = GenerateConfigItems();
+
+        private static ObservableCollection<ConfigItem> GenerateConfigItems()
+        {
+            var ConfigItems = new ObservableCollection<ConfigItem>();
+            return ConfigItems;
+        }
+
+        public void ConfigChanged(ConfigItem? config)
+        {
+            currentConfig = config;
+            if (config == null)
+            {
+                Debug.WriteLine("Config nullified.");
+                EnvironmentController.currentConfigFullPath = string.Empty;
+                return;
+            }
+            Debug.WriteLine($"Config Changed to: {config.FileName} \nPath: {config.FilePath}");
+            EnvironmentController.currentConfigFullPath = config.FilePath;
+            EnvironmentController.dataPixelStorage.LoadPixelStorageToEnvironment(config.FilePath);
+        }
+
+        [RelayCommand]
+        public async Task OnNewConfig(CancellationToken cancellation)
+        {
+            FileToSaveFullPath = string.Empty;
+            ConfigItem config = new ConfigItem("New Item", string.Empty);
+            config.State = ConfigState.NotSaved;
+            BasicListConfigViewItems.Add(config);
+        }
+
+        [RelayCommand]
+        public void OnClearConfig()
+        {
+            BasicListConfigViewItems.Clear();
+            currentConfig = null;
+            FileToSaveFullPath = string.Empty;
+            SavedConfigNoticeVisibility = Visibility.Collapsed;
+            SavedConfigNotice = string.Empty;
+        }
+
+
+        [ObservableProperty]
+        private string _fileToSaveFullPath = string.Empty;
 
         [ObservableProperty]
         private Visibility _savedConfigNoticeVisibility = Visibility.Collapsed;
@@ -157,6 +217,27 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
         [RelayCommand]
         public async Task OnSaveConfig(CancellationToken cancellation)
+        {
+            string fullpath = EnvironmentController.currentConfigFullPath;
+            if (fullpath == string.Empty)
+            {
+                OnSaveAsConfig(cancellation);
+            }
+            else
+            {
+                foreach (ConfigItem selectedItem in BasicListConfigViewItems)
+                {
+                    if(selectedItem.FilePath == fullpath)
+                        selectedItem.State = ConfigState.Saved;
+                }
+                EnvironmentController.dataPixelStorage.SavePixelStorage(fullpath);
+            }
+
+
+        }
+
+        [RelayCommand]
+        public async Task OnSaveAsConfig(CancellationToken cancellation)
         {
             SavedConfigNoticeVisibility = Visibility.Collapsed;
             string path = EnvironmentController.GetPixelStoragePath();
@@ -168,14 +249,14 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
                     InitialDirectory = path
                 };
 
-            if (!string.IsNullOrEmpty(FileToSaveName))
+            if (!string.IsNullOrEmpty(FileToSaveFullPath))
             {
                 var invalidChars =
                     new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
 
                 saveFileDialog.FileName = string.Join(
                         "_",
-                        FileToSaveName.Split(invalidChars.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+                        FileToSaveFullPath.Split(invalidChars.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
                     )
                     .Trim();
             }
@@ -194,6 +275,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             try
             {
                 string fileName = saveFileDialog.FileName;
+                FileToSaveFullPath = fileName;
                 EnvironmentController.dataPixelStorage.SavePixelStorage(fileName);
             }
             catch (Exception e)
@@ -205,6 +287,18 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
             SavedConfigNoticeVisibility = Visibility.Visible;
             SavedConfigNotice = $"File {saveFileDialog.FileName} was saved.";
+
+            ConfigItem config = new ConfigItem(saveFileDialog.SafeFileName, FileToSaveFullPath);
+            config.State = ConfigState.Saved;
+            if (currentConfig != null && currentConfig.FilePath == string.Empty)
+            {
+                int index = BasicListConfigViewItems.IndexOf(currentConfig);
+                if (index != -1)
+                    BasicListConfigViewItems[index] = config;
+                currentConfig = config;
+                return;
+            }
+            BasicListConfigViewItems.Add(config);
         }
 
 
@@ -224,6 +318,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             OpenFileDialog openFileDialog =
                 new()
                 {
+                    //Multiselect = true,
                     InitialDirectory = path,
                     Filter = $"Config Files (*{configFormat})|*{configFormat};*{configFormat}"
                 };
@@ -237,10 +332,18 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             {
                 return;
             }
+            
+            foreach(ConfigItem item in BasicListConfigViewItems)
+            {
+                if(item.FileName == openFileDialog.SafeFileName)
+                {
+                    return;
+                }
+            }
 
             OpenedLoadConfig = openFileDialog.FileName;
             OpenedLoadConfigVisibility = Visibility.Visible;
-            EnvironmentController.dataPixelStorage.LoadPixelStorageToEnvironment(OpenedLoadConfig);
+            BasicListConfigViewItems.Add(new ConfigItem(openFileDialog.SafeFileName, OpenedLoadConfig));
         }
 
 

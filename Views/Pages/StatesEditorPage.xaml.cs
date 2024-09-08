@@ -706,6 +706,35 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #endregion Buttons Helpers
 
+
+        #region List View
+
+        private int lastIndex = 0;
+        private void ConfigChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
+            if (listView == null) return;
+            ConfigItem? config = listView.SelectedItem as ConfigItem;
+
+            Debug.WriteLine(listView.SelectedIndex);
+            int index = listView.SelectedIndex;
+            if (config == null)
+                listView.SelectedIndex = lastIndex;
+            else
+                lastIndex = index;
+
+            ViewModel.ConfigChanged(config);
+        }
+
+        private void ClearConfigButton_Click(object sender, RoutedEventArgs e)
+        {
+            Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
+            if (listView == null) return;
+            listView.SelectedIndex = -1;
+        }
+
+        #endregion List View
+
         #endregion Buttons Preview Toolbar Controller
 
 

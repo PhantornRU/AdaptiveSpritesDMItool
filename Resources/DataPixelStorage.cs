@@ -100,16 +100,32 @@ namespace AdaptiveSpritesDMItool.Resources
 
         #region File IO
 
-
+        public void ResetPixelStorage()
+        {
+            foreach (var direction in StatesController.GetAllStateDirections(DirectionDepth.Four).Cast<StateDirection>())
+            {
+                foreach (var point in pixelStorages[direction])
+                {
+                    pixelStorages[direction][point.Key] = point.Key;
+                }
+            }
+            wasUpdated = true;
+            UpdateAfterStorage();
+        }
 
         public void SavePixelStorage(string path)
         {
+            EnvironmentController.currentConfigFullPath = CorrectPath(path);
             ExportPixelStorage(path);
         }
 
         public void LoadPixelStorageToEnvironment(string path)
         {
-            ImportPixelStorage(path);
+            if (!File.Exists(path) || path == string.Empty)
+                ResetPixelStorage();
+                //throw new FileNotFoundException();
+            else
+                ImportPixelStorage(path);
             DrawPixelStorageAtBitmaps();
         }
 

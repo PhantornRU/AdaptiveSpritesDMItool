@@ -587,71 +587,121 @@
         </StatusBar>
 
 
-        <!--ToolBar Overlay-->
-        <ToolBar Grid.Row="3" VerticalAlignment="Top" Margin="0,12,0,0">
 
-            <!--Take pixels from the preview and move them to the editable part-->
-            <Separator Margin="6,0,10,0" />
-            <ui:Button
-                Command="{Binding ViewModel.OpenMultipleCommand}"
-                Content="Load DMI files" 
-                Icon="{ui:SymbolIcon AppFolder24}"/>
-            <ui:Button
-                Command="{Binding ViewModel.ClearListCommand}"
-                Icon="{ui:SymbolIcon Delete24}" />
+        <!--File Panel-->
+        <Grid 
+            Grid.Row="3" 
+            Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-            <Separator Margin="12,0,12,0" />
-            <TextBlock Text="Preview: " VerticalAlignment="Center"/>
-            <ui:Button
+
+            <!--ToolBar Overlay-->
+            <ToolBar Grid.Row="0" 
+                     Grid.Column="0"
+                     VerticalAlignment="Top">
+
+                <!--Take pixels from the preview and move them to the editable part-->
+                <Separator Margin="6,0,10,0" />
+                <TextBlock Text="Preview: " VerticalAlignment="Center"/>
+                <ui:Button
+                    Command="{Binding ViewModel.OpenMultipleCommand}"
+                    Content="Load DMI files" 
+                    Icon="{ui:SymbolIcon AppFolder24}"/>
+                <ui:Button
+                    Command="{Binding ViewModel.ClearListCommand}"
+                    Appearance="Danger"
+                    Opacity="0.75"
+                    Icon="{ui:SymbolIcon Delete24}" />
+
+                <Separator Margin="12,0,12,0" />
+                <TextBlock Text="State: " VerticalAlignment="Center"/>
+                <ui:Button
                     x:Name="LeftPreviewButton"
                     ToolTip="Setting images to the left preview."
                     Appearance="Primary"
                     Icon="{ui:SymbolIcon TableStackRight24}" Click="LeftPreviewButton_Click" />
-            <ui:Button
+                <ui:Button
                     x:Name="RightPreviewButton"
                     ToolTip="Setting images to the right preview."
                     Appearance="Secondary"
                     Icon="{ui:SymbolIcon TableStackLeft24}" Click="RightPreviewButton_Click" />
-            <ui:Button
+                <ui:Button
                     x:Name="OverlayPreviewButton"
                     ToolTip="Setting images as overlay."
                     Appearance="Secondary"
                     Icon="{ui:SymbolIcon BorderBottomDouble24}" Click="OverlayPreviewButton_Click" />
-            <ComboBox x:Name="SelectionModeComboBox" 
-                      SelectedIndex="{Binding ViewModel.ListViewSelectionModeComboBoxSelectedIndex, Mode=TwoWay}" 
+                <ComboBox x:Name="SelectionModeComboBox" 
+                      SelectedIndex="{Binding ViewModel.ListViewPreviewSelectionModeComboBoxSelectedIndex, Mode=TwoWay}" 
                       MinWidth="70">
-                <ComboBoxItem Content="Single" />
-                <ComboBoxItem Content="Multiple" />
-                <!--<ComboBoxItem Content="Extended" />-->
-            </ComboBox>
-
-            <Separator Margin="12,0,12,0" />
-            <TextBlock Text="Config: " VerticalAlignment="Center"/>
-            <ui:Button
-                Content="Load"
-                ToolTip="Upload a new config to replace the current one."
-                Icon="{ui:SymbolIcon FolderOpen24}" 
-                Command="{Binding ViewModel.LoadConfigCommand}" />
-            <ui:Button
-                Content="Save" 
-                ToolTip="Save current config."
-                Icon="{ui:SymbolIcon Save24}" 
-                Command="{Binding ViewModel.SaveConfigCommand}" />
-            
-            <Separator Margin="12,0,12,0" />
-        </ToolBar>
+                    <ComboBoxItem Content="Single" />
+                    <ComboBoxItem Content="Multiple" />
+                    <!--<ComboBoxItem Content="Extended" />-->
+                </ComboBox>
+                
+                <Separator Margin="12,0,12,0" />
+            </ToolBar>
 
 
-        <!--Overlay Panel-->
-        <Grid Grid.Row="4">
+            <!--ToolBar Config-->
+            <ToolBar Grid.Row="0" 
+                     Grid.Column="1"
+                     VerticalAlignment="Top">
 
+                <Separator Margin="6,0,10,0" />
+
+                <TextBlock Text="Config: " VerticalAlignment="Center"/>
+                <ui:Button
+                    Content="New"
+                    ToolTip="New config."
+                    Icon="{ui:SymbolIcon ReceiptAdd24}" 
+                    Command="{Binding ViewModel.NewConfigCommand}" />
+                <ui:Button
+                    Content="Load"
+                    ToolTip="Upload a new config to replace the current one."
+                    Icon="{ui:SymbolIcon FolderOpen24}" 
+                    Command="{Binding ViewModel.LoadConfigCommand}" />
+                <ui:Button
+                    Content="Save" 
+                    ToolTip="Save current config."
+                    Icon="{ui:SymbolIcon Save24}" 
+                    Command="{Binding ViewModel.SaveConfigCommand}" />
+                <ui:Button
+                    Content="Save As" 
+                    ToolTip="Save current config as."
+                    Icon="{ui:SymbolIcon Save24}" 
+                    Command="{Binding ViewModel.SaveAsConfigCommand}" />
+
+                <Separator Margin="12,0,12,0" />
+                <ui:Button
+                    x:Name="ClearConfigButton"
+                    Command="{Binding ViewModel.ClearConfigCommand}"
+                    Appearance="Danger"
+                    Opacity="0.75"
+                    Icon="{ui:SymbolIcon Delete24}" 
+                    Click="ClearConfigButton_Click" />
+                
+                <Separator Margin="12,0,12,0" />
+                
+            </ToolBar>
+
+
+
+            <!--Overlay List -->
             <ui:ListView
+                x:Name="Tetete"
+                    Grid.Column="0"
                     Grid.Row="1"
-                    MaxHeight="200"
                     d:ItemsSource="{d:SampleData ItemCount=5}"
-                    ItemsSource="{Binding ViewModel.BasicListViewItems, Mode=TwoWay}"
-                    SelectedIndex="1"
-                    SelectionMode="{Binding ViewModel.ListViewSelectionMode, Mode=OneWay}">
+                    ItemsSource="{Binding ViewModel.BasicListPreviewViewItems, Mode=TwoWay}"
+                    SelectedIndex="0"
+                    SelectionMode="{Binding ViewModel.ListViewPreviewSelectionMode, Mode=OneWay}">
                 <ui:ListView.ItemTemplate>
                     <!--<DataTemplate DataType="{x:Type models:Person}">-->
                     <DataTemplate DataType="{x:Type models:StateItem}">
@@ -701,6 +751,38 @@
                                     Margin="12,0,0,6"
                                     Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
                                     Text="{Binding StateName, Mode=OneWay}" />
+                        </Grid>
+                    </DataTemplate>
+                </ui:ListView.ItemTemplate>
+            </ui:ListView>
+
+            <!--Overlay List -->
+            <ui:ListView
+                    x:Name="ConfigList"
+                    Grid.Column="1"
+                    Grid.Row="1"
+                    d:ItemsSource="{d:SampleData ItemCount=5}"
+                    ItemsSource="{Binding ViewModel.BasicListConfigViewItems, Mode=TwoWay}"
+                    SelectionChanged="ConfigChanged" 
+                    SelectedIndex="0">
+                <ui:ListView.ItemTemplate>
+                    <!--<DataTemplate DataType="{x:Type models:Person}">-->
+                    <DataTemplate DataType="{x:Type models:StateItem}">
+                        <Grid Margin="8,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Margin="12,6,0,12"
+                                    FontWeight="Bold"
+                                    Text="{Binding FileName, Mode=OneWay}" />
                         </Grid>
                     </DataTemplate>
                 </ui:ListView.ItemTemplate>

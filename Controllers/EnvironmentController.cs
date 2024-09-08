@@ -17,11 +17,6 @@ namespace AdaptiveSpritesDMItool.Controllers
     {
         public static DataImageState dataImageState;
 
-        public static WriteableBitmap gridCell;
-        public static WriteableBitmap gridCellSelect;
-
-        //public static Point[,] cellsData;// = new Point[dataImageState.imageCellsSize.Width, dataImageState.imageCellsSize.Height];
-
         public static DataPixelStorage dataPixelStorage;
 
         public static string defaultPath = "TestImages";
@@ -31,6 +26,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static string defaultFileFormat = ".dmi";
         public static string configFormat = ".csv";
 
+        public static string currentConfigFullPath = string.Empty;
 
         #region Loaders
 
@@ -117,6 +113,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         }
 
         #endregion Saves
+
 
         #region Paths
 
