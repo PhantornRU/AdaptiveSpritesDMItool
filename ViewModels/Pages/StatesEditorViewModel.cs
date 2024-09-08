@@ -10,6 +10,7 @@ using System.IO;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using System.Windows.Shell;
 using Wpf.Ui.Controls;
 
 
@@ -163,17 +164,23 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         /// <summary> Selected config item in the list </summary>
         ConfigItem? currentConfig;
 
+        /// <summary> The last item selected in the list </summary>
+        private int lastIndex = 0;
+
         [ObservableProperty]
         private ObservableCollection<ConfigItem> _BasicListConfigViewItems = GenerateConfigItems();
 
         private static ObservableCollection<ConfigItem> GenerateConfigItems()
         {
             var ConfigItems = new ObservableCollection<ConfigItem>();
+            ConfigItem config = GetNewConfigItem();
+            ConfigItems.Add(config);
             return ConfigItems;
         }
 
-        public void ConfigChanged(ConfigItem? config)
+        public void ConfigChanged(ConfigItem? config, int index)
         {
+            lastIndex = index;
             currentConfig = config;
             if (config == null)
             {
@@ -190,8 +197,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         public async Task OnNewConfig(CancellationToken cancellation)
         {
             FileToSaveFullPath = string.Empty;
-            ConfigItem config = new ConfigItem("New Item", string.Empty);
-            config.State = ConfigState.NotSaved;
+            ConfigItem config = GetNewConfigItem();
             BasicListConfigViewItems.Add(config);
         }
 
@@ -225,11 +231,8 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             }
             else
             {
-                foreach (ConfigItem selectedItem in BasicListConfigViewItems)
-                {
-                    if(selectedItem.FilePath == fullpath)
-                        selectedItem.State = ConfigState.Saved;
-                }
+                ConfigItem selectedItem = BasicListConfigViewItems[lastIndex];
+                selectedItem.State = ConfigState.Saved;
                 EnvironmentController.dataPixelStorage.SavePixelStorage(fullpath);
             }
 
@@ -346,6 +349,19 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             BasicListConfigViewItems.Add(new ConfigItem(openFileDialog.SafeFileName, OpenedLoadConfig));
         }
 
+
+        #region Helpers
+
+        private static int numItem = 0;
+        private static ConfigItem GetNewConfigItem()
+        {
+            numItem++;
+            ConfigItem config = new ConfigItem($"NewConfigItem{numItem}", string.Empty);
+            config.State = ConfigState.NotSaved;
+            return config;
+        }
+
+        #endregion Helpers
 
         #endregion Config
     }

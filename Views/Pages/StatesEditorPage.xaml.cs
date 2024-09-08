@@ -723,7 +723,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             else
                 lastIndex = index;
 
-            ViewModel.ConfigChanged(config);
+            ViewModel.ConfigChanged(config, lastIndex);
         }
 
         private void ClearConfigButton_Click(object sender, RoutedEventArgs e)
