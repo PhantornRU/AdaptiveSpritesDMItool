@@ -180,6 +180,11 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
         public void ConfigChanged(ConfigItem? config, int index)
         {
+            // Save last selected config
+            if (currentConfig != null)
+                EnvironmentController.dataPixelStorage.SavePixelStorage(currentConfig.FilePath);
+
+            // Load selected config
             lastIndex = index;
             currentConfig = config;
             if (config == null)
@@ -356,7 +361,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         private static ConfigItem GetNewConfigItem()
         {
             numItem++;
-            ConfigItem config = new ConfigItem($"NewConfigItem{numItem}", string.Empty);
+            ConfigItem config = new ConfigItem($"NewConfigItem{numItem} (Not Saved)", string.Empty);
             config.State = ConfigState.NotSaved;
             return config;
         }

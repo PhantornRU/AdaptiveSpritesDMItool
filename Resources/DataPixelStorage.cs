@@ -115,13 +115,17 @@ namespace AdaptiveSpritesDMItool.Resources
 
         public void SavePixelStorage(string path)
         {
+            //if (!wasUpdated)
+            //    return;
+            if (path == string.Empty)
+                return;
             EnvironmentController.currentConfigFullPath = CorrectPath(path);
             ExportPixelStorage(path);
         }
 
         public void LoadPixelStorageToEnvironment(string path)
         {
-            if (!File.Exists(path) || path == string.Empty)
+            if (path == string.Empty || !File.Exists(path))
                 ResetPixelStorage();
                 //throw new FileNotFoundException();
             else

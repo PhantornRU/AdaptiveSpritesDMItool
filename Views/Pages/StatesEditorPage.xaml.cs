@@ -716,7 +716,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             if (listView == null) return;
             ConfigItem? config = listView.SelectedItem as ConfigItem;
 
-            Debug.WriteLine(listView.SelectedIndex);
             int index = listView.SelectedIndex;
             if (config == null)
                 listView.SelectedIndex = lastIndex;
