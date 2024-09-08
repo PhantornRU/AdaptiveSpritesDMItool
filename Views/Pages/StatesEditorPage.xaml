@@ -8,7 +8,7 @@
       
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     d:DesignHeight="800" 
-    d:DesignWidth="1000"
+    d:DesignWidth="1150"
     d:DataContext="{d:DesignInstance local:StatesEditorPage, IsDesignTimeCreatable=False}"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -604,8 +604,9 @@
 
             <!--ToolBar Overlay-->
             <ToolBar Grid.Row="0" 
-                     Grid.Column="0"
-                     VerticalAlignment="Top">
+                    Grid.Column="0"
+                    Margin="12,0,12,0"
+                    VerticalAlignment="Top">
 
                 <!--Take pixels from the preview and move them to the editable part-->
                 <Separator Margin="6,0,10,0" />
@@ -614,11 +615,6 @@
                     Command="{Binding ViewModel.OpenMultipleCommand}"
                     Content="Load DMI files" 
                     Icon="{ui:SymbolIcon AppFolder24}"/>
-                <ui:Button
-                    Command="{Binding ViewModel.ClearListCommand}"
-                    Appearance="Danger"
-                    Opacity="0.75"
-                    Icon="{ui:SymbolIcon Delete24}" />
 
                 <Separator Margin="12,0,12,0" />
                 <TextBlock Text="State: " VerticalAlignment="Center"/>
@@ -644,6 +640,13 @@
                     <ComboBoxItem Content="Multiple" />
                     <!--<ComboBoxItem Content="Extended" />-->
                 </ComboBox>
+
+                <Separator Margin="12,0,12,0" />
+                <ui:Button
+                    Command="{Binding ViewModel.ClearListCommand}"
+                    Appearance="Danger"
+                    Opacity="0.75"
+                    Icon="{ui:SymbolIcon Delete24}" />
                 
                 <Separator Margin="12,0,12,0" />
             </ToolBar>
@@ -651,8 +654,9 @@
 
             <!--ToolBar Config-->
             <ToolBar Grid.Row="0" 
-                     Grid.Column="1"
-                     VerticalAlignment="Top">
+                    Grid.Column="1"
+                    Margin="12,0,12,0"
+                    VerticalAlignment="Top">
 
                 <Separator Margin="6,0,10,0" />
 
@@ -695,8 +699,9 @@
 
             <!--Overlay List -->
             <ui:ListView
-                x:Name="Tetete"
                     Grid.Column="0"
+                    MaxHeight="200"
+                    Margin="12,0,12,12"
                     Grid.Row="1"
                     d:ItemsSource="{d:SampleData ItemCount=5}"
                     ItemsSource="{Binding ViewModel.BasicListPreviewViewItems, Mode=TwoWay}"
@@ -759,8 +764,10 @@
             <!--Overlay List -->
             <ui:ListView
                     x:Name="ConfigList"
+                    MaxHeight="200"
                     Grid.Column="1"
                     Grid.Row="1"
+                    Margin="12,0,12,12"
                     d:ItemsSource="{d:SampleData ItemCount=5}"
                     ItemsSource="{Binding ViewModel.BasicListConfigViewItems, Mode=TwoWay}"
                     SelectionChanged="ConfigChanged" 
