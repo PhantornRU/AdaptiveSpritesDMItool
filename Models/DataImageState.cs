@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
-using System.Diagnostics;
 using System.IO;
 using AdaptiveSpritesDMItool.Controllers;
 using AdaptiveSpritesDMItool.Helpers;
@@ -21,11 +20,6 @@ namespace AdaptiveSpritesDMItool.Models
         /// Main editable state.
         /// </summary>
         DMIState currentState;
-
-        /// <summary>
-        /// Additional overlay displayed on top.
-        /// </summary>
-        DMIState currentStateOverlay;
 
         private int widthCellsImage = 32;
         private int heightCellsImage = 32;
@@ -64,6 +58,7 @@ namespace AdaptiveSpritesDMItool.Models
         public DataImageState(DMIState _state)
         {
             InitializeData(_state);
+            InitializeOverlayData();
         }
         public DataImageState(DMIState _state, DMIState _stateOverlay)
         {
@@ -103,26 +98,33 @@ namespace AdaptiveSpritesDMItool.Models
 
             widthCellsImage = currentState.Width;
             heightCellsImage = currentState.Height;
-
-            Debug.WriteLine($"Image - imageCellsSize: {imageCellsSize}; sizeUI: {imageCellsSize}; pixelSize: {pixelSize}");
         }
 
         public void InitializeOverlayData(DMIState _state)
         {
-            Debug.WriteLine("Initializing overlay data");
             if(_state.Width != currentState.Width || _state.Height != currentState.Height)
                 throw new Exception("Overlay DMIState has different dimensions than main DMIState");
-            currentStateOverlay = _state;
 
-            StateDirection[] stateDirections = StatesController.GetAllStateDirections(DirectionDepth.Four);
+            StateDirection[] stateDirections = StatesController.GetAllStateDirections(currentState.DirectionDepth);
             foreach (StateDirection direction in stateDirections)
             {
-                WriteableBitmap bitmap = ImageEncoder.GetBMPFromDMIState(currentStateOverlay, direction);
+                WriteableBitmap bitmap = ImageEncoder.GetBMPFromDMIState(_state, direction);
                 stateBMPdict[direction][StateImageType.Overlay].Add(StateImageSideType.Left, bitmap);
                 stateBMPdict[direction][StateImageType.Overlay].Add(StateImageSideType.Right, bitmap.Clone());
-                //foreach (StateImageSideType imageSideType in Enum.GetValues(typeof(StateImageSideType)))
             }
         }
+
+        public void InitializeOverlayData()
+        {
+            StateDirection[] stateDirections = StatesController.GetAllStateDirections(currentState.DirectionDepth);
+            foreach (StateDirection direction in stateDirections)
+            {
+                WriteableBitmap bitmap = stateBMPdict[direction][StateImageType.Preview][StateImageSideType.Left].Clone();
+                stateBMPdict[direction][StateImageType.Overlay].Add(StateImageSideType.Left, bitmap);
+                stateBMPdict[direction][StateImageType.Overlay].Add(StateImageSideType.Right, bitmap.Clone());
+            }
+        }
+
 
         #endregion Initializers
 

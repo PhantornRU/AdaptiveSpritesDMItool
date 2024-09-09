@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using System.Diagnostics;
 
 namespace AdaptiveSpritesDMItool.Helpers
 {
@@ -27,11 +28,12 @@ namespace AdaptiveSpritesDMItool.Helpers
             if (imgState != null && 
                 (imgState is Image<Rgba32> valueOfImage))
             {
-                Console.WriteLine($"image state is {valueOfImage}");
+                Debug.WriteLine($"image state is {valueOfImage}");
                 return GetBMPFromRGBA32(imgState);
             }
-            Console.WriteLine("image state does not have a value");
-            return new WriteableBitmap(1, 1, 1, 1, PixelFormats.Bgra32, null);
+            throw new Exception("image state is null");
+            //Console.WriteLine("image state does not have a value");
+            //return new WriteableBitmap(1, 1, 1, 1, PixelFormats.Bgra32, null);
         }
 
         #endregion DMI
@@ -46,6 +48,7 @@ namespace AdaptiveSpritesDMItool.Helpers
         /// <returns></returns>
         private static WriteableBitmap GetBMPFromRGBA32(Image<Rgba32> _imgState)
         {
+            if (_imgState == null) throw new ArgumentNullException(nameof(_imgState));
             var bmp = new WriteableBitmap(_imgState.Width, _imgState.Height, _imgState.Metadata.HorizontalResolution, _imgState.Metadata.VerticalResolution, PixelFormats.Bgra32, null);
 
             bmp.Lock();
@@ -59,6 +62,7 @@ namespace AdaptiveSpritesDMItool.Helpers
 
                     for (var y = 0; y < _imgState.Height; y++)
                     {
+                        Debug.WriteLine($"=== y: {y} ===");
                         Span<Rgba32> pixelRow = accessor.GetRowSpan(y);
 
                         for (var x = 0; x < _imgState.Width; x++)
@@ -72,6 +76,7 @@ namespace AdaptiveSpritesDMItool.Helpers
                     }
                 });
 
+                Debug.WriteLine($"End of ProcessPixelRows");
                 bmp.AddDirtyRect(new Int32Rect(0, 0, _imgState.Width, _imgState.Height));
             }
             finally

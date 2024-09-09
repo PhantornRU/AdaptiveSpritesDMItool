@@ -1,6 +1,8 @@
 ﻿using AdaptiveSpritesDMItool.Models;
 using AdaptiveSpritesDMItool.Resources;
 using DMISharp;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Color = System.Windows.Media.Color;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
@@ -47,17 +50,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         private static void LoadDataImageFiles()
         {
             DMIState currentState = LoadDMIState(defaultPath, defaultFileName);
-
-            //dataImageState = new DataImageState(currentState);
-
-            // !!!!!! test
-            // Overlay Preview File
-            string fullpathOverlay = $"{defaultPath}/testClothingOveralls{defaultFileFormat}";
-            using DMIFile fileOverlay = new DMIFile(fullpathOverlay);
-
-            DMIState currentStateOverlay = fileOverlay.States.First();
-            dataImageState = new DataImageState(currentState, currentStateOverlay);
-
+            dataImageState = new DataImageState(currentState);
         }
 
         private static void InitializeCellsData()
