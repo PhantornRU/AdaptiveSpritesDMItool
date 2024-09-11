@@ -20,6 +20,8 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static StateDirection selectedStateDirection = StateDirection.South;
         public static StatePreviewType currentStatePreviewMode = StatePreviewType.Left;
 
+        public static StateImageType[] editableImages = new StateImageType[] { StateImageType.Overlay /*, StateImageType.Preview*/ };
+
         /// <summary>
         /// Determines whether the state is centralized - setting the pixel in the middle of the pixel
         /// </summary>

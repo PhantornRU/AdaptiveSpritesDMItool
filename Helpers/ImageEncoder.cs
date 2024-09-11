@@ -28,7 +28,7 @@ namespace AdaptiveSpritesDMItool.Helpers
             if (imgState != null && 
                 (imgState is Image<Rgba32> valueOfImage))
             {
-                Debug.WriteLine($"image state is {valueOfImage}");
+                Debug.WriteLine($"image state is {_state.Name} {_state.Frames}");
                 return GetBMPFromRGBA32(imgState);
             }
             throw new Exception("image state is null");

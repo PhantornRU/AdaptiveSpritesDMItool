@@ -75,6 +75,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             for (int index = 0; index < fileDmi.States.Count; index++)
             {
                 DMIState currentState = fileDmi.States.ElementAt(index);
+                Debug.WriteLine($"GetListStateItems - Loaded {fileName}({fileDmi.States.Count}).");
                 WriteableBitmap writeableBitmap = ImageEncoder.GetBMPFromDMIState(currentState, StateDirection.South);
                 StateItems.Add(
                     new StateItem(
@@ -121,28 +122,14 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
                 return;
 
             var statePreviewMode = StatesController.currentStatePreviewMode;
-            StateImageType imageType = StateImageType.Preview;
-            switch (statePreviewMode)
-            {
-                case StatePreviewType.Left:
-                    imageType = StateImageType.Preview;
-                    break;
-                //case StatePreviewType.Right:
-                //    imageType = StateImageType.Landmark;
-                //    break;
-                case StatePreviewType.Overlay:
-                    imageType = StateImageType.Overlay;
-                    break;
-            }
-
             switch (ListViewPreviewSelectionMode)
             {
                 case SelectionMode.Single:
-                    EnvironmentController.dataImageState.ReplaceDMIState(state, imageType);
+                    EnvironmentController.dataImageState.ReplaceDMIState(state, statePreviewMode);
                     break;
                 case SelectionMode.Multiple:
                     // !!!!!!!!!!! ЗАПИХНУТЬ ПРОВЕРКУ НА СРАЗУ НЕСКОЛЬКО ВЫДЕЛЕННЫХ СТЕЙТОВ !!!!!!!!!!!!!!!!!!!!
-                    EnvironmentController.dataImageState.CombineDMIState(state, imageType);
+                    //EnvironmentController.dataImageState.CombineDMIState(state, statePreviewMode);
                     break;
                 default:
                     break;

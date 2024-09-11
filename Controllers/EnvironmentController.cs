@@ -50,7 +50,9 @@ namespace AdaptiveSpritesDMItool.Controllers
         private static void LoadDataImageFiles()
         {
             DMIState currentState = LoadDMIState(defaultPath, defaultFileName);
-            dataImageState = new DataImageState(currentState);
+            DMIState landmarkState = LoadDMIState(defaultPath, "testBodyMonkey");
+            DMIState overlayState = LoadDMIState(defaultPath, "testClothingDefaultCoat");
+            dataImageState = new DataImageState(currentState, landmarkState, overlayState);
         }
 
         private static void InitializeCellsData()
