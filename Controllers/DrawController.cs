@@ -158,17 +158,6 @@ namespace AdaptiveSpritesDMItool.Controllers
                     Point storagePoint = pointsStorage[stateDirection][point.Key];
                     storagePoint = CorrectMousePositionPoint(stateDirection, storagePoint, cellsSize);
 
-                    //Debug.WriteLine("======================================");
-                    //Debug.WriteLine($"point: {point}, tempPoint: {tempPoint}");
-                    //Debug.WriteLine($"selectedPoint: {selectedPoint}, storagePoint: {storagePoint}");
-                    //Debug.WriteLine($"offset: {pointOffset},
-                    //
-                    //
-                    //
-                    //
-                    //
-                    //: {pointOffsetDown}, mouse: {MouseController.currentMousePosition}");
-
                     // Update Data Pixel Storage
                     UpdatePixel(stateDirection, bitmapPreview, bitmapEditable, selectedPoint, storagePoint);
                     UpdatePixel(stateDirection, bitmapOverlayPreview, bitmapOverlayEditable, selectedPoint, storagePoint);

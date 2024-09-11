@@ -706,6 +706,7 @@
                     d:ItemsSource="{d:SampleData ItemCount=5}"
                     ItemsSource="{Binding ViewModel.BasicListPreviewViewItems, Mode=TwoWay}"
                     SelectedIndex="0"
+                    SelectionChanged="StateChanged" 
                     SelectionMode="{Binding ViewModel.ListViewPreviewSelectionMode, Mode=OneWay}">
                 <ui:ListView.ItemTemplate>
                     <!--<DataTemplate DataType="{x:Type models:Person}">-->
@@ -749,13 +750,13 @@
                                     Grid.Column="1"
                                     Margin="12,6,0,0"
                                     FontWeight="Bold"
-                                    Text="{Binding FileName, Mode=OneWay}" />
+                                    Text="{Binding StateName, Mode=OneWay}" />
                             <TextBlock
                                     Grid.Row="1"
                                     Grid.Column="1"
                                     Margin="12,0,0,6"
                                     Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
-                                    Text="{Binding StateName, Mode=OneWay}" />
+                                    Text="{Binding FileName, Mode=OneWay}" />
                         </Grid>
                     </DataTemplate>
                 </ui:ListView.ItemTemplate>

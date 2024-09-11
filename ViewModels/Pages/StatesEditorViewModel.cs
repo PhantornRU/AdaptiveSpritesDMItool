@@ -63,32 +63,91 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
             using DMIFile fileDmi = new DMIFile(fullpath);
 
-            var StateItems = GetListStateItems(fileDmi);
+            var StateItems = GetListStateItems(fileDmi, fullpath);
             return StateItems;
         }
 
-        private static ObservableCollection<StateItem> GetListStateItems(DMIFile fileDmi)
+        private static ObservableCollection<StateItem> GetListStateItems(DMIFile fileDmi, string fullPath)
         {
             var StateItems = new ObservableCollection<StateItem>();
-
             string fileName = EnvironmentController.defaultFileName;
-            StateDirection direction = StateDirection.South;
 
             for (int index = 0; index < fileDmi.States.Count; index++)
             {
                 DMIState currentState = fileDmi.States.ElementAt(index);
-                BitmapSource bmp = ImageEncoder.GetBMPFromDMIState(currentState, direction);
-
+                WriteableBitmap writeableBitmap = ImageEncoder.GetBMPFromDMIState(currentState, StateDirection.South);
                 StateItems.Add(
                     new StateItem(
                         fileName,
+                        fullPath,
                         currentState.Name,
-                        bmp
+                        writeableBitmap
+
                     )
                 );
             }
 
             return StateItems;
+        }
+
+        /// <summary> Selected config item in the list </summary>
+        StateItem? currentState;
+
+        public void StateChanged(StateItem? stateItem)
+        {
+            // Save last selected config
+            //if (currentState != null)
+            //    EnvironmentController.dataPixelStorage.SavePixelStorage(currentState.FilePath);
+
+            // Load selected config
+            currentState = stateItem;
+            if (stateItem == null)
+            {
+                Debug.WriteLine("State nullified.");
+                //EnvironmentController.currentStateFullPath = string.Empty;
+                return;
+            }
+
+            using DMIFile fileDmi = new DMIFile(stateItem.FilePath);
+            var states = fileDmi.States;
+            DMIState? state = null;
+            foreach(DMIState item in states)
+            {
+                if (item.Name != stateItem.StateName)
+                    continue;
+                state = item;
+            }
+            if (state == null)
+                return;
+
+            var statePreviewMode = StatesController.currentStatePreviewMode;
+            StateImageType imageType = StateImageType.Preview;
+            switch (statePreviewMode)
+            {
+                case StatePreviewType.Left:
+                    imageType = StateImageType.Preview;
+                    break;
+                //case StatePreviewType.Right:
+                //    imageType = StateImageType.Landmark;
+                //    break;
+                case StatePreviewType.Overlay:
+                    imageType = StateImageType.Overlay;
+                    break;
+            }
+
+            switch (ListViewPreviewSelectionMode)
+            {
+                case SelectionMode.Single:
+                    EnvironmentController.dataImageState.ReplaceDMIState(state, imageType);
+                    break;
+                case SelectionMode.Multiple:
+                    // !!!!!!!!!!! ЗАПИХНУТЬ ПРОВЕРКУ НА СРАЗУ НЕСКОЛЬКО ВЫДЕЛЕННЫХ СТЕЙТОВ !!!!!!!!!!!!!!!!!!!!
+                    EnvironmentController.dataImageState.CombineDMIState(state, imageType);
+                    break;
+                default:
+                    break;
+            }
+            Debug.WriteLine($"State Changed to: {stateItem.FileName} {stateItem.StateName}");
         }
 
         #endregion Preview
@@ -137,7 +196,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             foreach (var path in fileNames)
             {
                 using DMIFile fileDmi = new DMIFile(path);
-                var states = GetListStateItems(fileDmi);
+                var states = GetListStateItems(fileDmi, path);
                 foreach (var state in states)
                 {
                     BasicListPreviewViewItems.Add(state);
@@ -165,7 +224,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         ConfigItem? currentConfig;
 
         /// <summary> The last item selected in the list </summary>
-        private int lastIndex = 0;
+        private int lastIndexConfig = 0;
 
         [ObservableProperty]
         private ObservableCollection<ConfigItem> _BasicListConfigViewItems = GenerateConfigItems();
@@ -185,7 +244,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
                 EnvironmentController.dataPixelStorage.SavePixelStorage(currentConfig.FilePath);
 
             // Load selected config
-            lastIndex = index;
+            lastIndexConfig = index;
             currentConfig = config;
             if (config == null)
             {
@@ -236,7 +295,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             }
             else
             {
-                ConfigItem selectedItem = BasicListConfigViewItems[lastIndex];
+                ConfigItem selectedItem = BasicListConfigViewItems[lastIndexConfig];
                 selectedItem.State = ConfigState.Saved;
                 EnvironmentController.dataPixelStorage.SavePixelStorage(fullpath);
             }

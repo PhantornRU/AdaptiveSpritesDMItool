@@ -62,7 +62,6 @@ namespace AdaptiveSpritesDMItool.Helpers
 
                     for (var y = 0; y < _imgState.Height; y++)
                     {
-                        Debug.WriteLine($"=== y: {y} ===");
                         Span<Rgba32> pixelRow = accessor.GetRowSpan(y);
 
                         for (var x = 0; x < _imgState.Width; x++)
@@ -76,7 +75,6 @@ namespace AdaptiveSpritesDMItool.Helpers
                     }
                 });
 
-                Debug.WriteLine($"End of ProcessPixelRows");
                 bmp.AddDirtyRect(new Int32Rect(0, 0, _imgState.Width, _imgState.Height));
             }
             finally

@@ -1,4 +1,5 @@
-﻿using AdaptiveSpritesDMItool.Helpers;
+﻿using AdaptiveSpritesDMItool.Controllers;
+using AdaptiveSpritesDMItool.Helpers;
 using AdaptiveSpritesDMItool.Models;
 using DMISharp;
 using Microsoft.Win32;
@@ -83,22 +84,18 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
             // !!!! Test !!!!
             string path = "TestImages";
-            string fullpath = $"{path}/testBodyHuman.dmi";
-            using DMIFile file = new DMIFile(fullpath);
+            string fullPath = $"{path}/testBodyHuman.dmi";
+            using DMIFile file = new DMIFile(fullPath);
             DMIState currentState = file.States.First();
-
-            StateDirection direction = StateDirection.South;
-            BitmapSource bmp = ImageEncoder.GetBMPFromDMIState(currentState, direction);
 
             for (int i = 0; i < 50; i++)
             {
                 StateItems.Add(
                     new StateItem(
                         fileNames[random.Next(0, fileNames.Length)],
+                        fullPath,
                         stateNames[random.Next(0, stateNames.Length)],
-                        bmp
-                    // !!!!!!!!! БИТМАП ЗАГРУЗИТЬ !!!!!!
-
+                        ImageEncoder.GetBMPFromDMIState(currentState, StateDirection.South)
                     )
                 );
             }

@@ -38,10 +38,10 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             // Pre Initializers
             InitializeComponent();
+            InitializeComponentPaths();
             EnvironmentController.InitializeEnvironment();
 
             // Initializers
-            InitializeDictionaries();
             InitializeStatusBar();
             InitializeSources();
             InitializeGrids();
@@ -56,7 +56,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region Initializers
 
-        private void InitializeDictionaries()
+        private void InitializeComponentPaths()
         {
             StatesController.stateSourceDictionary = new Dictionary<StateDirection, Dictionary<StateImageType, Dictionary<StateImageSideType, System.Windows.Controls.Image>>>()
             {
@@ -709,7 +709,16 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region List View
 
-        private int lastIndex = 0;
+        private void StateChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
+            if (listView == null) return;
+            StateItem? state = listView.SelectedItem as StateItem;
+
+            ViewModel.StateChanged(state);
+        }
+
+        private int lastIndexConfig = 0;
         private void ConfigChanged(object sender, SelectionChangedEventArgs e)
         {
             Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
@@ -718,11 +727,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             int index = listView.SelectedIndex;
             if (config == null)
-                listView.SelectedIndex = lastIndex;
+                listView.SelectedIndex = lastIndexConfig;
             else
-                lastIndex = index;
+                lastIndexConfig = index;
 
-            ViewModel.ConfigChanged(config, lastIndex);
+            ViewModel.ConfigChanged(config, lastIndexConfig);
         }
 
         private void ClearConfigButton_Click(object sender, RoutedEventArgs e)
