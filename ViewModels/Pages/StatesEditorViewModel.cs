@@ -96,12 +96,10 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
         public void StateChanged(StateItem? stateItem)
         {
-            // Save last selected config
-            //if (currentState != null)
-            //    EnvironmentController.dataPixelStorage.SavePixelStorage(currentState.FilePath);
-
             // Load selected config
             currentState = stateItem;
+            var statePreviewMode = StatesController.currentStatePreviewMode;
+
             if (stateItem == null)
             {
                 Debug.WriteLine("State nullified.");
@@ -121,15 +119,13 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             if (state == null)
                 return;
 
-            var statePreviewMode = StatesController.currentStatePreviewMode;
             switch (ListViewPreviewSelectionMode)
             {
                 case SelectionMode.Single:
                     EnvironmentController.dataImageState.ReplaceDMIState(state, statePreviewMode);
                     break;
                 case SelectionMode.Multiple:
-                    // !!!!!!!!!!! ЗАПИХНУТЬ ПРОВЕРКУ НА СРАЗУ НЕСКОЛЬКО ВЫДЕЛЕННЫХ СТЕЙТОВ !!!!!!!!!!!!!!!!!!!!
-                    //EnvironmentController.dataImageState.CombineDMIState(state, statePreviewMode);
+                    EnvironmentController.dataImageState.CombineDMIState(state, statePreviewMode);
                     break;
                 default:
                     break;

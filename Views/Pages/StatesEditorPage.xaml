@@ -637,7 +637,7 @@
                       SelectedIndex="{Binding ViewModel.ListViewPreviewSelectionModeComboBoxSelectedIndex, Mode=TwoWay}" 
                       MinWidth="70">
                     <ComboBoxItem Content="Single" />
-                    <ComboBoxItem Content="Multiple" />
+                    <!--<ComboBoxItem Content="Multiple" />-->
                     <!--<ComboBoxItem Content="Extended" />-->
                 </ComboBox>
 

@@ -130,20 +130,21 @@ namespace AdaptiveSpritesDMItool.Models
 
         public void CombineDMIState(DMIState _state, StatePreviewType previewType)
         {
-            //StateImageType imageType;
-            //StateDirection[] stateDirections = StatesController.GetAllStateDirections(currentState.DirectionDepth);
-            //foreach (StateDirection direction in stateDirections)
-            //{
-            //    WriteableBitmap currentBitmap = stateBMPdict[direction][imageType][StateImageSideType.Left];
-            //    WriteableBitmap bitmap = ImageEncoder.GetBMPFromDMIState(_state, direction);
-                
-            //    Rect destRect = new Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight);
-            //    currentBitmap.Blit(destRect, bitmap, destRect);
+            StateImageType imageType = (previewType == StatePreviewType.Overlay) ? StateImageType.Overlay : StateImageType.Preview;
 
-            //    // !!!!!!!! СДЕЛАТЬ ТАКЖЕ ОЧЕРЕДНОСТЬ СОЕДИНЕНИЙ!!!!!!!!
-            //    stateBMPdict[direction][imageType][StateImageSideType.Right] = currentBitmap.Clone();
+            StateDirection[] stateDirections = StatesController.GetAllStateDirections(currentState.DirectionDepth);
+            foreach (StateDirection direction in stateDirections)
+            {
+                WriteableBitmap currentBitmap = stateBMPdict[direction][imageType][StateImageSideType.Left];
+                WriteableBitmap bitmap = ImageEncoder.GetBMPFromDMIState(_state, direction);
 
-            //}
+                Rect destRect = new Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight);
+                currentBitmap.Blit(destRect, bitmap, destRect);
+
+                // todo: queue bitmap for update
+                stateBMPdict[direction][imageType][StateImageSideType.Right] = currentBitmap.Clone();
+                //UpdateBitmaps(direction, previewType, currentBitmap);
+            }
         }
 
         #endregion DMI State
@@ -153,26 +154,23 @@ namespace AdaptiveSpritesDMItool.Models
 
         private void UpdateBitmaps(StateDirection direction, StatePreviewType previewType, WriteableBitmap bitmap)
         {
-            StateImageType imageType;
+            StateImageType imageType = (previewType == StatePreviewType.Overlay) ? StateImageType.Overlay : StateImageType.Preview;
             WriteableBitmap? leftState = null;
             WriteableBitmap? rightState = null;
 
             switch (previewType)
             {
                 case StatePreviewType.Left:
-                    imageType = StateImageType.Preview;
                     stateBMPdict[direction][imageType][StateImageSideType.Left] = bitmap;
                     leftState = stateBMPdict[direction][imageType][StateImageSideType.Left];
                     break;
 
                 case StatePreviewType.Right:
-                    imageType = StateImageType.Preview;
                     stateBMPdict[direction][imageType][StateImageSideType.Right] = bitmap;
                     rightState = stateBMPdict[direction][imageType][StateImageSideType.Right];
                     break;
 
                 case StatePreviewType.Overlay:
-                    imageType = StateImageType.Overlay;
                     stateBMPdict[direction][imageType][StateImageSideType.Left] = bitmap;
                     stateBMPdict[direction][imageType][StateImageSideType.Right] = bitmap.Clone();
                     leftState = stateBMPdict[direction][imageType][StateImageSideType.Left];
