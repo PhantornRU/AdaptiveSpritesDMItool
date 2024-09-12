@@ -188,7 +188,8 @@ namespace AdaptiveSpritesDMItool.Models
                 StatesController.stateSourceDictionary[direction][imageType][StateImageSideType.Left].Source = leftState;
             if (rightState != null)
                 StatesController.stateSourceDictionary[direction][imageType][StateImageSideType.Right].Source = rightState;
-
+            if(EnvironmentController.dataPixelStorage != null)
+                EnvironmentController.dataPixelStorage.DrawPixelStorageAtBitmaps();
         }
 
         #endregion Bitmap

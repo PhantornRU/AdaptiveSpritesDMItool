@@ -721,6 +721,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private int lastIndexConfig = 0;
         private void ConfigChanged(object sender, SelectionChangedEventArgs e)
         {
+            Debug.WriteLine($"Config Changed {lastIndexConfig}");
             Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
             if (listView == null) return;
             ConfigItem? config = listView.SelectedItem as ConfigItem;
