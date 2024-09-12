@@ -1,20 +1,21 @@
 ﻿<Page x:Class="AdaptiveSpritesDMItool.Views.Pages.StatesEditorPage"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:AdaptiveSpritesDMItool.Views.Pages"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:AdaptiveSpritesDMItool.Views.Pages"
+    xmlns:models="clr-namespace:AdaptiveSpritesDMItool.Models"
       
-      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-      d:DesignHeight="500" 
-      d:DesignWidth="800"
-      d:DataContext="{d:DesignInstance local:StatesEditorPage, IsDesignTimeCreatable=False}"
-      ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
-      ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-      Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    d:DesignHeight="800" 
+    d:DesignWidth="1150"
+    d:DataContext="{d:DesignInstance local:StatesEditorPage, IsDesignTimeCreatable=False}"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       
-      Title="StatesEditorPage"
-      mc:Ignorable="d" >
+    Title="StatesEditorPage"
+    mc:Ignorable="d" >
     
     <Page.Resources>
         <ResourceDictionary>
@@ -65,6 +66,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!--<ScrollViewer
@@ -199,6 +202,7 @@
             <!--Icon="{ui:SymbolIcon AppFolder24}"-->
         </ToolBar>
 
+        
         <!--Edit State Windows-->
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
@@ -535,12 +539,12 @@
 
         </Grid>
 
+        
         <!-- TODO: Statusbar and Toolbar that are displayed on top of the window, and not move with the editor window. -->
 
         <!--Status Bar-->
-        <StatusBar
+        <StatusBar Grid.Row="2"
             x:Name="RootStatusBar"
-            Grid.Row="2"
             MinHeight="0"
             Margin="0"
             Padding="8,2">
@@ -582,29 +586,218 @@
             </StatusBarItem>
         </StatusBar>
 
-        <!--Overlay Panel-->
-        <!--<Grid Grid.Row="3">
+
+
+        <!--File Panel-->
+        <Grid 
+            Grid.Row="3" 
+            Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <ToolBar Grid.Row="0" VerticalAlignment="Top" Margin="0,12,0,0">
 
-                Take pixels from the preview and move them to the editable part
+            <!--ToolBar Overlay-->
+            <ToolBar Grid.Row="0" 
+                    Grid.Column="0"
+                    Margin="12,0,12,0"
+                    VerticalAlignment="Top">
+
+                <!--Take pixels from the preview and move them to the editable part-->
                 <Separator Margin="6,0,10,0" />
+                <TextBlock Text="Preview: " VerticalAlignment="Center"/>
                 <ui:Button
-                        x:Name="TestButton"
-                        ToolTip="Test button. You shouldn't see it, if you did, the developer screwed up. Please let him know."
-                        Icon="{ui:SymbolIcon AddSquare24}" Click="TestButton_Click" />
+                    Command="{Binding ViewModel.OpenMultipleCommand}"
+                    Content="Load DMI files" 
+                    Icon="{ui:SymbolIcon AppFolder24}"/>
+
+                <Separator Margin="12,0,12,0" />
+                <TextBlock Text="State: " VerticalAlignment="Center"/>
                 <ui:Button
-                        x:Name="TestButton2"
-                        ToolTip="Test button. You shouldn't see it, if you did, the developer screwed up. Please let him know."
-                        Icon="{ui:SymbolIcon AddSquare24}" Click="TestButton2_Click" />
+                    x:Name="LeftPreviewButton"
+                    ToolTip="Setting images to the left preview."
+                    Appearance="Primary"
+                    Icon="{ui:SymbolIcon TableStackRight24}" Click="LeftPreviewButton_Click" />
+                <ui:Button
+                    x:Name="RightPreviewButton"
+                    ToolTip="Setting images to the right preview."
+                    Appearance="Secondary"
+                    Icon="{ui:SymbolIcon TableStackLeft24}" Click="RightPreviewButton_Click" />
+                <ui:Button
+                    x:Name="OverlayPreviewButton"
+                    ToolTip="Setting images as overlay."
+                    Appearance="Secondary"
+                    Icon="{ui:SymbolIcon BorderBottomDouble24}" Click="OverlayPreviewButton_Click" />
+                <ComboBox x:Name="SelectionModeComboBox" 
+                      SelectedIndex="{Binding ViewModel.ListViewPreviewSelectionModeComboBoxSelectedIndex, Mode=TwoWay}" 
+                      MinWidth="70">
+                    <ComboBoxItem Content="Single" />
+                    <!--<ComboBoxItem Content="Multiple" />-->
+                    <!--<ComboBoxItem Content="Extended" />-->
+                </ComboBox>
+
+                <Separator Margin="12,0,12,0" />
+                <ui:Button
+                    Command="{Binding ViewModel.ClearListCommand}"
+                    Appearance="Danger"
+                    Opacity="0.75"
+                    Icon="{ui:SymbolIcon Delete24}" />
+                
+                <Separator Margin="12,0,12,0" />
+            </ToolBar>
+
+
+            <!--ToolBar Config-->
+            <ToolBar Grid.Row="0" 
+                    Grid.Column="1"
+                    Margin="12,0,12,0"
+                    VerticalAlignment="Top">
+
+                <Separator Margin="6,0,10,0" />
+
+                <TextBlock Text="Config: " VerticalAlignment="Center"/>
+                <ui:Button
+                    Content="New"
+                    ToolTip="New config."
+                    Icon="{ui:SymbolIcon ReceiptAdd24}" 
+                    Command="{Binding ViewModel.NewConfigCommand}" />
+                <ui:Button
+                    Content="Load"
+                    ToolTip="Upload a new config to replace the current one."
+                    Icon="{ui:SymbolIcon FolderOpen24}" 
+                    Command="{Binding ViewModel.LoadConfigCommand}" />
+                <ui:Button
+                    Content="Save" 
+                    ToolTip="Save current config."
+                    Icon="{ui:SymbolIcon Save24}" 
+                    Command="{Binding ViewModel.SaveConfigCommand}" />
+                <ui:Button
+                    Content="Save As" 
+                    ToolTip="Save current config as."
+                    Icon="{ui:SymbolIcon Save24}" 
+                    Command="{Binding ViewModel.SaveAsConfigCommand}" />
+
+                <Separator Margin="12,0,12,0" />
+                <ui:Button
+                    x:Name="ClearConfigButton"
+                    Command="{Binding ViewModel.ClearConfigCommand}"
+                    Appearance="Danger"
+                    Opacity="0.75"
+                    Icon="{ui:SymbolIcon Delete24}" 
+                    Click="ClearConfigButton_Click" />
+                
+                <Separator Margin="12,0,12,0" />
                 
             </ToolBar>
 
-        </Grid>-->
+
+
+            <!--Overlay List -->
+            <ui:ListView
+                    Grid.Column="0"
+                    MaxHeight="200"
+                    Margin="12,0,12,12"
+                    Grid.Row="1"
+                    d:ItemsSource="{d:SampleData ItemCount=5}"
+                    ItemsSource="{Binding ViewModel.BasicListPreviewViewItems, Mode=TwoWay}"
+                    SelectedIndex="0"
+                    SelectionChanged="StateChanged" 
+                    SelectionMode="{Binding ViewModel.ListViewPreviewSelectionMode, Mode=OneWay}">
+                <ui:ListView.ItemTemplate>
+                    <!--<DataTemplate DataType="{x:Type models:Person}">-->
+                    <DataTemplate DataType="{x:Type models:StateItem}">
+                        <Grid Margin="8,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Ellipse
+                                    x:Name="Ellipse"
+                                    Grid.RowSpan="2"
+                                    Width="36"
+                                    Height="36"
+                                    Margin="6"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Opacity="0.25"
+                                    Fill="{ui:ThemeResource ControlStrongStrokeColorDefaultBrush}" />
+                            <Image
+                                    x:Name="ImagePreview"
+                                    Grid.RowSpan="2"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="6"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" 
+                                
+                                    RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                    RenderOptions.EdgeMode="Aliased"
+                                
+                                    Source="{Binding ImageSource, Mode=OneWay}"
+
+                            />
+                            <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Margin="12,6,0,0"
+                                    FontWeight="Bold"
+                                    Text="{Binding StateName, Mode=OneWay}" />
+                            <TextBlock
+                                    Grid.Row="1"
+                                    Grid.Column="1"
+                                    Margin="12,0,0,6"
+                                    Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{Binding FileName, Mode=OneWay}" />
+                        </Grid>
+                    </DataTemplate>
+                </ui:ListView.ItemTemplate>
+            </ui:ListView>
+
+            <!--Overlay List -->
+            <ui:ListView
+                    x:Name="ConfigList"
+                    MaxHeight="200"
+                    Grid.Column="1"
+                    Grid.Row="1"
+                    Margin="12,0,12,12"
+                    d:ItemsSource="{d:SampleData ItemCount=5}"
+                    ItemsSource="{Binding ViewModel.BasicListConfigViewItems, Mode=TwoWay}"
+                    SelectionChanged="ConfigChanged" 
+                    SelectedIndex="0">
+                <ui:ListView.ItemTemplate>
+                    <!--<DataTemplate DataType="{x:Type models:Person}">-->
+                    <DataTemplate DataType="{x:Type models:StateItem}">
+                        <Grid Margin="8,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Margin="12,6,0,12"
+                                    FontWeight="Bold"
+                                    Text="{Binding FileName, Mode=OneWay}" />
+                        </Grid>
+                    </DataTemplate>
+                </ui:ListView.ItemTemplate>
+            </ui:ListView>
+
+
+        </Grid>
 
     </Grid>
     

@@ -8,9 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
-using System.Diagnostics;
 using System.IO;
 using AdaptiveSpritesDMItool.Controllers;
+using AdaptiveSpritesDMItool.Helpers;
+using System.Diagnostics;
 
 namespace AdaptiveSpritesDMItool.Models
 {
@@ -20,11 +21,6 @@ namespace AdaptiveSpritesDMItool.Models
         /// Main editable state.
         /// </summary>
         DMIState currentState;
-
-        /// <summary>
-        /// Additional overlay displayed on top.
-        /// </summary>
-        DMIState currentStateOverlay;
 
         private int widthCellsImage = 32;
         private int heightCellsImage = 32;
@@ -60,37 +56,32 @@ namespace AdaptiveSpritesDMItool.Models
 
         #region Initializers
 
-        public DataImageState(DMIState _state)
+        public DataImageState(DMIState _state, DMIState _landmarkState = null, DMIState _overlayState = null)
         {
             InitializeData(_state);
-        }
-        public DataImageState(DMIState _state, DMIState _stateOverlay)
-        {
-            InitializeData(_state);
-            InitializeOverlayData(_stateOverlay);
+            InitializeLandmarkData(_landmarkState);
+            InitializeOverlayData(_overlayState);
         }
 
         private void InitializeData(DMIState _state)
         {
+            Debug.WriteLine($"Initialize Data: {_state.Name}");
             currentState = _state;
-            pixelSize = GetPixelSizeFromResolution(heightCellsImage);
+            pixelSize = ImageEncoder.GetPixelSizeFromResolution(heightCellsImage);
             WriteableBitmap bitmapUI = new WriteableBitmap(bitmapUISize.Width, bitmapUISize.Height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
-
-            Dictionary<StateImageSideType, WriteableBitmap> backgroundDict = new Dictionary<StateImageSideType, WriteableBitmap>();
 
             StateDirection[] stateDirections = StatesController.GetAllStateDirections(DirectionDepth.Four);
             foreach (StateDirection direction in stateDirections)
             {
                 stateBMPdict.Add(direction, new Dictionary<StateImageType, Dictionary<StateImageSideType, WriteableBitmap>>());
-                WriteableBitmap bitmap = GetBMPFromDMIState(currentState, direction);
+                WriteableBitmap bitmap = ImageEncoder.GetBMPFromDMIState(currentState, direction);
                 foreach (StateImageType imageType in initializedStateImageTypes)
                 {
                     stateBMPdict[direction].Add(imageType, new Dictionary<StateImageSideType, WriteableBitmap>());
                     switch (imageType)
                     {
                         case StateImageType.Preview:
-                            stateBMPdict[direction][imageType].Add(StateImageSideType.Left, bitmap);
-                            stateBMPdict[direction][imageType].Add(StateImageSideType.Right, bitmap.Clone());
+                            UpdateBitmaps(direction, StatePreviewType.Left, bitmap);
                             break;
                         case StateImageType.Selection:
                             foreach(StateImageSideType imageSideType in Enum.GetValues(typeof(StateImageSideType)))
@@ -102,114 +93,103 @@ namespace AdaptiveSpritesDMItool.Models
 
             widthCellsImage = currentState.Width;
             heightCellsImage = currentState.Height;
+        }
 
-            Debug.WriteLine($"Image - imageCellsSize: {imageCellsSize}; sizeUI: {imageCellsSize}; pixelSize: {pixelSize}");
+        public void InitializeLandmarkData(DMIState _state)
+        {
+            if (_state.Width != currentState.Width || _state.Height != currentState.Height)
+                throw new Exception("Overlay DMIState has different dimensions than main DMIState");
+
+            Debug.WriteLine($"Initialize Landmark Data: {_state.Name}");
+            ReplaceDMIState(_state, StatePreviewType.Right);
         }
 
         public void InitializeOverlayData(DMIState _state)
         {
             if(_state.Width != currentState.Width || _state.Height != currentState.Height)
                 throw new Exception("Overlay DMIState has different dimensions than main DMIState");
-            currentStateOverlay = _state;
 
-            StateDirection[] stateDirections = StatesController.GetAllStateDirections(DirectionDepth.Four);
-            foreach (StateDirection direction in stateDirections)
-            {
-                WriteableBitmap bitmap = GetBMPFromDMIState(currentStateOverlay, direction);
-                stateBMPdict[direction][StateImageType.Overlay].Add(StateImageSideType.Left, bitmap);
-                stateBMPdict[direction][StateImageType.Overlay].Add(StateImageSideType.Right, bitmap.Clone());
-                //foreach (StateImageSideType imageSideType in Enum.GetValues(typeof(StateImageSideType)))
-            }
+            Debug.WriteLine($"Initialize Overlay Data: {_state.Name}");
+            ReplaceDMIState(_state, StatePreviewType.Overlay);
         }
 
         #endregion Initializers
 
 
-        #region Image Encoder
+        #region DMI State
 
-        /// <summary>
-        /// Get the state bitmap
-        /// </summary>
-        /// <param name="_state"></param>
-        /// <param name="_stateDirection"></param>
-        /// <returns></returns>
-        private WriteableBitmap GetBMPFromDMIState(DMIState _state, StateDirection _stateDirection)
+        public void ReplaceDMIState(DMIState _state, StatePreviewType previewType)
         {
-            using Image<Rgba32> imgState = _state.GetFrame(_stateDirection, 0);
-            if (imgState is Image<Rgba32> valueOfImage)
-                Console.WriteLine($"image state is {valueOfImage}");
-            else
-                Console.WriteLine("image state does not have a value");
-            return GetBMPFromRGBA32(imgState);
+            StateDirection[] stateDirections = StatesController.GetAllStateDirections(currentState.DirectionDepth);
+            foreach (StateDirection direction in stateDirections)
+            {
+                WriteableBitmap bitmap = ImageEncoder.GetBMPFromDMIState(_state, direction);
+                UpdateBitmaps(direction, previewType, bitmap);
+            }
         }
 
-        /// <summary>
-        /// Converting Image RGBA32 to bitmap.
-        /// </summary>
-        /// <param name="_imgState"></param>
-        /// <returns></returns>
-        private WriteableBitmap GetBMPFromRGBA32(Image<Rgba32> _imgState)
+        public void CombineDMIState(DMIState _state, StatePreviewType previewType)
         {
-            var bmp = new WriteableBitmap(_imgState.Width, _imgState.Height, _imgState.Metadata.HorizontalResolution, _imgState.Metadata.VerticalResolution, PixelFormats.Bgra32, null);
+            StateImageType imageType = (previewType == StatePreviewType.Overlay) ? StateImageType.Overlay : StateImageType.Preview;
 
-            bmp.Lock();
-            try
+            StateDirection[] stateDirections = StatesController.GetAllStateDirections(currentState.DirectionDepth);
+            foreach (StateDirection direction in stateDirections)
             {
+                WriteableBitmap currentBitmap = stateBMPdict[direction][imageType][StateImageSideType.Left];
+                WriteableBitmap bitmap = ImageEncoder.GetBMPFromDMIState(_state, direction);
 
-                using Image<Rgba32> _image = _imgState;
-                _image.ProcessPixelRows(accessor =>
-                {
-                    var backBuffer = bmp.BackBuffer;
+                Rect destRect = new Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight);
+                currentBitmap.Blit(destRect, bitmap, destRect);
 
-                    for (var y = 0; y < _imgState.Height; y++)
-                    {
-                        Span<Rgba32> pixelRow = accessor.GetRowSpan(y);
-
-                        for (var x = 0; x < _imgState.Width; x++)
-                        {
-                            var backBufferPos = backBuffer + (y * _imgState.Width + x) * 4;
-                            var rgba = pixelRow[x];
-                            var color = rgba.A << 24 | rgba.R << 16 | rgba.G << 8 | rgba.B;
-
-                            System.Runtime.InteropServices.Marshal.WriteInt32(backBufferPos, color);
-                        }
-                    }
-                });
-
-                bmp.AddDirtyRect(new Int32Rect(0, 0, _imgState.Width, _imgState.Height));
+                // todo: queue bitmap for update
+                stateBMPdict[direction][imageType][StateImageSideType.Right] = currentBitmap.Clone();
+                //UpdateBitmaps(direction, previewType, currentBitmap);
             }
-            finally
-            {
-                bmp.Unlock();
-            }
-            return bmp;
         }
 
-        #endregion Image Encoder
+        #endregion DMI State
 
 
-        #region Helpers
+        #region Bitmap
 
-        /// <summary>
-        /// Dependence of pixel sizes on the canvas for better display.
-        /// </summary>
-        /// <param name="_pixelResolution"></param>
-        /// <returns></returns>
-        private int GetPixelSizeFromResolution(int _pixelResolution)
+        private void UpdateBitmaps(StateDirection direction, StatePreviewType previewType, WriteableBitmap bitmap)
         {
-            int pixelSize = 8;
-            if (_pixelResolution == 64)
+            StateImageType imageType = (previewType == StatePreviewType.Overlay) ? StateImageType.Overlay : StateImageType.Preview;
+            WriteableBitmap? leftState = null;
+            WriteableBitmap? rightState = null;
+
+            switch (previewType)
             {
-                pixelSize = 4;
+                case StatePreviewType.Left:
+                    stateBMPdict[direction][imageType][StateImageSideType.Left] = bitmap;
+                    leftState = stateBMPdict[direction][imageType][StateImageSideType.Left];
+                    break;
+
+                case StatePreviewType.Right:
+                    stateBMPdict[direction][imageType][StateImageSideType.Right] = bitmap;
+                    rightState = stateBMPdict[direction][imageType][StateImageSideType.Right];
+                    break;
+
+                case StatePreviewType.Overlay:
+                    stateBMPdict[direction][imageType][StateImageSideType.Left] = bitmap;
+                    stateBMPdict[direction][imageType][StateImageSideType.Right] = bitmap.Clone();
+                    leftState = stateBMPdict[direction][imageType][StateImageSideType.Left];
+                    rightState = stateBMPdict[direction][imageType][StateImageSideType.Right];
+                    break;
+
+                default:
+                    throw new Exception("Invalid preview type");
             }
-            else if (_pixelResolution == 16)
-            {
-                pixelSize = 16;
-            }
-            return pixelSize;
+
+            // Updating the references so that we are "losing"
+            if (leftState != null)
+                StatesController.stateSourceDictionary[direction][imageType][StateImageSideType.Left].Source = leftState;
+            if (rightState != null)
+                StatesController.stateSourceDictionary[direction][imageType][StateImageSideType.Right].Source = rightState;
+            if(EnvironmentController.dataPixelStorage != null)
+                EnvironmentController.dataPixelStorage.DrawPixelStorageAtBitmaps();
         }
 
-        #endregion Helpers
-
+        #endregion Bitmap
     }
 }

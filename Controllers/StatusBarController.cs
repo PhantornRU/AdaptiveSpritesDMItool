@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using Point = System.Drawing.Point;
 
 namespace AdaptiveSpritesDMItool.Controllers
@@ -57,6 +58,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             {
                 string storagePointText = GetPointText(storagePoint);
                 mouseText = $"{mousePosText} [{storagePointText}]";
+                ViewSelector(storagePoint);
             }
 
             StatesController.stateStatusBarDictionary[StatusBarType.SinglePoint].Text = mouseText;
@@ -104,6 +106,20 @@ namespace AdaptiveSpritesDMItool.Controllers
         private static string GetPointText(Point point)
         {
             return $"{point.X}:{point.Y}";
+        }
+
+
+        /// <summary>
+        /// View on the left canvas what edited
+        /// </summary>
+        private static void ViewSelector(Point storagePoint)
+        {
+            if (!(StatesController.currentStateEditMode == StateEditType.Move ||
+                StatesController.currentStateEditMode == StateEditType.Select))
+                return;
+
+            DrawController.ClearSelectors(StateImageSideType.Left);
+            DrawController.ViewSelectors(StateImageSideType.Left, storagePoint);
         }
 
         #endregion Helpers

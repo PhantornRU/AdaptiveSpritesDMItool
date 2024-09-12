@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Point = System.Drawing.Point;
 using Color = System.Windows.Media.Color;
+using SixLabors.ImageSharp.ColorSpaces;
 
 namespace AdaptiveSpritesDMItool.Resources
 {
@@ -24,7 +25,8 @@ namespace AdaptiveSpritesDMItool.Resources
 
         public DataPixelStorage(string path, int width, int height)
         {
-            if (!File.Exists($"{path}.csv"))
+            string configFormat = EnvironmentController.configFormat;
+            if (!File.Exists($"{path}.{configFormat}"))
             {
                 FillDataSimilarPoints(width, height);
                 return;
@@ -98,16 +100,36 @@ namespace AdaptiveSpritesDMItool.Resources
 
         #region File IO
 
-
+        public void ResetPixelStorage()
+        {
+            foreach (var direction in StatesController.GetAllStateDirections(DirectionDepth.Four).Cast<StateDirection>())
+            {
+                foreach (var point in pixelStorages[direction])
+                {
+                    pixelStorages[direction][point.Key] = point.Key;
+                }
+            }
+            wasUpdated = true;
+            UpdateAfterStorage();
+        }
 
         public void SavePixelStorage(string path)
         {
-            ExportPixelStorageToCSV(path);
+            //if (!wasUpdated)
+            //    return;
+            if (path == string.Empty)
+                return;
+            EnvironmentController.currentConfigFullPath = CorrectPath(path);
+            ExportPixelStorage(path);
         }
 
         public void LoadPixelStorageToEnvironment(string path)
         {
-            ImportPixelStorageFromCSV(path);
+            if (path == string.Empty || !File.Exists(path))
+                ResetPixelStorage();
+                //throw new FileNotFoundException();
+            else
+                ImportPixelStorage(path);
             DrawPixelStorageAtBitmaps();
         }
 
@@ -121,7 +143,7 @@ namespace AdaptiveSpritesDMItool.Resources
 
         #region Data table
 
-        private void ExportPixelStorageToCSV(string path)
+        private void ExportPixelStorage(string path)
         {
             var csv = string.Join(
                 Environment.NewLine,
@@ -136,12 +158,14 @@ namespace AdaptiveSpritesDMItool.Resources
                 })
             );
 
-            File.WriteAllText($"{path}.csv", csv);
+            path = CorrectPath(path);
+            File.WriteAllText(path, csv);
         }
 
-        private void ImportPixelStorageFromCSV(string path)
+        private void ImportPixelStorage(string path)
         {
-            var lines = File.ReadAllLines($"{path}.csv");
+            path = CorrectPath(path);
+            var lines = File.ReadAllLines(path);
 
             foreach (var line in lines)
             {
@@ -157,6 +181,19 @@ namespace AdaptiveSpritesDMItool.Resources
         }
 
         #endregion Data table
+
+
+        #region Helpers
+
+        private string CorrectPath(string path)
+        {
+            string configFormat = EnvironmentController.configFormat;
+            if (!path.Contains(configFormat))
+                path += configFormat;
+            return path;
+        }
+
+        #endregion Helpers
 
         #endregion File IO
     }

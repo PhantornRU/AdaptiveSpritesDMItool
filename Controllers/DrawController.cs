@@ -110,7 +110,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                 foreach (Point point in points)
                 {
                     var tempPoint = CorrectMousePositionPoint(stateDirection, point, cellsSize);
-                    UpdatePixelPickedPoint(stateDirection, bitmapEditable, tempPoint, color);
+                    if(StatesController.isLandmarkEditable)
+                        UpdatePixelPickedPoint(stateDirection, bitmapEditable, tempPoint, color);
                     UpdatePixelPickedPoint(stateDirection, bitmapOverlayEditable, tempPoint, colorOverlay);
                 }
             }
@@ -158,13 +159,9 @@ namespace AdaptiveSpritesDMItool.Controllers
                     Point storagePoint = pointsStorage[stateDirection][point.Key];
                     storagePoint = CorrectMousePositionPoint(stateDirection, storagePoint, cellsSize);
 
-                    //Debug.WriteLine("======================================");
-                    //Debug.WriteLine($"point: {point}, tempPoint: {tempPoint}");
-                    //Debug.WriteLine($"selectedPoint: {selectedPoint}, storagePoint: {storagePoint}");
-                    //Debug.WriteLine($"offset: {pointOffset}, down: {pointOffsetDown}, mouse: {MouseController.currentMousePosition}");
-
                     // Update Data Pixel Storage
-                    UpdatePixel(stateDirection, bitmapPreview, bitmapEditable, selectedPoint, storagePoint);
+                    if (StatesController.isLandmarkEditable)
+                        UpdatePixel(stateDirection, bitmapPreview, bitmapEditable, selectedPoint, storagePoint);
                     UpdatePixel(stateDirection, bitmapOverlayPreview, bitmapOverlayEditable, selectedPoint, storagePoint);
                 }
             }
@@ -238,9 +235,13 @@ namespace AdaptiveSpritesDMItool.Controllers
                     //Debug.WriteLine($"curPos: {curPos}, point: {point}, temp: {tempPoint}, selected: {selectedPoint}, storage: {storagePoint}, --- offset: {pointOffset}");
 
                     // Pixel Color
-                    Color color = bitmapOverlayPreview != null ? GetPointColor(bitmapOverlayPreview, storagePoint) : GetPointColor(bitmapPreview, storagePoint);
-                    if (color.A == 0 || color == Colors.Transparent)
+                    Color color = GetPointColor(bitmapOverlayPreview, storagePoint);
+                    if(StatesController.isLandmarkEditable)
+                    {
                         color = GetPointColor(bitmapPreview, storagePoint);
+                        if (color.A == 0 || color == Colors.Transparent)
+                            color = GetPointColor(bitmapPreview, storagePoint);
+                    }
                     color.A = Math.Min(alphaSelectedPoint, color.A);
                     // If the point is still transparent
                     if (color.A == 0 || color == Colors.Transparent)
@@ -312,7 +313,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                         color = GetPointColor(bitmapPreview, pointToColor);
                         colorOverlay = GetPointColor(bitmapOverlayPreview, pointToColor);
                     }
-                    UpdatePixelPickedPoint(stateDirection, bitmapEditable, pointToColor, color, !isUndo);
+                    if (StatesController.isLandmarkEditable)
+                        UpdatePixelPickedPoint(stateDirection, bitmapEditable, pointToColor, color, !isUndo);
                     UpdatePixelPickedPoint(stateDirection, bitmapOverlayEditable, pointToColor, colorOverlay, !isUndo);
                 }
             }
@@ -349,7 +351,8 @@ namespace AdaptiveSpritesDMItool.Controllers
                     Point tempPointForColor = new Point(pointForColor.x, pointForColor.y);
                     var pixel = GetPointColor(bitmapPreview, tempPointForColor);
                     var pixelOverlay = GetPointColor(bitmapOverlayPreview, tempPointForColor);
-                    bitmapEditable.SetPixel(point.x, point.y, pixel);
+                    if (StatesController.isLandmarkEditable)
+                        bitmapEditable.SetPixel(point.x, point.y, pixel);
                     bitmapOverlayEditable.SetPixel(point.x, point.y, pixelOverlay);
                 }
             }
@@ -412,6 +415,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         }
 
         #endregion Draw
+
 
         #region Grids
         /// <summary>
@@ -713,7 +717,6 @@ namespace AdaptiveSpritesDMItool.Controllers
         }
 
         #endregion Visualize
-
 
 
         #region Helpers

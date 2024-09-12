@@ -63,4 +63,11 @@ namespace AdaptiveSpritesDMItool.Models
         SinglePoint,
         MultiPoint
     }
+
+    public enum StatePreviewType
+    {
+        Left,
+        Right,
+        Overlay
+    }
 }

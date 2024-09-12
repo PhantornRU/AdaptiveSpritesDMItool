@@ -35,14 +35,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         public StatesEditorPage(StatesEditorViewModel viewModel)
         {
             ViewModel = viewModel;
-            DataContext = this;
 
             // Pre Initializers
             InitializeComponent();
+            InitializeComponentPaths();
             EnvironmentController.InitializeEnvironment();
 
             // Initializers
-            InitializeDictionaries();
             InitializeStatusBar();
             InitializeSources();
             InitializeGrids();
@@ -51,11 +50,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             ControllButtonsAvailability();
 
             TestFunction();
+
+            DataContext = this;
         }
 
         #region Initializers
 
-        private void InitializeDictionaries()
+        private void InitializeComponentPaths()
         {
             StatesController.stateSourceDictionary = new Dictionary<StateDirection, Dictionary<StateImageType, Dictionary<StateImageSideType, System.Windows.Controls.Image>>>()
             {
@@ -464,7 +465,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #endregion Mouse Controller
 
-        #region Buttons Controller
+
+        #region Buttons Toolbar Controller
 
         private void ControllButtonsAvailability()
         {
@@ -667,7 +669,83 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #endregion Buttons Helpers
 
-        #endregion Buttons Controller
+        #endregion Buttons Toolbar Controller
+
+
+        #region Buttons Preview Toolbar Controller
+
+        private void LeftPreviewButton_Click(object sender, RoutedEventArgs e)
+        {
+            ResetPreviewButtons();
+            LeftPreviewButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStatePreviewMode(StatePreviewType.Left);
+        }
+
+        private void RightPreviewButton_Click(object sender, RoutedEventArgs e)
+        {
+            ResetPreviewButtons();
+            RightPreviewButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStatePreviewMode(StatePreviewType.Right);
+        }
+
+        private void OverlayPreviewButton_Click(object sender, RoutedEventArgs e)
+        {
+            ResetPreviewButtons();
+            OverlayPreviewButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStatePreviewMode(StatePreviewType.Overlay);
+        }
+
+        #region Buttons Helpers
+
+        private void ResetPreviewButtons()
+        {
+            LeftPreviewButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            RightPreviewButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+            OverlayPreviewButton.Appearance = StatesController.GetUnPressedButtonAppearance();
+        }
+
+        #endregion Buttons Helpers
+
+
+        #region List View
+
+        private void StateChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
+            if (listView == null) return;
+            StateItem? state = listView.SelectedItem as StateItem;
+
+            ViewModel.StateChanged(state);
+        }
+
+        private int lastIndexConfig = 0;
+        private void ConfigChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Debug.WriteLine($"Config Changed {lastIndexConfig}");
+            Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
+            if (listView == null) return;
+            ConfigItem? config = listView.SelectedItem as ConfigItem;
+
+            int index = listView.SelectedIndex;
+            if (config == null)
+                listView.SelectedIndex = lastIndexConfig;
+            else
+                lastIndexConfig = index;
+
+            ViewModel.ConfigChanged(config, lastIndexConfig);
+        }
+
+        private void ClearConfigButton_Click(object sender, RoutedEventArgs e)
+        {
+            Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
+            if (listView == null) return;
+            listView.SelectedIndex = -1;
+        }
+
+        #endregion List View
+
+        #endregion Buttons Preview Toolbar Controller
+
 
         #region Hotkeys
 
@@ -707,6 +785,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         }
 
         #endregion Hotkeys
+
 
         #region Testing
 

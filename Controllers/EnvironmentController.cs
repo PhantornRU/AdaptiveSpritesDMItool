@@ -1,6 +1,8 @@
 ﻿using AdaptiveSpritesDMItool.Models;
 using AdaptiveSpritesDMItool.Resources;
 using DMISharp;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Color = System.Windows.Media.Color;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
@@ -17,12 +20,16 @@ namespace AdaptiveSpritesDMItool.Controllers
     {
         public static DataImageState dataImageState;
 
-        public static WriteableBitmap gridCell;
-        public static WriteableBitmap gridCellSelect;
-
-        //public static Point[,] cellsData;// = new Point[dataImageState.imageCellsSize.Width, dataImageState.imageCellsSize.Height];
-
         public static DataPixelStorage dataPixelStorage;
+
+        public static string defaultPath = "TestImages";
+        public static string defaultFileName = "testBodies"; // "testBodyHuman";
+        public static string lastPath = "TestImages";
+
+        public static string defaultFileFormat = ".dmi";
+        public static string configFormat = ".csv";
+
+        public static string currentConfigFullPath = string.Empty;
 
         #region Loaders
 
@@ -42,28 +49,10 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         private static void LoadDataImageFiles()
         {
-            string path = "TestImages";
-
-            // Main Preview File
-            string fullpath = $"{path}/testBodyHuman.dmi";
-            using DMIFile file = new DMIFile(fullpath);
-            DMIState currentState = file.States.First();
-
-            // Overlay Preview File
-            string fullpathOverlay = $"{path}/testClothingOveralls.dmi";
-            using DMIFile fileOverlay = new DMIFile(fullpathOverlay);
-
-            if(fileOverlay != null)
-            {
-                DMIState currentStateOverlay = fileOverlay.States.First();
-                dataImageState = new DataImageState(currentState, currentStateOverlay);
-            }
-            else
-            {
-                dataImageState = new DataImageState(currentState);
-            }
-
-            Debug.WriteLine($"Loaded {file}({file.States.Count}).");
+            DMIState currentState = LoadDMIState(defaultPath, defaultFileName);
+            DMIState landmarkState = LoadDMIState(defaultPath, "testBodyMonkey");
+            DMIState overlayState = LoadDMIState(defaultPath, "testClothingDefaultCoat");
+            dataImageState = new DataImageState(currentState, landmarkState, overlayState);
         }
 
         private static void InitializeCellsData()
@@ -72,6 +61,30 @@ namespace AdaptiveSpritesDMItool.Controllers
             int height = dataImageState.imageCellsSize.Height;
 
             dataPixelStorage = new DataPixelStorage(GetPixelStoragePath(), width, height);
+        }
+
+        public static DMIState LoadDMIState(string path, string fileName, int? index = null)
+        {
+            if (!Directory.Exists(path))
+            {
+                throw new Exception("Cant find path to dmi files.");
+                //Directory.CreateDirectory(path);
+            }
+
+            string fullpath = $"{path}/{fileName}.dmi";
+            if (!File.Exists(fullpath))
+            {
+                throw new Exception("Cant find file: " + fullpath);
+            }
+
+            DMIFile fileDmi = new DMIFile(fullpath);
+            Debug.WriteLine($"Loaded {fileName}({fileDmi.States.Count}).");
+
+            if (index == null || fileDmi.States.Count <= 1)
+                return fileDmi.States.First();
+
+            DMIState state = fileDmi.States.ElementAt((int)index);
+            return state;
         }
 
         #endregion Loaders
@@ -95,6 +108,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         }
 
         #endregion Saves
+
 
         #region Paths
 

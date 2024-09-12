@@ -6,6 +6,7 @@
     xmlns:local="clr-namespace:AdaptiveSpritesDMItool.Views.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:models="clr-namespace:AdaptiveSpritesDMItool.Models"
     Title="DashboardPage"
     d:DataContext="{d:DesignInstance local:DashboardPage,
                                      IsDesignTimeCreatable=False}"
@@ -16,36 +17,33 @@
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
 
-    <Grid VerticalAlignment="Top">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0"
+            VerticalAlignment="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        <ui:Button
+
+
+            <ui:Button
             Grid.Column="0"
             Command="{Binding ViewModel.CounterIncrementCommand, Mode=OneWay}"
             Content="Click me!"
             Icon="Fluent24" />
-        <TextBlock
+            <TextBlock
             Grid.Column="1"
             Margin="12,0,0,0"
             VerticalAlignment="Center"
             Text="{Binding ViewModel.Counter, Mode=OneWay}" />
 
-        <!--<Viewbox  Grid.Row="0" Grid.Column="1"
+            <!--<Viewbox  Grid.Row="0" Grid.Column="1"
                           Margin="12,12,12,12"
                             Stretch="Uniform">
             <Border BorderBrush="Black" BorderThickness="0.5"
@@ -54,35 +52,189 @@
                 </Canvas>
             </Border>
         </Viewbox>-->
-        <Viewbox  Grid.Row="0" Grid.Column="1"
+            <Viewbox Grid.Row="0" Grid.Column="1"
                           Margin="12,12,12,12"
                             Stretch="Uniform">
-            <Border BorderBrush="Black" BorderThickness="0.5"
-                                MinWidth="100" MinHeight="100">
-
-                <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTest1"></Image>
-                <!--<Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
-
-
-            </Border>
-
-        </Viewbox>
-
-        <Viewbox  Grid.Row="0" Grid.Column="3"
-                          Margin="12,12,12,12"
-                            Stretch="Uniform">
-            <Grid>
                 <Border BorderBrush="Black" BorderThickness="0.5"
                                 MinWidth="100" MinHeight="100">
 
-                    <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTestText"></Image>
+                    <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTest1"></Image>
                     <!--<Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
 
 
                 </Border>
-                <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTest2" MouseMove="imgTest2_MouseMove" MouseUp="imgTest2_MouseUp"></Image>
+            </Viewbox>
 
-            </Grid>
-        </Viewbox>
+            <Viewbox  Grid.Row="0" Grid.Column="2"
+                          Margin="12,12,12,12"
+                            Stretch="Uniform">
+                <Grid>
+                    <Border BorderBrush="Black" BorderThickness="0.5"
+                                MinWidth="100" MinHeight="100">
+
+                        <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTestText"></Image>
+                        <!--<Image x:Name="imgTest" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
+
+
+                    </Border>
+                    <Image RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" x:Name="imgTest2" MouseMove="imgTest2_MouseMove" MouseUp="imgTest2_MouseUp"></Image>
+
+                </Grid>
+            </Viewbox>
+
+
+            <!--<ListView Grid.Column="3" 
+            x:Name="MyListView" ItemsSource="{Binding Employees}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock  Text="{Binding Id}" />
+                        <TextBlock  Text="{Binding Name}" Margin="5,0,0,0" />
+                        <TextBlock  Text="{Binding Age}" Margin="5,0,0,0" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>-->
+
+
+
+
+
+
+            <!--<ListView Grid.Row="0" Grid.Column="3"   
+                  ItemsSource="{x:Bind ViewModel.Recordings}">
+            <ListView.HeaderTemplate>
+                <DataTemplate>
+                    <Grid Padding="12" Background="{ThemeResource SystemBaseLowColor}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="408"/>
+                            <ColumnDefinition Width="360"/>
+                            <ColumnDefinition Width="360"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Composition" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                        <TextBlock Grid.Column="1" Text="Artist" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                        <TextBlock Grid.Column="2" Text="Release Date" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.HeaderTemplate>
+            <ListView.ItemTemplate>
+                <DataTemplate x:Name="TableDataTemplate" x:DataType="local:Recording">
+                    <Grid Height="48" AutomationProperties.Name="{x:Bind CompositionName}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="48"/>
+                            <ColumnDefinition Width="360"/>
+                            <ColumnDefinition Width="360"/>
+                            <ColumnDefinition Width="360"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse Height="32" Width="32" VerticalAlignment="Center">
+                            <Ellipse.Fill>
+                                <ImageBrush ImageSource="Placeholder.png"/>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{ThemeResource BaseTextBlockStyle}" Text="{x:Bind CompositionName}" />
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{x:Bind ArtistName}"/>
+                        <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{x:Bind ReleaseDateTime}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>-->
+
+        </Grid>
+
+
+        <Grid Grid.Row="1"
+            VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <ToolBar Grid.Row="0">
+                <Grid>
+                    <ui:Button
+                    Grid.Column="0"
+                    Command="{Binding ViewModel.OpenMultipleCommand}"
+                    Content="Load DMI files" />
+                </Grid>
+                
+                <Separator />
+                
+                <StackPanel
+                    MinWidth="120"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Top">
+                    <Label Content="Selection mode" Target="{Binding ElementName=SelectionModeComboBox}" />
+                    <ComboBox x:Name="SelectionModeComboBox" SelectedIndex="{Binding ViewModel.ListViewSelectionModeComboBoxSelectedIndex, Mode=TwoWay}">
+                        <ComboBoxItem Content="Single" />
+                        <ComboBoxItem Content="Multiple" />
+                        <!--<ComboBoxItem Content="Extended" />-->
+                    </ComboBox>
+                </StackPanel>
+            </ToolBar>
+            
+            <ui:ListView
+                    Grid.Row="1"
+                    MaxHeight="200"
+                    d:ItemsSource="{d:SampleData ItemCount=5}"
+                    ItemsSource="{Binding ViewModel.BasicListViewItems, Mode=TwoWay}"
+                    SelectedIndex="1"
+                    SelectionMode="{Binding ViewModel.ListViewSelectionMode, Mode=OneWay}">
+                <ui:ListView.ItemTemplate>
+                    <!--<DataTemplate DataType="{x:Type models:Person}">-->
+                    <DataTemplate DataType="{x:Type models:StateItem}">
+                        <Grid Margin="8,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Ellipse
+                                    x:Name="Ellipse"
+                                    Grid.RowSpan="2"
+                                    Width="36"
+                                    Height="36"
+                                    Margin="6"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Opacity="0.25"
+                                    Fill="{ui:ThemeResource ControlStrongStrokeColorDefaultBrush}" />
+                            <Image
+                                    x:Name="ImagePreview"
+                                    Grid.RowSpan="2"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="6"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" 
+                                
+                                    RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                    RenderOptions.EdgeMode="Aliased"
+                                
+                                    Source="{Binding ImageSource, Mode=OneWay}"
+
+                            />
+                            <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Margin="12,6,0,0"
+                                    FontWeight="Bold"
+                                    Text="{Binding FileName, Mode=OneWay}" />
+                            <TextBlock
+                                    Grid.Row="1"
+                                    Grid.Column="1"
+                                    Margin="12,0,0,6"
+                                    Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{Binding StateName, Mode=OneWay}" />
+                        </Grid>
+                    </DataTemplate>
+                </ui:ListView.ItemTemplate>
+            </ui:ListView>
+
+
+        </Grid>
+
     </Grid>
 </Page>
