@@ -638,6 +638,10 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// <param name="pixelSize"></param>
         static void DrawSelectionRect(WriteableBitmap bitmap, Point point1, Point point2, int pixelSize)
         {
+            if (point1.X == -1 || point1.Y == -1 || 
+                point2.X == -1 || point2.Y == -1)
+                return;
+
             int lineLength = 3;
             int lineThickness = 2;
 
