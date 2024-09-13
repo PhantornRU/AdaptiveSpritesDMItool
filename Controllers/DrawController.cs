@@ -735,15 +735,16 @@ namespace AdaptiveSpritesDMItool.Controllers
         private static Point CorrectMousePositionPoint(StateDirection stateDirection, Point mousePoint, System.Drawing.Size cellsSize)
         {
             bool isMirroredState = StatesController.isMirroredState;
-            bool isStateOpposite = StatesController.isStateOpposite(stateDirection);
-            //bool isStateVerticalOpposite = StatesController.isStateVerticalOpposite(stateDirection);
-            if (!isMirroredState
-                || !isStateOpposite
-                //|| isStateVerticalOpposite
-                )
-            {
+            //bool isStateOpposite = StatesController.isStateOpposite(stateDirection);
+            bool isStateVerticalOpposite = StatesController.isStateVerticalOpposite(stateDirection);
+
+            bool needCurrentPoint = !isMirroredState 
+                || isStateVerticalOpposite 
+                || stateDirection == StatesController.currentStateDirection;
+
+            if (needCurrentPoint)
                 return mousePoint;
-            }
+
             var additionValueX = StatesController.isCentralizedState ? -1 : 0;
             int result = cellsSize.Width - mousePoint.X - 1 + additionValueX;
             result = Math.Max(result, 0);
@@ -753,7 +754,6 @@ namespace AdaptiveSpritesDMItool.Controllers
             return newMousePoint;
 
         }
-
 
 
         #region Offsets

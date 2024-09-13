@@ -621,7 +621,7 @@
                 <ui:Button
                     x:Name="LeftPreviewButton"
                     ToolTip="Setting images to the left preview."
-                    Appearance="Primary"
+                    Appearance="Secondary"
                     Icon="{ui:SymbolIcon TableStackRight24}" Click="LeftPreviewButton_Click" />
                 <ui:Button
                     x:Name="RightPreviewButton"
@@ -631,7 +631,7 @@
                 <ui:Button
                     x:Name="OverlayPreviewButton"
                     ToolTip="Setting images as overlay."
-                    Appearance="Secondary"
+                    Appearance="Primary"
                     Icon="{ui:SymbolIcon BorderBottomDouble24}" Click="OverlayPreviewButton_Click" />
                 <ComboBox x:Name="SelectionModeComboBox" 
                       SelectedIndex="{Binding ViewModel.ListViewPreviewSelectionModeComboBoxSelectedIndex, Mode=TwoWay}" 

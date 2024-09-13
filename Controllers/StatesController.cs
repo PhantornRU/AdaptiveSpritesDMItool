@@ -18,7 +18,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static StateQuantityType currentStateQuantityMode = StateQuantityType.Single;
         public static StateDirection currentStateDirection = StateDirection.South;
         public static StateDirection selectedStateDirection = StateDirection.South;
-        public static StatePreviewType currentStatePreviewMode = StatePreviewType.Left;
+        public static StatePreviewType currentStatePreviewMode = StatePreviewType.Overlay;
 
         /// <summary> Will the Landmark also be edited along with the overlay? </summary>
         public static bool isLandmarkEditable = false;
@@ -51,9 +51,9 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Helpers
 
-        public static bool isStateOpposite(StateDirection _stateDirection) => ((int)_stateDirection % 2 != 0) && !(_stateDirection == currentStateDirection);
+        public static bool isStateOpposite(StateDirection _stateDirection) => GetHorizontalOppositeState(currentStateDirection) == _stateDirection; //((int)_stateDirection % 2 != 0) && !(_stateDirection == currentStateDirection);
 
-        public static bool isStateVerticalOpposite(StateDirection _stateDirection) => ((int)_stateDirection % 2 == 0) && !(_stateDirection == currentStateDirection);
+        public static bool isStateVerticalOpposite(StateDirection _stateDirection) => GetVerticalOppositeState(currentStateDirection) == _stateDirection; //((int)_stateDirection % 2 != 0) && !(_stateDirection == currentStateDirection);
 
         #endregion Helpers
 
