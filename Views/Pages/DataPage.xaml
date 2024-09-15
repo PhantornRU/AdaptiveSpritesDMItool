@@ -43,10 +43,12 @@
                 <!--Take pixels from the preview and move them to the editable part-->
                 <Separator Margin="6,0,10,0" />
                 <ui:Button
-                    Command="{Binding ViewModel.OpenFolderCommand}"
-                    Content="Set Folder" 
+                    Command="{Binding ViewModel.SetFolderCommand}"
+                    Content="Set Folder Path:" 
                     ToolTip="Set the folder from which receive files for processing."
                     Icon="{ui:SymbolIcon Folder24}"/>
+
+                <ui:TextBox Text="{Binding ViewModel.FolderPath}" PlaceholderText="Type path here..." Width="200"/>
 
                 <Separator Margin="6,0,6,0" />
                 <ui:Button
@@ -106,7 +108,6 @@
                     Margin="12,0,12,12"
                     d:ItemsSource="{d:SampleData ItemCount=5}"
                     ItemsSource="{Binding ViewModel.BasicListConfigViewItems, Mode=TwoWay}"
-                    SelectionChanged="ConfigChanged" 
                     SelectedIndex="0">
                 <ui:ListView.ItemTemplate>
                     <!--<DataTemplate DataType="{x:Type models:Person}">-->

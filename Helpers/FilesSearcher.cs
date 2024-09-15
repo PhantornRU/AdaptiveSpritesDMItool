@@ -1,4 +1,7 @@
-﻿using System;
+﻿using AdaptiveSpritesDMItool.Controllers;
+using AdaptiveSpritesDMItool.Models;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +12,8 @@ namespace AdaptiveSpritesDMItool.Helpers
 {
     internal static class FilesSearcher
     {
+
+        #region Directory
         public static List<string> GetDirectories(string path, string searchPattern = "*",
             SearchOption searchOption = SearchOption.AllDirectories)
         {
@@ -51,6 +56,7 @@ namespace AdaptiveSpritesDMItool.Helpers
             return newDirectories;
         }
 
+        #endregion Directory
 
     }
 }

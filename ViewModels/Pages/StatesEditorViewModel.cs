@@ -214,10 +214,12 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
         private static ObservableCollection<ConfigItem> GenerateConfigItems()
         {
-            var ConfigItems = new ObservableCollection<ConfigItem>();
+            var configItems = new ObservableCollection<ConfigItem>();
             ConfigItem config = GetNewConfigItem();
-            ConfigItems.Add(config);
-            return ConfigItems;
+            configItems.Add(config);
+            if(StatesController.listConfigItems.Count == 0)
+                StatesController.listConfigItems = configItems;
+            return configItems;
         }
 
         public void ConfigChanged(ConfigItem? config, int index)
@@ -246,6 +248,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             FileToSaveFullPath = string.Empty;
             ConfigItem config = GetNewConfigItem();
             BasicListConfigViewItems.Add(config);
+
         }
 
         [RelayCommand]
@@ -361,6 +364,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         [RelayCommand]
         public void OnLoadConfig()
         {
+            BasicListConfigViewItems = StatesController.listConfigItems;
             OpenedLoadConfigVisibility = Visibility.Collapsed;
             string path = EnvironmentController.GetPixelStoragePath();
             string configFormat = EnvironmentController.configFormat;
@@ -393,7 +397,9 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
             OpenedLoadConfig = openFileDialog.FileName;
             OpenedLoadConfigVisibility = Visibility.Visible;
-            BasicListConfigViewItems.Add(new ConfigItem(openFileDialog.SafeFileName, OpenedLoadConfig));
+            var config = new ConfigItem(openFileDialog.SafeFileName, OpenedLoadConfig);
+            BasicListConfigViewItems.Add(config);
+
         }
 
 

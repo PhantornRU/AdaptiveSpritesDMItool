@@ -2,6 +2,7 @@
 using DMISharp;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -39,15 +40,14 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static int backgroundZIndexAbove = 2;
 
         // Initialize in StatesEditorPage.xaml.cs InitializeDictionaries()
-        /// <summary>
-        /// Stores all references to images for their quick calls depending on the state.
-        /// </summary>
+        /// <summary> Stores all references to images for their quick calls depending on the state. </summary>
         public static Dictionary<StateDirection, Dictionary<StateImageType, Dictionary<StateImageSideType, System.Windows.Controls.Image>>> stateSourceDictionary{ get; set; } = new();
 
-        /// <summary>
-        /// Links to status bar text blocks for editing and displaying them.
-        /// </summary>
+        /// <summary> Links to status bar text blocks for editing and displaying them. </summary>
         public static Dictionary<StatusBarType, System.Windows.Controls.TextBlock> stateStatusBarDictionary { get; set; } = new();
+
+        /// <summary> List of loaded configs in the workspace. </summary>
+        public static ObservableCollection<ConfigItem> listConfigItems = new ObservableCollection<ConfigItem>();
 
         #region Helpers
 
@@ -257,6 +257,5 @@ namespace AdaptiveSpritesDMItool.Controllers
         #endregion ControlAppearance
 
         #endregion Getters
-
     }
 }
