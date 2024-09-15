@@ -50,25 +50,24 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         }
 
 
-        [ObservableProperty]
-        private Visibility _openedFolderPathVisibility = Visibility.Collapsed;
+        #region Tree View
 
         [ObservableProperty]
-        private string _folderPath = string.Empty;
+        public string _folderPath = string.Empty;
 
         [RelayCommand]
         public void OnSetFolder()
         {
-            OpenedFolderPathVisibility = Visibility.Collapsed;
-
             Debug.WriteLine(FolderPath);
+            if (!File.Exists(FolderPath))
+                return;
 
-
-            OpenedFolderPathVisibility = Visibility.Visible;
         }
 
+        #endregion Tree View
 
 
+        #region Config List
 
         [ObservableProperty]
         private ObservableCollection<ConfigItem> _BasicListConfigViewItems = GenerateConfigItems();
@@ -76,9 +75,6 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         private static ObservableCollection<ConfigItem> GenerateConfigItems()
         {
             var ConfigItems = StatesController.listConfigItems;
-
-            //ConfigItem config = GetNewConfigItem();
-            //ConfigItems.Add(config);
             return ConfigItems;
         }
 
@@ -128,5 +124,8 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             ConfigItem config = new ConfigItem(openFileDialog.SafeFileName, OpenedLoadConfig);
             BasicListConfigViewItems.Add(config);
         }
+
+        #endregion Config List
+
     }
 }

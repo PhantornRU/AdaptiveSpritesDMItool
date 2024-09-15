@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using Wpf.Ui.Controls;
 using static System.Net.WebRequestMethods;
 using Directory = System.IO.Directory;
+using File = System.IO.File;
 using TreeViewItem = System.Windows.Controls.TreeViewItem;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
@@ -33,17 +34,19 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             InitializeComponent();
 
+            loadedPath = string.Empty;
             GenerateTreeItems();
         }
 
 
-        #region TreeView
+        #region Tree View
         private string loadedPath = string.Empty;
         private void GenerateTreeItems()
         {
             DataTreeView.Items.Clear();
 
-            loadedPath = EnvironmentController.defaultPath;
+            if(loadedPath == string.Empty)
+                loadedPath = EnvironmentController.defaultPath;
             var directories = FilesSearcher.GetDirectories(loadedPath, searchOption: SearchOption.TopDirectoryOnly);
             
             var treeItems = GetTreeItems(directories);
@@ -89,7 +92,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             return treeItem;
         }
 
-        #endregion TreeView
+        #endregion Tree View
 
 
         #region Buttons
@@ -111,6 +114,45 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             ViewItemsFromSelectedDMI(fullPath);
             //Debug.WriteLine($"Tree View Item Changed to: {fullPath} \t\t- Item: {item}");
+        }
+
+        private void SetFolderButton_Click(object sender, RoutedEventArgs e)
+        {
+            string path = ViewModel.FolderPath;
+
+            if (!Directory.Exists(path))
+                return;
+
+            loadedPath = path;
+            GenerateTreeItems();
+        }
+
+        private void OverrideButton_Click(object sender, RoutedEventArgs e)
+        {
+            isOverrideToggle = !isOverrideToggle;
+            var pressed = StatesController.GetPressedButtonAppearance();
+            var unpressed = StatesController.GetUnPressedButtonAppearance();
+            OverrideButton.Appearance = isOverrideToggle ? pressed : unpressed;
+        }
+
+        #endregion Buttons
+
+
+        #region Helpers
+
+        private string GetFullPath(TreeView listView, object item)
+        {
+            var fullPath = string.Empty;
+            var parent = item as TreeViewItem;
+            if (parent == null) return fullPath;
+            fullPath = GetFullPath(listView, parent.Parent) + "\\" + parent.Header;
+            return fullPath;
+        }
+
+        private string GetHeaderFile(string directory)
+        {
+            var pathParts = directory.Split('\\');
+            return pathParts.Last();
         }
 
         private void ViewItemsFromSelectedDMI(string fullPath)
@@ -149,34 +191,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 //StateItems.Add(stateItem);
                 ViewModel.UpdateStatesCollection(stateItem);
             }
-        }
-
-        private void OverrideButton_Click(object sender, RoutedEventArgs e)
-        {
-            isOverrideToggle = !isOverrideToggle;
-            var pressed = StatesController.GetPressedButtonAppearance();
-            var unpressed = StatesController.GetUnPressedButtonAppearance();
-            OverrideButton.Appearance = isOverrideToggle ? pressed : unpressed;
-        }
-
-        #endregion Buttons
-
-
-        #region Helpers
-
-        private string GetFullPath(TreeView listView, object item)
-        {
-            var fullPath = string.Empty;
-            var parent = item as TreeViewItem;
-            if (parent == null) return fullPath;
-            fullPath = GetFullPath(listView, parent.Parent) + "\\" + parent.Header;
-            return fullPath;
-        }
-
-        private string GetHeaderFile(string directory)
-        {
-            var pathParts = directory.Split('\\');
-            return pathParts.Last();
         }
 
         #endregion Helpers

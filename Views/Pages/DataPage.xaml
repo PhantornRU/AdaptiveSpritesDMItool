@@ -43,12 +43,16 @@
                 <!--Take pixels from the preview and move them to the editable part-->
                 <Separator Margin="6,0,10,0" />
                 <ui:Button
+                    x:Name="SetFolderButton"
                     Command="{Binding ViewModel.SetFolderCommand}"
                     Content="Set Folder Path:" 
                     ToolTip="Set the folder from which receive files for processing."
-                    Icon="{ui:SymbolIcon Folder24}"/>
+                    Icon="{ui:SymbolIcon Folder24}" Click="SetFolderButton_Click"/>
 
-                <ui:TextBox Text="{Binding ViewModel.FolderPath}" PlaceholderText="Type path here..." Width="200"/>
+                <ui:TextBox 
+                    Text="{Binding ViewModel.FolderPath}" 
+                    PlaceholderText="Type path here..." 
+                    Width="200"/>
 
                 <Separator Margin="6,0,6,0" />
                 <ui:Button
