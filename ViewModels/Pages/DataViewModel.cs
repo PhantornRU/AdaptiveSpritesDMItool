@@ -13,7 +13,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         private bool _isInitialized = false;
 
         [ObservableProperty]
-        private IEnumerable<DataColor> _colorsData;
+        private IEnumerable<StateItem> _statesData;
 
         public void OnNavigatedTo()
         {
@@ -25,70 +25,59 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
         private void InitializeViewModel()
         {
-            var random = new Random();
-            var colorCollection = new List<DataColor>();
-
-            for (int i = 0; i < 32; i++)
-                colorCollection.Add(
-                    new DataColor
-                    {
-                        Color = new SolidColorBrush(
-                            Color.FromArgb(
-                                (byte)200,
-                                (byte)random.Next(0, 250),
-                                (byte)random.Next(0, 250),
-                                (byte)random.Next(0, 250)
-                            )
-                        )
-                    }
-                );
-
-            ColorsData = colorCollection;
-
+            var statesCollection = new List<StateItem>();
+            StatesData = statesCollection;
             _isInitialized = true;
         }
 
 
-        /// <summary> Selected config item in the list </summary>
-        StateItem? currentState;
-
-        public void TreeItemChanged(StateItem? stateItem)
+        public void ClearStatesCollection()
         {
-            // Load selected config
-            currentState = stateItem;
-            var statePreviewMode = StatesController.currentStatePreviewMode;
-
-            if (stateItem == null)
-            {
-                Debug.WriteLine("State nullified.");
-                //EnvironmentController.currentStateFullPath = string.Empty;
-                return;
-            }
-
-            using DMIFile fileDmi = new DMIFile(stateItem.FilePath);
-            var states = fileDmi.States;
-            DMIState? state = null;
-            foreach (DMIState item in states)
-            {
-                if (item.Name != stateItem.StateName)
-                    continue;
-                state = item;
-            }
-            if (state == null)
-                return;
-
-            //switch (ListViewPreviewSelectionMode)
-            //{
-            //    case SelectionMode.Single:
-            //        EnvironmentController.dataImageState.ReplaceDMIState(state, statePreviewMode);
-            //        break;
-            //    case SelectionMode.Multiple:
-            //        EnvironmentController.dataImageState.CombineDMIState(state, statePreviewMode);
-            //        break;
-            //    default:
-            //        break;
-            //}
-            Debug.WriteLine($"State Changed to: {stateItem.FileName} {stateItem.StateName}");
+            StatesData = new List<StateItem>();
         }
+
+        public void UpdateStatesCollection(StateItem item)
+        {
+            var statesCollection = new List<StateItem>();
+
+            statesCollection.AddRange(StatesData);
+            statesCollection.Add(item);
+
+            StatesData = statesCollection;
+        }
+
+
+        //[ObservableProperty]
+        //private Visibility _openedFolderPathVisibility = Visibility.Collapsed;
+
+        //[ObservableProperty]
+        //private string _openedFolderPath = string.Empty;
+
+        //[RelayCommand]
+        //public void OnOpenFolder()
+        //{
+        //    OpenedFolderPathVisibility = Visibility.Collapsed;
+
+        //    OpenFolderDialog openFolderDialog =
+        //        new()
+        //        {
+        //            Multiselect = true,
+        //            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+        //        };
+
+        //    if (openFolderDialog.ShowDialog() != true)
+        //    {
+        //        return;
+        //    }
+
+        //    if (openFolderDialog.FolderNames.Length == 0)
+        //    {
+        //        return;
+        //    }
+
+        //    OpenedFolderPath = string.Join("\n", openFolderDialog.FolderNames);
+        //    OpenedFolderPathVisibility = Visibility.Visible;
+        //}
+
     }
 }

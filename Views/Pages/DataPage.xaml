@@ -20,50 +20,77 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="2*"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
-        <!--ToolBar-->
-        <ToolBar Grid.Row="0" VerticalAlignment="Top" Margin="0,12,0,0">
+        <Grid Grid.Row="0" Margin="12,12,12,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <!--Take pixels from the preview and move them to the editable part-->
-            <Separator Margin="6,0,10,0" />
-            <ui:Button
-                    Command="{Binding ViewModel.OpenMultipleCommand}"
+
+            <!--ToolBar-->
+            <ToolBar Grid.Row="0" Grid.Column="0"
+                     VerticalAlignment="Top" Margin="0,12,0,0">
+
+                <!--Take pixels from the preview and move them to the editable part-->
+                <Separator Margin="6,0,10,0" />
+                <ui:Button
+                    Command="{Binding ViewModel.OpenFolderCommand}"
                     Content="Set Folder" 
-                    ToolTip="TOOLTIP"
+                    ToolTip="Set the folder from which receive files for processing."
                     Icon="{ui:SymbolIcon Folder24}"/>
 
-            <Separator Margin="6,0,6,0" />
-            <ui:Button
+                <Separator Margin="6,0,6,0" />
+                <ui:Button
                     x:Name="OverrideButton"
                     Content="Override" 
-                    ToolTip="TOOLTIP"
+                    ToolTip="Overwrite similar files. If disabled, it will skip them."
                     Icon="{ui:SymbolIcon TextBulletListSquareEdit24 }" 
-                    Click="OverrideButton_Click" />
-            
-            <Separator Margin="6,0,6,0" />
+                    Click="OverrideButton_Click" 
+                    IsEnabled="False"
+                />
 
-        </ToolBar>
+                <Separator Margin="6,0,6,0" />
+
+            </ToolBar>
+
+            <ToolBar Grid.Row="0" Grid.Column="1"
+                     VerticalAlignment="Top" Margin="0,12,0,0">
+
+                <!--Take pixels from the preview and move them to the editable part-->
+                <Separator Margin="6,0,10,0" />
+                <ui:Button
+                    Content="Load Config"
+                    ToolTip="Upload a new config to replace the current one."
+                    Icon="{ui:SymbolIcon FolderOpen24}" 
+                    Command="{Binding ViewModel.LoadConfigCommand}" />
+
+            </ToolBar>
 
 
-        <Grid Grid.Row="1" Margin="12,12,12,12">
-            <TreeView x:Name="DataTreeView" 
-                      AllowDrop="True" 
-                      ItemsSource="{Binding ViewModel.Documents, Mode=OneWay}"
-                      SelectedItemChanged="TreeItemChanged">
+
+            <TreeView Grid.Row="1" Grid.Column="0" 
+                    x:Name="DataTreeView" 
+                    AllowDrop="True" 
+                    ItemsSource="{Binding ViewModel.Documents, Mode=OneWay}"
+                    SelectedItemChanged="TreeItemChanged">
                 <TreeViewItem
                     Header="TestItem"
                     IsExpanded="True"
                     IsSelected="True">
-                    <TreeViewItem Header="TestItem" />
+                    <TreeViewItem Header="TestItem" Foreground="Green" />
                     <TreeViewItem Header="TestItem" />
                 </TreeViewItem>
                 <TreeViewItem Header="TestItem">
-                    <TreeViewItem Header="TestItem" Foreground="Green"/>
+                    <TreeViewItem Header="TestItem"/>
                     <TreeViewItem Header="TestItem">
                         <TreeViewItem Header="TestItem" />
                         <TreeViewItem Header="TestItem" />
@@ -71,32 +98,83 @@
                     </TreeViewItem>
                 </TreeViewItem>
             </TreeView>
+
+            <ui:ListView
+                    Grid.Row="1" Grid.Column="1" 
+                    x:Name="ConfigList"
+                    MaxHeight="200"
+                    Margin="12,0,12,12"
+                    d:ItemsSource="{d:SampleData ItemCount=5}"
+                    ItemsSource="{Binding ViewModel.BasicListConfigViewItems, Mode=TwoWay}"
+                    SelectionChanged="ConfigChanged" 
+                    SelectedIndex="0">
+                <ui:ListView.ItemTemplate>
+                    <!--<DataTemplate DataType="{x:Type models:Person}">-->
+                    <DataTemplate DataType="{x:Type models:StateItem}">
+                        <Grid Margin="8,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Margin="12,6,0,12"
+                                    FontWeight="Bold"
+                                    Text="{Binding FileName, Mode=OneWay}" />
+                        </Grid>
+                    </DataTemplate>
+                </ui:ListView.ItemTemplate>
+            </ui:ListView>
+
         </Grid>
 
-        <Grid Grid.Row="2" Margin="12,12,12,12">
+        <Grid Grid.Row="1" Margin="12,12,12,12">
             <ui:VirtualizingItemsControl
             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-            ItemsSource="{Binding ViewModel.Colors, Mode=OneWay}"
+            ItemsSource="{Binding ViewModel.StatesData, Mode=OneWay}"
             VirtualizingPanel.CacheLengthUnit="Item">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models:DataColor}">
-                        <ui:Button
-                        Width="80"
-                        Height="80"
-                        Margin="2"
-                        Padding="0"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Appearance="Secondary"
-                        Background="{Binding Color, Mode=OneWay}"
-                        FontSize="25"
-                        Icon="Fluent24" />
+                    <DataTemplate DataType="{x:Type models:StateItem}">
+                        <Grid>
+                            <ui:Button
+                                Width="80"
+                                Height="80"
+                                Margin="2"
+                                Padding="0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Appearance="Secondary"
+                                Background="{Binding Color, Mode=OneWay}"
+                                FontSize="25"
+                                Icon="Fluent24" />
+                            <Image
+                                Grid.RowSpan="2"
+                                Width="80"
+                                Height="80"
+                                Margin="6"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" 
+                                
+                                RenderOptions.BitmapScalingMode="NearestNeighbor" 
+                                RenderOptions.EdgeMode="Aliased"
+                                
+                                IsHitTestVisible="False"
+                                
+                                Source="{Binding ImageSource, Mode=OneWay}"
+                                />
+                        </Grid>
+                        
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ui:VirtualizingItemsControl>
         </Grid>
 
-        <Grid Grid.Row="3" Margin="12,24,12,24">
+        <Grid Grid.Row="2" Margin="12,24,12,24">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -118,7 +196,7 @@
             <ui:Button Grid.Column="1"
                     Command="{Binding ViewModel.OpenMultipleCommand}"
                     Content="Apply" 
-                    ToolTip="TOOLTIP"
+                    ToolTip="Accept all changes from configs."
                     Appearance="Success"
                     Icon="{ui:SymbolIcon Checkmark24}"/>
         </Grid>

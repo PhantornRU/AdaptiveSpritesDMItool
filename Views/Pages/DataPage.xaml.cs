@@ -2,13 +2,18 @@
 using AdaptiveSpritesDMItool.Helpers;
 using AdaptiveSpritesDMItool.Models;
 using AdaptiveSpritesDMItool.ViewModels.Pages;
+using DMISharp;
 using MetadataExtractor;
+using System;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Wpf.Ui.Controls;
 using static System.Net.WebRequestMethods;
 using Directory = System.IO.Directory;
@@ -33,13 +38,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
 
         #region TreeView
-
+        private string loadedPath = string.Empty;
         private void GenerateTreeItems()
         {
-            //DataTreeView.Items.Clear();
+            DataTreeView.Items.Clear();
 
-            string path = EnvironmentController.defaultPath;
-            var directories = FilesSearcher.GetDirectories(path, searchOption: SearchOption.TopDirectoryOnly);
+            loadedPath = EnvironmentController.defaultPath;
+            var directories = FilesSearcher.GetDirectories(loadedPath, searchOption: SearchOption.TopDirectoryOnly);
             
             var treeItems = GetTreeItems(directories);
             foreach (var item in treeItems)
@@ -47,7 +52,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 DataTreeView.Items.Add(item);
             }
 
-            var files = System.IO.Directory.GetFiles(path);
+            var files = System.IO.Directory.GetFiles(loadedPath);
             foreach (var file in files)
             {
                 var fileTreeItem = new TreeViewItem { Header = GetHeaderFile(file) };
@@ -84,12 +89,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             return treeItem;
         }
 
-        private string GetHeaderFile(string directory)
-        {
-            var pathParts = directory.Split('\\');
-            return pathParts.Last();
-        }
-
         #endregion TreeView
 
 
@@ -100,9 +99,56 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             TreeView? listView = sender as TreeView;
             if (listView == null) return;
             var item = listView.SelectedItem;
-            //TreeViewItem? state = listView.SelectedItem as TreeViewItem;
             if (item == null) return;
-            Debug.WriteLine($"State Changed to: {item}");
+
+            string fullPath = "";
+            TreeViewItem? parent = item as TreeViewItem;
+            fullPath = GetFullPath(listView, item);
+
+            //if (fullPath.Length > 0 && fullPath.First() == '\\')
+            //    fullPath = fullPath.Substring(1); // remove first slash
+            fullPath = loadedPath + fullPath;
+
+            ViewItemsFromSelectedDMI(fullPath);
+            //Debug.WriteLine($"Tree View Item Changed to: {fullPath} \t\t- Item: {item}");
+        }
+
+        private void ViewItemsFromSelectedDMI(string fullPath)
+        {
+            if (!fullPath.Contains(".dmi"))
+                return;
+            ViewModel.ClearStatesCollection();
+
+
+            //var StateItems = new ObservableCollection<StateItem>();
+            using DMIFile fileDmi = new DMIFile(fullPath);
+            var states = fileDmi.States;
+            foreach (DMIState state in states)
+            {
+                WriteableBitmap writeableBitmap = ImageEncoder.GetBMPFromDMIState(state, StateDirection.South);
+                //var random = new Random();
+                //Brush color = new SolidColorBrush(
+                //    Color.FromArgb(
+                //        (byte)100,
+                //        (byte)random.Next(0, 250),
+                //        (byte)random.Next(0, 250),
+                //        (byte)random.Next(0, 250)
+                //    )
+                //);
+
+                Brush color = Brushes.GreenYellow;
+
+                StateItem stateItem = new StateItem(
+                        "NoName",
+                        fullPath,
+                        state.Name,
+                        writeableBitmap,
+                        color
+                    );
+
+                //StateItems.Add(stateItem);
+                ViewModel.UpdateStatesCollection(stateItem);
+            }
         }
 
         private void OverrideButton_Click(object sender, RoutedEventArgs e)
@@ -112,6 +158,27 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             var unpressed = StatesController.GetUnPressedButtonAppearance();
             OverrideButton.Appearance = isOverrideToggle ? pressed : unpressed;
         }
+
         #endregion Buttons
+
+
+        #region Helpers
+
+        private string GetFullPath(TreeView listView, object item)
+        {
+            var fullPath = string.Empty;
+            var parent = item as TreeViewItem;
+            if (parent == null) return fullPath;
+            fullPath = GetFullPath(listView, parent.Parent) + "\\" + parent.Header;
+            return fullPath;
+        }
+
+        private string GetHeaderFile(string directory)
+        {
+            var pathParts = directory.Split('\\');
+            return pathParts.Last();
+        }
+
+        #endregion Helpers
     }
 }
