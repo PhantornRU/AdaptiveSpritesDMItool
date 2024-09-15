@@ -12,7 +12,7 @@ using System.Windows.Controls;
 using Wpf.Ui.Controls;
 using static System.Net.WebRequestMethods;
 using Directory = System.IO.Directory;
-using TreeViewItem = Wpf.Ui.Controls.TreeViewItem;
+using TreeViewItem = System.Windows.Controls.TreeViewItem;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -36,7 +36,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void GenerateTreeItems()
         {
-            DataTreeView.Items.Clear();
+            //DataTreeView.Items.Clear();
 
             string path = EnvironmentController.defaultPath;
             var directories = FilesSearcher.GetDirectories(path, searchOption: SearchOption.TopDirectoryOnly);
@@ -50,7 +50,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             var files = System.IO.Directory.GetFiles(path);
             foreach (var file in files)
             {
-                DataTreeView.Items.Add(new TreeViewItem { Header = GetHeaderFile(file) });
+                var fileTreeItem = new TreeViewItem { Header = GetHeaderFile(file) };
+                DataTreeView.Items.Add(fileTreeItem);
             }
         }
 
@@ -76,7 +77,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             var files = System.IO.Directory.GetFiles(directory);
             foreach (var file in files)
             {
-                treeItem.Items.Add(new TreeViewItem { Header = GetHeaderFile(file), IsEnabled = true });
+                var fileTreeItem = new TreeViewItem { Header = GetHeaderFile(file) };
+                treeItem.Items.Add(fileTreeItem);
             }
 
             return treeItem;
