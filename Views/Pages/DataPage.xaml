@@ -1,4 +1,4 @@
-<Page
+﻿<Page
     x:Class="AdaptiveSpritesDMItool.Views.Pages.DataPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -19,13 +19,68 @@
     mc:Ignorable="d">
 
     <Grid>
-        <ui:VirtualizingItemsControl
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!--ToolBar-->
+        <ToolBar Grid.Row="0" VerticalAlignment="Top" Margin="0,12,0,0">
+
+            <!--Take pixels from the preview and move them to the editable part-->
+            <Separator Margin="6,0,10,0" />
+            <ui:Button
+                    Command="{Binding ViewModel.OpenMultipleCommand}"
+                    Content="Set Folder" 
+                    ToolTip="TOOLTIP"
+                    Icon="{ui:SymbolIcon Folder24}"/>
+
+            <Separator Margin="6,0,6,0" />
+            <ui:Button
+                    x:Name="OverrideButton"
+                    Content="Override" 
+                    ToolTip="TOOLTIP"
+                    Icon="{ui:SymbolIcon TextBulletListSquareEdit24 }" 
+                    Click="OverrideButton_Click" />
+            
+            <Separator Margin="6,0,6,0" />
+
+        </ToolBar>
+
+
+        <Grid Grid.Row="1" Margin="12,12,12,12">
+            <TreeView x:Name="DataTreeView" 
+                      AllowDrop="True" 
+                      ItemsSource="{Binding ViewModel.Documents, Mode=OneWay}"
+                      SelectedItemChanged="TreeItemChanged">
+                <TreeViewItem
+                    Header="TestItem"
+                    IsExpanded="True"
+                    IsSelected="True">
+                    <TreeViewItem Header="TestItem" />
+                    <TreeViewItem Header="TestItem" />
+                </TreeViewItem>
+                <TreeViewItem Header="TestItem">
+                    <TreeViewItem Header="TestItem" Foreground="Green"/>
+                    <TreeViewItem Header="TestItem">
+                        <TreeViewItem Header="TestItem" />
+                        <TreeViewItem Header="TestItem" />
+                        <TreeViewItem Header="TestItem" />
+                    </TreeViewItem>
+                </TreeViewItem>
+            </TreeView>
+        </Grid>
+
+        <Grid Grid.Row="2" Margin="12,12,12,12">
+            <ui:VirtualizingItemsControl
             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
             ItemsSource="{Binding ViewModel.Colors, Mode=OneWay}"
             VirtualizingPanel.CacheLengthUnit="Item">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="{x:Type models:DataColor}">
-                    <ui:Button
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:DataColor}">
+                        <ui:Button
                         Width="80"
                         Height="80"
                         Margin="2"
@@ -36,8 +91,37 @@
                         Background="{Binding Color, Mode=OneWay}"
                         FontSize="25"
                         Icon="Fluent24" />
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ui:VirtualizingItemsControl>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ui:VirtualizingItemsControl>
+        </Grid>
+
+        <Grid Grid.Row="3" Margin="12,24,12,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid Margin="24,0,24,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <ProgressBar Grid.Row="0" 
+                        HorizontalContentAlignment="Center"
+                        IsIndeterminate="True" />
+                <Label Grid.Row="1" 
+                        x:Name="StatusMessage"
+                        HorizontalContentAlignment="Center"
+                        FontFamily="Calibri" 
+                        Content="... Select a folder via the [Set Folder] button, all files in it will be processed ..." />
+            </Grid>
+            <ui:Button Grid.Column="1"
+                    Command="{Binding ViewModel.OpenMultipleCommand}"
+                    Content="Apply" 
+                    ToolTip="TOOLTIP"
+                    Appearance="Success"
+                    Icon="{ui:SymbolIcon Checkmark24}"/>
+        </Grid>
+
     </Grid>
 </Page>

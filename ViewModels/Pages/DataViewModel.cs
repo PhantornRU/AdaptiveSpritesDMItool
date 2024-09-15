@@ -1,4 +1,8 @@
-﻿using AdaptiveSpritesDMItool.Models;
+﻿using AdaptiveSpritesDMItool.Controllers;
+using AdaptiveSpritesDMItool.Models;
+using DMISharp;
+using System.Diagnostics;
+using System.Windows.Controls;
 using System.Windows.Media;
 using Wpf.Ui.Controls;
 
@@ -9,7 +13,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         private bool _isInitialized = false;
 
         [ObservableProperty]
-        private IEnumerable<DataColor> _colors;
+        private IEnumerable<DataColor> _colorsData;
 
         public void OnNavigatedTo()
         {
@@ -24,7 +28,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             var random = new Random();
             var colorCollection = new List<DataColor>();
 
-            for (int i = 0; i < 8192; i++)
+            for (int i = 0; i < 32; i++)
                 colorCollection.Add(
                     new DataColor
                     {
@@ -39,9 +43,52 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
                     }
                 );
 
-            Colors = colorCollection;
+            ColorsData = colorCollection;
 
             _isInitialized = true;
+        }
+
+
+        /// <summary> Selected config item in the list </summary>
+        StateItem? currentState;
+
+        public void TreeItemChanged(StateItem? stateItem)
+        {
+            // Load selected config
+            currentState = stateItem;
+            var statePreviewMode = StatesController.currentStatePreviewMode;
+
+            if (stateItem == null)
+            {
+                Debug.WriteLine("State nullified.");
+                //EnvironmentController.currentStateFullPath = string.Empty;
+                return;
+            }
+
+            using DMIFile fileDmi = new DMIFile(stateItem.FilePath);
+            var states = fileDmi.States;
+            DMIState? state = null;
+            foreach (DMIState item in states)
+            {
+                if (item.Name != stateItem.StateName)
+                    continue;
+                state = item;
+            }
+            if (state == null)
+                return;
+
+            //switch (ListViewPreviewSelectionMode)
+            //{
+            //    case SelectionMode.Single:
+            //        EnvironmentController.dataImageState.ReplaceDMIState(state, statePreviewMode);
+            //        break;
+            //    case SelectionMode.Multiple:
+            //        EnvironmentController.dataImageState.CombineDMIState(state, statePreviewMode);
+            //        break;
+            //    default:
+            //        break;
+            //}
+            Debug.WriteLine($"State Changed to: {stateItem.FileName} {stateItem.StateName}");
         }
     }
 }
