@@ -1,6 +1,7 @@
 ﻿using AdaptiveSpritesDMItool.Controllers;
 using AdaptiveSpritesDMItool.Helpers;
 using AdaptiveSpritesDMItool.Models;
+using AdaptiveSpritesDMItool.Processors;
 using AdaptiveSpritesDMItool.ViewModels.Pages;
 using DMISharp;
 using MetadataExtractor;
@@ -8,12 +9,14 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Wpf.Ui;
 using Wpf.Ui.Controls;
 using static System.Net.WebRequestMethods;
 using Button = Wpf.Ui.Controls.Button;
@@ -26,6 +29,9 @@ namespace AdaptiveSpritesDMItool.Views.Pages
     public partial class DataPage : INavigableView<DataViewModel>
     {
         public bool isOverrideToggle = false;
+
+        private Brush incorrectBrush = Brushes.Orange;
+        private Brush correctBrush = Brushes.Green;
 
         public DataViewModel ViewModel { get; }
         public DataPage(DataViewModel viewModel)
@@ -46,10 +52,10 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             DataTreeView.Items.Clear();
 
-            if(loadedPath == string.Empty)
+            if (loadedPath == string.Empty)
                 loadedPath = EnvironmentController.defaultPath;
             var directories = FilesSearcher.GetDirectories(loadedPath, searchOption: SearchOption.TopDirectoryOnly);
-            
+
             var treeItems = GetTreeItems(directories);
             foreach (var item in treeItems)
             {
@@ -86,7 +92,10 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             var files = System.IO.Directory.GetFiles(directory);
             foreach (var file in files)
             {
-                var fileTreeItem = new TreeViewItem { Header = GetHeaderFile(file) };
+                string headerFile = GetHeaderFile(file);
+                var fileTreeItem = new TreeViewItem { Header = headerFile };
+                if (!headerFile.Contains(EnvironmentController.defaultFileFormat))
+                    fileTreeItem.Foreground = incorrectBrush;
                 treeItem.Items.Add(fileTreeItem);
             }
 
@@ -105,22 +114,31 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             var item = listView.SelectedItem;
             if (item == null) return;
 
-            string fullPath = "";
             TreeViewItem? parent = item as TreeViewItem;
-            fullPath = GetFullPath(listView, item);
-
-            //if (fullPath.Length > 0 && fullPath.First() == '\\')
-            //    fullPath = fullPath.Substring(1); // remove first slash
+            string fullPath = GetFullPath(listView, item);
             fullPath = loadedPath + fullPath;
 
             ViewItemsFromSelectedDMI(fullPath);
-            //Debug.WriteLine($"Tree View Item Changed to: {fullPath} \t\t- Item: {item}");
+        }
+
+        List<ConfigItem> selectedConfigs = new List<ConfigItem>();
+
+        private void ConfigChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
+            if (listView == null) return;
+            var items = listView.SelectedItems;
+            selectedConfigs.Clear();
+            foreach (var item in items)
+            {
+                ConfigItem? config = item as ConfigItem;
+                selectedConfigs.Add(config);
+            }
         }
 
         private void SetFolderButton_Click(object sender, RoutedEventArgs e)
         {
             string path = ViewModel.FolderPath;
-
             if (!Directory.Exists(path))
                 return;
 
@@ -141,6 +159,50 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             Button button = sender as Button;
             ConfigItem config = button.DataContext as ConfigItem;
             ViewModel.RemoveConfig(config);
+        }
+
+        private async void ApplyButton_Click(object sender, RoutedEventArgs e)
+        {
+
+            if (selectedConfigs.Count == 0)
+            {
+
+                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
+                {
+                    Title = "No config selected",
+                    Content =
+                        "The process has been cancelled." +
+                        "\nPlease upload the configs that will process the files, then select those that will participate in the process. " +
+                        "\nYou can select several at once.",
+                };
+                uiMessageBox.Content = 
+                _ = await uiMessageBox.ShowDialogAsync();
+                return;
+            }
+
+            var statesData = ViewModel.StatesData;
+            if (statesData == null || statesData.Count() == 0)
+            {
+
+                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
+                {
+                    Title = "No DMI states found",
+                    Content =
+                        "Please upload DMI files by selecting the folder of their content directory. All subfolders in this category will be processed as well. " +
+                        "\nThe final result will be uploaded to separate files and directories under the config name. " +
+                        "\nAll files will have the same names and states.",
+                };
+                _ = await uiMessageBox.ShowDialogAsync();
+                return;
+            }
+
+            foreach (var config in selectedConfigs)
+                DMIStatesProcessor.ProcessStatesWithConfig(config, statesData);
+
+        }
+        private void ChoosenItemButton_Click(object sender, RoutedEventArgs e)
+        {
+            return;
         }
 
         #endregion Buttons
@@ -176,18 +238,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             foreach (DMIState state in states)
             {
                 WriteableBitmap writeableBitmap = ImageEncoder.GetBMPFromDMIState(state, StateDirection.South);
-                //var random = new Random();
-                //Brush color = new SolidColorBrush(
-                //    Color.FromArgb(
-                //        (byte)100,
-                //        (byte)random.Next(0, 250),
-                //        (byte)random.Next(0, 250),
-                //        (byte)random.Next(0, 250)
-                //    )
-                //);
-
                 Brush color = Brushes.GreenYellow;
-
                 StateItem stateItem = new StateItem(
                         "NoName",
                         fullPath,
@@ -195,12 +246,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                         writeableBitmap,
                         color
                     );
-
-                //StateItems.Add(stateItem);
                 ViewModel.UpdateStatesCollection(stateItem);
             }
         }
 
         #endregion Helpers
+
     }
 }

@@ -46,7 +46,7 @@
                     x:Name="SetFolderButton"
                     Command="{Binding ViewModel.SetFolderCommand}"
                     Content="Set Folder Path:" 
-                    ToolTip="Set the folder from which receive files for processing."
+                    ToolTip=" Set the folder from which receive files for processing. &#x0a; Something like [ImageStates/TestFolder/...] will open a folder located in the project directory. &#x0a; And the directory [C:/Users/DNS/Desktop/TestImages] will open exactly this directory."
                     Icon="{ui:SymbolIcon Folder24}" Click="SetFolderButton_Click"/>
 
                 <ui:TextBox 
@@ -75,7 +75,7 @@
                 <Separator Margin="6,0,10,0" />
                 <ui:Button
                     Content="Load Config"
-                    ToolTip="Upload a new config to replace the current one."
+                    ToolTip="Load the config that is used to process all files for new parameters and coordinate grid."
                     Icon="{ui:SymbolIcon FolderOpen24}" 
                     Command="{Binding ViewModel.LoadConfigCommand}" />
 
@@ -93,7 +93,7 @@
                     IsExpanded="True"
                     IsSelected="True">
                     <TreeViewItem Header="TestItem" Foreground="Green" />
-                    <TreeViewItem Header="TestItem" />
+                    <TreeViewItem Header="TestItem" Foreground="Orange" />
                 </TreeViewItem>
                 <TreeViewItem Header="TestItem">
                     <TreeViewItem Header="TestItem"/>
@@ -112,6 +112,8 @@
                     Margin="12,0,12,12"
                     d:ItemsSource="{d:SampleData ItemCount=5}"
                     ItemsSource="{Binding ViewModel.BasicListConfigViewItems, Mode=TwoWay}"
+                    SelectionChanged="ConfigChanged" 
+                    SelectionMode="Multiple"
                     SelectedIndex="0">
                 <ui:ListView.ItemTemplate>
                     <!--<DataTemplate DataType="{x:Type models:Person}">-->
@@ -142,10 +144,17 @@
         </Grid>
 
         <Grid Grid.Row="1" Margin="12,12,12,12">
+            <Border 
+                    Background="LightSlateGray"
+                    BorderBrush="DarkSlateGray" 
+                    CornerRadius="5" 
+                    Opacity="0.25"
+                    BorderThickness="1"
+                    Panel.ZIndex = "-5"
+                />
             <ui:VirtualizingItemsControl
-            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-            ItemsSource="{Binding ViewModel.StatesData, Mode=OneWay}"
-            VirtualizingPanel.CacheLengthUnit="Item">
+                        ItemsSource="{Binding ViewModel.StatesData, Mode=OneWay}"
+                        VirtualizingPanel.CacheLengthUnit="Item">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:StateItem}">
                         <Grid>
@@ -159,7 +168,9 @@
                                 Appearance="Secondary"
                                 Background="{Binding Color, Mode=OneWay}"
                                 FontSize="25"
-                                Icon="Fluent24" />
+                                Icon="Fluent24" 
+                                Click="ChoosenItemButton_Click"
+                                />
                             <Image
                                 Grid.RowSpan="2"
                                 Width="80"
@@ -176,7 +187,7 @@
                                 Source="{Binding ImageSource, Mode=OneWay}"
                                 />
                         </Grid>
-                        
+
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ui:VirtualizingItemsControl>
@@ -202,11 +213,11 @@
                         Content="... Select a folder via the [Set Folder] button, all files in it will be processed ..." />
             </Grid>
             <ui:Button Grid.Column="1"
-                    Command="{Binding ViewModel.OpenMultipleCommand}"
+                    x:Name="ApplyButton"
                     Content="Apply" 
-                    ToolTip="Accept all changes from configs."
+                    ToolTip="Process all files for configs, saving and creating them in new folders."
                     Appearance="Success"
-                    Icon="{ui:SymbolIcon Checkmark24}"/>
+                    Icon="{ui:SymbolIcon Checkmark24}" Click="ApplyButton_Click"/>
         </Grid>
 
     </Grid>
