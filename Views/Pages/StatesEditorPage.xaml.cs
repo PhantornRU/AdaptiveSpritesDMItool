@@ -22,6 +22,7 @@ using AdaptiveSpritesDMItool.Models;
 using AdaptiveSpritesDMItool.Controllers;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Button = Wpf.Ui.Controls.Button;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -718,6 +719,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             ViewModel.StateChanged(state);
         }
 
+        private void StateRemoveButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            StateItem state = button.DataContext as StateItem;
+            ViewModel.RemoveState(state);
+        }
+
         private int lastIndexConfig = 0;
         private void ConfigChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -740,6 +748,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
             if (listView == null) return;
             listView.SelectedIndex = -1;
+        }
+
+        private void ConfigRemoveButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            ConfigItem config = button.DataContext as ConfigItem;
+            ViewModel.RemoveConfig(config);
         }
 
         #endregion List View

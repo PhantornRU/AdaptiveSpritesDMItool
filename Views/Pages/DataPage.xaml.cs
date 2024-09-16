@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Wpf.Ui.Controls;
 using static System.Net.WebRequestMethods;
+using Button = Wpf.Ui.Controls.Button;
 using Directory = System.IO.Directory;
 using File = System.IO.File;
 using TreeViewItem = System.Windows.Controls.TreeViewItem;
@@ -133,6 +134,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             var pressed = StatesController.GetPressedButtonAppearance();
             var unpressed = StatesController.GetUnPressedButtonAppearance();
             OverrideButton.Appearance = isOverrideToggle ? pressed : unpressed;
+        }
+
+        private void ConfigRemoveButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            ConfigItem config = button.DataContext as ConfigItem;
+            ViewModel.RemoveConfig(config);
         }
 
         #endregion Buttons

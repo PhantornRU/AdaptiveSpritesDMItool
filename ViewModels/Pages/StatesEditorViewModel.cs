@@ -133,6 +133,11 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             Debug.WriteLine($"State Changed to: {stateItem.FileName} {stateItem.StateName}");
         }
 
+        public void RemoveState(StateItem state)
+        {
+            BasicListPreviewViewItems.Remove(state);
+        }
+
         #endregion Preview
 
 
@@ -214,11 +219,13 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
         private static ObservableCollection<ConfigItem> GenerateConfigItems()
         {
+            if(StatesController.listConfigItems.Count != 0)
+                return StatesController.listConfigItems;
+
             var configItems = new ObservableCollection<ConfigItem>();
             ConfigItem config = GetNewConfigItem();
             configItems.Add(config);
-            if(StatesController.listConfigItems.Count == 0)
-                StatesController.listConfigItems = configItems;
+            StatesController.listConfigItems = configItems;
             return configItems;
         }
 
@@ -240,6 +247,11 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             Debug.WriteLine($"Config Changed to: {config.FileName} \nPath: {config.FilePath}");
             EnvironmentController.currentConfigFullPath = config.FilePath;
             EnvironmentController.dataPixelStorage.LoadPixelStorageToEnvironment(config.FilePath);
+        }
+
+        public void RemoveConfig(ConfigItem config)
+        {
+            BasicListConfigViewItems.Remove(config);
         }
 
         [RelayCommand]

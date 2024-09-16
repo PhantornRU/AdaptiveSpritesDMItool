@@ -719,6 +719,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Ellipse
                                     x:Name="Ellipse"
@@ -757,6 +758,15 @@
                                     Margin="12,0,0,6"
                                     Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
                                     Text="{Binding FileName, Mode=OneWay}" />
+                            <ui:Button 
+                                x:Name="StateRemoveButton"
+                                Grid.RowSpan="2"
+                                Grid.Column="2"
+                                Width="32"
+                                Height="32"
+                                Appearance="Secondary"
+                                Icon="{ui:SymbolIcon Dismiss24}" 
+                                Click="StateRemoveButton_Click" />
                         </Grid>
                     </DataTemplate>
                 </ui:ListView.ItemTemplate>
@@ -777,20 +787,23 @@
                     <!--<DataTemplate DataType="{x:Type models:Person}">-->
                     <DataTemplate DataType="{x:Type models:StateItem}">
                         <Grid Margin="8,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock
-                                    Grid.Row="0"
-                                    Grid.Column="1"
-                                    Margin="12,6,0,12"
-                                    FontWeight="Bold"
-                                    Text="{Binding FileName, Mode=OneWay}" />
+                                Grid.Column="0"
+                                Margin="12,6,0,12"
+                                FontWeight="Bold"
+                                Text="{Binding FileName, Mode=OneWay}" />
+                            <ui:Button 
+                                x:Name="ConfigRemoveButton"
+                                Grid.Column="1"
+                                Width="32"
+                                Height="32"
+                                Appearance="Secondary"
+                                Icon="{ui:SymbolIcon Dismiss24}" 
+                                Click="ConfigRemoveButton_Click" />
                         </Grid>
                     </DataTemplate>
                 </ui:ListView.ItemTemplate>

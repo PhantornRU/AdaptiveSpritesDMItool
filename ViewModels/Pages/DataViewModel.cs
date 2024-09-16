@@ -34,6 +34,8 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         }
 
 
+        #region States
+
         public void ClearStatesCollection()
         {
             StatesData = new List<StateItem>();
@@ -48,6 +50,8 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
             StatesData = statesCollection;
         }
+
+        #endregion States
 
 
         #region Tree View
@@ -123,6 +127,11 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             OpenedLoadConfigVisibility = Visibility.Visible;
             ConfigItem config = new ConfigItem(openFileDialog.SafeFileName, OpenedLoadConfig);
             BasicListConfigViewItems.Add(config);
+        }
+
+        public void RemoveConfig(ConfigItem config)
+        {
+            BasicListConfigViewItems.Remove(config);
         }
 
         #endregion Config List
