@@ -8,6 +8,7 @@ using MetadataExtractor;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -28,10 +29,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 {
     public partial class DataPage : INavigableView<DataViewModel>
     {
-        public bool isOverrideToggle = false;
+
+        /// <summary> Paths to files to be processed. </summary>
+        private List<string> filesPaths = new List<string>();
 
         private Brush incorrectBrush = Brushes.Orange;
         private Brush correctBrush = Brushes.Green;
+        private Brush badBrush = Brushes.Red;
 
         public DataViewModel ViewModel { get; }
         public DataPage(DataViewModel viewModel)
@@ -48,26 +52,15 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         #region Tree View
         private string loadedPath = string.Empty;
+
         private void GenerateTreeItems()
         {
             DataTreeView.Items.Clear();
+            filesPaths.Clear();
 
             if (loadedPath == string.Empty)
-                loadedPath = EnvironmentController.defaultPath;
-            var directories = FilesSearcher.GetDirectories(loadedPath, searchOption: SearchOption.TopDirectoryOnly);
-
-            var treeItems = GetTreeItems(directories);
-            foreach (var item in treeItems)
-            {
-                DataTreeView.Items.Add(item);
-            }
-
-            var files = System.IO.Directory.GetFiles(loadedPath);
-            foreach (var file in files)
-            {
-                var fileTreeItem = new TreeViewItem { Header = GetHeaderFile(file) };
-                DataTreeView.Items.Add(fileTreeItem);
-            }
+                loadedPath = EnvironmentController.defaultImportPath;
+            FillTree(DataTreeView, loadedPath);
         }
 
         private IEnumerable<TreeViewItem> GetTreeItems(IEnumerable<string> directories)
@@ -81,7 +74,29 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private TreeViewItem GetTreeItem(string directory)
         {
             var treeItem = new TreeViewItem { Header = GetHeaderFile(directory), IsEnabled = true };
+            FillTreeItem(treeItem, directory);
+            return treeItem;
+        }
 
+        private void FillTree(TreeView tree, string directory)
+        {
+            var directories = FilesSearcher.GetDirectories(loadedPath, searchOption: SearchOption.TopDirectoryOnly);
+            var treeItems = GetTreeItems(directories);
+            foreach (var item in treeItems)
+            {
+                DataTreeView.Items.Add(item);
+            }
+
+            var files = System.IO.Directory.GetFiles(directory);
+            foreach (var file in files)
+            {
+                TreeViewItem fileTreeItem = GetTreeViewItem(directory, file);
+                tree.Items.Add(fileTreeItem);
+            }
+        }
+
+        private void FillTreeItem(TreeViewItem treeItem,string directory)
+        {
             var subDirectories = FilesSearcher.GetDirectories(directory, searchOption: SearchOption.TopDirectoryOnly);
             var treeItems = GetTreeItems(subDirectories);
             foreach (var item in treeItems)
@@ -92,15 +107,26 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             var files = System.IO.Directory.GetFiles(directory);
             foreach (var file in files)
             {
-                string headerFile = GetHeaderFile(file);
-                var fileTreeItem = new TreeViewItem { Header = headerFile };
-                if (!headerFile.Contains(EnvironmentController.defaultFileFormat))
-                    fileTreeItem.Foreground = incorrectBrush;
+                TreeViewItem fileTreeItem = GetTreeViewItem(directory, file);
                 treeItem.Items.Add(fileTreeItem);
             }
-
-            return treeItem;
         }
+
+        private TreeViewItem GetTreeViewItem(string directory, string file)
+        {
+            string headerFile = GetHeaderFile(file);
+            var fileTreeItem = new TreeViewItem { Header = headerFile };
+            if (!headerFile.Contains(EnvironmentController.defaultFileFormat))
+                fileTreeItem.Foreground = incorrectBrush;
+            else
+            {
+                string fullPath = $"{directory}\\{headerFile}";
+                filesPaths.Add(fullPath);
+            }
+            return fileTreeItem;
+        }
+
+
 
         #endregion Tree View
 
@@ -148,10 +174,10 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void OverrideButton_Click(object sender, RoutedEventArgs e)
         {
-            isOverrideToggle = !isOverrideToggle;
+            StatesController.isOverrideToggle = !StatesController.isOverrideToggle;
             var pressed = StatesController.GetPressedButtonAppearance();
             var unpressed = StatesController.GetUnPressedButtonAppearance();
-            OverrideButton.Appearance = isOverrideToggle ? pressed : unpressed;
+            OverrideButton.Appearance = StatesController.isOverrideToggle ? pressed : unpressed;
         }
 
         private void ConfigRemoveButton_Click(object sender, RoutedEventArgs e)
@@ -180,10 +206,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 return;
             }
 
-            var statesData = ViewModel.StatesData;
-            if (statesData == null || statesData.Count() == 0)
+            if (filesPaths.Count == 0)
             {
-
                 var uiMessageBox = new Wpf.Ui.Controls.MessageBox
                 {
                     Title = "No DMI states found",
@@ -196,10 +220,25 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 return;
             }
 
-            foreach (var config in selectedConfigs)
-                DMIStatesProcessor.ProcessStatesWithConfig(config, statesData);
+            if(!DMIStatesProcessor.isReadyForNewProcess)
+            {
+                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
+                {
+                    Title = "Process in progress",
+                    Content =
+                        "The program is processing programs. " +
+                        "\nIt is not possible to start new processes, please wait until the end.",
+                };
+                _ = await uiMessageBox.ShowDialogAsync();
+                return;
+            }
 
+            DMIStatesProcessor.InitializeNewData(filesPaths);
+            DMIStatesProcessor.UpdateProgressBar(ProgressBarProcess, StatusMessage);
+            foreach (var config in selectedConfigs)
+                DMIStatesProcessor.ProcessFilesWithConfig(config);
         }
+
         private void ChoosenItemButton_Click(object sender, RoutedEventArgs e)
         {
             return;

@@ -57,7 +57,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
         private static ObservableCollection<StateItem> GenerateStateItems()
         {
-            string path = EnvironmentController.defaultPath;
+            string path = EnvironmentController.defaultImportPath;
             string fileName = EnvironmentController.defaultFileName;
             string fullpath = $"{path}/{fileName}.dmi";
 
@@ -161,7 +161,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
                 new()
                 {
                     Multiselect = true,
-                    InitialDirectory = EnvironmentController.lastPath,
+                    InitialDirectory = EnvironmentController.lastImportPath,
                     //Filter = "All files (*.*)|*.*"
                     Filter = "DMI files (*.dmi)|*.dmi;*.dmi"
                 };

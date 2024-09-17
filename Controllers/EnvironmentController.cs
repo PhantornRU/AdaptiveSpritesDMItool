@@ -22,9 +22,11 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static DataPixelStorage dataPixelStorage;
 
-        public static string defaultPath = "TestImages";
+        public static string defaultImportPath = "Import";
+        public static string defaultExportPath = "Export";
         public static string defaultFileName = "testBodies"; // "testBodyHuman";
-        public static string lastPath = "TestImages";
+        public static string lastImportPath = defaultImportPath;
+        public static string lastExportPath = defaultExportPath;
 
         public static string defaultFileFormat = ".dmi";
         public static string configFormat = ".csv";
@@ -38,8 +40,17 @@ namespace AdaptiveSpritesDMItool.Controllers
         /// </summary>
         public static void InitializeEnvironment()
         {
+            InitializeFolders();
             InitializeData();
             InitializeCellsData();
+        }
+
+        private static void InitializeFolders()
+        {
+            if (!Directory.Exists(defaultImportPath))
+                Directory.CreateDirectory(defaultImportPath);
+            if (!Directory.Exists(defaultExportPath))
+                Directory.CreateDirectory(defaultExportPath);
         }
 
         private static void InitializeData()
@@ -49,9 +60,9 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         private static void LoadDataImageFiles()
         {
-            DMIState currentState = LoadDMIState(defaultPath, defaultFileName);
-            DMIState landmarkState = LoadDMIState(defaultPath, "testBodyMonkey");
-            DMIState overlayState = LoadDMIState(defaultPath, "testClothingDefaultCoat");
+            DMIState currentState = LoadDMIState(defaultImportPath, defaultFileName);
+            DMIState landmarkState = LoadDMIState(defaultImportPath, "testBodyMonkey");
+            DMIState overlayState = LoadDMIState(defaultImportPath, "testClothingDefaultCoat");
             dataImageState = new DataImageState(currentState, landmarkState, overlayState);
         }
 

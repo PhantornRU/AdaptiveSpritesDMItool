@@ -49,6 +49,7 @@
                     ToolTip=" Set the folder from which receive files for processing. &#x0a; Something like [ImageStates/TestFolder/...] will open a folder located in the project directory. &#x0a; And the directory [C:/Users/DNS/Desktop/TestImages] will open exactly this directory."
                     Icon="{ui:SymbolIcon Folder24}" Click="SetFolderButton_Click"/>
 
+                <!--TODO: Update to NET 8.0 and replace with folder selection dialog.-->
                 <ui:TextBox 
                     Text="{Binding ViewModel.FolderPath}" 
                     PlaceholderText="Type path here..." 
@@ -199,18 +200,22 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Grid Margin="24,0,24,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <ProgressBar Grid.Row="0" 
-                        HorizontalContentAlignment="Center"
-                        IsIndeterminate="True" />
-                <Label Grid.Row="1" 
-                        x:Name="StatusMessage"
-                        HorizontalContentAlignment="Center"
-                        FontFamily="Calibri" 
-                        Content="... Select a folder via the [Set Folder] button, all files in it will be processed ..." />
+                <ProgressBar 
+                    x:Name="ProgressBarProcess"
+                    Grid.Row="0"
+                    Minimum="0" 
+                    Maximum="100" 
+                    Value="1"
+                    Height="30"
+                    HorizontalContentAlignment="Center"
+                    VerticalAlignment="Center" />
+                    <!--IsIndeterminate="True"-->
+                <Label Grid.Row="0" 
+                    x:Name="StatusMessage"
+                    HorizontalContentAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontFamily="Calibri" 
+                    Content="... Select the configs and the folder with DMI files using [Set Folder Path] button, then click the [Apply] button ..." />
             </Grid>
             <ui:Button Grid.Column="1"
                     x:Name="ApplyButton"

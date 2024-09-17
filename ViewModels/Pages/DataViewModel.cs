@@ -16,7 +16,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         private bool _isInitialized = false;
 
         [ObservableProperty]
-        private IEnumerable<StateItem> _statesData;
+        private IEnumerable<StateItem> _statesData = new List<StateItem>();
 
         public void OnNavigatedTo()
         {

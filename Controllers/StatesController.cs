@@ -25,7 +25,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static bool isLandmarkEditable = false;
 
         /// <summary>
-        /// Determines whether the state is centralized - setting the pixel in the middle of the pixel
+        /// StatesEditorPage - Determines whether the state is centralized - setting the pixel in the middle of the pixel
         /// </summary>
         public static bool isCentralizedState = true;
         public static bool isMirroredState = true;
@@ -34,6 +34,8 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static bool isShowOverlay = true;
         public static bool isShowTextGrid = false;
 
+        /// <summary> DataPage - Whether to overwrite existing processed files in folders during processing. </summary>
+        public static bool isOverrideToggle = false;
 
         // Display Z indices background grid on top of overlays.
         public static int backgroundZIndexUnder = 0;
