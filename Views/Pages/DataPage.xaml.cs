@@ -237,116 +237,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 return;
             }
 
-            DMIStatesProcessor.InitializeNewData(filesPaths);
+            DMIStatesProcessor.InitializeNewData(filesPaths, selectedConfigs.Count);
             DMIStatesProcessor.UpdateProgressBar(ProgressBarProcess, StatusMessage);
             foreach (var config in selectedConfigs)
                 DMIStatesProcessor.ProcessFilesWithConfig(config);
         }
-
-
-
-
-        private void Test()
-        {
-            string path = EnvironmentController.defaultImportPath + "\\testBodies.dmi";
-            using DMIFile file = new DMIFile(path);
-
-            var firstState = file.States.First();
-            int width = firstState.Width;
-            int height = firstState.Height;
-            using var newDMI = new DMIFile(width, height);
-            newDMI.ImportStates(file);
-
-            ConfigItem config = selectedConfigs.First();
-            DataPixelStorage dataPixelStorage = new DataPixelStorage(config.FilePath, width, height);
-
-            foreach (DMIState state in newDMI.States)
-            {
-                Debug.WriteLine($"state: {state.Name}, --- {state.Frames} - {state.FrameCapacity} - {state.TotalFrames} - {state.Width} - {state.Height}");
-
-                StateDirection[] stateDirections = StatesController.GetAllStateDirections(state.DirectionDepth);
-                
-                for (int i = 0; i < state.Frames; i++)
-                {
-                    foreach (StateDirection direction in stateDirections)
-                    {
-                        //Debug.WriteLine($"{state.Name} [{i}] {direction}");
-                        Image<Rgba32>? img = state.GetFrame(direction, i); 
-                        if (img == null)
-                            continue;
-                        using Image<Rgba32>? imgCopy = img.Clone();
-                        img.ProcessPixelRows(accessor =>
-                        {
-                            // Color is pixel-agnostic, but it's implicitly convertible to the Rgba32 pixel type
-                            Rgba32 transparent = SixLabors.ImageSharp.Color.Transparent;
-
-                            for (int y = 0; y < accessor.Height; y++)
-                            {
-                                Span<Rgba32> pixelRow = accessor.GetRowSpan(y);
-
-                                // pixelRow.Length has the same value as accessor.Width,
-                                // but using pixelRow.Length allows the JIT to optimize away bounds checks:
-                                for (int x = 0; x < pixelRow.Length; x++)
-                                {
-                                    var currentPoint = new System.Drawing.Point(x, y);
-                                    var storagePoint = dataPixelStorage.GetPointStorage(direction, currentPoint);
-                                    if (currentPoint.X == storagePoint.X && currentPoint.Y == storagePoint.Y)
-                                        continue;
-
-                                    // Get a reference to the pixel at position x
-                                    ref Rgba32 pixel = ref pixelRow[x];
-
-                                    // Get current color
-                                    Rgba32 color;
-                                    if(storagePoint.X == -1 || storagePoint.Y == -1)
-                                    {
-                                        color = transparent;
-                                    }
-                                    else
-                                    {
-                                        color = imgCopy[storagePoint.X, storagePoint.Y];
-                                    }
-
-                                    pixel = color;
-                                }
-                            }
-                        });
-                    }
-                }
-            }
-
-            string configName = config.FileName.Replace(EnvironmentController.configFormat, "");
-            string filePath = Path.Combine(EnvironmentController.lastExportPath, configName, path);
-            string? directoryPath = Path.GetDirectoryName(filePath);
-
-            //newDMI.SortStates();
-            if (!Directory.Exists(directoryPath))
-            {
-                Directory.CreateDirectory(directoryPath);
-            }
-
-            newDMI.Save(filePath);
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         private void ChoosenItemButton_Click(object sender, RoutedEventArgs e)
         {

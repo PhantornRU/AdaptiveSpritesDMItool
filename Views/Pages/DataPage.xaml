@@ -116,7 +116,6 @@
                     SelectionChanged="ConfigChanged" 
                     SelectionMode="Multiple"
                     SelectedIndex="0">
-                    <!--SelectionMode="Multiple"--> <!--TODO: Improve the threads to run processing on several configs at once.-->
                 <ui:ListView.ItemTemplate>
                     <!--<DataTemplate DataType="{x:Type models:Person}">-->
                     <DataTemplate DataType="{x:Type models:StateItem}">
