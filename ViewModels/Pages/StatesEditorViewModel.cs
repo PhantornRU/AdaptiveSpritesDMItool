@@ -246,7 +246,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             }
             Debug.WriteLine($"Config Changed to: {config.FileName} \nPath: {config.FilePath}");
             EnvironmentController.currentConfigFullPath = config.FilePath;
-            EnvironmentController.dataPixelStorage.LoadPixelStorageToEnvironment(config.FilePath);
+            EnvironmentController.dataPixelStorage.LoadPixelStorageToEnvironment(config.FilePath, true);
         }
 
         public void RemoveConfig(ConfigItem config)

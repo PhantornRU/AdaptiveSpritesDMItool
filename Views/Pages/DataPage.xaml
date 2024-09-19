@@ -43,11 +43,11 @@
                 <!--Take pixels from the preview and move them to the editable part-->
                 <Separator Margin="6,0,10,0" />
                 <ui:Button
-                    x:Name="SetFolderButton"
+                    x:Name="SetImportFolderButton"
                     Command="{Binding ViewModel.SetFolderCommand}"
-                    Content="Set Folder Path:" 
+                    Content="Set Import Folder:" 
                     ToolTip=" Set the folder from which receive files for processing. &#x0a; Something like [ImageStates/TestFolder/...] will open a folder located in the project directory. &#x0a; And the directory [C:/Users/DNS/Desktop/TestImages] will open exactly this directory."
-                    Icon="{ui:SymbolIcon Folder24}" Click="SetFolderButton_Click"/>
+                    Icon="{ui:SymbolIcon Folder24}" Click="SetImportFolderButton_Click"/>
 
                 <!--TODO: Update to NET 8.0 and replace with folder selection dialog.-->
                 <ui:TextBox 
@@ -116,6 +116,7 @@
                     SelectionChanged="ConfigChanged" 
                     SelectionMode="Multiple"
                     SelectedIndex="0">
+                    <!--SelectionMode="Multiple"--> <!--TODO: Improve the threads to run processing on several configs at once.-->
                 <ui:ListView.ItemTemplate>
                     <!--<DataTemplate DataType="{x:Type models:Person}">-->
                     <DataTemplate DataType="{x:Type models:StateItem}">

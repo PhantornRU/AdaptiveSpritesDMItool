@@ -13,6 +13,7 @@ using System.Windows.Media.Media3D;
 using Point = System.Drawing.Point;
 using Color = System.Windows.Media.Color;
 using SixLabors.ImageSharp.ColorSpaces;
+using System.Diagnostics;
 
 namespace AdaptiveSpritesDMItool.Resources
 {
@@ -22,16 +23,18 @@ namespace AdaptiveSpritesDMItool.Resources
             new ConcurrentDictionary<StateDirection, ConcurrentDictionary<(int x, int y), (int x, int y)>>();
 
         bool wasUpdated = false;
+        DirectionDepth directionDepth = DirectionDepth.Four;
 
-        public DataPixelStorage(string path, int width, int height)
+        public DataPixelStorage(string path, int width, int height, bool isNeedDraw = false)
         {
-            string configFormat = EnvironmentController.configFormat;
-            if (!File.Exists($"{path}.{configFormat}"))
-            {
-                FillDataSimilarPoints(width, height);
+            //Debug.WriteLine("DataPixelStorage Loading");
+            FillDataSimilarPoints(width, height);
+
+            if (isNeedDraw)
                 return;
-            }
-            LoadPixelStorageToEnvironment(path);
+            path = CorrectPath(path);
+            LoadPixelStorageToEnvironment(path, isNeedDraw);
+            //Debug.WriteLine("DataPixelStorage Loaded");
         }
 
 
@@ -49,7 +52,7 @@ namespace AdaptiveSpritesDMItool.Resources
                 .Select(i => (x: i % width, y: i / width))
                 .ToArray();
 
-            foreach (var direction in StatesController.GetAllStateDirections(DirectionDepth.Four).Cast<StateDirection>())
+            foreach (var direction in StatesController.GetAllStateDirections(directionDepth).Cast<StateDirection>())
             {
                 pixelStorages[direction] = new ConcurrentDictionary<(int x, int y), (int x, int y)>(
                     initialPoints.Select(point => new KeyValuePair<(int x, int y), (int x, int y)>(point, point))
@@ -102,7 +105,7 @@ namespace AdaptiveSpritesDMItool.Resources
 
         public void ResetPixelStorage()
         {
-            foreach (var direction in StatesController.GetAllStateDirections(DirectionDepth.Four).Cast<StateDirection>())
+            foreach (var direction in StatesController.GetAllStateDirections(directionDepth).Cast<StateDirection>())
             {
                 foreach (var point in pixelStorages[direction])
                 {
@@ -123,14 +126,16 @@ namespace AdaptiveSpritesDMItool.Resources
             ExportPixelStorage(path);
         }
 
-        public void LoadPixelStorageToEnvironment(string path)
+        public void LoadPixelStorageToEnvironment(string path, bool isNeedDraw)
         {
             if (path == string.Empty || !File.Exists(path))
                 ResetPixelStorage();
                 //throw new FileNotFoundException();
             else
                 ImportPixelStorage(path);
-            DrawPixelStorageAtBitmaps();
+
+            if(isNeedDraw)
+                DrawPixelStorageAtBitmaps();
         }
 
         public void DrawPixelStorageAtBitmaps()
@@ -147,7 +152,7 @@ namespace AdaptiveSpritesDMItool.Resources
         {
             var csv = string.Join(
                 Environment.NewLine,
-                StatesController.GetAllStateDirections(DirectionDepth.Four).Cast<StateDirection>().Select(direction =>
+                StatesController.GetAllStateDirections(directionDepth).Cast<StateDirection>().Select(direction =>
                 {
                     var csvForDirection = string.Join(
                         Environment.NewLine,
@@ -177,6 +182,9 @@ namespace AdaptiveSpritesDMItool.Resources
                 var y2 = int.Parse(splitted[4]);
 
                 pixelStorages[direction][(x1, y1)] = (x2, y2);
+
+                //if (x1 != x2 || y1 != y2)
+                //    Debug.WriteLine($"PixelStorage[{direction}]: {(x1, y1)} {(x2, y2)}");
             }
         }
 
