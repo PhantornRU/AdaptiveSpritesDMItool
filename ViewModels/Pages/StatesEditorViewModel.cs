@@ -259,6 +259,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         {
             FileToSaveFullPath = string.Empty;
             ConfigItem config = GetNewConfigItem();
+            config.State = ConfigState.NotSaved;
             BasicListConfigViewItems.Add(config);
 
         }

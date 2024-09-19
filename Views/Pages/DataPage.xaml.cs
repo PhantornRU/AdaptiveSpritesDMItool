@@ -205,7 +205,22 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                         "\nPlease upload the configs that will process the files, then select those that will participate in the process. " +
                         "\nYou can select several at once.",
                 };
-                uiMessageBox.Content = 
+                _ = await uiMessageBox.ShowDialogAsync();
+                return;
+            }
+
+            foreach (ConfigItem config in selectedConfigs)
+            {
+                if (config.State != ConfigState.NotSaved)
+                    continue;
+
+                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
+                {
+                    Title = "Not saved config selected",
+                    Content =
+                        "One of the selected configs is not saved and does not have the required parameters for processing. " +
+                        "\nRemove the selection or save it on the \"Edit\" page.",
+                };
                 _ = await uiMessageBox.ShowDialogAsync();
                 return;
             }
