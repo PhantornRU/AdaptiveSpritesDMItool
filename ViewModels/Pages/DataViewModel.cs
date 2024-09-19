@@ -57,15 +57,51 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         #region Tree View
 
         [ObservableProperty]
-        public string _folderPath = string.Empty;
+        public string _folderImportPath = string.Empty;
+
+        [ObservableProperty]
+        public string _folderExportPath = string.Empty;
 
         [RelayCommand]
-        public void OnSetFolder()
+        public async Task OnSetImportFolder()
         {
-            Debug.WriteLine(FolderPath);
-            if (!File.Exists(FolderPath))
+            Debug.WriteLine(FolderImportPath);
+            if (!Directory.Exists(FolderImportPath))
+            {
+                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
+                {
+                    Title = "No directory found",
+                    Content =
+                        "Please write the correct full path to your directory. " +
+                        "\nIf the directory is in the build folder, then you only need to write its name, for example, " +
+                        "by writing \"Import\" you will get the directory where your build is located \"D:\\AdaptiveSpritesDMItool\\bin\\Debug\\net7.0-windows\\Import\"." +
+                         $"\nThe default directory is \"{EnvironmentController.defaultImportPath}\"",
+                };
+                _ = await uiMessageBox.ShowDialogAsync();
                 return;
+            }
+            EnvironmentController.lastImportPath = FolderImportPath;
+        }
 
+        [RelayCommand]
+        public async Task OnSetExportFolder()
+        {
+            Debug.WriteLine(FolderExportPath);
+            if (!Directory.Exists(FolderExportPath))
+            {
+                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
+                {
+                    Title = "No directory found",
+                    Content =
+                        "Please write the correct full path to your directory. " +
+                        "\nIf the directory is in the build folder, then you only need to write its name, for example, " +
+                        "by writing \"Export\" you will get the directory where your build is located \"D:\\AdaptiveSpritesDMItool\\bin\\Debug\\net7.0-windows\\Export\"." +
+                         $"\nThe default directory is \"{EnvironmentController.defaultExportPath}\"",
+                };
+                _ = await uiMessageBox.ShowDialogAsync();
+                return;
+            }
+            EnvironmentController.lastExportPath = FolderExportPath;
         }
 
         #endregion Tree View

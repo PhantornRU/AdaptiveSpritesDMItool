@@ -169,7 +169,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void SetImportFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            string path = ViewModel.FolderPath;
+            string path = ViewModel.FolderImportPath;
             if (!Directory.Exists(path))
                 return;
 
@@ -268,6 +268,10 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             return pathParts.Last();
         }
 
+        #endregion Helpers
+
+        #region Edit
+
         private void ViewItemsFromSelectedDMI(string fullPath)
         {
             if (!fullPath.Contains(".dmi"))
@@ -293,7 +297,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             }
         }
 
-        #endregion Helpers
+        #endregion Edit
 
     }
 }

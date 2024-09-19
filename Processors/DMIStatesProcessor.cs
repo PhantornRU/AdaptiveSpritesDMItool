@@ -44,18 +44,18 @@ namespace AdaptiveSpritesDMItool.Processors
                 maxIter += file.States.Count;
                 foreach (DMIState state in file.States)
                     maxIter += state.TotalFrames;
-                string newPath = path.Replace(EnvironmentController.lastImportPath + "\\", "");
+                string importPath = EnvironmentController.lastImportPath;
+                if (importPath.Last() != '\\') importPath += '\\';
+                string newPath = path.Replace(importPath, "");
                 DMIFiles.TryAdd(newPath, file);
             }
             maxIter *= configsCount;
-            maxIter;
         }
 
         #endregion Initializers
 
 
         #region Processors
-
 
         public static void ProcessFilesWithConfig(ConfigItem config)
         {
@@ -105,12 +105,13 @@ namespace AdaptiveSpritesDMItool.Processors
             {
                 iter++;
                 progress?.Report(iter);
-                EditStateWithConfig(state, config, dataPixelStorage);
+                ProcessStateWithConfig(state, config, dataPixelStorage);
                 //Thread.Sleep(200);
             }
 
             string configName = config.FileName.Replace(EnvironmentController.configFormat, "");
             string fileExportPath = Path.Combine(EnvironmentController.lastExportPath, configName, path);
+            //if(fileExportPath.Last() != '\\') fileExportPath += '\\';
             string? directoryExportPath = Path.GetDirectoryName(fileExportPath);
 
             if (directoryExportPath != null && 
@@ -141,12 +142,23 @@ namespace AdaptiveSpritesDMItool.Processors
 
         #region Draw
 
+
+        private static void ProcessStateWithConfig(DMIState state, ConfigItem config, DataPixelStorage dataPixelStorage)
+        {
+            // TODO: Checking that this state is already in the processed file
+            //if (!StatesController.isOverrideToggle)
+            //    if (state.Name == state.Name)
+            //      return;
+            EditStateWithConfig(state, config, dataPixelStorage);
+        }
+
         private static void EditStateWithConfig(DMIState state, ConfigItem config, DataPixelStorage dataPixelStorage)
         {
             //Debug.WriteLine($"state: {state.Name}, --- {state.Frames} - {state.FrameCapacity} - {state.TotalFrames} - {state.Width} - {state.Height}");
             StateDirection[] stateDirections = StatesController.GetAllStateDirections(state.DirectionDepth);
             for (int i = 0; i < state.Frames; i++)
             {
+
                 foreach (StateDirection direction in stateDirections)
                 {
                     iter++;
