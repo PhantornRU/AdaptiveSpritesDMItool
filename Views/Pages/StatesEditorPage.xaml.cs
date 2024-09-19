@@ -809,16 +809,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         }
 
-        private void TestButton_Click(object sender, RoutedEventArgs e)
-        {
-            EnvironmentController.dataPixelStorage.SavePixelStorage(EnvironmentController.GetPixelStoragePath() + "Test");
-        }
-
-        private void TestButton2_Click(object sender, RoutedEventArgs e)
-        {
-            EnvironmentController.dataPixelStorage.LoadPixelStorageToEnvironment(EnvironmentController.GetPixelStoragePath() + "Test");
-        }
-
         #endregion Testing
 
     }

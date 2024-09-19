@@ -5,6 +5,8 @@ using AdaptiveSpritesDMItool.Processors;
 using AdaptiveSpritesDMItool.ViewModels.Pages;
 using DMISharp;
 using MetadataExtractor;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -24,6 +26,9 @@ using Button = Wpf.Ui.Controls.Button;
 using Directory = System.IO.Directory;
 using File = System.IO.File;
 using TreeViewItem = System.Windows.Controls.TreeViewItem;
+using SixLabors.ImageSharp.Processing;
+using static System.Net.Mime.MediaTypeNames;
+using AdaptiveSpritesDMItool.Resources;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -162,7 +167,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             }
         }
 
-        private void SetFolderButton_Click(object sender, RoutedEventArgs e)
+        private void SetImportFolderButton_Click(object sender, RoutedEventArgs e)
         {
             string path = ViewModel.FolderPath;
             if (!Directory.Exists(path))
@@ -189,7 +194,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private async void ApplyButton_Click(object sender, RoutedEventArgs e)
         {
-
             if (selectedConfigs.Count == 0)
             {
 
@@ -220,7 +224,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 return;
             }
 
-            if(!DMIStatesProcessor.isReadyForNewProcess)
+            if(!DMIStatesProcessor.IsIterEnded())
             {
                 var uiMessageBox = new Wpf.Ui.Controls.MessageBox
                 {
@@ -233,7 +237,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 return;
             }
 
-            DMIStatesProcessor.InitializeNewData(filesPaths);
+            DMIStatesProcessor.InitializeNewData(filesPaths, selectedConfigs.Count);
             DMIStatesProcessor.UpdateProgressBar(ProgressBarProcess, StatusMessage);
             foreach (var config in selectedConfigs)
                 DMIStatesProcessor.ProcessFilesWithConfig(config);

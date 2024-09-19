@@ -71,7 +71,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             int width = dataImageState.imageCellsSize.Width;
             int height = dataImageState.imageCellsSize.Height;
 
-            dataPixelStorage = new DataPixelStorage(GetPixelStoragePath(), width, height);
+            dataPixelStorage = new DataPixelStorage(GetPixelStoragePath(), width, height, true);
         }
 
         public static DMIState LoadDMIState(string path, string fileName, int? index = null)
