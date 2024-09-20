@@ -28,6 +28,10 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static string lastImportPath = defaultImportPath;
         public static string lastExportPath = defaultExportPath;
 
+        public static string defaultResourcesPath = "Assets\\Resources";
+        public static string defaultStoragePath = "Assets\\Storage";
+        public static string ChoosenStorageName = "Default";
+
         public static string defaultFileFormat = ".dmi";
         public static string configFormat = ".csv";
 
@@ -123,11 +127,10 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #region Paths
 
-        public static string ChoosenStorageName = "Default";
 
-        public static string GetGridPath() => System.IO.Path.Combine(Environment.CurrentDirectory, "Resources", $"grid{dataImageState.imageCellsSize.Height}.png");
+        public static string GetGridPath() => System.IO.Path.Combine(Environment.CurrentDirectory, defaultResourcesPath, $"grid{dataImageState.imageCellsSize.Height}.png");
 
-        public static string GetPixelStoragePath() => System.IO.Path.Combine(Environment.CurrentDirectory, "Storage", $"{ChoosenStorageName}");
+        public static string GetPixelStoragePath() => System.IO.Path.Combine(Environment.CurrentDirectory, defaultStoragePath, $"{ChoosenStorageName}");
 
         #endregion Paths
 
