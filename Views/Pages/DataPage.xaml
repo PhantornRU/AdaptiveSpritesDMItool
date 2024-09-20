@@ -42,6 +42,12 @@
 
                 <!--Take pixels from the preview and move them to the editable part-->
                 <Separator Margin="6,0,10,0" />
+                
+                <Label VerticalAlignment="Center"
+                       Margin="0,0,6,0"
+                    FontFamily="Calibri" 
+                    ToolTip="Files that will be used for processing from Import directory. Files can demonstrate by their recoloring whether they will be processed, whether they were processed or skipped in processing."
+                    Content="Files for processing: " />
               
                 <!--<Separator Margin="6,0,6,0" />-->
                 <ui:Button
@@ -61,6 +67,11 @@
 
                 <!--Take pixels from the preview and move them to the editable part-->
                 <Separator Margin="6,0,10,0" />
+                <Label VerticalAlignment="Center"
+                       Margin="0,0,6,0"
+                    FontFamily="Calibri" 
+                    ToolTip="Configs that are related to the Edit page and determine how files will be processed, creating new processed ones in the Export Directory in the directory named after this config."
+                    Content="Configs for process:" />
                 <ui:Button
                     Content="Load Config"
                     ToolTip="Load the config that is used to process all files for new parameters and coordinate grid."
@@ -148,6 +159,7 @@
                     <Label Grid.Row="0" 
                     HorizontalContentAlignment="Center"
                     FontFamily="Calibri" 
+                    ToolTip=" Sets the folders from which files will be received and saved after processing. &#x0a; Something like [Import/TestFolder/...] will open the folder located in the project directory. &#x0a; And the directory [C:/Users/DNS/Desktop/Import] will open exactly this directory."
                     Content="Control Panel" />
 
                     <ScrollViewer  Grid.Row="1" 

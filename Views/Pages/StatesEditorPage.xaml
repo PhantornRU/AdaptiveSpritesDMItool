@@ -130,7 +130,10 @@
 
             <!--Switches "One, Horizontal, Vertical, All" states-->
             <Separator Margin="10,0,10,0" />
-            <TextBlock Text="States: " VerticalAlignment="Center"/>
+            <TextBlock 
+                Text="States: " 
+                ToolTip="Determines how many states are edited at a time."
+                VerticalAlignment="Center"/>
             <ui:Button
                         x:Name="ChooseSingleStateButton"
                         Appearance="Primary"
@@ -172,7 +175,10 @@
 
             <!--Environment Settings-->
             <Separator Margin="10,0,10,0" />
-            <TextBlock Text="Grids: " VerticalAlignment="Center"/>
+            <TextBlock 
+                Text="Grids: " 
+                ToolTip="Determines whether to display a grid over bitmaps."
+                VerticalAlignment="Center"/>
             <ui:Button
                         x:Name="GridEnvironmentButton"
                         Appearance="Primary"
@@ -617,7 +623,11 @@
                     Icon="{ui:SymbolIcon AppFolder24}"/>
 
                 <Separator Margin="12,0,12,0" />
-                <TextBlock Text="State: " VerticalAlignment="Center"/>
+                <TextBlock 
+                    VerticalAlignment="Center"
+                    Text="State: " 
+                    ToolTip="Select the type of image on which the selected files below will be superimposed."
+                    />
                 <ui:Button
                     x:Name="LeftPreviewButton"
                     ToolTip="Setting images to the left preview."
@@ -660,7 +670,11 @@
 
                 <Separator Margin="6,0,10,0" />
 
-                <TextBlock Text="Config: " VerticalAlignment="Center"/>
+                <TextBlock 
+                    Text="Config: " 
+                    VerticalAlignment="Center"
+                    ToolTip="Configs that are related to the Data page and determine how files will be processed, creating new processed ones in the Export Directory in the directory named after this config."
+                    />
                 <ui:Button
                     Content="New"
                     ToolTip="New config."
