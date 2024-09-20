@@ -22,9 +22,9 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static DataPixelStorage dataPixelStorage;
 
-        public static string defaultImportPath = "Import";
-        public static string defaultExportPath = "Export";
-        public static string defaultFileName = "testBodies"; // "testBodyHuman";
+        public static string defaultImportPath = "Assets\\Import";
+        public static string defaultExportPath = "Assets\\Export";
+        public static string defaultFileName = "default";
         public static string lastImportPath = defaultImportPath;
         public static string lastExportPath = defaultExportPath;
 

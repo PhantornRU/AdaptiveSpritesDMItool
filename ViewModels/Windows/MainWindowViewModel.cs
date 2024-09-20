@@ -6,17 +6,18 @@ namespace AdaptiveSpritesDMItool.ViewModels.Windows
     public partial class MainWindowViewModel : ObservableObject
     {
         [ObservableProperty]
-        private string _applicationTitle = "WPF UI - AdaptiveSpritesDMItool";
+        private string _applicationTitle = "Adaptive Sprites DMI tool";
 
         [ObservableProperty]
         private ObservableCollection<object> _menuItems = new()
         {
-            new NavigationViewItem()
-            {
-                Content = "Home",
-                Icon = new SymbolIcon { Symbol = SymbolRegular.Home24 },
-                TargetPageType = typeof(Views.Pages.DashboardPage)
-            },
+            // !!!!!!!!! TODO: Environment !!!!!!!!!!
+            //new NavigationViewItem()
+            //{
+            //    Content = "Home",
+            //    Icon = new SymbolIcon { Symbol = SymbolRegular.Home24 },
+            //    TargetPageType = typeof(Views.Pages.DashboardPage)
+            //},
             new NavigationViewItem()
             {
                 Content = "Edit",

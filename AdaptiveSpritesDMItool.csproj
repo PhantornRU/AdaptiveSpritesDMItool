@@ -40,12 +40,13 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2 " />
     <PackageReference Include="WriteableBitmapEx" Version="1.6.8" />
   </ItemGroup>
-
+  
   <ItemGroup>
+    <None Remove="Assets\logo.png" />
     <None Remove="Assets\wpfui-icon-256.png" />
     <None Remove="Assets\wpfui-icon-1024.png" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <None Include="..\..\4 Личные проекты\SS13\AdaptiveTool\AdaptiveToolLogo.png">
       <Pack>True</Pack>
@@ -54,8 +55,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\logo.png" />
     <Resource Include="Assets\wpfui-icon-256.png" />
     <Resource Include="Assets\wpfui-icon-1024.png" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="Assets\**">
+        <Link>Assets\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+        <TargetPath>Assets\%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
