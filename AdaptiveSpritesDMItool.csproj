@@ -8,6 +8,16 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Title>DMIAdaptiveTool</Title>
+    <Authors>$(PhantomRU)</Authors>
+    <Copyright>GNU GENERAL PUBLIC LICENSE</Copyright>
+    <Description>Adaptive tool for working with DMI files.</Description>
+    <PackageIcon>AdaptiveToolLogo.png</PackageIcon>
+    <RepositoryUrl>https://github.com/PhantornRU/AdaptiveSpritesDMItool/tree/main</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>DMI, c#, charp, adaptive, sprites, grid, pixel</PackageTags>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,8 +47,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\4 Личные проекты\SS13\AdaptiveTool\AdaptiveToolLogo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Assets\wpfui-icon-256.png" />
     <Resource Include="Assets\wpfui-icon-1024.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
