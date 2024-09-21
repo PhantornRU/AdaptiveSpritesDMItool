@@ -1,3 +1,7 @@
+README Available languages:
+[English](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README.md)
+[Russian](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README-ru.md)
+
 # Tool for adapting .dmi files
 This tool is designed to edit .dmi files with the potential to adapt them to any shape, size, offsets and other parameters imposed on all selected files through the config editor, storing tabular pixel data and their offsets.
 

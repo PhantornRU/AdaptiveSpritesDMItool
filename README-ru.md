@@ -1,3 +1,7 @@
+README Доступные языки:
+[English](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README.md)
+[Russian](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README-ru.md)
+
 # Инструмент адаптирования .dmi файлов
 Данный инструмент предназначен для редактирования .dmi файлов с потенциалом для адаптации их на любые формы, размеры, оффсеты и другие параметры накладываемые на все выбранные файлы через редакцию конфига, хранящую табличные данные пикселей и их смещения.
 
