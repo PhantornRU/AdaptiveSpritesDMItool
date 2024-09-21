@@ -1,5 +1,7 @@
 README Available languages:
+
 [English](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README.md)
+
 [Russian](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README-ru.md)
 
 # Tool for adapting .dmi files
