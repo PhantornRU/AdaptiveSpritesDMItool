@@ -11,13 +11,6 @@ This tool is designed to edit .dmi files with the potential to adapt them to any
 * Interface [WPF](https://github.com/dotnet/wpf) framework.
 * Framework for processing DMI files [DMI Sharp](https://github.com/bobbah/DMISharp)
 
-### For .NET 7
-These tool require Visual Studio 2022(v17.7), Visual Studio 2022 for Mac (v17.6) to build, test, and deploy, and also require the .NET 7 SDK.
-
-[Get a free copy of Visual Studio 2022 Community Edition](https://www.visualstudio.com/wpf-vs)
-
-[.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
-
 ## Usage
 
 ### Pages
@@ -36,6 +29,13 @@ The program has 3 pages:
 
 ## Delelopment
 The program is divided into controllers, resources, models and auxiliary classes for more convenient access to the code. Inside the code there are divisions into regions for even more convenient navigation and separation.
+
+### For .NET 7
+These tool require Visual Studio 2022(v17.7), Visual Studio 2022 for Mac (v17.6) to build, test, and deploy, and also require the .NET 7 SDK.
+
+[Get a free copy of Visual Studio 2022 Community Edition](https://www.visualstudio.com/wpf-vs)
+
+[.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
 
 ### View Models
 In addition to Views that contain WPF pages, they use:

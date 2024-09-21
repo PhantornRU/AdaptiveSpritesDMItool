@@ -12,15 +12,6 @@ README Доступные языки:
 * Фреймворк обработки DMI файлов [DMI Sharp](https://github.com/bobbah/DMISharp)
 
 
-### For .NET 7
-These tool require Visual Studio 2022(v17.7), Visual Studio 2022 for Mac (v17.6) to build, test, and deploy, and also require the .NET 7 SDK.
-
-[Get a free copy of Visual Studio 2022 Community Edition](https://www.visualstudio.com/wpf-vs)
-
-[.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
-
-
-
 ## Пользование
 
 ### Страницы
@@ -39,6 +30,13 @@ These tool require Visual Studio 2022(v17.7), Visual Studio 2022 for Mac (v17.6)
 
 ## Delelopment
 Программа разделена на контроллеры, ресурсы, модели и вспомогательные классы для более удобного доступа к коду. Внутри кода имеются разделения на региона для еще более удобной навигации и разделения. 
+
+### For .NET 7
+These tool require Visual Studio 2022(v17.7), Visual Studio 2022 for Mac (v17.6) to build, test, and deploy, and also require the .NET 7 SDK.
+
+[Get a free copy of Visual Studio 2022 Community Edition](https://www.visualstudio.com/wpf-vs)
+
+[.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
 
 ### View Models
 Помимо Views в которых находятся WPF страницы, ими используются:
