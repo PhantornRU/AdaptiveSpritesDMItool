@@ -1,3 +1,9 @@
+<h1 align="center">
+  <img src="Assets/logo.png" alt="logo.png" width="256"/>
+  <br/>
+  Adaptive DMI Tool
+</h1>
+
 README Доступные языки:
 
 [English](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README.md)
