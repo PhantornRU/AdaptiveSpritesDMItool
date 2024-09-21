@@ -1,94 +1,11 @@
-# RU:
-
-## Инструмент адаптирования .dmi файлов
-Данный инструмент предназначен для редактирования .dmi файлов с потенциалом для адаптации их на любые формы, размеры, оффсеты и другие параметры накладываемые на все выбранные файлы через редакцию конфига, хранящую табличные данные пикселей и их смещения.
-
-### Для реализации использовались:
-* Интерфейс [WPF](https://github.com/dotnet/wpf) фреймворк.
-* Фреймворк обработки DMI файлов [DMI Sharp](https://github.com/bobbah/DMISharp)
-
-
-#### For .NET 7
-These tool require Visual Studio 2022(v17.7), Visual Studio 2022 for Mac (v17.6) to build, test, and deploy, and also require the .NET 7 SDK.
-
-[Get a free copy of Visual Studio 2022 Community Edition](https://www.visualstudio.com/wpf-vs)
-
-[.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
-
-
-
-## Пользование
-
-### Страницы
-В программе 3 страницы:
-* Home - [WIP] Страница для работы с рабочим пространством, сохранение последних настроек пользователя, загрузка предустановок. 
-* Edit - Страница редактирования конфигов через изменения пикселей на превью полотках.
-* Data - Страница обработки файлов под выбранные конфиги.
-
-### Home
-[WIP]
-
-### Edit
-
-
-### Data
-
-## Delelopment
-Программа разделена на контроллеры, ресурсы, модели и вспомогательные классы для более удобного доступа к коду. Внутри кода имеются разделения на региона для еще более удобной навигации и разделения. 
-
-### View Models
-Помимо Views в которых находятся WPF страницы, ими используются:
-* Dashboard View Model - [WIP]
-* States Editor View Model - модель реализации изменения выбора конфигов, превью стейтов, работы с файлами и их загрузкой, сохранением конфига и хранения State Item's.
-* Data View Model - модель реализации изменения выбранного конфига, отображения Tree View со всеми выбранными файлами которые будут отображаться и обрабабатываться вдальнейшем. 
-* Settings View Model - модель настроек текущей темы.
-* Main Window View Model - модель навигации по страницам.
-
-### Models
-* Config Item - модель конфига хранящая путь к таблице для быстрого доступа.
-* State Item - модель стейта с .DMI файла хранящая превью, путь, название файла и название стейта.
-* Data Image State - модель работы с превью изображениями накладывающие стейты "превью, лендмарки и оверлея" друг на друга для дальнейшей визуализации.
-* State Edit Type - модель перечисления различных типов:
-** StateEditType - Режим редактирования главного окна предварительного просмотра
-** StateQuantityType - Тип редактирования стейтов.
-** StateImageType - Тип элемента превью.
-** StateImageSideType - Сторона элемента превью.
-** SelectMode - Текущий режим инструмента перемещения пикселей.
-** StatusBarType - Тип элемента статус бара.
-** StatePreviewType - Выбранный тип превью для наложения стейтов.
-
-### Controllers 
-* Environment Controller - Контроллер рабочего пространства и инициализации окружения.
-* Draw Controller - Контроллер обработки изображения, хранящий все функции для рисования на полотне и редактирования пикселей.
-* Editor Controller - Контроллер текущих режимов редактирования полотен и логики кнопок.
-* Mouse Controller - Контроллер обработки нажатых кнопок мыши и нахождения позиции курсора на полотне.
-* States Controller - Контроллер хранящий информацию о текущих состояниях, режимах, конфигах и статусах элементов используемых всей программой.
-* Status Bar Controller - Контроллер информации отображаемой на статусной панели.
-
-### Processors
-DMI State Processor - Обработчик файлов из данных стейтов под выделенные конфиги.
-
-### Helpers 
-Image Encoder - Обработчик DMI State в Writeable Bitmap для отображения и редактирования на странице "Edit".
-Files Searcher - Поисковик корректной директории.
-
-
-
-## Связь
-Вопросы или хотите в помочь реализации? Можете связаться со мной по дискорду: **PHANTOMRU** (не путайте ник на Гитхабе, там "m == rn" xdd)
-
-
-
-# ENG:
-
-## Tool for adapting .dmi files
+# Tool for adapting .dmi files
 This tool is designed to edit .dmi files with the potential to adapt them to any shape, size, offsets and other parameters imposed on all selected files through the config editor, storing tabular pixel data and their offsets.
 
-### The following were used for implementation:
+## The following were used for implementation:
 * Interface [WPF](https://github.com/dotnet/wpf) framework.
 * Framework for processing DMI files [DMI Sharp](https://github.com/bobbah/DMISharp)
 
-#### For .NET 7
+### For .NET 7
 These tool require Visual Studio 2022(v17.7), Visual Studio 2022 for Mac (v17.6) to build, test, and deploy, and also require the .NET 7 SDK.
 
 [Get a free copy of Visual Studio 2022 Community Edition](https://www.visualstudio.com/wpf-vs)
