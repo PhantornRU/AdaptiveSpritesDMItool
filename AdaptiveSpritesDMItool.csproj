@@ -46,8 +46,8 @@
   
   <ItemGroup>
     <None Remove="Assets\logo.png" />
-    <None Remove="Assets\wpfui-icon-256.png" />
-    <None Remove="Assets\wpfui-icon-1024.png" />
+    <None Remove="Assets\logo-784.png" />
+    <None Remove="Assets\logo-1080.png" />
   </ItemGroup>
   
   <ItemGroup>
@@ -59,8 +59,8 @@
 
   <ItemGroup>
     <Resource Include="Assets\logo.png" />
-    <Resource Include="Assets\wpfui-icon-256.png" />
-    <Resource Include="Assets\wpfui-icon-1024.png" />
+    <Resource Include="Assets\logo-784.png" />
+    <Resource Include="Assets\logo-1080.png" />
   </ItemGroup>
   
   <ItemGroup>
