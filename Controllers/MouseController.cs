@@ -2,7 +2,9 @@
 using DMISharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -30,6 +32,9 @@ namespace AdaptiveSpritesDMItool.Controllers
 
             currentMouseDownPosition = GetModifyMousePosition(e, stateImage);
             currentMousePosition = currentMouseDownPosition;
+
+            if (_stateImageSideType == StateImageSideType.Right)
+                UpdateBeforeStorage();
 
             switch (StatesController.currentStateEditMode)
             {
@@ -170,6 +175,18 @@ namespace AdaptiveSpritesDMItool.Controllers
             int x = (int)Math.Floor(_pos.X * _img.Source.Width / _img.ActualWidth);
             int y = (int)Math.Floor(_pos.Y * _img.Source.Height / _img.ActualHeight);
             return new Point(x, y);
+        }
+
+        private static void UpdateBeforeStorage()
+        {
+            var currentStateEditMode = StatesController.currentStateEditMode;
+            if (currentStateEditMode == StateEditType.Select &&
+                EditorController.selectMode == Models.SelectMode.Select)
+            {
+                return;
+            }
+
+            EnvironmentController.dataPixelStorage.UpdateBeforeStorage();
         }
 
         #endregion Helpers

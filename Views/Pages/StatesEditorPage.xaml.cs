@@ -515,6 +515,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             StatesController.SetCurrentStateEditMode(StateEditType.UndoArea);
         }
 
+        private void UndoLastButton_Click(object sender, RoutedEventArgs e)
+        {
+            EnvironmentController.dataPixelStorage.UndoLastChange();
+        }
+
         #endregion Buttons Edit Controller
 
 

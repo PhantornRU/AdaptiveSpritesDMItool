@@ -127,6 +127,11 @@
                         Appearance="Secondary"
                         ToolTip="Undo changes to the area of ​​selected cells in the right preview."
                         Icon="{ui:SymbolIcon SquareHintArrowBack16}" Click="UndoAreaButton_Click"/>
+            <ui:Button
+                        x:Name="UndoLastButton"
+                        Appearance="Secondary"
+                        ToolTip="Undo last actions."
+                        Icon="{ui:SymbolIcon ArrowHookDownLeft24}" Click="UndoLastButton_Click"/>
 
             <!--Switches "One, Horizontal, Vertical, All" states-->
             <Separator Margin="10,0,10,0" />

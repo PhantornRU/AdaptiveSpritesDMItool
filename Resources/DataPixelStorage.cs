@@ -14,6 +14,7 @@ using Point = System.Drawing.Point;
 using Color = System.Windows.Media.Color;
 using SixLabors.ImageSharp.ColorSpaces;
 using System.Diagnostics;
+using AdaptiveSpritesDMItool.Helpers;
 
 namespace AdaptiveSpritesDMItool.Resources
 {
@@ -96,6 +97,20 @@ namespace AdaptiveSpritesDMItool.Resources
             var stateDirections = StatesController.GetStateDirections();
             DrawController.RenderTextGrids(stateDirections);
             wasUpdated = false;
+        }
+
+        public void UpdateBeforeStorage()
+        {
+            UndoSaves.SaveStorage(pixelStorages);
+        }
+
+        public void UndoLastChange()
+        {
+            var undoPixelStorage = UndoSaves.GetUndoStorage();
+            if (undoPixelStorage == null)
+                return;
+            pixelStorages = undoPixelStorage;
+            DrawPixelStorageAtBitmaps();
         }
 
         #endregion Visualize

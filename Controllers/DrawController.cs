@@ -19,6 +19,7 @@ using System.Windows.Controls;
 using SixLabors.ImageSharp.Drawing.Processing;
 using System.Globalization;
 using System.Windows;
+using AdaptiveSpritesDMItool.Helpers;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
@@ -31,7 +32,8 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static Point pickedPointFromPreview = new Point(-1, -1);
 
         /// <summary> Storage of selected points for moving to a new area. </summary>
-        static Dictionary<StateDirection, Dictionary<Point, Point>> pointsStorage = new Dictionary<StateDirection, Dictionary<Point, Point>>();
+        private static Dictionary<StateDirection, Dictionary<Point, Point>> pointsStorage = new Dictionary<StateDirection, Dictionary<Point, Point>>();
+
 
         /// <summary> Offset from the original selected coordinate area. </summary>
         public static Point pointOffset;
@@ -839,7 +841,6 @@ namespace AdaptiveSpritesDMItool.Controllers
         }
 
         #endregion Offsets
-
 
         #endregion Helpers
     }

@@ -19,12 +19,13 @@ using SixLabors.ImageSharp.Formats;
 using System.Drawing;
 using System.Collections.Concurrent;
 using Point = System.Drawing.Point;
+using AdaptiveSpritesDMItool.Helpers;
 
 namespace AdaptiveSpritesDMItool.Controllers
 {
     internal static class EditorController
     {
-        static SelectMode selectMode = SelectMode.None;
+        public static SelectMode selectMode = SelectMode.None;
 
         #region Editor Modes
 
@@ -32,7 +33,6 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static void EditSingleMode(StateImageSideType _stateImageSideType)
         {
-            //SetPixel();
             if(!MouseController.isMouseInImage)
                 return;
 
@@ -189,7 +189,6 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static void EditMoveMode(StateImageSideType _stateImageSideType)
         {
             if (_stateImageSideType != StateImageSideType.Right) return;
-
             DrawController.UpdatePointOffset();
             ViewSelectedPoints(_stateImageSideType);
         }
@@ -234,7 +233,6 @@ namespace AdaptiveSpritesDMItool.Controllers
                     break;
             }
         }
-
 
 
         public static void EditSelectMode(StateImageSideType _stateImageSideType)
