@@ -32,7 +32,7 @@ namespace AdaptiveSpritesDMItool.Models
 
 
     /// <summary>
-    /// Type of state image
+    /// Preview element type.
     /// </summary>
 
     public enum StateImageType
@@ -44,12 +44,18 @@ namespace AdaptiveSpritesDMItool.Models
         TextGrid
     }
 
+    /// <summary>
+    /// Side of the preview element.
+    /// </summary>
     public enum StateImageSideType
     {
         Left,
         Right
     }
 
+    /// <summary>
+    /// The current mode of the pixel move tool.
+    /// </summary>
     public enum SelectMode
     {
         None,
@@ -57,6 +63,9 @@ namespace AdaptiveSpritesDMItool.Models
         Move
     }
 
+    /// <summary>
+    /// Element type status bar.
+    /// </summary>
     public enum StatusBarType
     {
         State,
@@ -64,6 +73,9 @@ namespace AdaptiveSpritesDMItool.Models
         MultiPoint
     }
 
+    /// <summary>
+    /// The selected preview type for state overlay.
+    /// </summary>
     public enum StatePreviewType
     {
         Left,
