@@ -115,6 +115,7 @@ In addition to Views that contain WPF pages, they use:
 * Draw Controller - Image processing controller that stores all functions for drawing on the canvas and editing pixels.
 * Editor Controller - Controller of current canvas editing modes and button logic.
 * Mouse Controller - Controller for processing pressed mouse buttons and finding the cursor position on the canvas.
+* Buttons Controller - Controller for processing pressed keys, hotkeys.
 * States Controller - Controller that stores information about current states, modes, configs and statuses of elements used by the entire program.
 * Status Bar Controller - Controller of information displayed on the status bar.
 
