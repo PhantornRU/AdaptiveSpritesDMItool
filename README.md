@@ -20,8 +20,7 @@ This tool is designed to edit .dmi files with the potential to adapt them to any
 ## Usage
 
 ### Demo
-[<img src="AssetsGitHub/2 Data Page.png" alt="logo.png" width="256"/>](https://youtu.be/X_SbgLqKqvI)
-
+[<img src="AssetsGitHub/VideoPic.png" alt="logo.png" width="256"/>](https://youtu.be/X_SbgLqKqvI)
 
 ### Pages
 The program has 3 pages:

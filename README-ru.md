@@ -21,7 +21,7 @@ README Доступные языки:
 ## Пользование
 
 ### Demo
-[<img src="AssetsGitHub/2 Data Page.png" alt="logo.png" width="256"/>](https://youtu.be/X_SbgLqKqvI)
+[<img src="AssetsGitHub/VideoPic.png" alt="logo.png" width="256"/>](https://youtu.be/X_SbgLqKqvI)
 
 ### Страницы
 В программе 3 страницы:
