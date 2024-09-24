@@ -430,5 +430,17 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         #endregion Helpers
 
         #endregion Config
+
+
+
+
+
+
+
+        [RelayCommand]
+        public static void TextCommand()
+        {
+            Debug.WriteLine("123");
+        }
     }
 }

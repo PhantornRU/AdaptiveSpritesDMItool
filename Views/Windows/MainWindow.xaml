@@ -21,6 +21,34 @@
     WindowCornerPreference="Round"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
+
+    <Window.CommandBindings>
+        <CommandBinding Command="{x:Static local:MainWindow.SingleCommand}" Executed="SingleCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.FillCommand}" Executed="FillCommandExecuted"/>
+
+        <CommandBinding Command="{x:Static local:MainWindow.MoveCommand}" Executed="MoveCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.SelectCommand}" Executed="SelectCommandExecuted"/>
+
+        <CommandBinding Command="{x:Static local:MainWindow.DeleteCommand}" Executed="DeleteCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.UndoCommand}" Executed="UndoCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.UndoAreaCommand}" Executed="UndoAreaCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.UndoLastCommand}" Executed="UndoLastCommandExecuted"/>
+
+        <CommandBinding Command="{x:Static local:MainWindow.ChooseSingleStateCommand}" Executed="ChooseSingleStateCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.ChooseParallelStatesCommand}" Executed="ChooseParallelStatesCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.ChooseAllStatesCommand}" Executed="ChooseAllStatesCommandExecuted"/>
+
+        <CommandBinding Command="{x:Static local:MainWindow.MirrorStatesCommand}" Executed="MirrorStatesCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.CentralizeStatesCommand}" Executed="CentralizeStatesCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.GridEnvironmentCommand}" Executed="GridEnvironmentCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.GridZIndexEnvironmentCommand}" Executed="GridZIndexEnvironmentCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.TextGridEnvironmentCommand}" Executed="TextGridEnvironmentCommandExecuted"/>
+        <CommandBinding Command="{x:Static local:MainWindow.OverlayCommand}" Executed="OverlayCommandExecuted"/>
+
+        <CommandBinding Command="{x:Static local:MainWindow.SaveCommand}" Executed="SaveCommandExecuted"/>
+    </Window.CommandBindings>
+    
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

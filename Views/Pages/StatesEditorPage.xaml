@@ -16,47 +16,6 @@
       
     Title="StatesEditorPage"
     mc:Ignorable="d" >
-    
-    <Page.Resources>
-        <ResourceDictionary>
-            <RoutedUICommand x:Key="ToolAdd1" Text="Tool Add 1" />
-            <RoutedUICommand x:Key="ToolAdd2" Text="Tool Add 2" />
-            
-            <RoutedUICommand x:Key="ToolSelect1" Text="Tool Select 1" />
-            <RoutedUICommand x:Key="ToolSelect2" Text="Tool Select 2" />
-            
-            <RoutedUICommand x:Key="ToolUndo1" Text="Tool Undo 1" />
-            <RoutedUICommand x:Key="ToolUndo2" Text="Tool Undo 2" />
-            <RoutedUICommand x:Key="ToolUndo3" Text="Tool Undo 3" />
-        </ResourceDictionary>
-    </Page.Resources>
-
-    <!--https://learn.microsoft.com/en-us/dotnet/api/system.windows.input.key?view=windowsdesktop-8.0&redirectedfrom=MSDN-->
-    <Page.InputBindings>
-        <KeyBinding Key="D1" Command="{StaticResource ToolAdd1}" />
-        <KeyBinding Key="D2" Command="{StaticResource ToolAdd2}" />
-        
-        <KeyBinding Key="D3" Command="{StaticResource ToolSelect1}" />
-        <KeyBinding Key="D4" Command="{StaticResource ToolSelect2}" />
-        
-        <KeyBinding Key="D5" Command="{StaticResource ToolUndo1}" />
-        <KeyBinding Key="D6" Command="{StaticResource ToolUndo2}" />
-        <KeyBinding Key="D7" Command="{StaticResource ToolUndo3}" />
-        <!--<KeyBinding Key="F3" Modifiers="Ctrl" Command="{StaticResource ToolUndo3}" />-->
-    </Page.InputBindings>
-
-    <Page.CommandBindings>
-        <CommandBinding Command="{StaticResource ToolAdd1}" Executed="ToolAdd1_Shortcut" />
-        <CommandBinding Command="{StaticResource ToolAdd2}" Executed="ToolAdd2_Shortcut" />
-
-        <CommandBinding Command="{StaticResource ToolSelect1}" Executed="ToolSelect1_Shortcut" />
-        <CommandBinding Command="{StaticResource ToolSelect2}" Executed="ToolSelect2_Shortcut" />
-        
-        <CommandBinding Command="{StaticResource ToolUndo1}" Executed="ToolUndo1_Shortcut" />
-        <CommandBinding Command="{StaticResource ToolUndo2}" Executed="ToolUndo2_Shortcut" />
-        <CommandBinding Command="{StaticResource ToolUndo3}" Executed="ToolUndo3_Shortcut" />
-    </Page.CommandBindings>
-
 
     <Grid VerticalAlignment="Top">
         <Grid.ColumnDefinitions>

@@ -27,10 +27,11 @@ using Button = Wpf.Ui.Controls.Button;
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
     /// <summary>
-    /// Логика взаимодействия для StatesEditorPage.xaml
+    /// Interaction logic for StatesEditorPage.xaml
     /// </summary>
     public partial class StatesEditorPage : INavigableView<StatesEditorViewModel>
     {
+
         public StatesEditorViewModel ViewModel { get; }
 
         public StatesEditorPage(StatesEditorViewModel viewModel)
@@ -40,6 +41,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             // Pre Initializers
             InitializeComponent();
             InitializeComponentPaths();
+            InitializeButtons();
             EnvironmentController.InitializeEnvironment();
 
             // Initializers
@@ -235,6 +237,69 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             StatesController.stateStatusBarDictionary[StatusBarType.State] = StatusBarStateText;
             StatesController.stateStatusBarDictionary[StatusBarType.SinglePoint] = StatusBarSinglePointText;
             StatesController.stateStatusBarDictionary[StatusBarType.MultiPoint] = StatusBarMultiPointText;
+        }
+
+        private void InitializeButtons()
+        {
+            ButtonsController.SingleButton = SingleButton;
+            ButtonsController.FillButton = FillButton;
+
+            ButtonsController.SelectButton = SelectButton;
+            ButtonsController.MoveButton = MoveButton;
+
+            ButtonsController.DeleteButton = DeleteButton;
+            ButtonsController.UndoButton = UndoButton;
+            ButtonsController.UndoAreaButton = UndoAreaButton;
+            ButtonsController.UndoLastButton = UndoLastButton;
+
+            ButtonsController.ChooseSingleStateButton = ChooseSingleStateButton;
+            ButtonsController.ChooseParallelStatesButton = ChooseParallelStatesButton;
+            ButtonsController.ChooseAllStatesButton = ChooseAllStatesButton;
+
+            ButtonsController.CentralizeStatesButton = CentralizeStatesButton;
+            ButtonsController.MirrorStatesButton = MirrorStatesButton;
+
+            ButtonsController.GridEnvironmentButton = GridEnvironmentButton;
+            ButtonsController.GridZIndexEnvironmentButton = GridZIndexEnvironmentButton;
+            ButtonsController.TextGridEnvironmentButton = TextGridEnvironmentButton;
+
+            ButtonsController.InitializeButtons();
+            UpdateTooltipButtons();
+        }
+
+        private void UpdateTooltipButtons()
+        {
+            UpdateTooltip(SingleButton, ButtonsController.SingleGesture);
+            UpdateTooltip(FillButton, ButtonsController.FillGesture);
+
+            UpdateTooltip(SelectButton, ButtonsController.SelectGesture);
+            UpdateTooltip(MoveButton, ButtonsController.MoveGesture);
+
+            UpdateTooltip(DeleteButton, ButtonsController.DeleteGesture);
+            UpdateTooltip(UndoButton, ButtonsController.UndoGesture);
+            UpdateTooltip(UndoAreaButton, ButtonsController.UndoAreaGesture);
+            UpdateTooltip(UndoLastButton, ButtonsController.UndoLastGesture);
+
+            UpdateTooltip(ChooseSingleStateButton, ButtonsController.ChooseSingleStateGesture);
+            UpdateTooltip(ChooseParallelStatesButton, ButtonsController.ChooseParallelStatesGesture);
+            UpdateTooltip(ChooseAllStatesButton, ButtonsController.ChooseAllStatesGesture);
+
+            UpdateTooltip(CentralizeStatesButton, ButtonsController.CentralizeStatesGesture);
+            UpdateTooltip(MirrorStatesButton, ButtonsController.MirrorStatesGesture);
+
+            UpdateTooltip(GridEnvironmentButton, ButtonsController.GridEnvironmentGesture);
+            UpdateTooltip(GridZIndexEnvironmentButton, ButtonsController.GridZIndexEnvironmentGesture);
+            UpdateTooltip(TextGridEnvironmentButton, ButtonsController.TextGridEnvironmentGesture);
+        }
+
+        private void UpdateTooltip(Button button, KeyGesture gesture)
+        {
+            // &#x0a; == \n
+            string splitKey = " Hotkey: ";
+            string? tooltip = button.ToolTip.ToString();
+            if (tooltip == null) return;
+            button.ToolTip = tooltip.Split(splitKey)[0]; // Remove last change
+            button.ToolTip += $"{splitKey}{gesture.Modifiers.ToString().Replace(", ", "+")}+{gesture.Key}";
         }
 
         #endregion Initializers
@@ -471,53 +536,39 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void ControllButtonsAvailability()
         {
-            MirrorStatesButton.IsEnabled = StatesController.GetEnableStateMirrorButton();
-            CentralizeStatesButton.IsEnabled = StatesController.GetEnableStateCentralizeButton();
-            GridZIndexEnvironmentButton.IsEnabled = StatesController.GetEnableStateGridZIndexButton();
-            GridZIndexEnvironmentUpdate();
-            GridEnvironmentUpdate();
+            ButtonsController.ControllButtonsAvailability();
         }
 
         #region Buttons Edit Controller
 
         private void SingleButton_Click(object sender, RoutedEventArgs e)
         {
-            ResetEditButtons();
-            SingleButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateEditMode(StateEditType.Single);
+            UpdateTooltip(SingleButton, ButtonsController.SingleGesture);
+            ButtonsController.SingleButton_Click(sender, e);
         }
 
         private void FillButton_Click(object sender, RoutedEventArgs e)
         {
-            ResetEditButtons();
-            FillButton.Appearance = StatesController.GetPressedButtonAppearance();
-
-            StatesController.SetCurrentStateEditMode(StateEditType.Fill);
+            ButtonsController.FillButton_Click(sender, e);
         }
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            ResetEditButtons();
-            DeleteButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateEditMode(StateEditType.Delete);
+            ButtonsController.DeleteButton_Click(sender, e);
         }
         private void UndoButton_Click(object sender, RoutedEventArgs e)
         {
-            ResetEditButtons();
-            UndoButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateEditMode(StateEditType.Undo);
+            ButtonsController.UndoButton_Click(sender, e);
         }
 
         private void UndoAreaButton_Click(object sender, RoutedEventArgs e)
         {
-            ResetEditButtons();
-            UndoAreaButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateEditMode(StateEditType.UndoArea);
+            ButtonsController.UndoAreaButton_Click(sender, e);
         }
 
         private void UndoLastButton_Click(object sender, RoutedEventArgs e)
         {
-            EnvironmentController.dataPixelStorage.UndoLastChange();
+            ButtonsController.UndoLastButton_Click(sender, e);
         }
 
         #endregion Buttons Edit Controller
@@ -527,16 +578,12 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void MoveButton_Click(object sender, RoutedEventArgs e)
         {
-            ResetEditButtons();
-            MoveButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateEditMode(StateEditType.Move);
+            ButtonsController.MoveButton_Click(sender, e);
         }
 
         private void SelectButton_Click(object sender, RoutedEventArgs e)
         {
-            ResetEditButtons();
-            SelectButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateEditMode(StateEditType.Select);
+            ButtonsController.SelectButton_Click(sender, e);
         }
 
         #endregion Buttons Move Controller
@@ -546,39 +593,27 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void ChooseSingleStateButton_Click(object sender, RoutedEventArgs e)
         {
-            ResetStatesButtons();
-            ChooseSingleStateButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateQuantityMode(StateQuantityType.Single);
-            ControllButtonsAvailability();
+            ButtonsController.ChooseSingleStateButton_Click(sender, e);
         }
 
         private void ChooseParallelStatesButton_Click(object sender, RoutedEventArgs e)
         {
-            ResetStatesButtons();
-            ChooseParallelStatesButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateQuantityMode(StateQuantityType.Parallel);
-            ControllButtonsAvailability();
+            ButtonsController.ChooseParallelStatesButton_Click(sender, e);
         }
 
         private void ChooseAllStatesButton_Click(object sender, RoutedEventArgs e)
         {
-            ResetStatesButtons();
-            ChooseAllStatesButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateQuantityMode(StateQuantityType.All);
-            ControllButtonsAvailability();
+            ButtonsController.ChooseAllStatesButton_Click(sender, e);
         }
 
         private void CentralizeStatesButton_Click(object sender, RoutedEventArgs e)
         {
-            StatesController.ToggleCentralizedState();
-            CentralizeStatesButton.Appearance = StatesController.GetControlAppearanceCentralize();
+            ButtonsController.CentralizeStatesButton_Click(sender, e);
         }
 
         private void MirrorStatesButton_Click(object sender, RoutedEventArgs e)
         {
-            StatesController.ToggleMirroredState();
-            MirrorStatesButton.Appearance = StatesController.GetControlAppearanceMirror();
-            ControllButtonsAvailability();
+            ButtonsController.MirrorStatesButton_Click(sender, e);
         }
 
         #endregion Buttons States Controller
@@ -588,92 +623,26 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void GridEnvironmentButton_Click(object sender, RoutedEventArgs e)
         {
-            StatesController.ToggleShowGrid();
-            GridEnvironmentUpdate();
-        }
-
-        private void GridEnvironmentUpdate()
-        {
-            GridEnvironmentButton.Appearance = StatesController.GetControlAppearanceGrid();
-            GridZIndexEnvironmentButton.IsEnabled = StatesController.GetEnableStateGridZIndexButton();
-            TextGridEnvironmentButton.IsEnabled = StatesController.GetEnableStateTextGridButton();
-
-            foreach (var state in StatesController.stateSourceDictionary.Values)
-            {
-                state[StateImageType.Background][StateImageSideType.Left].Visibility = StatesController.GetVisibilityGrid();
-                state[StateImageType.Background][StateImageSideType.Right].Visibility = StatesController.GetVisibilityGrid();
-
-                state[StateImageType.TextGrid][StateImageSideType.Left].Visibility = StatesController.GetVisibilityTextGrid();
-                state[StateImageType.TextGrid][StateImageSideType.Right].Visibility = StatesController.GetVisibilityTextGrid();
-            }
+            ButtonsController.GridEnvironmentButton_Click(sender, e);
         }
 
         private void GridZIndexEnvironmentButton_Click(object sender, RoutedEventArgs e)
         {
-            StatesController.ToggleShowAboveGrid();
-            GridZIndexEnvironmentUpdate();
-        }
-
-        private void GridZIndexEnvironmentUpdate()
-        {
-            GridZIndexEnvironmentButton.Appearance = StatesController.GetControlAppearanceGridZIndex();
-
-            foreach (var state in StatesController.stateSourceDictionary.Values)
-            {
-                Panel.SetZIndex(state[StateImageType.Background][StateImageSideType.Left], StatesController.GetBackgroundZIndex());
-                Panel.SetZIndex(state[StateImageType.Background][StateImageSideType.Right], StatesController.GetBackgroundZIndex());
-            }
+            ButtonsController.GridZIndexEnvironmentButton_Click(sender, e);
         }
 
         private void OverlayButton_Click(object sender, RoutedEventArgs e)
         {
-            StatesController.ToggleShowOverlay();
-            OverlayButton.Appearance = StatesController.GetControlAppearanceOverlay();
-
-            foreach (var state in StatesController.stateSourceDictionary.Values)
-            {
-                state[StateImageType.Overlay][StateImageSideType.Left].Visibility = StatesController.GetVisibilityOverlay();
-                state[StateImageType.Overlay][StateImageSideType.Right].Visibility = StatesController.GetVisibilityOverlay();
-            }
+            ButtonsController.OverlayButton_Click(sender, e);
         }
 
         private void TextGridEnvironmentButton_Click(object sender, RoutedEventArgs e)
         {
-            StatesController.ToggleShowTextGrid();
-            TextGridEnvironmentButton.Appearance = StatesController.GetControlAppearanceTextGrid();
-
-            EnvironmentController.dataPixelStorage.UpdateAfterStorage();
-
-            foreach (var state in StatesController.stateSourceDictionary.Values)
-            {
-                state[StateImageType.TextGrid][StateImageSideType.Left].Visibility = StatesController.GetVisibilityTextGrid();
-                state[StateImageType.TextGrid][StateImageSideType.Right].Visibility = StatesController.GetVisibilityTextGrid();
-            }
+            ButtonsController.TextGridEnvironmentButton_Click(sender, e);
         }
+
 
         #endregion Buttons Environment Controller
-
-        #region Buttons Helpers
-
-        private void ResetEditButtons()
-        {
-            SingleButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-            FillButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-            SelectButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-            MoveButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-            DeleteButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-            UndoButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-            UndoAreaButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-        }
-
-        private void ResetStatesButtons()
-        {
-            ChooseSingleStateButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-            ChooseParallelStatesButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-            ChooseAllStatesButton.Appearance = StatesController.GetUnPressedButtonAppearance();
-        }
-
-        #endregion Buttons Helpers
 
         #endregion Buttons Toolbar Controller
 
@@ -765,46 +734,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         #endregion List View
 
         #endregion Buttons Preview Toolbar Controller
-
-
-        #region Hotkeys
-
-        public void ToolAdd1_Shortcut(Object sender, ExecutedRoutedEventArgs e)
-        {
-            SingleButton_Click(sender, e);
-        }
-
-        public void ToolAdd2_Shortcut(Object sender, ExecutedRoutedEventArgs e)
-        {
-            FillButton_Click(sender, e);
-        }
-
-        public void ToolSelect1_Shortcut(Object sender, ExecutedRoutedEventArgs e)
-        {
-            MoveButton_Click(sender, e);
-        }
-
-        public void ToolSelect2_Shortcut(Object sender, ExecutedRoutedEventArgs e)
-        {
-            SelectButton_Click(sender, e);
-        }
-
-        public void ToolUndo1_Shortcut(Object sender, ExecutedRoutedEventArgs e)
-        {
-            DeleteButton_Click(sender, e);
-        }
-
-        public void ToolUndo2_Shortcut(Object sender, ExecutedRoutedEventArgs e)
-        {
-            UndoButton_Click(sender, e);
-        }
-
-        public void ToolUndo3_Shortcut(Object sender, ExecutedRoutedEventArgs e)
-        {
-            UndoAreaButton_Click(sender, e);
-        }
-
-        #endregion Hotkeys
 
 
         #region Testing
