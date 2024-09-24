@@ -18,6 +18,8 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 {
     public partial class StatesEditorViewModel : ObservableObject
     {
+        [ObservableProperty]
+        private double _overlayOpacitySliderValue = 1;
 
         #region List View
 

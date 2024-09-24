@@ -34,9 +34,6 @@
                 IsTabStop="True"
                 HorizontalAlignment="Stretch">
             <StackPanel HorizontalAlignment="Left">
-
-
-
             </StackPanel>
         </ScrollViewer>-->
 
@@ -48,12 +45,12 @@
             <ui:Button
                         x:Name="SingleButton"
                         Appearance="Primary"
-                        ToolTip="Create a single cell on the right preview using the selected cell from the left preview."
+                        ToolTip="Create a single cell on the right overlay preview using the selected cell from the left preview."
                         Icon="{ui:SymbolIcon AddSquare24}" Click="SingleButton_Click" />
             <ui:Button
                         x:Name="FillButton"
                         Appearance="Secondary"
-                        ToolTip="Fill the area on the right preview with the selected cell from the left preview"
+                        ToolTip="Fill the area on the right overlay preview with the selected cell from the left preview"
                         Icon="{ui:SymbolIcon Grid24}" Click="FillButton_Click" />
 
             <!--Move pixels of the edited part-->
@@ -61,12 +58,12 @@
             <ui:Button
                         x:Name="MoveButton"
                         Appearance="Secondary"
-                        ToolTip="Move a single cell on the right preview."
+                        ToolTip="Move a single cell on the right overlay preview."
                         Icon="{ui:SymbolIcon ArrowMove24}" Click="MoveButton_Click" />
             <ui:Button
                         x:Name="SelectButton"
                         Appearance="Secondary"
-                        ToolTip="Move the selected area of ​​cells on the right preview."
+                        ToolTip="Move the selected area of ​​cells on the right overlay preview."
                         Icon="{ui:SymbolIcon SquareHintApps24}" Click="SelectButton_Click" />
 
             <!--Clear pixels of the edited part-->
@@ -74,17 +71,17 @@
             <ui:Button
                         x:Name="DeleteButton"
                         Appearance="Secondary"
-                        ToolTip="Delete a pixel on the right preview, creating an empty cell."
+                        ToolTip="Delete a pixel on the right overlay preview, creating an empty cell."
                         Icon="{ui:SymbolIcon Eraser24}" Click="DeleteButton_Click" />
             <ui:Button
                         x:Name="UndoButton"                        
                         Appearance="Secondary"
-                        ToolTip="Undo changes to a single cell in the right preview."
+                        ToolTip="Undo changes to a single cell in the right overlay preview."
                         Icon="{ui:SymbolIcon SquareEraser20}" Click="UndoButton_Click"/>
             <ui:Button
                         x:Name="UndoAreaButton"
                         Appearance="Secondary"
-                        ToolTip="Undo changes to the area of ​​selected cells in the right preview."
+                        ToolTip="Undo changes to the area of ​​selected cells in the right overlay preview."
                         Icon="{ui:SymbolIcon SquareHintArrowBack16}" Click="UndoAreaButton_Click"/>
             <ui:Button
                         x:Name="UndoLastButton"
@@ -128,7 +125,7 @@
                         x:Name="MirrorStatesButton"
                         Appearance="Primary"
                         IsEnabled="True"
-                        ToolTip="Mirror."
+                        ToolTip="Toggle mirroring on parallel states."
                         Icon="{ui:SymbolIcon DualScreenMirror24}" Click="MirrorStatesButton_Click" />
             <ui:Button
                         x:Name="CentralizeStatesButton"
@@ -167,8 +164,21 @@
                         x:Name="OverlayButton"
                         Appearance="Primary"
                         IsEnabled="True"
-                        ToolTip="Toggle overlay environment."
+                        ToolTip="Toggle overlay preview."
                         Icon="{ui:SymbolIcon BorderTop24}" Click="OverlayButton_Click" />
+
+            <Slider     x:Name="OverlayOpacitySlider"
+                        ToolTip="Overlay preview opacity slider."
+                        Width="100"
+                        Margin="5, 0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Maximum="1"
+                        Minimum="0"
+                        TickFrequency="0.1"
+                        Value="{Binding ViewModel.OverlayOpacitySliderValue, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:StatesEditorPage}, Mode=TwoWay}"
+                />
+            
             <!--Icon="{ui:SymbolIcon AppFolder24}"-->
         </ToolBar>
 
@@ -215,6 +225,7 @@
                         <Image x:Name="imageOverlayPreviewLeftSouth"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
+                                Opacity="{Binding ViewModel.OverlayOpacitySliderValue, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:StatesEditorPage}, Mode=TwoWay}"
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imageTextGridPreviewLeftSouth"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -249,6 +260,7 @@
                         <Image x:Name="imageOverlayPreviewRightSouth"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
+                                Opacity="{Binding ViewModel.OverlayOpacitySliderValue, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:StatesEditorPage}, Mode=TwoWay}"
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imageTextGridPreviewRightSouth"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -296,6 +308,7 @@
                         <Image x:Name="imageOverlayPreviewLeftNorth"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
+                                Opacity="{Binding ViewModel.OverlayOpacitySliderValue, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:StatesEditorPage}, Mode=TwoWay}"
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imageTextGridPreviewLeftNorth"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -329,6 +342,7 @@
                         <Image x:Name="imageOverlayPreviewRightNorth"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
+                                Opacity="{Binding ViewModel.OverlayOpacitySliderValue, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:StatesEditorPage}, Mode=TwoWay}"
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imageTextGridPreviewRightNorth"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -376,6 +390,7 @@
                         <Image x:Name="imageOverlayPreviewLeftEast"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
+                                Opacity="{Binding ViewModel.OverlayOpacitySliderValue, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:StatesEditorPage}, Mode=TwoWay}"
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imageTextGridPreviewLeftEast"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -409,6 +424,7 @@
                         <Image x:Name="imageOverlayPreviewRightEast"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
+                                Opacity="{Binding ViewModel.OverlayOpacitySliderValue, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:StatesEditorPage}, Mode=TwoWay}"
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imageTextGridPreviewRightEast"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -456,6 +472,7 @@
                         <Image x:Name="imageOverlayPreviewLeftWest"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
+                                Opacity="{Binding ViewModel.OverlayOpacitySliderValue, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:StatesEditorPage}, Mode=TwoWay}"
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imageTextGridPreviewLeftWest"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -489,6 +506,7 @@
                         <Image x:Name="imageOverlayPreviewRightWest"                             
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                 RenderOptions.EdgeMode="Aliased" 
+                                Opacity="{Binding ViewModel.OverlayOpacitySliderValue, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:StatesEditorPage}, Mode=TwoWay}"
                                 IsHitTestVisible="False"/>
                         <Image x:Name="imageTextGridPreviewRightWest"
                                 RenderOptions.BitmapScalingMode="NearestNeighbor" 
