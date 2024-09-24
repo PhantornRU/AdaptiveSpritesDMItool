@@ -19,6 +19,10 @@ This tool is designed to edit .dmi files with the potential to adapt them to any
 
 ## Usage
 
+### Demo
+[<img src="AssetsGitHub/2 Data Page.png" alt="logo.png" width="256"/>](https://youtu.be/X_SbgLqKqvI)
+
+
 ### Pages
 The program has 3 pages:
 * Home - [WIP] Page for working with the workspace, saving the latest user settings, loading presets.
@@ -55,7 +59,7 @@ Here you can:
 
 When you select a config, it is superimposed on the preview.
 
-  <img src="Assets/1 Edit Page.png" alt="logo.png" width="512"/>
+  <img src="AssetsGitHub/1 Edit Page.png" alt="logo.png" width="512"/>
   
 ### Data
 
@@ -77,7 +81,7 @@ After pressing - wait for it to complete.
 
 All processed files will be exported to Directory/"Config Name"/
 
-  <img src="Assets/2 Data Page.png" alt="logo.png" width="512"/>
+  <img src="AssetsGitHub/2 Data Page.png" alt="logo.png" width="512"/>
 
 ## Delelopment
 The program is divided into controllers, resources, models and auxiliary classes for more convenient access to the code. Inside the code there are divisions into regions for even more convenient navigation and separation.
