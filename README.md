@@ -31,7 +31,53 @@ The program has 3 pages:
 
 ### Edit
 
+1 - Page selection
+
+2 - Toolbar, buttons for interaction and editing PREVIEW. Editing, deleting, changing mode (parallel), grid, overlay. Toolbar tools may not be fully displayed, you can display full tools by expanding the window or clicking on the "check mark" button in the drop-down on the right.
+
+3 - Preview image displaying all edited sprites for configs, overlays (editable images), previews (left non-editable image) and landmarks (right non-editable image).
+
+4 - Status bar information of the mouse located on top of the preview windows.
+
+5 - Window for loading DMI files and selecting DMI States from them to display on top. You can configure on top of which preview the state will be displayed.
+
+6 - Window for saving and creating new configs.
+
+Here you can:
+
+- - Create a new config (DO NOT FORGET SAVE IT)
+
+- - Load an existing config
+
+- - Save the current config
+
+- - Save the current config as a new file.
+
+When you select a config, it is superimposed on the preview.
+
+  <img src="Assets/1 Edit Page.png" alt="logo.png" width="512"/>
+  
 ### Data
+
+1 - Displays all files loaded from the "Import" directory for processing in the Export folder.
+
+- - The "Override" button will switch the mode of overwriting similar files in the Export directory.
+
+2 - Displays the states of the selected .dmi file
+
+3 - Panel for selecting a config for processing all files. You can select several configs at once. The config name will be used as the name of the new folder in the Export directory.
+
+4 - Setting the paths of the Import and Export directories. By default, files will be processed in the folder of the working build.
+
+5 - Loading bar showing how many files have already been processed.
+
+6 - Button for processing all files under the selected configs.
+
+After pressing - wait for it to complete.
+
+All processed files will be exported to Directory/"Config Name"/
+
+  <img src="Assets/2 Data Page.png" alt="logo.png" width="512"/>
 
 ## Delelopment
 The program is divided into controllers, resources, models and auxiliary classes for more convenient access to the code. Inside the code there are divisions into regions for even more convenient navigation and separation.
