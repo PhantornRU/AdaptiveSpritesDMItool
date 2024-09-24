@@ -45,13 +45,13 @@ The program has 3 pages:
 
 Here you can:
 
-- - Create a new config (DO NOT FORGET SAVE IT)
+- Create a new config (DO NOT FORGET SAVE IT)
 
-- - Load an existing config
+- Load an existing config
 
-- - Save the current config
+- Save the current config
 
-- - Save the current config as a new file.
+- Save the current config as a new file.
 
 When you select a config, it is superimposed on the preview.
 
@@ -61,7 +61,7 @@ When you select a config, it is superimposed on the preview.
 
 1 - Displays all files loaded from the "Import" directory for processing in the Export folder.
 
-- - The "Override" button will switch the mode of overwriting similar files in the Export directory.
+- The "Override" button will switch the mode of overwriting similar files in the Export directory.
 
 2 - Displays the states of the selected .dmi file
 
