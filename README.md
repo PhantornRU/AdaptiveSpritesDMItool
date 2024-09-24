@@ -19,7 +19,7 @@ This tool is designed to edit .dmi files with the potential to adapt them to any
 
 ## Usage
 
-### Demo
+### Demo-Video
 [<img src="AssetsGitHub/VideoPic.png" alt="logo.png" width="256"/>](https://youtu.be/X_SbgLqKqvI)
 
 ### Pages

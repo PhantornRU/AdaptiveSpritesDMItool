@@ -20,7 +20,7 @@ README Доступные языки:
 
 ## Пользование
 
-### Demo
+### Demo-Video
 [<img src="AssetsGitHub/VideoPic.png" alt="logo.png" width="256"/>](https://youtu.be/X_SbgLqKqvI)
 
 ### Страницы
