@@ -12,6 +12,7 @@ README Available languages:
 
 # Tool for adapting .dmi files
 This tool is designed to edit .dmi files with the potential to adapt them to any shape, size, offsets and other parameters imposed on all selected files through the config editor, storing tabular pixel data and their offsets.
+Sprite displacement configuration tool to statically create sprites based on those configs.
 
 ## The following were used for implementation:
 * Interface [WPF](https://github.com/dotnet/wpf) framework.
