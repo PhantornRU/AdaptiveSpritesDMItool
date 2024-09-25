@@ -263,6 +263,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             ButtonsController.GridZIndexEnvironmentButton = GridZIndexEnvironmentButton;
             ButtonsController.TextGridEnvironmentButton = TextGridEnvironmentButton;
 
+            ButtonsController.OverlayButton = OverlayButton;
+
             ButtonsController.InitializeButtons();
             UpdateTooltipButtons();
         }
@@ -290,6 +292,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             UpdateTooltip(GridEnvironmentButton, ButtonsController.GridEnvironmentGesture);
             UpdateTooltip(GridZIndexEnvironmentButton, ButtonsController.GridZIndexEnvironmentGesture);
             UpdateTooltip(TextGridEnvironmentButton, ButtonsController.TextGridEnvironmentGesture);
+
+            UpdateTooltip(OverlayButton, ButtonsController.OverlayGesture);
         }
 
         private void UpdateTooltip(Button button, KeyGesture gesture)
