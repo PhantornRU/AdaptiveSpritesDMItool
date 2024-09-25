@@ -334,11 +334,11 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
                 return;
             }
 
-            if (File.Exists(saveFileDialog.FileName))
-            {
-                // Protect the user from accidental writes
-                return;
-            }
+            //if (File.Exists(saveFileDialog.FileName))
+            //{
+            //    // Protect the user from accidental writes
+            //    return;
+            //}
 
             try
             {
@@ -355,6 +355,13 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
             SavedConfigNoticeVisibility = Visibility.Visible;
             SavedConfigNotice = $"File {saveFileDialog.FileName} was saved.";
+
+            foreach (ConfigItem item in BasicListConfigViewItems)
+            {
+                if (item.FileName == saveFileDialog.SafeFileName 
+                    && item.FilePath == FileToSaveFullPath)
+                    return;
+            }
 
             ConfigItem config = new ConfigItem(saveFileDialog.SafeFileName, FileToSaveFullPath);
             config.State = ConfigState.Saved;
@@ -401,17 +408,19 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             {
                 return;
             }
-            
-            foreach(ConfigItem item in BasicListConfigViewItems)
+
+            foreach (ConfigItem item in BasicListConfigViewItems)
             {
-                if(item.FileName == openFileDialog.SafeFileName)
-                {
-                    return;
-                }
+                if (item.FileName != openFileDialog.SafeFileName)
+                    continue;
+                ShowMessages.ConfigAlreadyLoaded();
+                return;
             }
 
             OpenedLoadConfig = openFileDialog.FileName;
             OpenedLoadConfigVisibility = Visibility.Visible;
+
+
             var config = new ConfigItem(openFileDialog.SafeFileName, OpenedLoadConfig);
             BasicListConfigViewItems.Add(config);
 

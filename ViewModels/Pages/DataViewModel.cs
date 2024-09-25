@@ -1,4 +1,5 @@
 ﻿using AdaptiveSpritesDMItool.Controllers;
+using AdaptiveSpritesDMItool.Helpers;
 using AdaptiveSpritesDMItool.Models;
 using DMISharp;
 using Microsoft.Win32;
@@ -68,16 +69,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             Debug.WriteLine(FolderImportPath);
             if (!Directory.Exists(FolderImportPath))
             {
-                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
-                {
-                    Title = "No directory found",
-                    Content =
-                        "Please write the correct full path to your directory. " +
-                        "\nIf the directory is in the build folder, then you only need to write its name, for example, " +
-                        "by writing \"Import\" you will get the directory where your build is located \"D:\\AdaptiveSpritesDMItool\\bin\\Debug\\net7.0-windows\\Import\"." +
-                         $"\nThe default directory is \"{EnvironmentController.defaultImportPath}\"",
-                };
-                _ = await uiMessageBox.ShowDialogAsync();
+                ShowMessages.NoDirectoryFound();
                 return;
             }
             EnvironmentController.lastImportPath = FolderImportPath;
@@ -89,16 +81,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             Debug.WriteLine(FolderExportPath);
             if (!Directory.Exists(FolderExportPath))
             {
-                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
-                {
-                    Title = "No directory found",
-                    Content =
-                        "Please write the correct full path to your directory. " +
-                        "\nIf the directory is in the build folder, then you only need to write its name, for example, " +
-                        "by writing \"Export\" you will get the directory where your build is located \"D:\\AdaptiveSpritesDMItool\\bin\\Debug\\net7.0-windows\\Export\"." +
-                         $"\nThe default directory is \"{EnvironmentController.defaultExportPath}\"",
-                };
-                _ = await uiMessageBox.ShowDialogAsync();
+                ShowMessages.NoDirectoryFound();
                 return;
             }
             EnvironmentController.lastExportPath = FolderExportPath;

@@ -196,16 +196,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             if (selectedConfigs.Count == 0)
             {
-
-                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
-                {
-                    Title = "No config selected",
-                    Content =
-                        "The process has been cancelled." +
-                        "\nPlease upload the configs that will process the files, then select those that will participate in the process. " +
-                        "\nYou can select several at once.",
-                };
-                _ = await uiMessageBox.ShowDialogAsync();
+                ShowMessages.NoConfigSelected();
                 return;
             }
 
@@ -214,41 +205,19 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 if (config.State != ConfigState.NotSaved)
                     continue;
 
-                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
-                {
-                    Title = "Not saved config selected",
-                    Content =
-                        "One of the selected configs is not saved and does not have the required parameters for processing. " +
-                        "\nRemove the selection or save it on the \"Edit\" page.",
-                };
-                _ = await uiMessageBox.ShowDialogAsync();
+                ShowMessages.NotSavedConfigSelected();
                 return;
             }
 
             if (filesPaths.Count == 0)
             {
-                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
-                {
-                    Title = "No DMI states found",
-                    Content =
-                        "Please upload DMI files by selecting the folder of their content directory. All subfolders in this category will be processed as well. " +
-                        "\nThe final result will be uploaded to separate files and directories under the config name. " +
-                        "\nAll files will have the same names and states.",
-                };
-                _ = await uiMessageBox.ShowDialogAsync();
+                ShowMessages.NoDMIStatesFound();
                 return;
             }
 
             if(!DMIStatesProcessor.IsIterEnded())
             {
-                var uiMessageBox = new Wpf.Ui.Controls.MessageBox
-                {
-                    Title = "Process in progress",
-                    Content =
-                        "The program is processing programs. " +
-                        "\nIt is not possible to start new processes, please wait until the end.",
-                };
-                _ = await uiMessageBox.ShowDialogAsync();
+                ShowMessages.ProcessInProgress();
                 return;
             }
 
