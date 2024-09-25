@@ -244,6 +244,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             {
                 Debug.WriteLine("Config nullified.");
                 EnvironmentController.currentConfigFullPath = string.Empty;
+                lastIndexConfig = -1;
                 return;
             }
             Debug.WriteLine($"Config Changed to: {config.FileName} \nPath: {config.FilePath}");
@@ -296,11 +297,15 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             }
             else
             {
+                if (lastIndexConfig == -1)
+                {
+                    ShowMessages.NoConfigSelected();
+                    return;
+                }
                 ConfigItem selectedItem = BasicListConfigViewItems[lastIndexConfig];
                 selectedItem.State = ConfigState.Saved;
                 EnvironmentController.dataPixelStorage.SavePixelStorage(fullpath);
             }
-
 
         }
 

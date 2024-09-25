@@ -33,8 +33,7 @@ namespace AdaptiveSpritesDMItool.Helpers
             string title = "No config selected";
             string content =
                 "The process has been cancelled." +
-                "\nPlease upload the configs that will process the files, then select those that will participate in the process. " +
-                "\nYou can select several at once.";
+                "\nPlease upload the configs that will process the files, then select those that will participate in the process. ";
             ShowMessageBox(title, content);
         }
 
