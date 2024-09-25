@@ -153,11 +153,6 @@ namespace AdaptiveSpritesDMItool.Processors
         private static void ProcessStateWithConfig(DMIState state, ConfigItem config, DataPixelStorage dataPixelStorage, string path)
         {
 
-            if (!(state.Name == "vox1" || state.Name == "vox2" || state.Name == "vox3"))
-            {
-                return;
-            }
-
             if (!StatesController.isOverrideToggle)
             {
                 string exportPath = FilesSearcher.GetExportConfigPath(config.FileName, path);
