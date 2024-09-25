@@ -38,9 +38,11 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         /// <summary> Paths to files to be processed. </summary>
         private List<string> filesPaths = new List<string>();
 
+        private Brush correctBrush = Brushes.ForestGreen;
         private Brush incorrectBrush = Brushes.Orange;
-        private Brush correctBrush = Brushes.Green;
         private Brush badBrush = Brushes.Red;
+        private Brush skipBrush = Brushes.Gray;
+        private Brush doneBrush = Brushes.GreenYellow;
 
         public DataViewModel ViewModel { get; }
         public DataPage(DataViewModel viewModel)
@@ -121,22 +123,55 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             string headerFile = GetHeaderFile(file);
             var fileTreeItem = new TreeViewItem { Header = headerFile };
-            if (!headerFile.Contains(EnvironmentController.defaultFileFormat))
-                fileTreeItem.Foreground = incorrectBrush;
-            else
+            string fullPath = $"{directory}\\{headerFile}";
+            fileTreeItem.Foreground = GetColorTreeItem(headerFile, fullPath);
+            if (headerFile.Contains(EnvironmentController.defaultFileFormat))
             {
-                string fullPath = $"{directory}\\{headerFile}";
                 filesPaths.Add(fullPath);
             }
             return fileTreeItem;
         }
 
+        private Brush GetColorTreeItem(string headerFile, string fullPath)
+        {
+            // No DMI file? No process.
+            if (!headerFile.Contains(EnvironmentController.defaultFileFormat))
+                return badBrush;
 
+            if (fullPath == string.Empty)
+                return badBrush;
+
+            // Work with configs & DMI file states
+            using DMIFile fileDmi = new DMIFile(fullPath);
+            if (fileDmi.States.Count == 0)
+                return badBrush;
+
+            if (StatesController.isOverrideToggle)
+                return correctBrush;
+
+            foreach (ConfigItem config in selectedConfigs)
+            {
+                string exportPath = FilesSearcher.GetExportConfigPath(config.FileName, fullPath);
+                if (File.Exists(exportPath) == false)
+                    continue;
+                DMIFile exportedDMIFile = new DMIFile(exportPath);
+                foreach (DMIState state in fileDmi.States)
+                {
+                    foreach (DMIState exportedState in exportedDMIFile.States)
+                    {
+                        if (state.Name == exportedState.Name)
+                            return incorrectBrush;
+                    }
+                }
+            }
+
+            return correctBrush;
+        }
 
         #endregion Tree View
 
 
-        #region Buttons
+        #region Changed Events
 
         public void TreeItemChanged(object sender, RoutedEventArgs e)
         {
@@ -165,7 +200,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 ConfigItem? config = item as ConfigItem;
                 selectedConfigs.Add(config);
             }
+            GenerateTreeItems();
         }
+
+        #endregion Changed Events
+
+
+        #region Buttons
 
         private void SetImportFolderButton_Click(object sender, RoutedEventArgs e)
         {
@@ -183,12 +224,16 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             var pressed = StatesController.GetPressedButtonAppearance();
             var unpressed = StatesController.GetUnPressedButtonAppearance();
             OverrideButton.Appearance = StatesController.isOverrideToggle ? pressed : unpressed;
+
+            string fullPath = EnvironmentController.lastImportPath;
+            GenerateTreeItems();
         }
 
         private void ConfigRemoveButton_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
-            ConfigItem config = button.DataContext as ConfigItem;
+            Button? button = sender as Button;
+            ConfigItem? config = button?.DataContext as ConfigItem;
+            if (config == null) return;
             ViewModel.RemoveConfig(config);
         }
 
@@ -262,14 +307,30 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 return;
             ViewModel.ClearStatesCollection();
 
-
             //var StateItems = new ObservableCollection<StateItem>();
             using DMIFile fileDmi = new DMIFile(fullPath);
             var states = fileDmi.States;
             foreach (DMIState state in states)
             {
                 WriteableBitmap writeableBitmap = ImageEncoder.GetBMPFromDMIState(state, StateDirection.South);
-                Brush color = Brushes.GreenYellow;
+
+                Brush color = correctBrush;
+                if (!StatesController.isOverrideToggle)
+                {
+                    foreach (ConfigItem config in selectedConfigs)
+                    {
+                        string exportPath = FilesSearcher.GetExportConfigPath(config.FileName, fullPath);
+                        if (File.Exists(exportPath) == false)
+                            continue;
+                        DMIFile exportedDMIFile = new DMIFile(exportPath);
+                        foreach (DMIState exportedState in exportedDMIFile.States)
+                        {
+                            if (state.Name == exportedState.Name)
+                                color = incorrectBrush;
+                        }
+                    }
+                }
+
                 StateItem stateItem = new StateItem(
                         "NoName",
                         fullPath,

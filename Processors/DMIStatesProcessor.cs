@@ -14,6 +14,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using SixLabors.ImageSharp.Processing;
 using AdaptiveSpritesDMItool.Resources;
+using AdaptiveSpritesDMItool.Helpers;
 
 namespace AdaptiveSpritesDMItool.Processors
 {
@@ -105,7 +106,7 @@ namespace AdaptiveSpritesDMItool.Processors
             {
                 iter++;
                 progress?.Report(iter);
-                ProcessStateWithConfig(state, config, dataPixelStorage);
+                ProcessStateWithConfig(state, config, dataPixelStorage, path);
                 //Thread.Sleep(200);
             }
 
@@ -135,6 +136,12 @@ namespace AdaptiveSpritesDMItool.Processors
             }
 
             Debug.WriteLine($"[{iter}/{maxIter}] NOT SAVED {fileExportPath}");
+            foreach (DMIState state in file.States)
+            {
+                iter++;
+                iter += state.TotalFrames;
+                //Thread.Sleep(200);
+            }
         }
 
         #endregion Processors
@@ -143,12 +150,34 @@ namespace AdaptiveSpritesDMItool.Processors
         #region Draw
 
 
-        private static void ProcessStateWithConfig(DMIState state, ConfigItem config, DataPixelStorage dataPixelStorage)
+        private static void ProcessStateWithConfig(DMIState state, ConfigItem config, DataPixelStorage dataPixelStorage, string path)
         {
-            // TODO: Checking that this state is already in the processed file
-            //if (!StatesController.isOverrideToggle)
-            //    if (state.Name == state.Name)
-            //      return;
+
+            if (!(state.Name == "vox1" || state.Name == "vox2" || state.Name == "vox3"))
+            {
+                return;
+            }
+
+            if (!StatesController.isOverrideToggle)
+            {
+                string exportPath = FilesSearcher.GetExportConfigPath(config.FileName, path);
+                //Debug.WriteLine($"PROCESS {exportPath} \n\t--- {path}");
+                if (File.Exists(exportPath) == false)
+                {
+                    EditStateWithConfig(state, config, dataPixelStorage);
+                    return;
+                }
+
+                DMIFile exportedDMIFile = new DMIFile(exportPath);
+                foreach (DMIState exportedState in exportedDMIFile.States)
+                {
+                    if (state.Name == exportedState.Name)
+                    {
+                        iter += state.TotalFrames;
+                        return;
+                    }
+                }
+            }
             EditStateWithConfig(state, config, dataPixelStorage);
         }
 

@@ -699,8 +699,9 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void StateRemoveButton_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
-            StateItem state = button.DataContext as StateItem;
+            Button? button = sender as Button;
+            StateItem? state = button?.DataContext as StateItem;
+            if (state == null) return;
             ViewModel.RemoveState(state);
         }
 
@@ -730,8 +731,9 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         private void ConfigRemoveButton_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
-            ConfigItem config = button.DataContext as ConfigItem;
+            Button? button = sender as Button;
+            ConfigItem? config = button?.DataContext as ConfigItem;
+            if (config == null) return;
             ViewModel.RemoveConfig(config);
         }
 

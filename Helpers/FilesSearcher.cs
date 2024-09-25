@@ -58,5 +58,16 @@ namespace AdaptiveSpritesDMItool.Helpers
 
         #endregion Directory
 
+
+        #region Path
+        public static string GetExportConfigPath(string configFileName, string fullpath)
+        {
+            string fullpathPart = fullpath.Replace(EnvironmentController.lastImportPath, "");
+            string configName = configFileName.Replace(EnvironmentController.configFormat, "");
+            string exportPath = $"{EnvironmentController.lastExportPath}\\{configName}\\{fullpathPart}";
+            return exportPath;
+        }
+
+        #endregion Path
     }
 }

@@ -67,11 +67,15 @@ namespace AdaptiveSpritesDMItool.Resources
         public Point GetPointStorage(StateDirection direction, Point point)
         {
             var storagePoint = ConvertToStoragePoint(point);
+            storagePoint.x = Math.Max(storagePoint.x, 0);
+            storagePoint.y = Math.Max(storagePoint.y, 0);
             return ConvertFromStoragePoint(pixelStorages[direction][storagePoint]);
         }
 
         public (int x, int y) GetPointStorage(StateDirection direction, (int x, int y) point)
         {
+            point.x = Math.Max(point.x, 0);
+            point.y = Math.Max(point.y, 0);
             return pixelStorages[direction][point];
         }
 
