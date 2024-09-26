@@ -4,6 +4,31 @@
   Adaptive DMI Tool
 </h1>
 
+#   
+#  
+#  
+
+<h1 align="center">
+!!!!!!! This is a BETA program !!!!!!!!
+</h1>
+<h3 align="center">
+The tool is under development, there are inconveniences and bugs.
+</h3>
+Known issues:
+
+- No support for any resolution except 32x32
+- After saving, the parallel state starts showing an alternative reality when mirroring (how can that be...)
+- There is no empty workspace and methods for cleaning it (plans to fix)
+- There is no saving of the workspace and settings.
+- There is no ability to set a suffix and prefix to each state and file if necessary.
+- There is no REDO hotkey.
+- Inconvenient location of windows (at the moment, the interface is being improved)
+- It is necessary to add a button to invert the parallel state for the config
+
+#   
+#  
+#  
+
 README Available languages:
 
 [English](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README.md)
