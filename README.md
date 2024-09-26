@@ -17,13 +17,14 @@ The tool is under development, there are inconveniences and bugs.
 Known issues:
 
 - No support for any resolution except 32x32
-- After saving, the parallel state starts showing an alternative reality when mirroring (how can that be...)
 - There is no empty workspace and methods for cleaning it (plans to fix)
 - There is no saving of the workspace and settings.
 - There is no ability to set a suffix and prefix to each state and file if necessary.
 - There is no REDO hotkey.
 - Inconvenient location of windows (at the moment, the interface is being improved)
 - It is necessary to add a button to invert the parallel state for the config
+- After saving, the parallel state starts showing an alternative reality when mirroring (how can that be...). 
+- - A rare bug that occurs if you do the save incorrectly. I'm trying to find out how it's called (it's called when all the configs have been removed and resaved. A very strange and annoying bug =/
 
 #   
 #  
