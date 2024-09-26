@@ -41,8 +41,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private Brush correctBrush = Brushes.ForestGreen;
         private Brush incorrectBrush = Brushes.Orange;
         private Brush badBrush = Brushes.Red;
-        private Brush skipBrush = Brushes.Gray;
-        private Brush doneBrush = Brushes.GreenYellow;
 
         public DataViewModel ViewModel { get; }
         public DataPage(DataViewModel viewModel)
