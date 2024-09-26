@@ -51,7 +51,8 @@ namespace AdaptiveSpritesDMItool.Services
                 _navigationWindow!.ShowWindow();
 
                 //_navigationWindow.Navigate(typeof(Views.Pages.DashboardPage));
-                _navigationWindow.Navigate(typeof(Views.Pages.StatesEditorPage)); // !!!!! ВРЕМЕННОЕ ПЕРЕКЛЮЧЕНИЕ !!!!!!
+                _navigationWindow.Navigate(typeof(Views.Pages.StatesEditorPage));
+
             }
 
             await Task.CompletedTask;

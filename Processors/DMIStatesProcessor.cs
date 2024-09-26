@@ -110,9 +110,7 @@ namespace AdaptiveSpritesDMItool.Processors
                 //Thread.Sleep(200);
             }
 
-            string configName = config.FileName.Replace(EnvironmentController.configFormat, "");
-            string fileExportPath = Path.Combine(EnvironmentController.lastExportPath, configName, path);
-            //if(fileExportPath.Last() != '\\') fileExportPath += '\\';
+            string fileExportPath = FilesSearcher.GetExportConfigPath(config.FileName, path);
             string? directoryExportPath = Path.GetDirectoryName(fileExportPath);
 
             if (directoryExportPath != null && 
@@ -135,13 +133,31 @@ namespace AdaptiveSpritesDMItool.Processors
                 return;
             }
 
-            Debug.WriteLine($"[{iter}/{maxIter}] NOT SAVED {fileExportPath}");
-            foreach (DMIState state in file.States)
+            DMIFile exportedDMIFile = new DMIFile(fileExportPath);
+            bool isNeedSave = file.States.Count != exportedDMIFile.States.Count;
+            foreach (DMIState exportedState in exportedDMIFile.States)
             {
-                iter++;
-                iter += state.TotalFrames;
-                //Thread.Sleep(200);
+                //if (!file.States.Any(s => s.Name == exportedState.Name))
+                var existingState = file.States.FirstOrDefault(s => s.Name == exportedState.Name);
+                if (existingState == null)
+                {
+                    file.AddState(exportedState);
+                }
+                else
+                {
+                    file.RemoveState(existingState);
+                    file.AddState(exportedState);
+                }
             }
+
+            if (isNeedSave)
+            {
+                Debug.WriteLine($"[{iter}/{maxIter}] SAVED {fileExportPath} - Supplemented with states");
+                file.SortStates();
+                file.Save(fileExportPath);
+            }
+            Debug.WriteLine($"[{iter}/{maxIter}] NOT SAVED {fileExportPath}");
+            //Thread.Sleep(200);
         }
 
         #endregion Processors
@@ -182,7 +198,6 @@ namespace AdaptiveSpritesDMItool.Processors
             StateDirection[] stateDirections = StatesController.GetAllStateDirections(state.DirectionDepth);
             for (int i = 0; i < state.Frames; i++)
             {
-
                 foreach (StateDirection direction in stateDirections)
                 {
                     iter++;

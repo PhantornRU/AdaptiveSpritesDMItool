@@ -60,11 +60,12 @@ namespace AdaptiveSpritesDMItool.Helpers
 
 
         #region Path
-        public static string GetExportConfigPath(string configFileName, string fullpath)
+        public static string GetExportConfigPath(string configFileName, string path)
         {
-            string fullpathPart = fullpath.Replace(EnvironmentController.lastImportPath, "");
+            //if(fileExportPath.Last() != '\\') fileExportPath += '\\';
+            string pathPart = path.Replace(EnvironmentController.lastImportPath, "");
             string configName = configFileName.Replace(EnvironmentController.configFormat, "");
-            string exportPath = $"{EnvironmentController.lastExportPath}\\{configName}\\{fullpathPart}";
+            string exportPath = Path.Combine(EnvironmentController.lastExportPath, configName, pathPart);
             return exportPath;
         }
 
