@@ -708,7 +708,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private int lastIndexConfig = 0;
         private void ConfigChanged(object sender, SelectionChangedEventArgs e)
         {
-            Debug.WriteLine($"Config start Changed {lastIndexConfig}");
             Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
             if (listView == null) return;
             ConfigItem? config = listView.SelectedItem as ConfigItem;
@@ -725,10 +724,8 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             }    
             else
                 lastIndexConfig = index;
-            // !!!!!!!!!! НУЖЕН НОРМАЛЬНЫЙ ВЫБОР чтобы не сбрасывался во второй раз
             Debug.WriteLine($"Config Changed {lastIndexConfig} - {index}");
             ViewModel.ConfigChanged(config, lastIndexConfig);
-            Debug.WriteLine($"Config finished Changed {lastIndexConfig} - {index}");
         }
 
         private void ClearConfigButton_Click(object sender, RoutedEventArgs e)
