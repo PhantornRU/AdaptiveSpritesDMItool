@@ -244,6 +244,8 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             {
                 Debug.WriteLine("Config nullified.");
                 EnvironmentController.currentConfigFullPath = string.Empty;
+                EnvironmentController.dataPixelStorage.ResetPixelStorage();
+                EnvironmentController.dataPixelStorage.DrawPixelStorageAtBitmaps();
                 lastIndexConfig = -1;
                 return;
             }
