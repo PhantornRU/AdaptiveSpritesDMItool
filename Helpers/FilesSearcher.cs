@@ -64,6 +64,7 @@ namespace AdaptiveSpritesDMItool.Helpers
         {
             //if(fileExportPath.Last() != '\\') fileExportPath += '\\';
             string pathPart = path.Replace(EnvironmentController.lastImportPath, "");
+            if (pathPart.First() == '\\') pathPart = pathPart.Remove(0, 1);
             string configName = configFileName.Replace(EnvironmentController.configFormat, "");
             string exportPath = Path.Combine(EnvironmentController.lastExportPath, configName, pathPart);
             return exportPath;
