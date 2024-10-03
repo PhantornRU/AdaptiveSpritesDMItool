@@ -56,7 +56,7 @@ namespace AdaptiveSpritesDMItool.Helpers
 
             //Similarly: Push(tempPixelStorage);
             pixelsStorages.AddLast(tempPixelStorage);
-            Debug.WriteLine($"UndoStack PUSH: {pixelsStorages.Count}");
+            //Debug.WriteLine($"UndoStack PUSH: {pixelsStorages.Count}");
         }
 
     }

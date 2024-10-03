@@ -43,7 +43,11 @@ namespace AdaptiveSpritesDMItool.Resources
 
         public void ChangePoint(StateDirection direction, (int x, int y) point, (int x, int y) pointMod)
         {
+            //Debug.WriteLine($"ChangePoint {direction} -- {point} - {pointMod}");
+            //string textWas = $"\tWas: {point} - Storage: {pixelStorages[direction][point]}";
             pixelStorages[direction][point] = pointMod;
+            //string textNow = $"\tNow: {point} - Storage: {pixelStorages[direction][point]}";
+            //Debug.WriteLine($"{textWas} \n{textNow}");
             wasUpdated = true;
         }
 

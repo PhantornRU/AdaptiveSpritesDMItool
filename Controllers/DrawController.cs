@@ -138,7 +138,6 @@ namespace AdaptiveSpritesDMItool.Controllers
             foreach (var stateDirection in stateDirections)
             {
                 if (pointsStorage.ContainsKey(stateDirection) == false) continue;
-                Point[] points = GetStoragePoints(stateDirection);
 
                 WriteableBitmap bitmapPreview = EnvironmentController.GetPreviewBMP(stateDirection, StateImageSideType.Left);
                 WriteableBitmap bitmapOverlayPreview = EnvironmentController.GetOverlayBMP(stateDirection, StateImageSideType.Left);
@@ -148,9 +147,6 @@ namespace AdaptiveSpritesDMItool.Controllers
 
                 foreach (var point in pointsStorage[stateDirection])
                 {
-                    //var tempPoint = CorrectMousePositionPoint(stateDirection, point.Key, cellsSize);
-                    //var storagePoint = point.Value;
-
                     // Pixel Shift
                     Point tempPoint = CorrectMousePositionPoint(stateDirection, point.Key, cellsSize);
 
@@ -158,8 +154,7 @@ namespace AdaptiveSpritesDMItool.Controllers
                     Point selectedPoint = new Point(tempPoint.X + pointOffset.X, tempPoint.Y + pointOffset.Y);
                     selectedPoint = CorrectMousePositionPoint(stateDirection, selectedPoint, cellsSize);
 
-                    Point storagePoint = pointsStorage[stateDirection][point.Key];
-                    storagePoint = CorrectMousePositionPoint(stateDirection, storagePoint, cellsSize);
+                    Point storagePoint = point.Value;
 
                     // Update Data Pixel Storage
                     if (StatesController.isLandmarkEditable)
@@ -180,7 +175,6 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             var stateDirections = StatesController.GetStateDirections();
             var cellsSize = EnvironmentController.dataImageState.imageCellsSize;
-
             pointsStorage = pointsStorage ?? new Dictionary<StateDirection, Dictionary<Point, Point>>();
 
             foreach (var stateDirection in stateDirections)
@@ -188,12 +182,10 @@ namespace AdaptiveSpritesDMItool.Controllers
                 pointsStorage[stateDirection] = new Dictionary<Point, Point>();
                 foreach (var point in points)
                 {
-                    Point tempPoint = CorrectMousePositionPoint(stateDirection, point, cellsSize);
-                    Point storagePoint = EnvironmentController.dataPixelStorage.GetPointStorage(stateDirection, point);
-                    pointsStorage[stateDirection][tempPoint] = storagePoint;
+                    Point newPoint = CorrectMousePositionPoint(stateDirection, point, cellsSize);
+                    Point storagePoint = EnvironmentController.dataPixelStorage.GetPointStorage(stateDirection, newPoint);
+                    pointsStorage[stateDirection][newPoint] = storagePoint;
                 }
-                //string pointStoragePoints = string.Join(", ", GetStoragePoints(stateDirection));
-                //Debug.WriteLine($"StoragePoints: {stateDirection}: {pointStoragePoints}");
             }
         }
 
@@ -231,10 +223,6 @@ namespace AdaptiveSpritesDMItool.Controllers
                     Point selectedPoint = new Point(point.X - pointOffset.X, point.Y - pointOffset.Y);
                     selectedPoint = CorrectMousePositionPoint(stateDirection, selectedPoint, cellsSize);
                     Point storagePoint = pointsStorage[stateDirection][selectedPoint];
-                    storagePoint = CorrectMousePositionPoint(stateDirection, storagePoint, cellsSize);
-
-                    //Point curPos = MouseController.currentMousePosition;
-                    //Debug.WriteLine($"curPos: {curPos}, point: {point}, temp: {tempPoint}, selected: {selectedPoint}, storage: {storagePoint}, --- offset: {pointOffset}");
 
                     // Pixel Color
                     Color color = GetPointColor(bitmapOverlayPreview, storagePoint);
@@ -773,7 +761,7 @@ namespace AdaptiveSpritesDMItool.Controllers
             pointOffsetMax.X = Math.Max(point1.X, point2.X);
             pointOffsetMax.Y = Math.Max(point1.Y, point2.Y);
 
-            Debug.WriteLine($"Update Point Offset Bounds, min: {pointOffsetMin}, max: {pointOffsetMax}. pointOffset: {pointOffset}, Down: {pointOffsetDown}, Last: {pointOffsetLast}");
+            //Debug.WriteLine($"Update Point Offset Bounds, min: {pointOffsetMin}, max: {pointOffsetMax}. pointOffset: {pointOffset}, Down: {pointOffsetDown}, Last: {pointOffsetLast}");
         }
 
         /// <summary>
