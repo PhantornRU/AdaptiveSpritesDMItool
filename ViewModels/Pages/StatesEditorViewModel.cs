@@ -7,10 +7,12 @@ using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection.Metadata;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Shell;
+using Wpf.Ui;
 using Wpf.Ui.Controls;
 
 
@@ -186,6 +188,8 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             foreach (var path in fileNames)
             {
                 using DMIFile fileDmi = new DMIFile(path);
+                if (!EnvironmentController.dataImageState.CheckCorrectDMIFile(fileDmi))
+                    continue;
                 var states = GetListStateItems(fileDmi, path);
                 foreach (var state in states)
                 {
@@ -464,15 +468,5 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         #endregion Config
 
 
-
-
-
-
-
-        [RelayCommand]
-        public static void TextCommand()
-        {
-            Debug.WriteLine("123");
-        }
     }
 }

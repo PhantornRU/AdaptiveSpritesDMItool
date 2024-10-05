@@ -203,5 +203,19 @@ namespace AdaptiveSpritesDMItool.Models
 
             pixelSize = ImageEncoder.GetPixelSizeFromResolution(heightCellsImage);
         }
+
+        public bool CheckCorrectDMIFile(DMIFile fileDmi)
+        {
+            if (fileDmi == null)
+                return false;
+
+            if (fileDmi.Metadata.FrameWidth != imageCellsSize.Width || fileDmi.Metadata.FrameHeight != imageCellsSize.Height)
+            {
+                Debug.WriteLine($"Skipped DMI File with first state {fileDmi.States.First().Name}: {fileDmi.Metadata.FrameWidth}x{fileDmi.Metadata.FrameHeight} != {imageCellsSize.Width}x{imageCellsSize.Height}");
+                return false;
+            }
+
+            return true;
+        }
     }
 }
