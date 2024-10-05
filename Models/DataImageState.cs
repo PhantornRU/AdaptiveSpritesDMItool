@@ -12,6 +12,7 @@ using System.IO;
 using AdaptiveSpritesDMItool.Controllers;
 using AdaptiveSpritesDMItool.Helpers;
 using System.Diagnostics;
+using System.Data;
 
 namespace AdaptiveSpritesDMItool.Models
 {
@@ -67,8 +68,13 @@ namespace AdaptiveSpritesDMItool.Models
         {
             Debug.WriteLine($"Initialize Data: {_state.Name}");
             currentState = _state;
-            pixelSize = ImageEncoder.GetPixelSizeFromResolution(heightCellsImage);
-            WriteableBitmap bitmapUI = new WriteableBitmap(bitmapUISize.Width, bitmapUISize.Height, pixelSize, pixelSize, PixelFormats.Bgra32, null);
+            UpdateWidthCellsImage(currentState.Width, currentState.Height);
+
+            WriteableBitmap bitmapUI = new WriteableBitmap(
+                bitmapUISize.Width, 
+                bitmapUISize.Height, 
+                pixelSize, pixelSize, 
+                PixelFormats.Bgra32, null);
 
             StateDirection[] stateDirections = StatesController.GetAllStateDirections(DirectionDepth.Four);
             foreach (StateDirection direction in stateDirections)
@@ -91,8 +97,6 @@ namespace AdaptiveSpritesDMItool.Models
                 }
             }
 
-            widthCellsImage = currentState.Width;
-            heightCellsImage = currentState.Height;
         }
 
         public void InitializeLandmarkData(DMIState _state)
@@ -191,5 +195,13 @@ namespace AdaptiveSpritesDMItool.Models
         }
 
         #endregion Bitmap
+
+        public void UpdateWidthCellsImage(int _width, int _height)
+        {
+            widthCellsImage = _width;
+            heightCellsImage = _height;
+
+            pixelSize = ImageEncoder.GetPixelSizeFromResolution(heightCellsImage);
+        }
     }
 }

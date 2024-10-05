@@ -1,0 +1,115 @@
+﻿<Window x:Class="AdaptiveSpritesDMItool.Views.Windows.DialogWindows.DialogResolutionChangeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AdaptiveSpritesDMItool.Views.Windows.DialogWindows"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        mc:Ignorable="d"
+        Title="Different resolutions of files" Height="350" Width="350">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Margin="0,10"
+            BorderBrush="LightSlateGray" BorderThickness="0.5">
+            <TextBlock Margin="10"
+                TextWrapping="Wrap" 
+                VerticalAlignment="Center"
+                FontFamily="Calibri" 
+                Text=" Some .dmi files you download have a different resolution than the one you are currently using. &#x0a; What should do with files of different resolutions?"/>
+        </Border>
+
+        <ui:Button Grid.Row="1" Margin="10,5"
+                x:Name="ButtonSkipFiles"
+                IsDefault="True" 
+                IsCancel="True" 
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                FontFamily="Calibri" 
+                Content="Skip files of a different resolution." 
+                Click="ButtonSkipFiles_Click"/>
+
+        <ui:Button Grid.Row="2" Margin="10,5"
+                x:Name="ButtonReplaceFiles"
+                IsCancel="True" 
+                MinWidth="225"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center" 
+                Click="ButtonReplaceFiles_Click">
+            <TextBlock Grid.Row="2"
+                VerticalAlignment="Center"
+                FontFamily="Calibri" 
+                TextWrapping="Wrap"  
+                Text="Replace files of a lower resolution &#x0a;by moving the images to the side:"/>
+        </ui:Button>
+
+
+        <Grid Grid.Row="3"
+            HorizontalAlignment="Center" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <ui:Button Grid.Row="0" Grid.Column="0"
+                        x:Name="ButtonUpLeft"
+                        Icon="{ui:SymbolIcon ArrowUpLeft24}" 
+                        Click="ButtonUpLeft_Click"/>
+            <ui:Button Grid.Row="0" Grid.Column="1"
+                        x:Name="ButtonUp"
+                        Icon="{ui:SymbolIcon ArrowUp24}" 
+                        Click="ButtonUp_Click"/>
+            <ui:Button Grid.Row="0" Grid.Column="2"
+                        x:Name="ButtonUpRight"
+                        Icon="{ui:SymbolIcon ArrowUpRight24}" 
+                        Click="ButtonUpRight_Click"/>
+
+            <ui:Button Grid.Row="1" Grid.Column="0"
+                        x:Name="ButtonLeft"
+                        Icon="{ui:SymbolIcon ArrowLeft24}" 
+                        Click="ButtonLeft_Click"/>
+            <ui:Button Grid.Row="1" Grid.Column="1"
+                        x:Name="ButtonCenter"
+                        Appearance="Primary"
+                        Icon="{ui:SymbolIcon Square24}" 
+                        Click="ButtonCenter_Click"/>
+            <ui:Button Grid.Row="1" Grid.Column="2"
+                        x:Name="ButtonRight"
+                        Icon="{ui:SymbolIcon ArrowRight24}" 
+                        Click="ButtonRight_Click"/>
+
+            <ui:Button Grid.Row="2" Grid.Column="0"
+                        x:Name="ButtonDownLeft"
+                        Icon="{ui:SymbolIcon ArrowDownLeft24}" 
+                        Click="ButtonDownLeft_Click"/>
+            <ui:Button Grid.Row="2" Grid.Column="1"
+                        x:Name="ButtonDown"
+                        Icon="{ui:SymbolIcon ArrowDown24}" 
+                        Click="ButtonDown_Click"/>
+            <ui:Button Grid.Row="2" Grid.Column="2"
+                        x:Name="ButtonDownRight"
+                        Icon="{ui:SymbolIcon ArrowDownLeft24}"
+                        RenderTransformOrigin="0.5,0.5" 
+                        Click="ButtonDownRight_Click">
+                
+                <ui:Button.RenderTransform>
+                    <ScaleTransform ScaleX="-1" />
+                </ui:Button.RenderTransform>
+            </ui:Button>
+            
+        </Grid>
+
+
+    </Grid>
+</Window>

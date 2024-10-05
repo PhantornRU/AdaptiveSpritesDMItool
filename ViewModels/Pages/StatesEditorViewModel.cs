@@ -205,6 +205,20 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             OpenedMultiplePathVisibility = Visibility.Collapsed;
         }
 
+        //[RelayCommand]
+        //public void OnClearPreviews()
+        //{
+        //    //BasicListPreviewViewItems.Clear(); //BasicListPreviewViewItems.Clear();
+        //    OpenedMultiplePath = string.Empty;
+        //    OpenedMultiplePathVisibility = Visibility.Collapsed;
+
+
+        //    foreach ( var direction in StatesController.GetAllStateDirections())
+        //        foreach (StateImageSideType type in Enum.GetValues(typeof(StateImageSideType)))
+        //            StatesController.stateSourceDictionary[direction][StateImageType.Preview][type]
+
+        //}
+
         #endregion Files
 
 

@@ -271,7 +271,7 @@
                     <!--IsIndeterminate="True"-->
                 <Label Grid.Row="0" 
                     x:Name="StatusMessage"
-                    HorizontalContentAlignment="Center"
+                    HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     FontFamily="Calibri" 
                     Content="... Select the configs and the folder with DMI files using [Set Folder Path] button, then click the [Apply] button ..." />

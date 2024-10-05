@@ -8,7 +8,7 @@
       
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     d:DesignHeight="900" 
-    d:DesignWidth="1150"
+    d:DesignWidth="1300"
     d:DataContext="{d:DesignInstance local:StatesEditorPage, IsDesignTimeCreatable=False}"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -636,9 +636,16 @@
                 <Separator Margin="12,0,12,0" />
                 <ui:Button
                     Command="{Binding ViewModel.ClearListCommand}"
+                    ToolTip="Clear the list of selectable states."
                     Appearance="Danger"
                     Opacity="0.75"
                     Icon="{ui:SymbolIcon Delete24}" />
+                <!--<ui:Button
+                    Command="{Binding ViewModel.ClearPreviewsCommand}"
+                    ToolTip="Clear all preview images."
+                    Appearance="Caution"
+                    Opacity="0.75"
+                    Icon="{ui:SymbolIcon EraserTool24}"/>-->
                 
                 <Separator Margin="12,0,12,0" />
             </ToolBar>
