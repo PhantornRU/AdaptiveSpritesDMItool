@@ -23,8 +23,6 @@ Known issues:
 - There is no REDO hotkey.
 - Inconvenient location of windows (at the moment, the interface is being improved)
 - It is necessary to add a button to invert the parallel state for the config
-- After saving, the parallel state starts showing an alternative reality when mirroring (how can that be...). 
-- - A rare bug that occurs if you do the save incorrectly. I'm trying to find out how it's called (it's called when all the configs have been removed and resaved. A very strange and annoying bug =/
 
 #   
 #  
