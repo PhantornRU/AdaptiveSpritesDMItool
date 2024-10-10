@@ -36,6 +36,7 @@
 
   <ItemGroup>
     <PackageReference Include="DMISharp" Version="2.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.4" />
     <PackageReference Include="WPF-UI" Version="3.0.4" />

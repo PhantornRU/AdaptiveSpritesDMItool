@@ -50,8 +50,7 @@ namespace AdaptiveSpritesDMItool.Services
                 )!;
                 _navigationWindow!.ShowWindow();
 
-                //_navigationWindow.Navigate(typeof(Views.Pages.DashboardPage));
-                _navigationWindow.Navigate(typeof(Views.Pages.StatesEditorPage));
+                _navigationWindow.Navigate(typeof(Views.Pages.DashboardPage));
 
             }
 

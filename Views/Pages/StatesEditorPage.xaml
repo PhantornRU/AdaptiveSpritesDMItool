@@ -682,7 +682,7 @@
                 <ui:Button
                     Content="Save As" 
                     ToolTip="Save current config as."
-                    Icon="{ui:SymbolIcon Save24}" 
+                    Icon="{ui:SymbolIcon SaveEdit24}" 
                     Command="{Binding ViewModel.SaveAsConfigCommand}" />
 
                 <Separator Margin="12,0,12,0" />
@@ -796,7 +796,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock
                                 Grid.Column="0"
-                                Margin="12,6,0,12"
+                                Margin="12,6"
                                 FontWeight="Bold"
                                 Text="{Binding FileName, Mode=OneWay}" />
                             <ui:Button 

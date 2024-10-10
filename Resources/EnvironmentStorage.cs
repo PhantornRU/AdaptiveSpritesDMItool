@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AdaptiveSpritesDMItool.Resources
 {
-    internal class EnvironmentStorage
+    public class EnvironmentStorage
     {
     }
 }

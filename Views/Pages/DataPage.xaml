@@ -107,7 +107,6 @@
             <ui:ListView
                     Grid.Row="1" Grid.Column="1" 
                     x:Name="ConfigList"
-                    MaxHeight="200"
                     Margin="12,0,12,12"
                     d:ItemsSource="{d:SampleData ItemCount=5}"
                     ItemsSource="{Binding ViewModel.BasicListConfigViewItems, Mode=TwoWay}"
@@ -124,7 +123,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock
                                 Grid.Column="0"
-                                Margin="12,6,0,12"
+                                Margin="12,6"
                                 FontWeight="Bold"
                                 Text="{Binding FileName, Mode=OneWay}" />
                             <ui:Button 

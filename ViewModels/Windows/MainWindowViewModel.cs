@@ -11,13 +11,12 @@ namespace AdaptiveSpritesDMItool.ViewModels.Windows
         [ObservableProperty]
         private ObservableCollection<object> _menuItems = new()
         {
-            // !!!!!!!!! TODO: Environment !!!!!!!!!!
-            //new NavigationViewItem()
-            //{
-            //    Content = "Home",
-            //    Icon = new SymbolIcon { Symbol = SymbolRegular.Home24 },
-            //    TargetPageType = typeof(Views.Pages.DashboardPage)
-            //},
+            new NavigationViewItem()
+            {
+                Content = "Home",
+                Icon = new SymbolIcon { Symbol = SymbolRegular.Home24 },
+                TargetPageType = typeof(Views.Pages.DashboardPage)
+            },
             new NavigationViewItem()
             {
                 Content = "Edit",
