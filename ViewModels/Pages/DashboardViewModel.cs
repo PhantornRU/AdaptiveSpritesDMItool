@@ -22,25 +22,17 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         {
             var environmentItems = new ObservableCollection<EnvironmentItem>();
 
-            return environmentItems; // !!!!!!!!!!!!!!
-
             string path = EnvironmentController.defaultSavesPath;
-
-            if (!Directory.Exists(path))
-            {
-                throw new Exception("Cant find path to dmi files.");
-                //Directory.CreateDirectory(path);
-            }
-
-            var files = Directory.GetFiles(path, "*.dmi");
-
+            string searchPattern = $"*{EnvironmentController.savesFormat}";
+            var files = Directory.EnumerateFiles(path, searchPattern, SearchOption.AllDirectories);
             foreach (var file in files)
             {
-                var fileName = Path.GetFileNameWithoutExtension(file);
-                var lastModified = File.GetLastWriteTime(file);
+                var fileName = Path.GetFileName(file);
+                fileName = fileName.Substring(0, fileName.Length - EnvironmentController.savesFormat.Length);
 
-                var item = new EnvironmentItem(fileName, file, lastModified);
-                environmentItems.Add(item);
+                var lastWriteTime = File.GetLastWriteTime(file);
+
+                environmentItems.Add(new EnvironmentItem(fileName, file, lastWriteTime));
             }
 
             // sort by last modified date

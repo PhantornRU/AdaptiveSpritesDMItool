@@ -39,6 +39,7 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #endregion Initialized at StatesEditorPage.xaml.ca
 
+
         #region Gestures
 
         public static KeyGesture SaveGesture = new KeyGesture(Key.S, ModifierKeys.Control);
@@ -68,10 +69,6 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         #endregion Gestures
 
-        public static void InitializeButtons()
-        {
-
-        }
 
         #region Buttons Toolbar Controller
 

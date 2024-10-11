@@ -105,6 +105,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock
                                 Grid.Column="0"
@@ -116,7 +117,13 @@
                                 Margin="12,6"
                                 VerticalAlignment="Center"
                                 FontSize = "10"
-                                Text="{Binding FilePath, Mode=OneWay}" />
+                                Text="{Binding FilePath , Mode=OneWay}" />
+                            <TextBlock
+                                Grid.Column="2"
+                                Margin="12,6"
+                                VerticalAlignment="Center"
+                                FontSize = "10"
+                                Text="{Binding LastModifiedDate, Mode=OneWay}" />
                         </Grid>
                     </DataTemplate>
                 </ui:ListView.ItemTemplate>

@@ -265,7 +265,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
             ButtonsController.OverlayButton = OverlayButton;
 
-            ButtonsController.InitializeButtons();
             UpdateTooltipButtons();
         }
 

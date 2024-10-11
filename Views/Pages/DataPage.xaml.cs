@@ -123,7 +123,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             var fileTreeItem = new TreeViewItem { Header = headerFile };
             string fullPath = $"{directory}\\{headerFile}";
             fileTreeItem.Foreground = GetColorTreeItem(headerFile, fullPath);
-            if (headerFile.Contains(EnvironmentController.defaultFileFormat))
+            if (headerFile.Contains(EnvironmentController.fileImageFormat))
             {
                 filesPaths.Add(fullPath);
             }
@@ -133,7 +133,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private Brush GetColorTreeItem(string headerFile, string fullPath)
         {
             // No DMI file? No process.
-            if (!headerFile.Contains(EnvironmentController.defaultFileFormat))
+            if (!headerFile.Contains(EnvironmentController.fileImageFormat))
                 return badBrush;
 
             if (fullPath == string.Empty)

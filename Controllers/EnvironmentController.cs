@@ -36,8 +36,9 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static string defaultStoragePath = "Assets\\Storage";
         public static string ChoosenStorageName = "Default";
 
-        public static string defaultFileFormat = ".dmi";
+        public static string fileImageFormat = ".dmi";
         public static string configFormat = ".csv";
+        public static string savesFormat = ".json";
 
         public static string currentConfigFullPath = string.Empty;
 
