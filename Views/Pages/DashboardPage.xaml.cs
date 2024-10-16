@@ -23,6 +23,9 @@ using System.Windows.Interop;
 using System.Windows.Controls;
 using AdaptiveSpritesDMItool.Models;
 using AdaptiveSpritesDMItool.Controllers;
+using AdaptiveSpritesDMItool.Services;
+using Microsoft.Extensions.Hosting;
+using AdaptiveSpritesDMItool.Views.Windows;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -72,8 +75,15 @@ namespace AdaptiveSpritesDMItool.Views.Pages
                 listView.SelectedIndex = -1;
                 return;
             }
+
             Debug.WriteLine($"Environment changed to {item.FileName} - {item.FilePath} - {item.LastModifiedDate}");
+            listView.SelectedIndex = -1;
+
+            var window = Window.GetWindow(App.Current.MainWindow) as MainWindow;
+            window.Navigate(typeof(Views.Pages.StatesEditorPage));
+
             EnvironmentController.LoadSettings(item);
+
         }
     }
 }

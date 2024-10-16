@@ -15,6 +15,7 @@
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       
     Title="StatesEditorPage"
+    Loaded="OnPageLoad"
     mc:Ignorable="d" >
 
     <Grid VerticalAlignment="Top">

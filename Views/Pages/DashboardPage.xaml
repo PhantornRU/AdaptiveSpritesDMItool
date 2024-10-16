@@ -97,7 +97,7 @@
                     d:ItemsSource="{d:SampleData ItemCount=10}"
                     ItemsSource="{Binding ViewModel.BasicListEnvironmentViewItems, Mode=TwoWay}"
                     SelectionChanged="EnvironmentChanged" 
-                    SelectedIndex="0">
+                    SelectedIndex="-1">
                 <ui:ListView.ItemTemplate>
                     <!--<DataTemplate DataType="{x:Type models:Person}">-->
                     <DataTemplate DataType="{x:Type models:StateItem}">

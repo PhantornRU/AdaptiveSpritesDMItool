@@ -49,7 +49,6 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             InitializeSources();
             InitializeGrids();
 
-            // Post Initializers
             ControllButtonsAvailability();
 
             TestFunction();
@@ -57,7 +56,13 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             DataContext = this;
         }
 
+        private void OnPageLoad(object sender, RoutedEventArgs e)
+        {
+            ButtonsController.UpdateAll();
+        }
+
         #region Initializers
+
 
         private void InitializeComponentPaths()
         {

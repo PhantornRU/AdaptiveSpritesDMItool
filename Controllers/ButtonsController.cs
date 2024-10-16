@@ -1,4 +1,5 @@
 ﻿using AdaptiveSpritesDMItool.Models;
+using DMISharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -91,41 +92,72 @@ namespace AdaptiveSpritesDMItool.Controllers
             if (SingleButton == null) return;
             Debug.WriteLine("Single Button Click");
             ResetEditButtons();
+            SingleButtonPressed();
+        }
+
+        private static void SingleButtonPressed()
+        {
             SingleButton.Appearance = StatesController.GetPressedButtonAppearance();
             StatesController.SetCurrentStateEditMode(StateEditType.Single);
         }
+
 
         public static void FillButton_Click(object sender, RoutedEventArgs e)
         {
             if (FillButton == null) return;
             ResetEditButtons();
-            FillButton.Appearance = StatesController.GetPressedButtonAppearance();
+            FillButtonPressed();
+        }
 
+        private static void FillButtonPressed()
+        {
+            FillButton.Appearance = StatesController.GetPressedButtonAppearance();
             StatesController.SetCurrentStateEditMode(StateEditType.Fill);
         }
+
 
         public static void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             if (DeleteButton == null) return;
             ResetEditButtons();
+            DeleteButtonPressed();
+        }
+
+        private static void DeleteButtonPressed()
+        {
             DeleteButton.Appearance = StatesController.GetPressedButtonAppearance();
             StatesController.SetCurrentStateEditMode(StateEditType.Delete);
         }
+
+
         public static void UndoButton_Click(object sender, RoutedEventArgs e)
         {
             if (UndoButton == null) return;
             ResetEditButtons();
+            UndoButtonPressed();
+        }
+
+        private static void UndoButtonPressed()
+        {
             UndoButton.Appearance = StatesController.GetPressedButtonAppearance();
             StatesController.SetCurrentStateEditMode(StateEditType.Undo);
         }
+
+
 
         public static void UndoAreaButton_Click(object sender, RoutedEventArgs e)
         {
             if (UndoAreaButton == null) return;
             ResetEditButtons();
+            UndoAreaButtonPressed();
+        }
+
+        private static void UndoAreaButtonPressed()
+        {
             UndoAreaButton.Appearance = StatesController.GetPressedButtonAppearance();
             StatesController.SetCurrentStateEditMode(StateEditType.UndoArea);
         }
+
 
         public static void UndoLastButton_Click(object sender, RoutedEventArgs e)
         {
@@ -143,14 +175,25 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             if (MoveButton == null) return;
             ResetEditButtons();
+            MoveButtonPressed();
+        }
+
+        private static void MoveButtonPressed()
+        {
             MoveButton.Appearance = StatesController.GetPressedButtonAppearance();
             StatesController.SetCurrentStateEditMode(StateEditType.Move);
         }
+
 
         public static void SelectButton_Click(object sender, RoutedEventArgs e)
         {
             if (SelectButton == null) return;
             ResetEditButtons();
+            SelectButtonPressed();
+        }
+
+        private static void SelectButtonPressed()
+        {
             SelectButton.Appearance = StatesController.GetPressedButtonAppearance();
             StatesController.SetCurrentStateEditMode(StateEditType.Select);
         }
@@ -164,42 +207,71 @@ namespace AdaptiveSpritesDMItool.Controllers
         {
             if (ChooseSingleStateButton == null) return;
             ResetStatesButtons();
-            ChooseSingleStateButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateQuantityMode(StateQuantityType.Single);
+            ChooseSingleStateButtonPressed();
             ControllButtonsAvailability();
         }
+
+        private static void ChooseSingleStateButtonPressed()
+        {
+            ChooseSingleStateButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateQuantityMode(StateQuantityType.Single);
+        }
+
 
         public static void ChooseParallelStatesButton_Click(object sender, RoutedEventArgs e)
         {
             if (ChooseParallelStatesButton == null) return;
             ResetStatesButtons();
-            ChooseParallelStatesButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateQuantityMode(StateQuantityType.Parallel);
+            ChooseParallelStatesButtonPressed();
             ControllButtonsAvailability();
         }
+
+        private static void ChooseParallelStatesButtonPressed()
+        {
+            ChooseParallelStatesButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateQuantityMode(StateQuantityType.Parallel);
+        }
+
 
         public static void ChooseAllStatesButton_Click(object sender, RoutedEventArgs e)
         {
             if (ChooseAllStatesButton == null) return;
             ResetStatesButtons();
-            ChooseAllStatesButton.Appearance = StatesController.GetPressedButtonAppearance();
-            StatesController.SetCurrentStateQuantityMode(StateQuantityType.All);
+            ChooseAllStatesButtonPressed();
             ControllButtonsAvailability();
         }
+
+        private static void ChooseAllStatesButtonPressed()
+        {
+            ChooseAllStatesButton.Appearance = StatesController.GetPressedButtonAppearance();
+            StatesController.SetCurrentStateQuantityMode(StateQuantityType.All);
+        }
+
 
         public static void CentralizeStatesButton_Click(object sender, RoutedEventArgs e)
         {
             if (CentralizeStatesButton == null) return;
+            CentralizeStatesButtonPressed();
+        }
+
+        private static void CentralizeStatesButtonPressed()
+        {
             StatesController.ToggleCentralizedState();
             CentralizeStatesButton.Appearance = StatesController.GetControlAppearanceCentralize();
         }
 
+
         public static void MirrorStatesButton_Click(object sender, RoutedEventArgs e)
         {
             if (MirrorStatesButton == null) return;
+            MirrorStatesButtonPressed();
+            ControllButtonsAvailability();
+        }
+
+        private static void MirrorStatesButtonPressed()
+        {
             StatesController.ToggleMirroredState();
             MirrorStatesButton.Appearance = StatesController.GetControlAppearanceMirror();
-            ControllButtonsAvailability();
         }
 
         #endregion Buttons States Controller
@@ -322,6 +394,52 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static void SaveUpdate(object sender, RoutedEventArgs e)
         {
             Debug.WriteLine("Save Update Hotkey");
+        }
+
+        public static void UpdateAll()
+        {
+            ResetEditButtons();
+            ResetStatesButtons();
+
+            switch (StatesController.currentStateEditMode)
+            {
+                case StateEditType.Single:
+                    SingleButtonPressed();
+                    break;
+                case StateEditType.Fill:
+                    FillButtonPressed();
+                    break;
+                case StateEditType.Select:
+                    SelectButtonPressed();
+                    break;
+                case StateEditType.Move:
+                    MoveButtonPressed();
+                    break;
+                case StateEditType.Delete:
+                    DeleteButtonPressed();
+                    break;
+                case StateEditType.Undo:
+                    UndoButtonPressed();
+                    break;
+                case StateEditType.UndoArea:
+                    UndoAreaButtonPressed();
+                    break;
+            }
+
+            switch (StatesController.currentStateQuantityMode)
+            {
+                case StateQuantityType.Single:
+                    ChooseSingleStateButtonPressed();
+                    break;
+                case StateQuantityType.Parallel:
+                    ChooseParallelStatesButtonPressed();
+                    break;
+                case StateQuantityType.All:
+                    ChooseAllStatesButtonPressed();
+                    break;
+            }
+
+            ControllButtonsAvailability();
         }
 
         #endregion Updaters

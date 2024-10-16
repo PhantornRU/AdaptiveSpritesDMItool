@@ -134,7 +134,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         #endregion Saves
 
 
-        #region Loadders
+        #region Settings
 
 
 
@@ -165,8 +165,6 @@ namespace AdaptiveSpritesDMItool.Controllers
             StatesController.isShowOverlay = settings.IsShowOverlay;
             StatesController.isShowTextGrid = settings.IsShowTextGrid;
             StatesController.isOverrideToggle = settings.IsOverrideToggle;
-
-
         }
 
 
