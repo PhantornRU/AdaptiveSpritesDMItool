@@ -94,7 +94,6 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
                 return;
             }
-
         }
 
         [RelayCommand]

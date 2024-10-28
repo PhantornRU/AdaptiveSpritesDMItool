@@ -13,7 +13,6 @@ namespace AdaptiveSpritesDMItool.Helpers
 {
     static class SettingsManager
     {
-
         [Serializable]
         private class Settings
         {
