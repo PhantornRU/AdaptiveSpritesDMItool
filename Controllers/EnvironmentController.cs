@@ -1,7 +1,7 @@
-﻿using AdaptiveSpritesDMItool.Models;
+﻿using AdaptiveSpritesDMItool.Helpers;
+using AdaptiveSpritesDMItool.Models;
 using AdaptiveSpritesDMItool.Resources;
 using DMISharp;
-using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
@@ -28,19 +28,23 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static string defaultImportPath = "Assets\\Import";
         public static string defaultExportPath = "Assets\\Export";
         public static string defaultFileName = "default";
+        public static string defaultSaveName = "defaultSave";
         public static string lastImportPath = defaultImportPath;
         public static string lastExportPath = defaultExportPath;
 
         public static string defaultResourcesPath = "Assets\\Resources";
         public static string defaultSavesPath = "Assets\\Saves";
         public static string defaultStoragePath = "Assets\\Storage";
-        public static string ChoosenStorageName = "Default";
+        public static string choosenStorageName = "Default";
 
         public static string fileImageFormat = ".dmi";
         public static string configFormat = ".csv";
         public static string savesFormat = ".json";
 
         public static string currentConfigFullPath = string.Empty;
+
+        public static EnvironmentItem? choosenSaveFile;
+
 
         #region Loaders
 
@@ -111,7 +115,13 @@ namespace AdaptiveSpritesDMItool.Controllers
             return state;
         }
 
+        public static bool LoadSettings(EnvironmentItem item)
+        {
+            return SettingsManager.LoadSettings(item);
+        }
+
         #endregion Loaders
+
 
         #region Saves
 
@@ -131,136 +141,12 @@ namespace AdaptiveSpritesDMItool.Controllers
             dataPixelStorage.SavePixelStorage(GetPixelStoragePath());
         }
 
+        public static void SaveSettings(string fullpath)
+        {
+            SettingsManager.SaveSettings(fullpath);
+        }
+
         #endregion Saves
-
-
-        #region Settings
-
-
-
-
-
-
-        // Сделай сериализацию переменных в виде файла-сохранения в папку EnvironmentController.DefaultPath
-
-
-        public static void LoadSettings(EnvironmentItem item)
-        {
-            string path = item.FilePath;
-            //string path = Path.Combine(defaultSavesPath, "settings.json");
-            if (!File.Exists(path)) return;
-
-            var settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(path));
-
-            StatesController.currentStateEditMode = settings.CurrentStateEditMode;
-            StatesController.currentStateQuantityMode = settings.CurrentStateQuantityMode;
-            StatesController.currentStateDirection = settings.CurrentStateDirection;
-            StatesController.selectedStateDirection = settings.SelectedStateDirection;
-            StatesController.currentStatePreviewMode = settings.CurrentStatePreviewMode;
-            StatesController.isLandmarkEditable = settings.IsLandmarkEditable;
-            StatesController.isCentralizedState = settings.IsCentralizedState;
-            StatesController.isMirroredState = settings.IsMirroredState;
-            StatesController.isShowGrid = settings.IsShowGrid;
-            StatesController.isShowAboveGrid = settings.IsShowAboveGrid;
-            StatesController.isShowOverlay = settings.IsShowOverlay;
-            StatesController.isShowTextGrid = settings.IsShowTextGrid;
-            StatesController.isOverrideToggle = settings.IsOverrideToggle;
-        }
-
-
-        public static void SaveSettings()
-        {
-            string path = Path.Combine(defaultSavesPath, "save.json");
-            if (!Directory.Exists(defaultSavesPath)) 
-                Directory.CreateDirectory(defaultSavesPath);
-
-            var settings = new Settings
-            {
-                CurrentStateEditMode = StatesController.currentStateEditMode,
-                CurrentStateQuantityMode = StatesController.currentStateQuantityMode,
-                CurrentStateDirection = StatesController.currentStateDirection,
-                SelectedStateDirection = StatesController.selectedStateDirection,
-                CurrentStatePreviewMode = StatesController.currentStatePreviewMode,
-                IsLandmarkEditable = StatesController.isLandmarkEditable,
-                IsCentralizedState = StatesController.isCentralizedState,
-                IsMirroredState = StatesController.isMirroredState,
-                IsShowGrid = StatesController.isShowGrid,
-                IsShowAboveGrid = StatesController.isShowAboveGrid,
-                IsShowOverlay = StatesController.isShowOverlay,
-                IsShowTextGrid = StatesController.isShowTextGrid,
-                IsOverrideToggle = StatesController.isOverrideToggle,
-            };
-
-            File.WriteAllText(path, JsonConvert.SerializeObject(settings, Newtonsoft.Json.Formatting.Indented));
-        }
-
-        [Serializable]
-        private class Settings
-        {
-            public StateEditType CurrentStateEditMode { get; set; }
-            public StateQuantityType CurrentStateQuantityMode { get; set; }
-            public StateDirection CurrentStateDirection { get; set; }
-            public StateDirection SelectedStateDirection { get; set; }
-            public StatePreviewType CurrentStatePreviewMode { get; set; }
-            public bool IsLandmarkEditable { get; set; }
-            public bool IsCentralizedState { get; set; }
-            public bool IsMirroredState { get; set; }
-            public bool IsShowGrid { get; set; }
-            public bool IsShowAboveGrid { get; set; }
-            public bool IsShowOverlay { get; set; }
-            public bool IsShowTextGrid { get; set; }
-            public bool IsOverrideToggle { get; set; }
-        }
-
-
-
-
-
-
-
-        /*
-         нужно сохранять и загружать файлы-сохранения, хранящие и перезаписывающие переменные в static StatesController:         public static StateEditType currentStateEditMode = StateEditType.Single;
-                public static StateQuantityType currentStateQuantityMode = StateQuantityType.Single;
-                public static StateDirection currentStateDirection = StateDirection.South;
-                public static StateDirection selectedStateDirection = StateDirection.South;
-                public static StatePreviewType currentStatePreviewMode = StatePreviewType.Overlay;
-
-                /// <summary> Will the Landmark also be edited along with the overlay? </summary>
-                public static bool isLandmarkEditable = false;
-
-                /// <summary>
-                /// StatesEditorPage - Determines whether the state is centralized - setting the pixel in the middle of the pixel
-                /// </summary>
-                public static bool isCentralizedState = true;
-                public static bool isMirroredState = true;
-                public static bool isShowGrid = true;
-                public static bool isShowAboveGrid = true;
-                public static bool isShowOverlay = true;
-                public static bool isShowTextGrid = false;
-
-                /// <summary> DataPage - Whether to overwrite existing processed files in folders during processing. </summary>
-                public static bool isOverrideToggle = false;
-        */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        #endregion Loadders
 
 
         #region Paths
@@ -268,9 +154,15 @@ namespace AdaptiveSpritesDMItool.Controllers
 
         public static string GetGridPath() => System.IO.Path.Combine(Environment.CurrentDirectory, defaultResourcesPath, $"grid{dataImageState.imageCellsSize.Height}.png");
 
-        public static string GetPixelStoragePath() => System.IO.Path.Combine(Environment.CurrentDirectory, defaultStoragePath, $"{ChoosenStorageName}");
+        public static string GetPixelStoragePath() => System.IO.Path.Combine(Environment.CurrentDirectory, defaultStoragePath, $"{choosenStorageName}");
 
         #endregion Paths
+
+        #region Setters
+
+        public static void SetSaveFile(EnvironmentItem? saveFile) => choosenSaveFile = saveFile;
+
+        #endregion Setters
 
 
         #region Getters

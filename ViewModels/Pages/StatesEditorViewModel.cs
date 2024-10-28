@@ -79,7 +79,6 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             for (int index = 0; index < fileDmi.States.Count; index++)
             {
                 DMIState currentState = fileDmi.States.ElementAt(index);
-                Debug.WriteLine($"GetListStateItems - Loaded {fileName}({fileDmi.States.Count}).");
                 WriteableBitmap writeableBitmap = ImageEncoder.GetBMPFromDMIState(currentState, StateDirection.South);
                 StateItems.Add(
                     new StateItem(
@@ -310,7 +309,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         [RelayCommand]
         public async Task OnSaveConfig(CancellationToken cancellation)
         {
-            string fullpath = EnvironmentController.currentConfigFullPath;
+            string fullpath = EnvironmentController.lastExportPath;
             if (fullpath == string.Empty)
             {
                 OnSaveAsConfig(cancellation);
@@ -438,7 +437,7 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
             {
                 if (item.FileName != openFileDialog.SafeFileName)
                     continue;
-                ShowMessages.ConfigAlreadyLoaded();
+                ShowMessages.FileAlreadyLoaded();
                 return;
             }
 

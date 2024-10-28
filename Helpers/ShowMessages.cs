@@ -21,12 +21,8 @@ namespace AdaptiveSpritesDMItool.Helpers
             _ = await uiMessageBox.ShowDialogAsync();
         }
 
-        public static void ConfigAlreadyLoaded()
-        {
-            string title = "Config is already loaded";
-            string content = "A config with a similar name has already been loaded. Operation cancelled. Change the name or load another config.";
-            ShowMessageBox(title, content);
-        }
+
+        #region Config
 
         public static void NoConfigSelected()
         {
@@ -43,6 +39,15 @@ namespace AdaptiveSpritesDMItool.Helpers
             string content =
                 "One of the selected configs is not saved and does not have the required parameters for processing. " +
                 "\nRemove the selection or save it on the \"Edit\" page.";
+            ShowMessageBox(title, content);
+        }
+
+        #endregion Config
+
+        public static void FileAlreadyLoaded()
+        {
+            string title = "File is already loaded";
+            string content = "A file with a similar name has already been loaded. Operation cancelled. Change the name or load another file.";
             ShowMessageBox(title, content);
         }
 
@@ -75,21 +80,6 @@ namespace AdaptiveSpritesDMItool.Helpers
                     $"\nThe default directory is \"{EnvironmentController.defaultImportPath}\"";
             ShowMessageBox(title, content);
         }
-
-
-
-        //public static void ConfigAlreadyLoaded()
-        //{
-
-        //    ShowMessageBox(title, content);
-        //}
-
-
-
-
-
-
-
 
     }
 }

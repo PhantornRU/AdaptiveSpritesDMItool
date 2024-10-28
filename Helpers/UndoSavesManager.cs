@@ -11,7 +11,7 @@ using Point = System.Drawing.Point;
 
 namespace AdaptiveSpritesDMItool.Helpers
 {
-    internal static class UndoSaves
+    internal static class UndoSavesManager
     {
         /// <summary>
         /// How many elements are allowed in a stack

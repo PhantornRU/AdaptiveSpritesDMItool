@@ -26,6 +26,7 @@ using AdaptiveSpritesDMItool.Controllers;
 using AdaptiveSpritesDMItool.Services;
 using Microsoft.Extensions.Hosting;
 using AdaptiveSpritesDMItool.Views.Windows;
+using System;
 
 namespace AdaptiveSpritesDMItool.Views.Pages
 {
@@ -68,22 +69,36 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         {
             Wpf.Ui.Controls.ListView? listView = sender as Wpf.Ui.Controls.ListView;
             if (listView == null) return;
-            EnvironmentItem? item = listView.SelectedItem as EnvironmentItem;
-            if (item == null)
+            EnvironmentItem? environment = listView.SelectedItem as EnvironmentItem;
+            if (environment == null)
             {
                 Debug.WriteLine("Environment nullified.");
                 listView.SelectedIndex = -1;
                 return;
             }
 
-            Debug.WriteLine($"Environment changed to {item.FileName} - {item.FilePath} - {item.LastModifiedDate}");
+            Debug.WriteLine($"Environment changed to {environment.FileName} - {environment.FilePath} - {environment.LastModifiedDate}");
             listView.SelectedIndex = -1;
 
             var window = Window.GetWindow(App.Current.MainWindow) as MainWindow;
             window.Navigate(typeof(Views.Pages.StatesEditorPage));
 
-            EnvironmentController.LoadSettings(item);
+            bool loaded = EnvironmentController.LoadSettings(environment);
+            if (!loaded) return;
+            AllowToPressSaveButtons();
+            EnvironmentController.SetSaveFile(environment);
 
+        }
+
+        private void NewEnvironmentButton_Click(object sender, RoutedEventArgs e)
+        {
+            AllowToPressSaveButtons();
+        }
+
+        private void AllowToPressSaveButtons()
+        {
+            SaveButton.IsEnabled = true;
+            SaveAsButton.IsEnabled = true;
         }
     }
 }

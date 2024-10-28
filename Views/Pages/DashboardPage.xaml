@@ -37,19 +37,27 @@
 
             <StackPanel Orientation="Horizontal">
                 <ui:Button Margin="5,0"
+                    x:Name="OpenButton"
                     Content="Open" 
                     ToolTip="Text"
-                    Icon="{ui:SymbolIcon Form24 }" 
+                    Icon="{ui:SymbolIcon Form24 }"
+                    Command="{Binding ViewModel.LoadEnvironmentCommand}" 
                 />
                 <ui:Button Margin="5,0"
+                    x:Name="SaveButton"
                     Content="Save" 
+                    IsEnabled="False"
                     ToolTip="Text"
-                    Icon="{ui:SymbolIcon Save24}" 
+                    Icon="{ui:SymbolIcon Save24}"
+                    Command="{Binding ViewModel.SaveEnvironmentCommand}"
                 />
                 <ui:Button Margin="5,0"
+                    x:Name="SaveAsButton"
                     Content="Save as" 
+                    IsEnabled="False"
                     ToolTip="Text"
-                    Icon="{ui:SymbolIcon SaveEdit24}" 
+                    Icon="{ui:SymbolIcon SaveEdit24}"
+                    Command="{Binding ViewModel.SaveAsEnvironmentCommand}"
                 />
                 <Label
                    VerticalAlignment="Bottom"
@@ -63,9 +71,12 @@
               Margin="0,20"
               HorizontalAlignment="Center">
             <ui:Button
+                    x:Name="NewEnvironmentButton"
                     Content="New Environment" 
                     ToolTip="Text"
-                    Icon="{ui:SymbolIcon FormNew24 }" 
+                    Icon="{ui:SymbolIcon FormNew24 }"
+                    Command="{Binding ViewModel.NewEnvironmentCommand}" 
+                    Click="NewEnvironmentButton_Click"
                 />
         </Grid>
 

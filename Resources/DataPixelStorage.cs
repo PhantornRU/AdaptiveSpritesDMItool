@@ -109,12 +109,12 @@ namespace AdaptiveSpritesDMItool.Resources
 
         public void UpdateBeforeStorage()
         {
-            UndoSaves.SaveStorage(pixelStorages);
+            UndoSavesManager.SaveStorage(pixelStorages);
         }
 
         public void UndoLastChange()
         {
-            var undoPixelStorage = UndoSaves.GetUndoStorage();
+            var undoPixelStorage = UndoSavesManager.GetUndoStorage();
             if (undoPixelStorage == null)
                 return;
             pixelStorages = undoPixelStorage;
@@ -187,12 +187,14 @@ namespace AdaptiveSpritesDMItool.Resources
             );
 
             path = CorrectPath(path);
+            Debug.WriteLine($"Export to {path}");
             File.WriteAllText(path, csv);
         }
 
         private void ImportPixelStorage(string path)
         {
             path = CorrectPath(path);
+            Debug.WriteLine($"Import {path}");
             var lines = File.ReadAllLines(path);
 
             foreach (var line in lines)
