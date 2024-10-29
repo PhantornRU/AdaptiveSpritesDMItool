@@ -48,15 +48,14 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
         public async Task OnNewEnvironment(CancellationToken cancellation)
         {
             Debug.WriteLine("New Environment button pressed");
-            string fileName = $"New EnvironmentItem (Not Saved)";
-            string filePath = EnvironmentController.defaultSavesPath;
-            DateTime fileDate = DateTime.Now;
-            EnvironmentItem environment = new EnvironmentItem(fileName, filePath, fileDate);
 
-            BasicListEnvironmentViewItems.Add(environment);
-            SortEnvironmentItems(BasicListEnvironmentViewItems);
+            EnvironmentController.ResetSaveFile();
+            _ = OnSaveAsEnvironment(cancellation);
+            if (EnvironmentController.choosenSaveFile == null)
+                return;
 
-            EnvironmentController.SetSaveFile(environment);
+            // TODO: Extract data for create new environment
+
         }
         [ObservableProperty]
         private string _fileToSaveFullPath = string.Empty;
@@ -137,6 +136,21 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
                 {
                     EnvironmentController.dataPixelStorage.SavePixelStorage(exportpath);
                 }
+
+                foreach (EnvironmentItem item in BasicListEnvironmentViewItems)
+                {
+                    if (item.FileName == saveFileDialog.SafeFileName
+                        && item.FilePath == FileToSaveFullPath)
+                        return;
+                }
+
+                EnvironmentItem environment = new EnvironmentItem(saveFileDialog.SafeFileName, FileToSaveFullPath, DateTime.Now);
+
+                BasicListEnvironmentViewItems.Add(environment);
+                SaveSettings(environment);
+                SortEnvironmentItems(BasicListEnvironmentViewItems);
+
+                EnvironmentController.SetSaveFile(environment);
             }
             catch (Exception e)
             {
@@ -147,21 +161,6 @@ namespace AdaptiveSpritesDMItool.ViewModels.Pages
 
             SavedEnvironmentNoticeVisibility = Visibility.Visible;
             SavedEnvironmentNotice = $"File {saveFileDialog.FileName} was saved.";
-
-            foreach (EnvironmentItem item in BasicListEnvironmentViewItems)
-            {
-                if (item.FileName == saveFileDialog.SafeFileName
-                    && item.FilePath == FileToSaveFullPath)
-                    return;
-            }
-
-            EnvironmentItem environment = new EnvironmentItem(saveFileDialog.SafeFileName, FileToSaveFullPath, DateTime.Now);
-
-            BasicListEnvironmentViewItems.Add(environment);
-            SaveSettings(environment);
-            SortEnvironmentItems(BasicListEnvironmentViewItems);
-
-            EnvironmentController.SetSaveFile(environment);
         }
 
 

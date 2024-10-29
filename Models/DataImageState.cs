@@ -13,6 +13,7 @@ using AdaptiveSpritesDMItool.Controllers;
 using AdaptiveSpritesDMItool.Helpers;
 using System.Diagnostics;
 using System.Data;
+using Size = System.Drawing.Size;
 
 namespace AdaptiveSpritesDMItool.Models
 {
@@ -29,7 +30,7 @@ namespace AdaptiveSpritesDMItool.Models
         /// <summary>
         /// Pixel cell array sizes.
         /// </summary>
-        public System.Drawing.Size imageCellsSize => new System.Drawing.Size(widthCellsImage, heightCellsImage);
+        public Size imageCellsSize => new Size(widthCellsImage, heightCellsImage);
 
         private int widthBitmapUI = 257;
         private int heightBitmapUI = 257;
@@ -37,7 +38,7 @@ namespace AdaptiveSpritesDMItool.Models
         /// <summary>
         /// The sizes of the bitmap on which the interface elements are drawn.
         /// </summary>
-        public System.Drawing.Size bitmapUISize => new System.Drawing.Size(widthBitmapUI, heightBitmapUI);
+        public Size bitmapUISize => new Size(widthBitmapUI, heightBitmapUI);
 
         /// <summary>
         /// The size of the cell on the grid canvas and selection.
@@ -217,5 +218,12 @@ namespace AdaptiveSpritesDMItool.Models
 
             return true;
         }
+
+        public void SetImageCellsSize(Size _imageCellsSize)
+        {
+            widthCellsImage = _imageCellsSize.Width;
+            heightCellsImage = _imageCellsSize.Height;
+        }
+
     }
 }

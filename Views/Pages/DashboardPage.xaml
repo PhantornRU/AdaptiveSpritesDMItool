@@ -155,9 +155,13 @@
                 <StackPanel 
                     HorizontalAlignment="Center"
                     Orientation="Horizontal">
-                    <ui:TextBox PlaceholderText="32" MinWidth="40"/>
+                    <ui:TextBox x:Name="TextBoxResolutionX"
+                        PlaceholderText="32" MinWidth="40"
+                        TextChanged="TextResolutionXChangedEventHandler"/>
                     <Label VerticalAlignment="Center" Content="x"/>
-                    <ui:TextBox PlaceholderText="32" MinWidth="40"/>
+                    <ui:TextBox x:Name="TextBoxResolutionY"
+                        PlaceholderText="32" MinWidth="40"
+                        TextChanged="TextResolutionYChangedEventHandler"/>
                 </StackPanel>
 
                 <Grid>

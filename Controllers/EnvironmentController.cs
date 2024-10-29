@@ -42,6 +42,7 @@ namespace AdaptiveSpritesDMItool.Controllers
         public static string savesFormat = ".json";
 
         public static string currentConfigFullPath = string.Empty;
+        public static System.Drawing.Size currentResolutionSize = new System.Drawing.Size(32, 32);
 
         public static EnvironmentItem? choosenSaveFile;
 
@@ -161,6 +162,16 @@ namespace AdaptiveSpritesDMItool.Controllers
         #region Setters
 
         public static void SetSaveFile(EnvironmentItem? saveFile) => choosenSaveFile = saveFile;
+
+        public static void ResetSaveFile() => choosenSaveFile = null;
+
+        public static void SetResolutionX(int _resolutionX) => currentResolutionSize.Width = _resolutionX;
+
+        public static void SetResolutionY(int _resolutionY) => currentResolutionSize.Height = _resolutionY;
+
+        public static void SetCurrentResolution() => dataImageState.SetImageCellsSize(currentResolutionSize);
+
+        
 
         #endregion Setters
 

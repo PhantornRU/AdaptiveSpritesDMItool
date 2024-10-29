@@ -39,7 +39,9 @@ namespace AdaptiveSpritesDMItool.Views.Pages
 
         public DashboardViewModel ViewModel { get; }
 
-        private string? choosenFileName;
+        private string? choosenPresetFileName;
+
+        private int defaultResolution = 32;
 
         public DashboardPage(DashboardViewModel viewModel)
         {
@@ -49,20 +51,22 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             FileNameHuman = "Human";
             FileNameMonkey = "Monkey";
             FileNameVox = "Vox";
-            choosenFileName = FileNameNone;
+            choosenPresetFileName = FileNameNone;
 
             DataContext = this;
 
             InitializeComponent();
 
+            TextBoxResolutionX.Text = defaultResolution.ToString();
+            TextBoxResolutionY.Text = defaultResolution.ToString();
         }
 
         private void RadioButton_Checked(object sender, RoutedEventArgs e)
         {
             RadioButton pressed = (RadioButton)sender;
             if (pressed.Content == null) return;
-            choosenFileName = pressed.Content.ToString();
-            Debug.WriteLine(choosenFileName);
+            choosenPresetFileName = pressed.Content.ToString();
+            Debug.WriteLine(choosenPresetFileName);
         }
 
         private void EnvironmentChanged(object sender, SelectionChangedEventArgs e)
@@ -93,6 +97,7 @@ namespace AdaptiveSpritesDMItool.Views.Pages
         private void NewEnvironmentButton_Click(object sender, RoutedEventArgs e)
         {
             AllowToPressSaveButtons();
+            EnvironmentController.SetCurrentResolution();
         }
 
         private void AllowToPressSaveButtons()
@@ -100,5 +105,39 @@ namespace AdaptiveSpritesDMItool.Views.Pages
             SaveButton.IsEnabled = true;
             SaveAsButton.IsEnabled = true;
         }
+
+
+        #region Text Changed Event Handlers
+
+        // TextChangedEventHandler delegate method for resolution changes.
+        private void TextResolutionChangedEventHandler(object sender, TextChangedEventArgs args, Action<int> setResolution, Func<int> getDefaultResolution)
+        {
+            if (sender is not Wpf.Ui.Controls.TextBox textBox) return;
+
+            if (int.TryParse(textBox.Text, out int value))
+            {
+                setResolution(value);
+            }
+            else
+            {
+                if(!string.IsNullOrEmpty(textBox.Text))
+                    textBox.Text = getDefaultResolution().ToString();
+                setResolution(getDefaultResolution());
+                //textBox.Text = getDefaultResolution().ToString();
+                Debug.WriteLine("Invalid resolution input, not an integer. Revert to default resolution value.");
+            }
+        }
+
+        private void TextResolutionXChangedEventHandler(object sender, TextChangedEventArgs args)
+        {
+            TextResolutionChangedEventHandler(sender, args, EnvironmentController.SetResolutionX, () => EnvironmentController.dataImageState?.imageCellsSize.Width ?? defaultResolution);
+        }
+
+        private void TextResolutionYChangedEventHandler(object sender, TextChangedEventArgs args)
+        {
+            TextResolutionChangedEventHandler(sender, args, EnvironmentController.SetResolutionY, () => EnvironmentController.dataImageState?.imageCellsSize.Height ?? defaultResolution);
+        }
+
+        #endregion Text Changed Event Handlers
     }
 }
