@@ -396,3 +396,10 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Local AI/Codex task state
+AGENTS/local/PLAN.md
+AGENTS/local/TODO.md
+AGENTS/local/DECISIONS.md
+AGENTS/local/EVIDENCE.md
+AGENTS/local/logs/
