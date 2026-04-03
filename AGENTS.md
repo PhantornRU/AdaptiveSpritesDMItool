@@ -6,6 +6,7 @@
 1. [AGENTS/README.md](./AGENTS/README.md)
 2. Stable guidance:
    - [AGENTS/PROJECT_CONTEXT.md](./AGENTS/PROJECT_CONTEXT.md)
+   - [AGENTS/REFACTOR_GUIDANCE.md](./AGENTS/REFACTOR_GUIDANCE.md)
    - [AGENTS/CONFIRMED_UNRESOLVED_ERRORS.md](./AGENTS/CONFIRMED_UNRESOLVED_ERRORS.md)
    - [AGENTS/WORKFLOW_RULES.md](./AGENTS/WORKFLOW_RULES.md)
    - [AGENTS/POLICIES.md](./AGENTS/POLICIES.md)
@@ -34,10 +35,12 @@
 - Сохранять текущие слои ответственности: UI и bindings в `Views/**` и `ViewModels/**`, общее runtime-состояние в `Controllers/**` и `Resources/**`, обработку файлов и изображений в `Processors/**` и `Helpers/**`.
 - При добавлении новой страницы, сервиса или модели навигации проверять регистрацию в `App.xaml.cs` и разрешение через `Services/PageService.cs`.
 - Не менять без явной причины контракты путей и форматов из `Controllers/EnvironmentController.cs`: `Assets/Import`, `Assets/Export`, `Assets/Storage`, `Assets/Saves`, а также `.dmi`, `.csv`, `.json`.
+- Для крупных архитектурных рефакторингов дополнительно читать [AGENTS/REFACTOR_GUIDANCE.md](./AGENTS/REFACTOR_GUIDANCE.md). Этот документ применяется именно к крупным миграциям и не должен навязывать тяжелый процесс для маленьких локальных правок.
 - Для C# и XAML правок минимальная проверка по умолчанию: `dotnet build AdaptiveSpritesDMItool.sln`. Для docs-only изменений минимум `git diff --check`.
 - Не использовать деструктивные git-команды без прямого запроса пользователя.
 
 ## Маршрутизация
 - Агентная база знаний: [AGENTS/](./AGENTS/README.md)
 - Локальный task-state и сырые артефакты: [AGENTS/local/README.md](./AGENTS/local/README.md)
+- Крупные рефакторинги и миграции: [AGENTS/REFACTOR_GUIDANCE.md](./AGENTS/REFACTOR_GUIDANCE.md)
 - Продуктовые документы: `README*.md`, `AdaptiveSpritesDMItool.csproj`, `App.xaml*`, `Views/**`, `ViewModels/**`, `Controllers/**`, `Models/**`, `Processors/**`, `Helpers/**`, `Services/**`, `Resources/**`

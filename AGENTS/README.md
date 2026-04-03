@@ -5,6 +5,7 @@
 ## Состав
 - Stable guidance:
   - [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)
+  - [REFACTOR_GUIDANCE.md](./REFACTOR_GUIDANCE.md)
   - [CONFIRMED_UNRESOLVED_ERRORS.md](./CONFIRMED_UNRESOLVED_ERRORS.md)
   - [WORKFLOW_RULES.md](./WORKFLOW_RULES.md)
   - [POLICIES.md](./POLICIES.md)
@@ -20,6 +21,7 @@
 
 ## Storage policy
 - `PROJECT_CONTEXT.md`, `CONFIRMED_UNRESOLVED_ERRORS.md`, `WORKFLOW_RULES.md`, `POLICIES.md`, `REQUEST_PATTERNS.md` являются стабильными репозиторными правилами и должны оставаться короткими и актуальными.
+- `REFACTOR_GUIDANCE.md` описывает целевой режим только для крупных архитектурных миграций и реорганизации решения. Это не обязательный протокол для каждого бага, мелкой UI-правки или docs-задачи.
 - `local/PLAN.md`, `local/TODO.md`, `local/DECISIONS.md`, `local/EVIDENCE.md` являются локальным task-state для текущей задачи. Они намеренно исключены из git и не считаются постоянной памятью репозитория.
 - Сырые логи, длинный вывод команд, временные JSON и прочие шумные артефакты должны жить только в `local/logs/` или рядом с локальным task-state, но не в стабильных документах.
 - `CONFIRMED_UNRESOLVED_ERRORS.md` хранит только короткий реестр подтвержденных, но еще не устраненных проблем. Это не место для гипотез, черновиков и длинных stack trace.

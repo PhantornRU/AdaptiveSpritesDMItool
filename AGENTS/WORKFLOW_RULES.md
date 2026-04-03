@@ -20,6 +20,7 @@
 ## Правила выполнения задач
 - Сначала определить тип задачи: docs, XAML/UI, ViewModel/controller, DMI processing, settings/path handling, build или смешанный scope.
 - Для нетривиальных изменений сначала формировать decision-complete план с рисками, альтернативами и acceptance criteria.
+- Для крупных архитектурных рефакторингов сначала открыть `AGENTS/REFACTOR_GUIDANCE.md`, разложить работу по workstream-ам и зафиксировать PR-roadmap до начала кодовых изменений.
 - Перед правками global-state классов отдельно проверять влияние на другие страницы и режимы.
 - Перед добавлением новой страницы или сервиса проверять регистрацию в `App.xaml.cs` и связность навигации через `PageService`.
 - Перед изменением путей сохранения и экспорта отдельно проверять контракт `FilesSearcher.GetExportConfigPath(...)` и поля `EnvironmentController.lastImportPath/lastExportPath`.
@@ -35,6 +36,10 @@
    - `dotnet build AdaptiveSpritesDMItool.sln`
    - по возможности ручной smoke test на `Assets/Import/*.dmi` и `Assets/Storage/*.csv`
    - отдельно проверить, что пути импорта/экспорта и режим `Override` не поломаны
+4. Крупный рефакторинг:
+   - `dotnet build AdaptiveSpritesDMItool.sln`
+   - unit/integration tests, если они появились в рамках рефакторинга
+   - smoke validation запуска приложения, загрузки/сохранения конфига и batch-processing
 
 ## Кодировка
 - Все новые документы и правки держать в UTF-8.
