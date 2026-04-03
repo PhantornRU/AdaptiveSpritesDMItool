@@ -1,0 +1,16 @@
+<Application x:Class="AdaptiveSpritesDmiTool.Presentation.Wpf.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnMainWindowClose">
+    <Application.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <SolidColorBrush x:Key="Brush.WindowBackground" Color="#F4EFE7" />
+        <SolidColorBrush x:Key="Brush.PanelBackground" Color="#FFFDF9" />
+        <SolidColorBrush x:Key="Brush.PanelBorder" Color="#D9CFC0" />
+        <SolidColorBrush x:Key="Brush.Accent" Color="#1E5C54" />
+        <SolidColorBrush x:Key="Brush.AccentMuted" Color="#CDE0DB" />
+        <SolidColorBrush x:Key="Brush.Warning" Color="#C66A2B" />
+        <SolidColorBrush x:Key="Brush.TextPrimary" Color="#1F1C18" />
+        <SolidColorBrush x:Key="Brush.TextSecondary" Color="#6A6258" />
+    </Application.Resources>
+</Application>
