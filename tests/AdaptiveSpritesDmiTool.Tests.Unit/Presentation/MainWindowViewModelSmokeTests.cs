@@ -10,7 +10,7 @@ namespace AdaptiveSpritesDmiTool.Tests.Unit.Presentation;
 public sealed class MainWindowViewModelSmokeTests
 {
     [Fact]
-    public async Task InitializeAsync_ShouldStartWithEmptyWorkspaceWithoutDemoAssets()
+    public async Task InitializeAsyncShouldStartWithEmptyWorkspaceWithoutDemoAssets()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var viewModel = CreateViewModel(settingsRepository);
@@ -24,7 +24,7 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
-    public async Task PersistWorkspaceSettingsAsync_ShouldStoreShellState()
+    public async Task PersistWorkspaceSettingsAsyncShouldStoreShellState()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var viewModel = CreateViewModel(settingsRepository);

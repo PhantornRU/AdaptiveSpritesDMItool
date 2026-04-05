@@ -6,7 +6,7 @@ namespace AdaptiveSpritesDmiTool.Tests.Unit.Domain;
 public sealed class SpriteResolutionTests
 {
     [Fact]
-    public void Constructor_ShouldRejectNonPositiveValues()
+    public void ConstructorShouldRejectNonPositiveValues()
     {
         var action = () => new SpriteResolution(0, 32);
 
@@ -14,7 +14,7 @@ public sealed class SpriteResolutionTests
     }
 
     [Fact]
-    public void Contains_ShouldReturnTrueForCoordinateWithinBounds()
+    public void ContainsShouldReturnTrueForCoordinateWithinBounds()
     {
         var resolution = new SpriteResolution(32, 32);
 

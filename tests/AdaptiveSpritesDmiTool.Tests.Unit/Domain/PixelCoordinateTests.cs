@@ -6,7 +6,7 @@ namespace AdaptiveSpritesDmiTool.Tests.Unit.Domain;
 public sealed class PixelCoordinateTests
 {
     [Fact]
-    public void Constructor_ShouldRejectNegativeX()
+    public void ConstructorShouldRejectNegativeX()
     {
         var action = () => new PixelCoordinate(-1, 0);
 
@@ -14,7 +14,7 @@ public sealed class PixelCoordinateTests
     }
 
     [Fact]
-    public void Constructor_ShouldRejectNegativeY()
+    public void ConstructorShouldRejectNegativeY()
     {
         var action = () => new PixelCoordinate(0, -1);
 

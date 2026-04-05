@@ -6,7 +6,7 @@ namespace AdaptiveSpritesDmiTool.Tests.Unit.Domain;
 public sealed class SupportedDirectionSetTests
 {
     [Fact]
-    public void Four_ShouldOnlySupportCardinalDirections()
+    public void FourShouldOnlySupportCardinalDirections()
     {
         var directionSet = SupportedDirectionSet.Four;
 
@@ -15,7 +15,7 @@ public sealed class SupportedDirectionSetTests
     }
 
     [Fact]
-    public void FromDirections_ShouldResolveEightDirectionSet()
+    public void FromDirectionsShouldResolveEightDirectionSet()
     {
         var directionSet = SupportedDirectionSet.FromDirections(
         [

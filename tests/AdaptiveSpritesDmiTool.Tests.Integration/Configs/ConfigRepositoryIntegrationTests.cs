@@ -14,7 +14,7 @@ public sealed class ConfigRepositoryIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task JsonRepository_ShouldRoundTripConfig()
+    public async Task JsonRepositoryShouldRoundTripConfig()
     {
         var repository = new JsonSpriteConfigRepository();
         var configPath = Path.Combine(_tempDirectory, "config.json");
@@ -35,7 +35,7 @@ public sealed class ConfigRepositoryIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task LegacyImporter_ShouldImportCsvAndInferTransparency()
+    public async Task LegacyImporterShouldImportCsvAndInferTransparency()
     {
         var csvPath = Path.Combine(_tempDirectory, "legacy.csv");
         await File.WriteAllLinesAsync(

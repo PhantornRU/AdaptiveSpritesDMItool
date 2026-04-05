@@ -7,7 +7,7 @@ namespace AdaptiveSpritesDmiTool.Tests.Unit.Domain;
 public sealed class SpriteConfigTests
 {
     [Fact]
-    public void ValidateCandidate_ShouldRejectOutOfBoundsMappings()
+    public void ValidateCandidateShouldRejectOutOfBoundsMappings()
     {
         var resolution = new SpriteResolution(32, 32);
 
@@ -46,7 +46,7 @@ public sealed class SpriteConfigTests
     }
 
     [Fact]
-    public void SetMapping_ShouldRemoveIdentityMappings()
+    public void SetMappingShouldRemoveIdentityMappings()
     {
         var config = SpriteConfig.CreateEmpty(
             "config",
@@ -60,7 +60,7 @@ public sealed class SpriteConfigTests
     }
 
     [Fact]
-    public void SetMapping_ShouldRejectUnsupportedDirections()
+    public void SetMappingShouldRejectUnsupportedDirections()
     {
         var config = SpriteConfig.CreateEmpty(
             "config",
@@ -145,7 +145,7 @@ public sealed class SpriteConfigTests
     }
 
     [Fact]
-    public void EmptyWorkspace_ShouldBeMarkedAsEmpty()
+    public void EmptyWorkspaceShouldBeMarkedAsEmpty()
     {
         WorkspaceState.Empty.IsEmpty.Should().BeTrue();
         WorkspaceState.Empty.LoadedDocumentPath.Should().BeNull();

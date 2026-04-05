@@ -8,7 +8,7 @@ namespace AdaptiveSpritesDmiTool.Tests.Unit.Application;
 public sealed class UseCasesTests
 {
     [Fact]
-    public async Task SaveConfigUseCase_ShouldDelegateToRepository()
+    public async Task SaveConfigUseCaseShouldDelegateToRepository()
     {
         var session = new EditorSession();
         session.LoadAsset(new DmiAssetInfo("asset", null, new SpriteResolution(32, 32), SupportedDirectionSet.Four, []));
@@ -24,7 +24,7 @@ public sealed class UseCasesTests
     }
 
     [Fact]
-    public async Task LoadDmiFileUseCase_ShouldUpdateSessionAndWorkspace()
+    public async Task LoadDmiFileUseCaseShouldUpdateSessionAndWorkspace()
     {
         var asset = new DmiAssetInfo("asset", "sample.dmi", new SpriteResolution(32, 32), SupportedDirectionSet.Four, []);
         var reader = new StubDmiReader(asset);
@@ -40,7 +40,7 @@ public sealed class UseCasesTests
     }
 
     [Fact]
-    public void SetPreviewSelectionUseCase_ShouldNormalizeOptionalValues()
+    public void SetPreviewSelectionUseCaseShouldNormalizeOptionalValues()
     {
         var session = new EditorSession();
         var useCase = new SetPreviewSelectionUseCase(session);
@@ -52,7 +52,7 @@ public sealed class UseCasesTests
     }
 
     [Fact]
-    public async Task LoadWorkspaceSettingsUseCase_ShouldFallbackToEmptySettingsWhenRepositoryHasNoData()
+    public async Task LoadWorkspaceSettingsUseCaseShouldFallbackToEmptySettingsWhenRepositoryHasNoData()
     {
         var repository = new StubSettingsRepository(
             Result.Failure<WorkspaceSettings>(Errors.NotFound("settings.json")));
@@ -65,7 +65,7 @@ public sealed class UseCasesTests
     }
 
     [Fact]
-    public async Task SaveWorkspaceSettingsUseCase_ShouldDelegateToRepository()
+    public async Task SaveWorkspaceSettingsUseCaseShouldDelegateToRepository()
     {
         var repository = new StubSettingsRepository(Result.Success(WorkspaceSettings.Empty));
         var useCase = new SaveWorkspaceSettingsUseCase(repository);

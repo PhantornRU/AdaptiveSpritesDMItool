@@ -7,7 +7,7 @@ namespace AdaptiveSpritesDmiTool.Tests.Unit.Application;
 public sealed class EditorSessionTests
 {
     [Fact]
-    public void CreateConfig_ShouldRequireLoadedAsset()
+    public void CreateConfigShouldRequireLoadedAsset()
     {
         var session = new EditorSession();
 
@@ -18,7 +18,7 @@ public sealed class EditorSessionTests
     }
 
     [Fact]
-    public void UndoRedo_ShouldRestorePreviousConfigSnapshots()
+    public void UndoRedoShouldRestorePreviousConfigSnapshots()
     {
         var session = new EditorSession();
         var asset = new DmiAssetInfo(
@@ -40,7 +40,7 @@ public sealed class EditorSessionTests
     }
 
     [Fact]
-    public void ApplyTransform_ShouldCaptureBulkEditAsSingleUndoStep()
+    public void ApplyTransformShouldCaptureBulkEditAsSingleUndoStep()
     {
         var session = new EditorSession();
         var asset = new DmiAssetInfo(
@@ -67,7 +67,7 @@ public sealed class EditorSessionTests
     }
 
     [Fact]
-    public void LoadAsset_ShouldCreateLoadedWorkspace()
+    public void LoadAssetShouldCreateLoadedWorkspace()
     {
         var session = new EditorSession();
         var asset = new DmiAssetInfo(
