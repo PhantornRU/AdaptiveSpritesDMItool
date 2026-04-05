@@ -23,6 +23,16 @@ Production-grade WPF application for authoring and applying pixel-mapping config
 6. Save the config as JSON.
 7. Run batch processing against an input folder and review per-file results.
 
+## Sample Assets
+
+Optional example `.dmi` files are available under `samples/dmi`.
+
+- they are kept in the repository for manual exploration and debugging
+- they are not loaded automatically on startup
+- the application still starts with an empty workspace
+
+See [samples/dmi/README.md](samples/dmi/README.md).
+
 ## Architecture
 
 The repository is organized as a layered solution:
