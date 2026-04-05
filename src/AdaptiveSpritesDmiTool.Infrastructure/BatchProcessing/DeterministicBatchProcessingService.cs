@@ -32,7 +32,7 @@ public sealed class DeterministicBatchProcessingService(IDmiWriter dmiWriter)
                 continue;
             }
 
-            progress?.Report(new BatchProgress(index, inputFiles.Length, inputPath));
+            progress?.Report(new BatchProgress(index + 1, inputFiles.Length, inputPath));
 
             if (cancellationToken.IsCancellationRequested)
             {
@@ -41,7 +41,7 @@ public sealed class DeterministicBatchProcessingService(IDmiWriter dmiWriter)
             }
 
             var outputPath = BuildOutputPath(request, inputPath);
-            var overwriteDecision = EvaluateOverwritePolicy(request.OverwritePolicy, outputPath);
+            var overwriteDecision = EvaluateOverwritePolicy(request.OverwritePolicy, inputPath, outputPath);
             if (overwriteDecision is not null)
             {
                 results.Add(overwriteDecision);
@@ -83,14 +83,14 @@ public sealed class DeterministicBatchProcessingService(IDmiWriter dmiWriter)
         return Path.Combine(request.OutputDirectory, fileName);
     }
 
-    private static BatchFileResult? EvaluateOverwritePolicy(OverwritePolicy overwritePolicy, string outputPath) =>
+    private static BatchFileResult? EvaluateOverwritePolicy(OverwritePolicy overwritePolicy, string inputPath, string outputPath) =>
         overwritePolicy switch
         {
             OverwritePolicy.OverwriteExisting => null,
             OverwritePolicy.SkipExisting when SystemFileSystem.FileExists(outputPath) =>
-                new BatchFileResult(outputPath, outputPath, BatchFileStatus.Skipped, "Skipped because output file already exists."),
+                new BatchFileResult(inputPath, outputPath, BatchFileStatus.Skipped, "Skipped because output file already exists."),
             OverwritePolicy.FailIfExists when SystemFileSystem.FileExists(outputPath) =>
-                new BatchFileResult(outputPath, outputPath, BatchFileStatus.Failed, "Output file already exists."),
+                new BatchFileResult(inputPath, outputPath, BatchFileStatus.Failed, "Output file already exists."),
             _ => null
         };
 

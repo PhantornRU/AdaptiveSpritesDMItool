@@ -70,7 +70,32 @@ public sealed record BatchJobResult(IReadOnlyList<BatchFileResult> Files)
     public bool WasCancelled => Files.Any(static file => file.Status == BatchFileStatus.Cancelled);
 }
 
-public sealed record WorkspaceSettings(string? LastOpenedConfigPath, string? LastInputDirectory, string? LastOutputDirectory);
+public sealed record WorkspaceSettings(
+    string? LastOpenedDmiPath,
+    string? LastOpenedConfigPath,
+    string? LastImportedLegacyCsvPath,
+    string? LastInputDirectory,
+    string? LastOutputDirectory,
+    string? LastDraftConfigName,
+    string? LastBaseState,
+    string? LastLandmarkState,
+    string? LastOverlayState,
+    SpriteDirection? LastSelectedDirection,
+    OverwritePolicy LastOverwritePolicy)
+{
+    public static WorkspaceSettings Empty { get; } = new(
+        LastOpenedDmiPath: null,
+        LastOpenedConfigPath: null,
+        LastImportedLegacyCsvPath: null,
+        LastInputDirectory: null,
+        LastOutputDirectory: null,
+        LastDraftConfigName: null,
+        LastBaseState: null,
+        LastLandmarkState: null,
+        LastOverlayState: null,
+        LastSelectedDirection: null,
+        LastOverwritePolicy: OverwritePolicy.OverwriteExisting);
+}
 
 public interface IConfigRepository
 {

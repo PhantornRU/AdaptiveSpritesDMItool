@@ -40,6 +40,33 @@ public sealed class EditorSessionTests
     }
 
     [Fact]
+    public void ApplyTransform_ShouldCaptureBulkEditAsSingleUndoStep()
+    {
+        var session = new EditorSession();
+        var asset = new DmiAssetInfo(
+            "asset",
+            "sample.dmi",
+            new SpriteResolution(4, 4),
+            SupportedDirectionSet.Four,
+            []);
+
+        session.LoadAsset(asset);
+        session.CreateConfig("config", ConfigMetadata.CreateNew(ConfigSource.UserCreated, "test"));
+
+        var result = session.ApplyTransform(config =>
+            config
+                .SetMapping(SpriteDirection.South, new PixelCoordinate(0, 0), new PixelCoordinate(1, 1))
+                .SetMapping(SpriteDirection.South, new PixelCoordinate(2, 2), null));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.GetMappings(SpriteDirection.South).Should().HaveCount(2);
+
+        var undo = session.Undo();
+        undo.IsSuccess.Should().BeTrue();
+        undo.Value.GetMappings(SpriteDirection.South).Should().BeEmpty();
+    }
+
+    [Fact]
     public void LoadAsset_ShouldCreateLoadedWorkspace()
     {
         var session = new EditorSession();

@@ -131,6 +131,25 @@ public sealed class EditorSession
         return Result.Success(CurrentConfig);
     }
 
+    public Result<SpriteConfig> ApplyTransform(Func<SpriteConfig, SpriteConfig> transform)
+    {
+        ArgumentNullException.ThrowIfNull(transform);
+
+        if (CurrentConfig is null)
+        {
+            return Result.Failure<SpriteConfig>(Errors.Conflict("There is no active config to edit."));
+        }
+
+        var snapshot = CurrentConfig.Clone();
+        var updatedConfig = transform(CurrentConfig.Clone());
+        ArgumentNullException.ThrowIfNull(updatedConfig);
+
+        _undoStack.Push(snapshot);
+        _redoStack.Clear();
+        CurrentConfig = updatedConfig;
+        return Result.Success(CurrentConfig);
+    }
+
     public Result<SpriteConfig> Undo()
     {
         if (CurrentConfig is null || _undoStack.Count == 0)

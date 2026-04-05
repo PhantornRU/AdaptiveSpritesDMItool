@@ -111,6 +111,43 @@ public sealed class BuildPreviewUseCase(IPreviewBuilder previewBuilder, EditorSe
     }
 }
 
+public sealed class SetPreviewSelectionUseCase(EditorSession session)
+{
+    public Result Execute(string baseState, string? landmarkState, string? overlayState)
+    {
+        if (string.IsNullOrWhiteSpace(baseState))
+        {
+            return Result.Failure(Errors.Validation("A base state name is required."));
+        }
+
+        return session.SetPreviewSelection(
+            new PreviewSelection(
+                baseState.Trim(),
+                NormalizeOptionalState(landmarkState),
+                NormalizeOptionalState(overlayState)));
+    }
+
+    private static string? NormalizeOptionalState(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+}
+
+public sealed class SetSelectedDirectionUseCase(EditorSession session)
+{
+    public Result Execute(SpriteDirection direction) => session.SetSelectedDirection(direction);
+}
+
+public sealed class UpsertPixelMappingUseCase(EditorSession session)
+{
+    public Result<SpriteConfig> Execute(SpriteDirection direction, PixelCoordinate source, PixelCoordinate? target) =>
+        session.UpsertMapping(direction, source, target);
+}
+
+public sealed class RemovePixelMappingUseCase(EditorSession session)
+{
+    public Result<SpriteConfig> Execute(SpriteDirection direction, PixelCoordinate source) =>
+        session.RemoveMapping(direction, source);
+}
+
 public sealed class ApplyConfigToDmiBatchUseCase(IBatchProcessingService batchProcessingService, EditorSession session)
 {
     public async Task<Result<BatchJobResult>> ExecuteAsync(
@@ -130,6 +167,15 @@ public sealed class ApplyConfigToDmiBatchUseCase(IBatchProcessingService batchPr
     }
 }
 
+public sealed class ApplyConfigTransformUseCase(EditorSession session)
+{
+    public Result<SpriteConfig> Execute(Func<SpriteConfig, SpriteConfig> transform)
+    {
+        ArgumentNullException.ThrowIfNull(transform);
+        return session.ApplyTransform(transform);
+    }
+}
+
 public sealed class UndoChangeUseCase(EditorSession session)
 {
     public Result<SpriteConfig> Execute() => session.Undo();
@@ -138,4 +184,28 @@ public sealed class UndoChangeUseCase(EditorSession session)
 public sealed class RedoChangeUseCase(EditorSession session)
 {
     public Result<SpriteConfig> Execute() => session.Redo();
+}
+
+public sealed class LoadWorkspaceSettingsUseCase(ISettingsRepository repository)
+{
+    private static readonly WorkspaceSettings Empty = WorkspaceSettings.Empty;
+
+    public async Task<Result<WorkspaceSettings>> ExecuteAsync(CancellationToken cancellationToken)
+    {
+        var result = await repository.LoadAsync(cancellationToken);
+        return result.IsSuccess
+            ? result
+            : result.Error.Code == "not-found"
+                ? Result.Success(Empty)
+                : result;
+    }
+}
+
+public sealed class SaveWorkspaceSettingsUseCase(ISettingsRepository repository)
+{
+    public Task<Result> ExecuteAsync(WorkspaceSettings settings, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return repository.SaveAsync(settings, cancellationToken);
+    }
 }

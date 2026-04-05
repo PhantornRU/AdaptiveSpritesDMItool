@@ -40,6 +40,21 @@ public sealed class DmiSharpInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public async Task ReaderShouldRejectEmptyDmiFiles()
+    {
+        var dmiPath = Path.Combine(_tempDirectory, "empty.dmi");
+        await File.WriteAllBytesAsync(dmiPath, []);
+
+        var reader = new DmiSharpReader();
+
+        var result = await reader.LoadAsync(dmiPath, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("validation");
+        result.Error.Message.Should().Contain("empty");
+    }
+
+    [Fact]
     public async Task PreviewBuilderShouldHandleMissingLandmarkAndOverlayGracefully()
     {
         var dmiPath = Path.Combine(_tempDirectory, "preview.dmi");

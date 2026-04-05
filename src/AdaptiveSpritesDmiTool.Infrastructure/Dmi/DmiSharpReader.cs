@@ -19,6 +19,11 @@ public sealed class DmiSharpReader : IDmiReader
             return Result.Failure<DmiAssetInfo>(Errors.NotFound($"DMI file '{normalizedPath}' was not found."));
         }
 
+        if (new FileInfo(normalizedPath).Length == 0)
+        {
+            return Result.Failure<DmiAssetInfo>(Errors.Validation("DMI file is empty."));
+        }
+
         try
         {
             return await Task.Run(() =>

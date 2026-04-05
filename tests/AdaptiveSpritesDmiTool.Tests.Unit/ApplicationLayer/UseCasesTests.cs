@@ -39,6 +39,55 @@ public sealed class UseCasesTests
         workspace.Current.LoadedDocumentPath.Should().Be("sample.dmi");
     }
 
+    [Fact]
+    public void SetPreviewSelectionUseCase_ShouldNormalizeOptionalValues()
+    {
+        var session = new EditorSession();
+        var useCase = new SetPreviewSelectionUseCase(session);
+
+        var result = useCase.Execute(" base ", " landmark ", "   ");
+
+        result.IsSuccess.Should().BeTrue();
+        session.PreviewSelection.Should().Be(new PreviewSelection("base", "landmark", null));
+    }
+
+    [Fact]
+    public async Task LoadWorkspaceSettingsUseCase_ShouldFallbackToEmptySettingsWhenRepositoryHasNoData()
+    {
+        var repository = new StubSettingsRepository(
+            Result.Failure<WorkspaceSettings>(Errors.NotFound("settings.json")));
+        var useCase = new LoadWorkspaceSettingsUseCase(repository);
+
+        var result = await useCase.ExecuteAsync(CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(WorkspaceSettings.Empty);
+    }
+
+    [Fact]
+    public async Task SaveWorkspaceSettingsUseCase_ShouldDelegateToRepository()
+    {
+        var repository = new StubSettingsRepository(Result.Success(WorkspaceSettings.Empty));
+        var useCase = new SaveWorkspaceSettingsUseCase(repository);
+        var settings = new WorkspaceSettings(
+            "sprite.dmi",
+            "config.json",
+            "legacy.csv",
+            "input",
+            "output",
+            "draft",
+            "base",
+            "landmark",
+            "overlay",
+            SpriteDirection.East,
+            OverwritePolicy.FailIfExists);
+
+        var result = await useCase.ExecuteAsync(settings, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        repository.SavedSettings.Should().Be(settings);
+    }
+
     private sealed class InMemoryConfigRepository : IConfigRepository
     {
         public Dictionary<string, SpriteConfig> Stored { get; } = [];
@@ -59,5 +108,19 @@ public sealed class UseCasesTests
     {
         public Task<Result<DmiAssetInfo>> LoadAsync(string path, CancellationToken cancellationToken) =>
             Task.FromResult(Result.Success(asset));
+    }
+
+    private sealed class StubSettingsRepository(Result<WorkspaceSettings> loadResult) : ISettingsRepository
+    {
+        public WorkspaceSettings? SavedSettings { get; private set; }
+
+        public Task<Result<WorkspaceSettings>> LoadAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(loadResult);
+
+        public Task<Result> SaveAsync(WorkspaceSettings settings, CancellationToken cancellationToken)
+        {
+            SavedSettings = settings;
+            return Task.FromResult(Result.Success());
+        }
     }
 }

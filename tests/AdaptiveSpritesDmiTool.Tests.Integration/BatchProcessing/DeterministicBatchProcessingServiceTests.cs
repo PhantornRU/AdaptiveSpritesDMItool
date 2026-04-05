@@ -54,6 +54,8 @@ public sealed class DeterministicBatchProcessingServiceTests : IDisposable
         result.IsSuccess.Should().BeTrue();
         result.Value.Files.Should().ContainSingle();
         result.Value.Files[0].Status.Should().Be(BatchFileStatus.Skipped);
+        result.Value.Files[0].InputPath.Should().Be(Path.GetFullPath(inputPath));
+        result.Value.Files[0].OutputPath.Should().Be(Path.GetFullPath(outputPath));
         writer.Requests.Should().BeEmpty();
     }
 
@@ -73,6 +75,8 @@ public sealed class DeterministicBatchProcessingServiceTests : IDisposable
         result.IsSuccess.Should().BeTrue();
         result.Value.Files[0].Status.Should().Be(BatchFileStatus.Failed);
         result.Value.Files[0].Message.Should().Contain("already exists");
+        result.Value.Files[0].InputPath.Should().Be(Path.GetFullPath(Path.Combine(inputDirectory, "sprite.dmi")));
+        result.Value.Files[0].OutputPath.Should().Be(Path.GetFullPath(Path.Combine(outputDirectory, "sprite.dmi")));
         writer.Requests.Should().BeEmpty();
     }
 
