@@ -1,0 +1,54 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-wpf-shell",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj",
+        "-c",
+        "Debug",
+        "-v",
+        "minimal"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "build-solution",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/AdaptiveSpritesDMItool.sln",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-v",
+        "minimal"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "test-solution",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "${workspaceFolder}/AdaptiveSpritesDMItool.sln",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-v",
+        "minimal"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "test"
+    }
+  ]
+}
