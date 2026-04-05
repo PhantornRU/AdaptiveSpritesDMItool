@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -21,5 +21,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\AdaptiveSpritesDmiTool.Application\AdaptiveSpritesDmiTool.Application.csproj" />
     <ProjectReference Include="..\..\src\AdaptiveSpritesDmiTool.Domain\AdaptiveSpritesDmiTool.Domain.csproj" />
+    <ProjectReference Include="..\..\src\AdaptiveSpritesDmiTool.Presentation.Wpf\AdaptiveSpritesDmiTool.Presentation.Wpf.csproj" />
   </ItemGroup>
 </Project>

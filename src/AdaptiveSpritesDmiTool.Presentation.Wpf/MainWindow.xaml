@@ -5,537 +5,140 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="{Binding WindowTitle}"
-        Width="1360"
-        Height="860"
-        MinWidth="1120"
-        MinHeight="720"
+        Width="1480"
+        Height="920"
+        MinWidth="1200"
+        MinHeight="760"
         Background="{StaticResource Brush.WindowBackground}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <DataTemplate x:Key="SourceCellTemplate">
+            <Button Width="20" Height="20" Margin="1" Padding="0" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" Content="{Binding Caption}" Foreground="{Binding Foreground}" FontSize="10" ToolTip="{Binding ToolTip}" PreviewMouseLeftButtonDown="SourceCellButton_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="SourceCellButton_PreviewMouseLeftButtonUp" MouseEnter="SourceCellButton_MouseEnter" />
+        </DataTemplate>
+        <DataTemplate x:Key="TargetCellTemplate">
+            <Button Width="20" Height="20" Margin="1" Padding="0" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" Content="{Binding Caption}" Foreground="{Binding Foreground}" FontSize="10" ToolTip="{Binding ToolTip}" PreviewMouseLeftButtonUp="TargetCellButton_PreviewMouseLeftButtonUp" />
+        </DataTemplate>
+        <DataTemplate x:Key="PreviewCellTemplate">
+            <Border Width="18" Height="18" Margin="1" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" ToolTip="{Binding ToolTip}">
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9" Text="{Binding Caption}" />
+            </Border>
+        </DataTemplate>
     </Window.Resources>
     <DockPanel Margin="18">
-        <Border DockPanel.Dock="Top"
-                Margin="0,0,0,18"
-                Padding="20"
-                Background="{StaticResource Brush.PanelBackground}"
-                BorderBrush="{StaticResource Brush.PanelBorder}"
-                BorderThickness="1"
-                CornerRadius="18">
+        <Border DockPanel.Dock="Top" Margin="0,0,0,18" Padding="18" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="18">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock FontSize="30"
-                               FontWeight="SemiBold"
-                               Foreground="{StaticResource Brush.TextPrimary}"
-                               Text="Adaptive Sprites DMI Tool" />
-                    <TextBlock Margin="0,8,0,0"
-                               Foreground="{StaticResource Brush.TextSecondary}"
-                               Text="Empty workspace first. The shell executes open, save, load, import, and preview flows without direct file logic in code-behind." />
+                    <TextBlock FontSize="30" FontWeight="SemiBold" Text="Adaptive Sprites DMI Tool" />
+                    <TextBlock Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="Empty-workspace startup, JSON configs, deterministic batch processing, and interactive mapping editor." />
                 </StackPanel>
-
-                <WrapPanel Grid.Column="1"
-                           HorizontalAlignment="Right"
-                           VerticalAlignment="Center">
-                    <Button Margin="0,0,12,12"
-                            Padding="18,10"
-                            Command="{Binding OpenDmiCommand}"
-                            Content="Open DMI" />
-                    <Button Margin="0,0,12,12"
-                            Padding="18,10"
-                            Command="{Binding CreateConfigCommand}"
-                            Content="Create Config" />
-                    <Button Margin="0,0,12,12"
-                            Padding="18,10"
-                            Command="{Binding SaveConfigCommand}"
-                            Content="Save Config" />
-                    <Button Margin="0,0,12,12"
-                            Padding="18,10"
-                            Command="{Binding LoadConfigCommand}"
-                            Content="Load Config" />
-                    <Button Margin="0,0,12,12"
-                            Padding="18,10"
-                            Command="{Binding ImportLegacyConfigCommand}"
-                            Content="Import CSV" />
-                    <Button Padding="18,10"
-                            Command="{Binding ResetWorkspaceCommand}"
-                            Content="Reset Workspace" />
+                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Margin="0,0,10,10" Padding="16,8" Command="{Binding OpenDmiCommand}" Content="Open DMI" />
+                    <Button Margin="0,0,10,10" Padding="16,8" Command="{Binding CreateConfigCommand}" Content="Create Config" />
+                    <Button Margin="0,0,10,10" Padding="16,8" Command="{Binding LoadConfigCommand}" Content="Load Config" />
+                    <Button Margin="0,0,10,10" Padding="16,8" Command="{Binding SaveConfigCommand}" Content="Save Config" />
+                    <Button Margin="0,0,10,10" Padding="16,8" Command="{Binding BuildPreviewCommand}" Content="Build Preview" />
+                    <Button Margin="0,0,10,10" Padding="16,8" Command="{Binding RunBatchCommand}" Content="Run Batch" />
+                    <Button Margin="0,0,10,10" Padding="16,8" Command="{Binding UndoCommand}" Content="Undo" />
+                    <Button Margin="0,0,10,10" Padding="16,8" Command="{Binding RedoCommand}" Content="Redo" />
+                    <Button Padding="16,8" Command="{Binding ResetWorkspaceAsyncCommand}" Content="Reset" />
                 </WrapPanel>
             </Grid>
         </Border>
 
-        <Border DockPanel.Dock="Bottom"
-                Padding="14"
-                Background="{StaticResource Brush.PanelBackground}"
-                BorderBrush="{StaticResource Brush.PanelBorder}"
-                BorderThickness="1"
-                CornerRadius="16">
+        <Border DockPanel.Dock="Bottom" Padding="14" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="16">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock VerticalAlignment="Center"
-                           Foreground="{StaticResource Brush.TextSecondary}"
-                           Text="{Binding StatusMessage}" />
-
-                <StackPanel Grid.Column="1"
-                            Orientation="Horizontal"
-                            Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <ProgressBar Width="160"
-                                 Height="10"
-                                 Margin="0,0,12,0"
-                                 IsIndeterminate="True" />
-                    <Button Padding="12,6"
-                            Command="{Binding CancelCommand}"
-                            Content="Cancel" />
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{Binding StatusMessage}" />
+                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding BatchSummary}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <ProgressBar Width="240" Height="10" IsIndeterminate="{Binding IsProgressIndeterminate}" Maximum="{Binding OperationProgressMaximum}" Value="{Binding OperationProgressValue}" />
+                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Right" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding BatchCurrentFile}" />
+                    <Button Margin="0,8,0,0" Padding="12,6" Command="{Binding CancelCommand}" Content="Cancel" />
                 </StackPanel>
             </Grid>
         </Border>
 
         <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2.1*" />
-                <ColumnDefinition Width="1.35*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="2.15*" /><ColumnDefinition Width="1.35*" /></Grid.ColumnDefinitions>
 
-            <Border Grid.Row="0"
-                    Grid.ColumnSpan="2"
-                    Margin="0,0,0,18"
-                    Padding="18"
-                    Background="{StaticResource Brush.PanelBackground}"
-                    BorderBrush="{StaticResource Brush.PanelBorder}"
-                    BorderThickness="1"
-                    CornerRadius="16">
+            <ScrollViewer Grid.Column="0" Margin="0,0,18,0" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Border Padding="16" Margin="0,0,0,18" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="16">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <StackPanel><TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Workspace" /><TextBlock Margin="0,6,0,0" FontSize="18" FontWeight="SemiBold" Text="{Binding WorkspaceTitle}" /><TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding WorkspaceNotes}" /></StackPanel>
+                            <StackPanel Grid.Column="1"><TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Sprite Contract" /><TextBlock Margin="0,6,0,0" FontSize="16" Text="{Binding SpriteContractSummary}" /><TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding CurrentStateSummary}" /></StackPanel>
+                            <StackPanel Grid.Column="2"><TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Config State" /><TextBlock Margin="0,6,0,0" FontSize="16" Text="{Binding ConfigSummary}" /><TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding PreviewSelectionSummary}" /></StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Padding="16" Margin="0,0,0,18" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="16">
+                        <StackPanel>
+                            <TextBlock FontSize="18" FontWeight="SemiBold" Text="Files And Configs" />
+                            <Grid Margin="0,16,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="DMI" /><TextBox Grid.Column="1" Margin="16,0" Padding="10,8" Text="{Binding DmiPath, UpdateSourceTrigger=PropertyChanged}" /><Button Grid.Column="2" Margin="0,0,10,0" Padding="12,6" Command="{Binding BrowseDmiPathCommand}" Content="Browse" /><Button Grid.Column="3" Padding="12,6" Command="{Binding OpenDmiCommand}" Content="Open" /></Grid>
+                            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Load JSON" /><TextBox Grid.Column="1" Margin="16,0" Padding="10,8" Text="{Binding ConfigPath, UpdateSourceTrigger=PropertyChanged}" /><Button Grid.Column="2" Margin="0,0,10,0" Padding="12,6" Command="{Binding BrowseLoadConfigPathCommand}" Content="Browse" /><Button Grid.Column="3" Padding="12,6" Command="{Binding LoadConfigCommand}" Content="Load" /></Grid>
+                            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Save JSON" /><TextBox Grid.Column="1" Margin="16,0" Padding="10,8" Text="{Binding SaveConfigPath, UpdateSourceTrigger=PropertyChanged}" /><Button Grid.Column="2" Margin="0,0,10,0" Padding="12,6" Command="{Binding BrowseSaveConfigPathCommand}" Content="Browse" /><Button Grid.Column="3" Padding="12,6" Command="{Binding SaveConfigCommand}" Content="Save" /></Grid>
+                            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Legacy CSV" /><TextBox Grid.Column="1" Margin="16,0" Padding="10,8" Text="{Binding LegacyCsvPath, UpdateSourceTrigger=PropertyChanged}" /><Button Grid.Column="2" Margin="0,0,10,0" Padding="12,6" Command="{Binding BrowseLegacyCsvPathCommand}" Content="Browse" /><Button Grid.Column="3" Margin="0,0,10,0" Padding="12,6" Command="{Binding ImportLegacyConfigCommand}" Content="Import" /><Button Grid.Column="4" Padding="12,6" Command="{Binding ResetActiveConfigCommand}" Content="Clear" /></Grid>
+                            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Draft name" /><TextBox Grid.Column="1" Margin="16,0" Padding="10,8" Text="{Binding DraftConfigName, UpdateSourceTrigger=PropertyChanged}" /><Button Grid.Column="2" Padding="12,6" Command="{Binding CreateConfigCommand}" Content="Create" /></Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Margin="0,0,0,18"><Grid.ColumnDefinitions><ColumnDefinition Width="1.1*" /><ColumnDefinition Width="0.9*" /></Grid.ColumnDefinitions>
+                        <Border Padding="16" Margin="0,0,12,0" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="16">
+                            <StackPanel>
+                                <TextBlock FontSize="18" FontWeight="SemiBold" Text="Editor" />
+                                <WrapPanel Margin="0,16,0,0"><TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Direction" /><ComboBox Width="120" Margin="0,0,14,8" ItemsSource="{Binding AvailableDirections}" SelectedItem="{Binding SelectedDirection}" /><TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Tool" /><ComboBox Width="120" Margin="0,0,14,8" ItemsSource="{Binding EditorTools}" SelectedItem="{Binding SelectedEditorTool}" /><TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Scope" /><ComboBox Width="120" Margin="0,0,14,8" ItemsSource="{Binding DirectionScopes}" SelectedItem="{Binding SelectedDirectionScope}" /></WrapPanel>
+                                <WrapPanel Margin="0,4,0,0"><CheckBox Margin="0,0,14,8" IsChecked="{Binding MirrorAcrossDirections}" Content="Mirror" /><CheckBox Margin="0,0,14,8" IsChecked="{Binding UseCentralizedPropagation}" Content="Centralize" /><CheckBox Margin="0,0,14,8" IsChecked="{Binding ShowGrid}" Content="Grid" /><CheckBox Margin="0,0,14,8" IsChecked="{Binding GridAboveImage}" Content="Grid Above" /><CheckBox Margin="0,0,14,8" IsChecked="{Binding ShowOverlay}" Content="Overlay" /><CheckBox Margin="0,0,14,8" IsChecked="{Binding ShowTextGrid}" Content="Text Grid" /></WrapPanel>
+                                <TextBlock Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding EditorStatus}" />
+                                <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding SelectedSourceSummary}" />
+                                <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding SelectedAreaSummary}" />
+                                <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding HoverSummary}" />
+                                <WrapPanel Margin="0,10,0,0"><Button Margin="0,0,10,0" Padding="12,6" Command="{Binding ClearSelectionCommand}" Content="Clear Selection" /><Button Padding="12,6" Command="{Binding BuildPreviewCommand}" Content="Rebuild Preview" /></WrapPanel>
+                                <Grid Margin="0,16,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <Border Margin="0,0,10,0" Padding="10" Background="#F8F3EC" CornerRadius="12"><StackPanel><TextBlock FontWeight="SemiBold" Text="Source Pane" /><ScrollViewer Margin="0,10,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding SourceRows}"><ItemsControl.ItemTemplate><DataTemplate><ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource SourceCellTemplate}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></ScrollViewer></StackPanel></Border>
+                                    <Border Grid.Column="1" Margin="10,0,0,0" Padding="10" Background="#F2EEE5" CornerRadius="12"><StackPanel><TextBlock FontWeight="SemiBold" Text="Editable Pane" /><ScrollViewer Margin="0,10,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding TargetRows}"><ItemsControl.ItemTemplate><DataTemplate><ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource TargetCellTemplate}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></ScrollViewer></StackPanel></Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Padding="16" Margin="12,0,0,0" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="16">
+                            <StackPanel>
+                                <TextBlock FontSize="18" FontWeight="SemiBold" Text="State Explorer" />
+                                <ListBox Margin="0,14,0,0" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" Height="180" />
+                                <WrapPanel Margin="0,12,0,0"><Button Margin="0,0,10,0" Padding="10,5" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Base" /><Button Margin="0,0,10,0" Padding="10,5" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Landmark" /><Button Padding="10,5" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Overlay" /></WrapPanel>
+                                <TextBlock Margin="0,18,0,0" FontSize="18" FontWeight="SemiBold" Text="Mappings" />
+                                <DataGrid Margin="0,12,0,0" ItemsSource="{Binding MappingRows}" SelectedItem="{Binding SelectedMapping}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" Height="310"><DataGrid.Columns><DataGridTextColumn Header="Source" Binding="{Binding SourceText}" Width="*" /><DataGridTextColumn Header="Target" Binding="{Binding TargetText}" Width="*" /></DataGrid.Columns></DataGrid>
+                                <Button Margin="0,10,0,0" Padding="12,6" Command="{Binding RemoveSelectedMappingCommand}" Content="Remove Selected Mapping" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Border Padding="16" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="16">
+                        <StackPanel>
+                            <TextBlock FontSize="18" FontWeight="SemiBold" Text="Batch Processing" />
+                            <Grid Margin="0,16,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Input" /><TextBox Grid.Column="1" Margin="16,0" Padding="10,8" Text="{Binding BatchInputDirectory, UpdateSourceTrigger=PropertyChanged}" /><Button Grid.Column="2" Padding="12,6" Command="{Binding BrowseBatchInputDirectoryCommand}" Content="Browse" /></Grid>
+                            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="120" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Output" /><TextBox Grid.Column="1" Margin="16,0" Padding="10,8" Text="{Binding BatchOutputDirectory, UpdateSourceTrigger=PropertyChanged}" /><Button Grid.Column="2" Margin="0,0,10,0" Padding="12,6" Command="{Binding BrowseBatchOutputDirectoryCommand}" Content="Browse" /><ComboBox Grid.Column="3" ItemsSource="{Binding OverwritePolicies}" SelectedItem="{Binding SelectedOverwritePolicy}" /><Button Grid.Column="4" Margin="10,0,0,0" Padding="12,6" Command="{Binding RunBatchCommand}" Content="Run" /></Grid>
+                            <DataGrid Margin="0,16,0,0" ItemsSource="{Binding BatchResults}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" Height="220"><DataGrid.Columns><DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" /><DataGridTextColumn Header="Input" Binding="{Binding InputPath}" Width="*" /><DataGridTextColumn Header="Output" Binding="{Binding OutputPath}" Width="*" /><DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="1.2*" /></DataGrid.Columns></DataGrid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border Grid.Column="1" Padding="18" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="16">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel>
-                        <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Workspace" />
-                        <TextBlock Margin="0,6,0,0"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource Brush.TextPrimary}"
-                                   Text="{Binding WorkspaceTitle}" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Sprite Contract" />
-                        <TextBlock Margin="0,6,0,0"
-                                   FontSize="16"
-                                   Foreground="{StaticResource Brush.TextPrimary}"
-                                   Text="{Binding SpriteContractSummary}" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Config State" />
-                        <TextBlock Margin="0,6,0,0"
-                                   FontSize="16"
-                                   Foreground="{StaticResource Brush.TextPrimary}"
-                                   Text="{Binding ConfigSummary}" />
-                    </StackPanel>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <WrapPanel><TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Base" /><TextBox Width="120" Margin="0,0,10,8" Padding="8,6" Text="{Binding BaseStateName, UpdateSourceTrigger=PropertyChanged}" /><TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Landmark" /><TextBox Width="120" Margin="0,0,10,8" Padding="8,6" Text="{Binding LandmarkStateName, UpdateSourceTrigger=PropertyChanged}" /><TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Overlay" /><TextBox Width="120" Margin="0,0,10,8" Padding="8,6" Text="{Binding OverlayStateName, UpdateSourceTrigger=PropertyChanged}" /><ComboBox Width="130" Margin="0,0,10,8" ItemsSource="{Binding PreviewDisplayModes}" SelectedItem="{Binding SelectedPreviewDisplayMode}" /><Button Padding="12,6" Command="{Binding BuildPreviewCommand}" Content="Render" /></WrapPanel>
+                    <TextBlock Grid.Row="1" Margin="0,12,0,12" TextWrapping="Wrap" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding PreviewSummary}" />
+                    <Grid Grid.Row="2">
+                        <Border Visibility="{Binding IsPreviewImageVisible, Converter={StaticResource BooleanToVisibilityConverter}}" CornerRadius="14" Background="#FFF9F2"><Viewbox Stretch="Uniform"><Image Source="{Binding CurrentPreviewImage}" Stretch="None" SnapsToDevicePixels="True" /></Viewbox></Border>
+                        <ScrollViewer Visibility="{Binding IsPreviewGridVisible, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding PreviewGridRows}"><ItemsControl.ItemTemplate><DataTemplate><ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource PreviewCellTemplate}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></ScrollViewer>
+                        <TextBox Visibility="{Binding IsPreviewTextVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Background="#FFF9F2" BorderThickness="0" FontFamily="Consolas" FontSize="12" IsReadOnly="True" Text="{Binding PreviewTextGrid}" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" />
+                    </Grid>
                 </Grid>
             </Border>
-
-            <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,18,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="1.45*" />
-                    <RowDefinition Height="0.9*" />
-                </Grid.RowDefinitions>
-
-                <Border Grid.Row="0"
-                        Margin="0,0,0,18"
-                        Padding="18"
-                        Background="{StaticResource Brush.PanelBackground}"
-                        BorderBrush="{StaticResource Brush.PanelBorder}"
-                        BorderThickness="1"
-                        CornerRadius="16">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource Brush.TextPrimary}"
-                                   Text="Preview Staging" />
-
-                        <TextBlock Grid.Row="1"
-                                   Margin="0,12,0,0"
-                                   TextWrapping="Wrap"
-                                   Foreground="{StaticResource Brush.TextSecondary}"
-                                   Text="{Binding PreviewSelectionSummary}" />
-
-                        <Grid Grid.Row="2" Margin="0,18,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Margin="0,0,12,0">
-                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Base state" />
-                                <TextBox Margin="0,8,0,0"
-                                         Padding="10,8"
-                                         Text="{Binding BaseStateName, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="1" Margin="12,0">
-                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Landmark state" />
-                                <TextBox Margin="0,8,0,0"
-                                         Padding="10,8"
-                                         Text="{Binding LandmarkStateName, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2" Margin="12,0">
-                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Overlay state" />
-                                <TextBox Margin="0,8,0,0"
-                                         Padding="10,8"
-                                         Text="{Binding OverlayStateName, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
-
-                            <Button Grid.Column="3"
-                                    Margin="16,24,0,0"
-                                    Padding="16,8"
-                                    VerticalAlignment="Top"
-                                    Command="{Binding StagePreviewSelectionCommand}"
-                                    Content="Build Preview" />
-                        </Grid>
-
-                        <Grid Grid.Row="3" Margin="0,18,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-
-                            <Border Margin="0,0,12,12"
-                                    CornerRadius="14"
-                                    Background="{StaticResource Brush.AccentMuted}">
-                                <StackPanel Margin="16">
-                                    <TextBlock FontWeight="SemiBold" Text="Base State" />
-                                    <Border Margin="0,12,0,0"
-                                            Height="164"
-                                            CornerRadius="12"
-                                            Background="#FFF9F2">
-                                        <Viewbox Stretch="Uniform">
-                                            <Image Source="{Binding BasePreviewImage}"
-                                                   Stretch="None"
-                                                   SnapsToDevicePixels="True" />
-                                        </Viewbox>
-                                    </Border>
-                                    <TextBlock Margin="0,10,0,0"
-                                               TextWrapping="Wrap"
-                                               Foreground="{StaticResource Brush.TextSecondary}"
-                                               Text="{Binding BasePreviewText}" />
-                                </StackPanel>
-                            </Border>
-
-                            <Border Grid.Column="1"
-                                    Margin="12,0,0,12"
-                                    CornerRadius="14"
-                                    Background="#F0E8DA">
-                                <StackPanel Margin="16">
-                                    <TextBlock FontWeight="SemiBold" Text="Landmark" />
-                                    <Border Margin="0,12,0,0"
-                                            Height="164"
-                                            CornerRadius="12"
-                                            Background="#FFF9F2">
-                                        <Viewbox Stretch="Uniform">
-                                            <Image Source="{Binding LandmarkPreviewImage}"
-                                                   Stretch="None"
-                                                   SnapsToDevicePixels="True" />
-                                        </Viewbox>
-                                    </Border>
-                                    <TextBlock Margin="0,10,0,0"
-                                               TextWrapping="Wrap"
-                                               Foreground="{StaticResource Brush.TextSecondary}"
-                                               Text="{Binding LandmarkPreviewText}" />
-                                </StackPanel>
-                            </Border>
-
-                            <Border Grid.Row="1"
-                                    Margin="0,12,12,0"
-                                    CornerRadius="14"
-                                    Background="#ECE3D7">
-                                <StackPanel Margin="16">
-                                    <TextBlock FontWeight="SemiBold" Text="Overlay" />
-                                    <Border Margin="0,12,0,0"
-                                            Height="164"
-                                            CornerRadius="12"
-                                            Background="#FFF9F2">
-                                        <Viewbox Stretch="Uniform">
-                                            <Image Source="{Binding OverlayPreviewImage}"
-                                                   Stretch="None"
-                                                   SnapsToDevicePixels="True" />
-                                        </Viewbox>
-                                    </Border>
-                                    <TextBlock Margin="0,10,0,0"
-                                               TextWrapping="Wrap"
-                                               Foreground="{StaticResource Brush.TextSecondary}"
-                                               Text="{Binding OverlayPreviewText}" />
-                                </StackPanel>
-                            </Border>
-
-                            <Border Grid.Row="1"
-                                    Grid.Column="1"
-                                    Margin="12,12,0,0"
-                                    CornerRadius="14"
-                                    Background="#E6E8D9">
-                                <StackPanel Margin="16">
-                                    <TextBlock FontWeight="SemiBold" Text="Composite" />
-                                    <Border Margin="0,12,0,0"
-                                            Height="164"
-                                            CornerRadius="12"
-                                            Background="#FFF9F2">
-                                        <Viewbox Stretch="Uniform">
-                                            <Image Source="{Binding CompositePreviewImage}"
-                                                   Stretch="None"
-                                                   SnapsToDevicePixels="True" />
-                                        </Viewbox>
-                                    </Border>
-                                    <TextBlock Margin="0,10,0,0"
-                                               TextWrapping="Wrap"
-                                               Foreground="{StaticResource Brush.TextSecondary}"
-                                               Text="{Binding CompositePreviewText}" />
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-                    </Grid>
-                </Border>
-
-                <Border Grid.Row="1"
-                        Padding="18"
-                        Background="{StaticResource Brush.PanelBackground}"
-                        BorderBrush="{StaticResource Brush.PanelBorder}"
-                        BorderThickness="1"
-                        CornerRadius="16">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource Brush.TextPrimary}"
-                                   Text="Manual Flow" />
-
-                        <TextBlock Grid.Row="1"
-                                   Margin="0,12,0,0"
-                                   TextWrapping="Wrap"
-                                   Foreground="{StaticResource Brush.TextSecondary}"
-                                   Text="{Binding ManualFlowSummary}" />
-
-                        <Grid Grid.Row="2" Margin="0,18,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock VerticalAlignment="Center"
-                                       Foreground="{StaticResource Brush.TextSecondary}"
-                                       Text="DMI path" />
-                            <TextBox Grid.Column="1"
-                                     Margin="16,0"
-                                     Padding="10,8"
-                                     Text="{Binding PendingDmiPath, UpdateSourceTrigger=PropertyChanged}" />
-                            <Button Grid.Column="2"
-                                    Padding="16,8"
-                                    Command="{Binding OpenDmiCommand}"
-                                    Content="Open" />
-                        </Grid>
-
-                        <Grid Grid.Row="3" Margin="0,12,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock VerticalAlignment="Center"
-                                       Foreground="{StaticResource Brush.TextSecondary}"
-                                       Text="Config name" />
-                            <TextBox Grid.Column="1"
-                                     Margin="16,0"
-                                     Padding="10,8"
-                                     Text="{Binding DraftConfigName, UpdateSourceTrigger=PropertyChanged}" />
-                            <Button Grid.Column="2"
-                                    Padding="16,8"
-                                    Command="{Binding CreateConfigCommand}"
-                                    Content="Create" />
-                        </Grid>
-
-                        <Grid Grid.Row="4" Margin="0,12,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock VerticalAlignment="Center"
-                                       Foreground="{StaticResource Brush.TextSecondary}"
-                                       Text="JSON path" />
-                            <TextBox Grid.Column="1"
-                                     Margin="16,0"
-                                     Padding="10,8"
-                                     Text="{Binding PendingConfigPath, UpdateSourceTrigger=PropertyChanged}" />
-                            <Button Grid.Column="2"
-                                    Margin="0,0,10,0"
-                                    Padding="16,8"
-                                    Command="{Binding LoadConfigCommand}"
-                                    Content="Load" />
-                            <Button Grid.Column="3"
-                                    Padding="16,8"
-                                    Command="{Binding SaveConfigCommand}"
-                                    Content="Save" />
-                        </Grid>
-
-                        <Grid Grid.Row="5" Margin="0,12,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock VerticalAlignment="Center"
-                                       Foreground="{StaticResource Brush.TextSecondary}"
-                                       Text="Legacy CSV" />
-                            <TextBox Grid.Column="1"
-                                     Margin="16,0"
-                                     Padding="10,8"
-                                     Text="{Binding PendingLegacyCsvPath, UpdateSourceTrigger=PropertyChanged}" />
-                            <Button Grid.Column="2"
-                                    Padding="16,8"
-                                    Command="{Binding ImportLegacyConfigCommand}"
-                                    Content="Import" />
-                        </Grid>
-                    </Grid>
-                </Border>
-            </Grid>
-
-            <Grid Grid.Row="1" Grid.Column="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <Border Margin="0,0,0,18"
-                        Padding="18"
-                        Background="{StaticResource Brush.PanelBackground}"
-                        BorderBrush="{StaticResource Brush.PanelBorder}"
-                        BorderThickness="1"
-                        CornerRadius="16">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource Brush.TextPrimary}"
-                                   Text="Direction Display" />
-
-                        <StackPanel Grid.Row="1" Margin="0,16,0,0">
-                            <TextBlock Foreground="{StaticResource Brush.TextSecondary}"
-                                       Text="{Binding CurrentDirectionText}" />
-
-                            <ItemsControl Margin="0,12,0,0" ItemsSource="{Binding DirectionBadges}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Margin="0,0,10,10"
-                                                Padding="10,6"
-                                                CornerRadius="12"
-                                                Background="{StaticResource Brush.AccentMuted}">
-                                            <TextBlock Text="{Binding}" />
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-
-                <Border Grid.Row="1"
-                        Padding="18"
-                        Background="{StaticResource Brush.PanelBackground}"
-                        BorderBrush="{StaticResource Brush.PanelBorder}"
-                        BorderThickness="1"
-                        CornerRadius="16">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource Brush.TextPrimary}"
-                                   Text="Blockers And Next Actions" />
-
-                        <TextBlock Grid.Row="1"
-                                   Margin="0,14,0,0"
-                                   TextWrapping="Wrap"
-                                   Foreground="{StaticResource Brush.TextSecondary}"
-                                   Text="{Binding WorkspaceNotes}" />
-
-                        <ItemsControl Grid.Row="2" Margin="0,18,0,0" ItemsSource="{Binding IntegrationBlockers}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Margin="0,0,0,10"
-                                            Padding="12"
-                                            CornerRadius="12"
-                                            Background="#F8EEE4">
-                                        <TextBlock TextWrapping="Wrap" Text="{Binding}" />
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <ItemsControl Grid.Row="3" Margin="0,18,0,0" ItemsSource="{Binding NextActions}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Margin="0,0,0,10"
-                                            Padding="12"
-                                            CornerRadius="12"
-                                            Background="#F8F3EC">
-                                        <TextBlock TextWrapping="Wrap" Text="{Binding}" />
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </Grid>
-                </Border>
-            </Grid>
         </Grid>
     </DockPanel>
 </Window>
