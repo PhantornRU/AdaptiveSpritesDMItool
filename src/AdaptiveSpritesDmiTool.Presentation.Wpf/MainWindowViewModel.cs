@@ -7,7 +7,7 @@ using System.Windows.Media.Imaging;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
-public partial class MainWindowViewModel : ObservableObject
+public partial class MainWindowViewModel : ObservableObject, IDisposable
 {
     private readonly StartEmptyWorkspaceUseCase _startEmptyWorkspaceUseCase;
     private readonly CreateConfigUseCase _createConfigUseCase;
@@ -28,11 +28,13 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IFileDialogService _fileDialogService;
     private readonly EditorSession _editorSession;
     private readonly ILogger<MainWindowViewModel> _logger;
+    private readonly SemaphoreSlim _workspaceSettingsPersistenceGate = new(1, 1);
     private CancellationTokenSource? _activeOperationCts;
     private PixelCoordinate? _selectedSourceCoordinate;
     private PixelCoordinate? _dragAnchor;
     private PixelAreaSelection? _selectedArea;
     private bool _isDraggingSourceArea;
+    private bool _isSynchronizingSelectedDirection;
     private SpriteImage? _baseImage;
     private SpriteImage? _landmarkImage;
     private SpriteImage? _overlayImage;
@@ -117,4 +119,10 @@ public partial class MainWindowViewModel : ObservableObject
     public IReadOnlyList<PreviewDisplayMode> PreviewDisplayModes { get; }
 
     public IReadOnlyList<OverwritePolicy> OverwritePolicies { get; }
+
+    public void Dispose()
+    {
+        _workspaceSettingsPersistenceGate.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

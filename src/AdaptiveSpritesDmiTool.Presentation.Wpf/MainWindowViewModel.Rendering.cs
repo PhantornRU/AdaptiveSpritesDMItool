@@ -56,8 +56,10 @@ public partial class MainWindowViewModel
             var dmiResult = await _loadDmiFileUseCase.ExecuteAsync(DmiPath, CancellationToken.None);
             if (dmiResult.IsSuccess)
             {
-                BaseStateName = dmiResult.Value.States.FirstOrDefault()?.Name ?? string.Empty;
-                SelectedDirection = dmiResult.Value.SupportedDirections.GetDirections().First();
+                BaseStateName = ResolveStateOrFallback(dmiResult.Value, BaseStateName);
+                LandmarkStateName = ResolveOptionalState(dmiResult.Value, LandmarkStateName);
+                OverlayStateName = ResolveOptionalState(dmiResult.Value, OverlayStateName);
+                NormalizeSelectedDirection();
             }
             else
             {
@@ -91,7 +93,7 @@ public partial class MainWindowViewModel
             string.IsNullOrWhiteSpace(BaseStateName) ? null : BaseStateName.Trim(),
             string.IsNullOrWhiteSpace(LandmarkStateName) ? null : LandmarkStateName.Trim(),
             string.IsNullOrWhiteSpace(OverlayStateName) ? null : OverlayStateName.Trim(),
-            SelectedDirection,
+            GetSafeSelectedDirection(),
             SelectedOverwritePolicy);
 
     private void ResetWorkspaceCore()
@@ -184,6 +186,8 @@ public partial class MainWindowViewModel
             return;
         }
 
+        var direction = GetSafeSelectedDirection();
+
         var result = await _buildPreviewUseCase.ExecuteAsync(cancellationToken);
         if (result.IsFailure)
         {
@@ -198,7 +202,7 @@ public partial class MainWindowViewModel
         _overlayImage = result.Value.OverlayImage;
         _compositeImage = result.Value.CompositeImage;
         PreviewSummary =
-            $"Preview built for direction {SelectedDirection}. " +
+            $"Preview built for direction {direction}. " +
             $"Landmark {(result.Value.LandmarkImage is null ? "missing or not selected" : "available")}, " +
             $"overlay {(result.Value.OverlayImage is null ? "missing or not selected" : "available")}.";
         StatusMessage = "Preview built successfully.";
@@ -267,12 +271,13 @@ public partial class MainWindowViewModel
     private SpriteConfig ApplyScopedMapping(SpriteConfig config, PixelCoordinate source, PixelCoordinate? target)
     {
         var next = config;
+        var selectedDirection = GetSafeSelectedDirection();
         foreach (var direction in ResolveDirections(config.SupportedDirections))
         {
-            var transformedSource = TransformCoordinate(source, SelectedDirection, direction, config.Resolution);
+            var transformedSource = TransformCoordinate(source, selectedDirection, direction, config.Resolution);
             PixelCoordinate? transformedTarget = target is null
                 ? null
-                : TransformTarget(source, target.Value, transformedSource, SelectedDirection, direction, config.Resolution);
+                : TransformTarget(source, target.Value, transformedSource, selectedDirection, direction, config.Resolution);
             next = next.SetMapping(direction, transformedSource, transformedTarget);
         }
 
@@ -282,9 +287,10 @@ public partial class MainWindowViewModel
     private SpriteConfig ApplyScopedRestore(SpriteConfig config, PixelCoordinate source)
     {
         var next = config;
+        var selectedDirection = GetSafeSelectedDirection();
         foreach (var direction in ResolveDirections(config.SupportedDirections))
         {
-            next = next.RemoveMapping(direction, TransformCoordinate(source, SelectedDirection, direction, config.Resolution));
+            next = next.RemoveMapping(direction, TransformCoordinate(source, selectedDirection, direction, config.Resolution));
         }
 
         return next;
@@ -293,12 +299,13 @@ public partial class MainWindowViewModel
     private IReadOnlyList<SpriteDirection> ResolveDirections(SupportedDirectionSet supportedDirections)
     {
         var available = supportedDirections.GetDirections().ToArray();
+        var selectedDirection = GetSafeSelectedDirection();
         return SelectedDirectionScope switch
         {
-            DirectionScope.Single => [SelectedDirection],
-            DirectionScope.Parallel => available.Where(direction => GetParallelGroup(direction) == GetParallelGroup(SelectedDirection)).ToArray(),
+            DirectionScope.Single => [selectedDirection],
+            DirectionScope.Parallel => available.Where(direction => GetParallelGroup(direction) == GetParallelGroup(selectedDirection)).ToArray(),
             DirectionScope.All => available,
-            _ => [SelectedDirection]
+            _ => [selectedDirection]
         };
     }
 
@@ -387,9 +394,10 @@ public partial class MainWindowViewModel
 
         StatusMessage = successMessage;
         PreviewSummary = "Config changed. Build preview again to render the updated mappings.";
+        NormalizeSelectedDirection();
         RefreshWorkspaceState();
         RefreshEditorSurface();
-        PersistWorkspaceSettingsAsync().GetAwaiter().GetResult();
+        PersistWorkspaceSettingsInBackground();
     }
 
     private void RefreshWorkspaceState()
@@ -444,17 +452,104 @@ public partial class MainWindowViewModel
 
     private void RefreshPreviewSelectionSummary()
     {
+        var direction = GetSafeSelectedDirection();
         PreviewSelectionSummary = string.IsNullOrWhiteSpace(BaseStateName)
-            ? $"Direction: {SelectedDirection}. Base state is not selected yet."
-            : $"Direction: {SelectedDirection}. Base '{BaseStateName}', landmark '{NormalizeOptionalText(LandmarkStateName)}', overlay '{NormalizeOptionalText(OverlayStateName)}'.";
+            ? $"Direction: {direction}. Base state is not selected yet."
+            : $"Direction: {direction}. Base '{BaseStateName}', landmark '{NormalizeOptionalText(LandmarkStateName)}', overlay '{NormalizeOptionalText(OverlayStateName)}'.";
     }
 
     private void RefreshEditorSurface()
     {
+        NormalizeSelectedDirection();
         RefreshMappingRows();
         RebuildPixelRows(SourceRows, false);
         RebuildPixelRows(TargetRows, ShowOverlay);
         RebuildPreviewGridRows();
         RefreshActivePreviewPresentation();
+    }
+
+    private SpriteDirection GetSafeSelectedDirection()
+    {
+        var supportedDirections = ResolveSelectedDirectionSupport();
+        var preferredDirection = supportedDirections is not null && !supportedDirections.Supports(SelectedDirection)
+            ? supportedDirections.GetDirections().First()
+            : SelectedDirection;
+
+        if (TryApplySelectedDirection(preferredDirection, refreshUi: false))
+        {
+            return _editorSession.SelectedDirection;
+        }
+
+        return supportedDirections?.Supports(_editorSession.SelectedDirection) == true
+            ? _editorSession.SelectedDirection
+            : supportedDirections?.GetDirections().First() ?? _editorSession.SelectedDirection;
+    }
+
+    private void NormalizeSelectedDirection() => GetSafeSelectedDirection();
+
+    private SupportedDirectionSet? ResolveSelectedDirectionSupport() =>
+        _editorSession.CurrentConfig?.SupportedDirections ?? _editorSession.LoadedAsset?.SupportedDirections;
+
+    private bool TryApplySelectedDirection(SpriteDirection direction, bool refreshUi)
+    {
+        var result = _setSelectedDirectionUseCase.Execute(direction);
+        if (result.IsFailure)
+        {
+            StatusMessage = result.Error.Message;
+            SynchronizeSelectedDirectionProperty(_editorSession.SelectedDirection);
+            return false;
+        }
+
+        SynchronizeSelectedDirectionProperty(_editorSession.SelectedDirection);
+        CurrentDirectionText = _editorSession.SelectedDirection.ToString();
+
+        if (refreshUi)
+        {
+            RefreshWorkspaceState();
+            RefreshPreviewSelectionSummary();
+            RefreshEditorSurface();
+        }
+
+        return true;
+    }
+
+    private void SynchronizeSelectedDirectionProperty(SpriteDirection direction)
+    {
+        if (SelectedDirection == direction)
+        {
+            return;
+        }
+
+        _isSynchronizingSelectedDirection = true;
+        try
+        {
+            SelectedDirection = direction;
+        }
+        finally
+        {
+            _isSynchronizingSelectedDirection = false;
+        }
+    }
+
+    private static string ResolveStateOrFallback(DmiAssetInfo asset, string? preferredState)
+    {
+        if (!string.IsNullOrWhiteSpace(preferredState) &&
+            asset.States.Any(state => string.Equals(state.Name, preferredState, StringComparison.OrdinalIgnoreCase)))
+        {
+            return preferredState.Trim();
+        }
+
+        return asset.States.FirstOrDefault()?.Name ?? string.Empty;
+    }
+
+    private static string ResolveOptionalState(DmiAssetInfo asset, string? preferredState)
+    {
+        if (!string.IsNullOrWhiteSpace(preferredState) &&
+            asset.States.Any(state => string.Equals(state.Name, preferredState, StringComparison.OrdinalIgnoreCase)))
+        {
+            return preferredState.Trim();
+        }
+
+        return string.Empty;
     }
 }

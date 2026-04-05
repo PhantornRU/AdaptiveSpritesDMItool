@@ -52,7 +52,11 @@ public sealed class SaveConfigUseCase(IConfigRepository repository, EditorSessio
         var saveResult = await repository.SaveAsync(path, session.CurrentConfig, cancellationToken);
         if (saveResult.IsSuccess)
         {
-            session.SetCurrentConfig(session.CurrentConfig, path);
+            var sessionResult = session.SetCurrentConfigPath(path);
+            if (sessionResult.IsFailure)
+            {
+                return sessionResult;
+            }
         }
 
         return saveResult;

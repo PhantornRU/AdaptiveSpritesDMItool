@@ -32,8 +32,8 @@ public partial class App : System.Windows.Application
             var viewModel = _host.Services.GetRequiredService<MainWindowViewModel>();
 
             MainWindow = mainWindow;
-            viewModel.InitializeAsync().GetAwaiter().GetResult();
             mainWindow.Show();
+            _ = InitializeMainWindowAsync(mainWindow, viewModel);
         }
         catch (Exception exception)
         {
@@ -105,6 +105,27 @@ public partial class App : System.Windows.Application
                 services.AddSingleton<MainWindow>();
             })
             .Build();
+
+    private async Task InitializeMainWindowAsync(MainWindow mainWindow, MainWindowViewModel viewModel)
+    {
+        mainWindow.IsEnabled = false;
+
+        try
+        {
+            await viewModel.InitializeAsync();
+        }
+        catch (Exception exception)
+        {
+            HandleFatalException("Application startup failed.", exception);
+        }
+        finally
+        {
+            if (mainWindow.IsLoaded)
+            {
+                mainWindow.IsEnabled = true;
+            }
+        }
+    }
 
     private void RegisterGlobalExceptionHandlers()
     {

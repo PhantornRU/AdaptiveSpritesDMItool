@@ -88,6 +88,17 @@ public sealed class EditorSession
         return Result.Success();
     }
 
+    public Result SetCurrentConfigPath(string? path)
+    {
+        if (CurrentConfig is null)
+        {
+            return Result.Failure(Errors.Conflict("There is no active config to update."));
+        }
+
+        CurrentConfigPath = path;
+        return Result.Success();
+    }
+
     public Result SetPreviewSelection(PreviewSelection selection)
     {
         PreviewSelection = selection ?? throw new ArgumentNullException(nameof(selection));
@@ -99,6 +110,11 @@ public sealed class EditorSession
         if (LoadedAsset is not null && !LoadedAsset.SupportedDirections.Supports(direction))
         {
             return Result.Failure(Errors.Validation($"Direction '{direction}' is not supported by the loaded asset."));
+        }
+
+        if (CurrentConfig is not null && !CurrentConfig.SupportedDirections.Supports(direction))
+        {
+            return Result.Failure(Errors.Validation($"Direction '{direction}' is not supported by the active config."));
         }
 
         SelectedDirection = direction;

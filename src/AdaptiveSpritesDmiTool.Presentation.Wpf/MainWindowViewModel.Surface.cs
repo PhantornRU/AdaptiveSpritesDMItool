@@ -17,7 +17,9 @@ public partial class MainWindowViewModel
             return;
         }
 
-        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(SelectedDirection)
+        var direction = GetSafeSelectedDirection();
+
+        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction)
                      .OrderBy(static mapping => mapping.Source.Y)
                      .ThenBy(static mapping => mapping.Source.X))
         {
@@ -42,7 +44,8 @@ public partial class MainWindowViewModel
         }
 
         var referenceImage = useCompositeImage ? _compositeImage ?? _baseImage : _baseImage;
-        var mappings = _editorSession.CurrentConfig?.GetMappings(SelectedDirection).ToDictionary(static mapping => mapping.Source) ?? [];
+        var direction = GetSafeSelectedDirection();
+        var mappings = _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
         var selectedTarget = _selectedSourceCoordinate is { } source && mappings.TryGetValue(source, out var mapping)
             ? mapping.Target
             : null;
@@ -81,6 +84,7 @@ public partial class MainWindowViewModel
         }
 
         var textRows = new List<string>(resolution.Value.Height);
+        var direction = GetSafeSelectedDirection();
         for (var y = 0; y < resolution.Value.Height; y++)
         {
             var cells = new List<PixelCellViewModel>(resolution.Value.Width);
@@ -88,8 +92,8 @@ public partial class MainWindowViewModel
             for (var x = 0; x < resolution.Value.Width; x++)
             {
                 var coordinate = new PixelCoordinate(x, y);
-                var isTransparent = _editorSession.CurrentConfig.IsTransparent(SelectedDirection, coordinate);
-                var effectiveTarget = _editorSession.CurrentConfig.GetEffectiveTarget(SelectedDirection, coordinate);
+                var isTransparent = _editorSession.CurrentConfig.IsTransparent(direction, coordinate);
+                var effectiveTarget = _editorSession.CurrentConfig.GetEffectiveTarget(direction, coordinate);
                 var isMoved = effectiveTarget != coordinate;
                 rowText[x] = isTransparent ? 'T' : isMoved ? 'M' : '.';
 

@@ -29,12 +29,26 @@ public partial class MainWindowViewModel
 
     public async Task PersistWorkspaceSettingsAsync()
     {
-        var result = await _saveWorkspaceSettingsUseCase.ExecuteAsync(BuildWorkspaceSettings(), CancellationToken.None);
-        if (result.IsFailure)
+        var settings = BuildWorkspaceSettings();
+        await _workspaceSettingsPersistenceGate.WaitAsync().ConfigureAwait(false);
+
+        try
         {
-            _logger.LogWarning("Failed to persist workspace settings: {Message}", result.Error.Message);
+            var result = await _saveWorkspaceSettingsUseCase
+                .ExecuteAsync(settings, CancellationToken.None)
+                .ConfigureAwait(false);
+            if (result.IsFailure)
+            {
+                _logger.LogWarning("Failed to persist workspace settings: {Message}", result.Error.Message);
+            }
+        }
+        finally
+        {
+            _workspaceSettingsPersistenceGate.Release();
         }
     }
+
+    private void PersistWorkspaceSettingsInBackground() => _ = PersistWorkspaceSettingsAsync();
 
     public void HandleSourceCellPointerDown(PixelCellViewModel cell)
     {
@@ -240,7 +254,7 @@ public partial class MainWindowViewModel
                 BatchOutputDirectory = string.IsNullOrWhiteSpace(BatchOutputDirectory)
                     ? Path.Combine(BatchInputDirectory, "processed")
                     : BatchOutputDirectory;
-                SelectedDirection = result.Value.SupportedDirections.GetDirections().First();
+                NormalizeSelectedDirection();
                 StatusMessage = $"Loaded DMI '{result.Value.DisplayName}' with {result.Value.States.Count} states.";
                 ClearPreviewArtifacts();
                 RefreshWorkspaceState();
@@ -273,7 +287,7 @@ public partial class MainWindowViewModel
         RefreshWorkspaceState();
         RefreshPreviewSelectionSummary();
         RefreshEditorSurface();
-        PersistWorkspaceSettingsAsync().GetAwaiter().GetResult();
+        PersistWorkspaceSettingsInBackground();
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveConfig))]

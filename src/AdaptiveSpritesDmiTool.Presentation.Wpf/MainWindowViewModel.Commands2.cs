@@ -60,10 +60,16 @@ public partial class MainWindowViewModel
                     BatchResults.Add(new BatchResultRowViewModel(file));
                 }
 
+                var processedCount = result.Value.Files.Count(file => file.Status == BatchFileStatus.Processed);
+                var skippedCount = result.Value.Files.Count(file => file.Status == BatchFileStatus.Skipped);
+                var failedCount = result.Value.Files.Count(file => file.Status == BatchFileStatus.Failed);
+                var cancelledCount = result.Value.Files.Count(file => file.Status == BatchFileStatus.Cancelled);
+                var summaryPrefix = result.Value.WasCancelled ? "Batch cancelled with" : "Batch finished with";
                 BatchSummary =
-                    $"Batch finished with {result.Value.Files.Count(file => file.Status == BatchFileStatus.Processed)} processed, " +
-                    $"{result.Value.Files.Count(file => file.Status == BatchFileStatus.Skipped)} skipped, " +
-                    $"{result.Value.Files.Count(file => file.Status == BatchFileStatus.Failed)} failed.";
+                    $"{summaryPrefix} {processedCount} processed, " +
+                    $"{skippedCount} skipped, " +
+                    $"{failedCount} failed, " +
+                    $"{cancelledCount} cancelled.";
                 StatusMessage = BatchSummary;
                 await PersistWorkspaceSettingsAsync();
             });
@@ -136,6 +142,7 @@ public partial class MainWindowViewModel
     {
         BaseStateName = stateName;
         RefreshPreviewSelectionSummary();
+        PersistWorkspaceSettingsInBackground();
     }
 
     [RelayCommand]
@@ -143,6 +150,7 @@ public partial class MainWindowViewModel
     {
         LandmarkStateName = stateName;
         RefreshPreviewSelectionSummary();
+        PersistWorkspaceSettingsInBackground();
     }
 
     [RelayCommand]
@@ -150,6 +158,7 @@ public partial class MainWindowViewModel
     {
         OverlayStateName = stateName;
         RefreshPreviewSelectionSummary();
+        PersistWorkspaceSettingsInBackground();
     }
 
     [RelayCommand]
@@ -157,7 +166,7 @@ public partial class MainWindowViewModel
     {
         ArgumentNullException.ThrowIfNull(row);
 
-        var result = _applyConfigTransformUseCase.Execute(config => config.RemoveMapping(SelectedDirection, row.Source));
+        var result = _applyConfigTransformUseCase.Execute(config => config.RemoveMapping(GetSafeSelectedDirection(), row.Source));
         ApplyMutationResult(result, $"Removed mapping for {row.Source}.");
     }
 
@@ -226,17 +235,12 @@ public partial class MainWindowViewModel
 
     partial void OnSelectedDirectionChanged(SpriteDirection value)
     {
-        var result = _setSelectedDirectionUseCase.Execute(value);
-        if (result.IsFailure)
+        if (_isSynchronizingSelectedDirection)
         {
-            StatusMessage = result.Error.Message;
             return;
         }
 
-        CurrentDirectionText = value.ToString();
-        RefreshWorkspaceState();
-        RefreshPreviewSelectionSummary();
-        RefreshEditorSurface();
+        TryApplySelectedDirection(value, refreshUi: true);
     }
 
     partial void OnSelectedPreviewDisplayModeChanged(PreviewDisplayMode value) => RefreshActivePreviewPresentation();

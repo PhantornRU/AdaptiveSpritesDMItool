@@ -23,7 +23,7 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
 
         try
         {
-            var json = await File.ReadAllTextAsync(filePath, cancellationToken);
+            var json = await File.ReadAllTextAsync(filePath, cancellationToken).ConfigureAwait(false);
             var document = JsonConvert.DeserializeObject<WorkspaceSettingsDocument>(json);
             if (document is null)
             {
@@ -65,7 +65,7 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             }
 
             var json = JsonConvert.SerializeObject(FromDomain(settings), Formatting.Indented);
-            await File.WriteAllTextAsync(filePath, json, cancellationToken);
+            await File.WriteAllTextAsync(filePath, json, cancellationToken).ConfigureAwait(false);
             return Result.Success();
         }
         catch (Exception exception)
