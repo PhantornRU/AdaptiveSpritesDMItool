@@ -2,14 +2,16 @@
 
 ## Status
 
-Primary format: versioned JSON
+Primary format:
 
-Legacy compatibility:
+- versioned JSON
 
-- CSV is supported only as an import path.
-- New configs are not written as CSV.
+Compatibility:
 
-## File Shape
+- legacy CSV is supported only as an import path
+- new configs are not written as CSV
+
+## JSON Shape
 
 ```json
 {
@@ -31,16 +33,21 @@ Legacy compatibility:
     "NorthWest"
   ],
   "metadata": {
-    "createdUtc": "2026-04-03T00:00:00Z",
-    "updatedUtc": "2026-04-03T00:00:00Z",
-    "source": "editor",
-    "importedFromLegacy": false
+    "createdUtc": "2026-04-05T00:00:00Z",
+    "updatedUtc": "2026-04-05T00:00:00Z",
+    "source": "ImportedLegacyCsv",
+    "sourceIdentifier": "legacy-config.csv",
+    "importedFromLegacy": "legacy-config.csv"
   },
   "mappingsByDirection": {
     "South": [
       {
         "source": { "x": 0, "y": 0 },
         "target": { "x": 1, "y": 0 }
+      },
+      {
+        "source": { "x": 2, "y": 0 },
+        "target": null
       }
     ]
   }
@@ -64,9 +71,10 @@ Legacy compatibility:
 - `name` must be non-empty
 - `resolution` must be positive
 - `supportedDirections` must match `directionDepth`
-- mapping coordinates must be in bounds for the config resolution
-- mappings cannot duplicate the same source coordinate within a direction
-- `target` may be null only when representing transparent/deleted output
+- every mapping source and target must stay within bounds
+- `target: null` means transparent output
+- config resolution must match the target DMI resolution
+- config direction set must match the target DMI direction depth
 
 ## Legacy CSV Import
 
@@ -76,14 +84,8 @@ Legacy CSV rows are interpreted as:
 Direction,SourceX,SourceY,TargetX,TargetY
 ```
 
-Import behavior:
+Behavior:
 
-- invalid rows fail validation and return structured errors
-- imported configs are marked with `metadata.importedFromLegacy = true`
-- imported configs are re-saved as JSON
-
-## Compatibility Rules
-
-- a config can be applied only when resolution matches the target DMI frame size
-- a config can be applied only when its direction set is compatible with the target DMI
-- compatibility mismatches must be reported as validation errors, not silent skips
+- invalid rows fail fast with structured validation errors
+- imported configs keep provenance in `metadata`
+- imported configs should be saved as JSON for future editing and batch processing

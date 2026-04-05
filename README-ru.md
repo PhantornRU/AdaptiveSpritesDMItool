@@ -1,136 +1,104 @@
-<h1 align="center">
-  <img src="Assets/logo.png" alt="logo.png" width="256"/>
-  <br/>
-  Adaptive DMI Tool
-</h1>
+# Adaptive Sprites DMI Tool
 
-README Доступные языки:
+Production-grade WPF-приложение для редактирования конфигов пиксельных преобразований и пакетной обработки `.dmi`.
 
-[English](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README.md)
+## Возможности
 
-[Russian](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README-ru.md)
+- пустой workspace на старте без зависимости от demo/test assets
+- ручное открытие `.dmi`
+- редактирование pixel mappings для `4-dir` и `8-dir`
+- предпросмотр `base`, `landmark`, `overlay`, `composite`, `grid` и `text-grid`
+- сохранение и загрузка versioned JSON-конфигов
+- импорт legacy CSV как миграционный путь
+- детерминированная, awaitable и cancellable batch processing
+- сохранение пользовательских настроек и путей между запусками
 
-# Инструмент адаптирования .dmi файлов
-Данный инструмент предназначен для редактирования .dmi файлов с потенциалом для адаптации их на любые формы, размеры, оффсеты и другие параметры накладываемые на все выбранные файлы через редакцию конфига, хранящую табличные данные пикселей и их смещения.
-Инструмент конфигурации смещения спрайтов для статического создания спрайтов на основе этих конфигураций.
+## Пользовательский сценарий
 
-## Для реализации использовались:
-* Интерфейс [WPF](https://github.com/dotnet/wpf) фреймворк.
-* Фреймворк обработки DMI файлов [DMI Sharp](https://github.com/bobbah/DMISharp)
+1. Запустить приложение. Откроется пустой workspace.
+2. Открыть `.dmi`.
+3. Создать новый конфиг или загрузить/import существующий.
+4. Выбрать `base`, `landmark` и `overlay` через state explorer.
+5. Редактировать mapping’и в source/editable pane инструментами `Single`, `Fill`, `Delete`, `Undo`, `UndoArea`, `Select`, `Move`.
+6. Сохранить конфиг в JSON.
+7. Запустить batch processing по папке и проверить per-file results.
 
+## Архитектура
 
-## Пользование
+Репозиторий разделен на слои:
 
-### Demo-Video
-[<img src="AssetsGitHub/VideoPic.png" alt="logo.png" width="256"/>](https://youtu.be/X_SbgLqKqvI)
+- `src/AdaptiveSpritesDmiTool.Domain`
+  Чистая доменная модель, value objects, валидация, direction model, empty workspace model.
+- `src/AdaptiveSpritesDmiTool.Application`
+  Use cases, editor session, undo/redo, batch orchestration, progress/cancellation, settings contracts.
+- `src/AdaptiveSpritesDmiTool.Infrastructure`
+  Адаптеры DMISharp, JSON repository, legacy CSV importer, settings repository, preview builder, deterministic batch processor.
+- `src/AdaptiveSpritesDmiTool.Presentation.Wpf`
+  MVVM shell, dialogs, pointer adapter, preview/editor UI, startup/runtime hardening.
+- `tests/AdaptiveSpritesDmiTool.Tests.Unit`
+  Domain/application тесты и WPF shell smoke checks.
+- `tests/AdaptiveSpritesDmiTool.Tests.Integration`
+  Persistence, DMI adapters, settings, batch, legacy CSV import.
 
-### Страницы
-В программе 3 страницы:
-* Home - [WIP] Страница для работы с рабочим пространством, сохранение последних настроек пользователя, загрузка предустановок. 
-* Edit - Страница редактирования конфигов через изменения пикселей на превью полотках.
-* Data - Страница обработки файлов под выбранные конфиги.
+Legacy static controllers и старый root WPF runtime path удалены из финальной runtime-архитектуры.
 
-### Home
-[WIP]
+## Форматы конфигов
 
-### Edit
+Основной формат:
 
-1 - Выбор страницы
+- versioned JSON
 
-2 - Тулбар, кнопки для взаимодействия и редактирования ПРЕВЬЮ. Редактирование, удаление, смена режима (параллель), сетка, оверлей. Тулбар инструменты могут не полностью отобразиться, вы можете отобразить полные инструменты расширив окно или нажав на кнопку "галочку" выпадения справа.
+Совместимость:
 
-3 - Превью изображения отображающей все редактированные спрайты под конфиги, оверлеи (редактируемые изображения), превью (левое нередактируемое изображение) и лендмарки (правое нередактируемое изображение).
+- CSV поддерживается только как import path
+- новые конфиги в CSV не записываются
 
-4 - Статус бар информации мыши находящейся поверх окон превью.
+См.:
 
-5 - Окно загрузки ДМИ файлов и выбор из них ДМИ Стейтов для отображения поверх. Можно настроить поверх какого превью будет отображаться стейт.
+- [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md)
+- [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 
-6 - Окно сохранения и создания новых конфигов. 
+## Сборка и запуск
 
-Здесь можно: 
+Требования:
 
-- Создать новый конфиг (НЕ ЗАБУДЬТЕ СОХРАНИТЬ ЕГО)
+- Windows
+- .NET 8 SDK
 
-- Загрузить уже существующий конфиг
+Команды:
 
-- Сохранить текущий конфиг
+```powershell
+dotnet build AdaptiveSpritesDMItool.sln -m:1 -v minimal
+dotnet test AdaptiveSpritesDMItool.sln -m:1 -v minimal
+dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj
+```
 
-- Сохранить текущий конфиг как новый файл.
+## Тестирование
 
-При выборе конфига - он накладывается поверх превью.
+Автоматически покрыты:
 
-  <img src="AssetsGitHub/1 Edit Page.png" alt="logo.png" width="512"/>
-  
-### Data
+- startup без demo assets
+- empty workspace
+- валидация загрузки `.dmi`, включая empty/invalid cases
+- JSON roundtrip и ошибки валидации
+- import legacy CSV
+- сценарии `4-dir` и `8-dir`
+- undo/redo и grouped editor mutations
+- overwrite behavior и deterministic batch processing
+- реальные integration tests для DMI writer/apply
+- persistence пользовательских настроек
+- smoke checks нового WPF shell
 
-1 - Отображение всех файлов загруженных с директории "Импорта" для обработки в папку Экспорта.
+Подробности: [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
 
-- Кнопка "Override" переключит режим перезаписи похожих файлов в директории Экспорта.
+## Ключевые документы
 
-2 - Отображение стейтов выбранного .dmi файла
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/REFACTOR_PLAN.md](docs/REFACTOR_PLAN.md)
+- [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
+- [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md)
+- [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 
-3 - Панель выбора конфига для обработки всех файлов. Можно выделить сразу несколько конфигов. Название конфига будет использовано как название новой папки в директории Экспорта.
+## Лицензия
 
-4 - Установка путей директорий Импорта и Экспорта. По дефолту файлы будут обработаны в папке рабочего билда.
-
-5 - Полоска загрузки отображающая сколько файлов уже было обработано.
-
-6 - Кнопка обработки всех файлов под выбранные конфиги.
-
-После нажатия - дождитесь его завершения.
-
-Все обработанные файлы будут экспортированы в Директория/"Название Конфига"/
-
-  <img src="AssetsGitHub/2 Data Page.png" alt="logo.png" width="512"/>
-
-## Delelopment
-Программа разделена на контроллеры, ресурсы, модели и вспомогательные классы для более удобного доступа к коду. Внутри кода имеются разделения на региона для еще более удобной навигации и разделения. 
-
-### For .NET 7
-These tool require Visual Studio 2022(v17.7), Visual Studio 2022 for Mac (v17.6) to build, test, and deploy, and also require the .NET 7 SDK.
-
-[Get a free copy of Visual Studio 2022 Community Edition](https://www.visualstudio.com/wpf-vs)
-
-[.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
-
-### View Models
-Помимо Views в которых находятся WPF страницы, ими используются:
-* Dashboard View Model - [WIP]
-* States Editor View Model - модель реализации изменения выбора конфигов, превью стейтов, работы с файлами и их загрузкой, сохранением конфига и хранения State Item's.
-* Data View Model - модель реализации изменения выбранного конфига, отображения Tree View со всеми выбранными файлами которые будут отображаться и обрабабатываться вдальнейшем. 
-* Settings View Model - модель настроек текущей темы.
-* Main Window View Model - модель навигации по страницам.
-
-### Models
-* Config Item - модель конфига хранящая путь к таблице для быстрого доступа.
-* State Item - модель стейта с .DMI файла хранящая превью, путь, название файла и название стейта.
-* Data Image State - модель работы с превью изображениями накладывающие стейты "превью, лендмарки и оверлея" друг на друга для дальнейшей визуализации.
-* State Edit Type - модель перечисления различных типов:
-** StateEditType - Режим редактирования главного окна предварительного просмотра
-** StateQuantityType - Тип редактирования стейтов.
-** StateImageType - Тип элемента превью.
-** StateImageSideType - Сторона элемента превью.
-** SelectMode - Текущий режим инструмента перемещения пикселей.
-** StatusBarType - Тип элемента статус бара.
-** StatePreviewType - Выбранный тип превью для наложения стейтов.
-
-### Controllers 
-* Environment Controller - Контроллер рабочего пространства и инициализации окружения.
-* Draw Controller - Контроллер обработки изображения, хранящий все функции для рисования на полотне и редактирования пикселей.
-* Editor Controller - Контроллер текущих режимов редактирования полотен и логики кнопок.
-* Mouse Controller - Контроллер обработки нажатых кнопок мыши и нахождения позиции курсора на полотне.
-* Buttons Controller - Контроллер обработки нажатых клавиш, хоткеев.
-* States Controller - Контроллер хранящий информацию о текущих состояниях, режимах, конфигах и статусах элементов используемых всей программой.
-* Status Bar Controller - Контроллер информации отображаемой на статусной панели.
-
-### Processors
-DMI State Processor - Обработчик файлов из данных стейтов под выделенные конфиги.
-
-### Helpers 
-Image Encoder - Обработчик DMI State в Writeable Bitmap для отображения и редактирования на странице "Edit".
-Files Searcher - Поисковик корректной директории.
-
-
-
-## Связь
-Вопросы или хотите в помочь реализации? Можете связаться со мной по дискорду: **PHANTOMRU** (не путайте ник на Гитхабе, там "m == rn" xdd)
+Репозиторий распространяется по GPL v3. См. [LICENSE](LICENSE).
