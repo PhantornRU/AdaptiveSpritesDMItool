@@ -10,6 +10,7 @@
         "${workspaceFolder}/src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj",
         "-c",
         "Debug",
+        "-m:1",
         "-v",
         "minimal"
       ],
@@ -18,6 +19,32 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "stage-wpf-debug-run",
+      "type": "process",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/tools/vscode/Prepare-WpfDebugRun.ps1",
+        "-WorkspaceRoot",
+        "${workspaceFolder}",
+        "-Configuration",
+        "Debug"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "prepare-wpf-debug-run",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "build-wpf-shell",
+        "stage-wpf-debug-run"
+      ],
+      "problemMatcher": []
     },
     {
       "label": "build-solution",

@@ -5,9 +5,9 @@
       "name": "Launch AdaptiveSpritesDmiTool WPF",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build-wpf-shell",
-      "program": "${workspaceFolder}/src/AdaptiveSpritesDmiTool.Presentation.Wpf/bin/Debug/net8.0-windows/AdaptiveSpritesDmiTool.Presentation.Wpf.dll",
-      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "prepare-wpf-debug-run",
+      "program": "${workspaceFolder}/.vscode/.debug/current/AdaptiveSpritesDmiTool.Presentation.Wpf.dll",
+      "cwd": "${workspaceFolder}/.vscode/.debug/current",
       "stopAtEntry": false,
       "console": "internalConsole",
       "justMyCode": true
