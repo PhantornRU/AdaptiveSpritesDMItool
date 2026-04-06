@@ -427,34 +427,28 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="10" />
-                            <RowDefinition Height="250" />
+                            <RowDefinition Height="198" />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="144" />
-                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="116" />
+                            <ColumnDefinition Width="8" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="10" />
-                            <ColumnDefinition Width="206" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="156" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Grid.Row="0" Grid.Column="0" Padding="10" Background="#FFF9F2" CornerRadius="16" DataContext="{Binding EditorWorkspace}">
+                        <Border Grid.Row="0" Grid.Column="0" Padding="8" Background="#FFF9F2" CornerRadius="16" DataContext="{Binding EditorWorkspace}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <TextBlock FontSize="16" FontWeight="SemiBold" Text="Roles" />
-                                <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding RolesSummary}" />
-                                <Border Grid.Row="2" Margin="0,8,0,0" Padding="8" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="10">
-                                    <StackPanel>
-                                        <TextBlock FontSize="11" FontWeight="SemiBold" Text="Selected state" />
-                                        <TextBlock Margin="0,4,0,0" FontSize="12" Text="{Binding SelectedExplorerState, StringFormat={}{0}}" />
-                                        <TextBlock Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding LeftRailSummary}" />
-                                    </StackPanel>
-                                </Border>
-                                <UniformGrid Grid.Row="3" Margin="0,10,0,0" Columns="2">
+                                <TextBlock FontSize="15" FontWeight="SemiBold" Text="States" />
+                                <TextBlock Grid.Row="1" Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding SpriteContractSummary}" />
+                                <ListBox Grid.Row="2" Margin="0,8,0,0" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" BorderBrush="{StaticResource Brush.PanelBorder}" />
+                                <UniformGrid Grid.Row="3" Margin="0,8,0,0" Columns="2">
                                     <Button Margin="0,0,4,4" Padding="8,5" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Base" />
                                     <Button Margin="4,0,0,4" Padding="8,5" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Landmark" />
                                     <Button Margin="0,4,4,0" Padding="8,5" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Overlay" />
@@ -463,7 +457,7 @@
                             </Grid>
                         </Border>
 
-                        <Border Grid.Row="0" Grid.Column="2" Padding="10" Background="#FFF9F2" CornerRadius="16">
+                        <Border Grid.Row="0" Grid.Column="2" Padding="8" Background="#FFF9F2" CornerRadius="16">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -471,7 +465,7 @@
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
 
-                                <Border Padding="8" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12" DataContext="{Binding EditorWorkspace.CommandBar}">
+                                <Border Padding="6" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12" DataContext="{Binding EditorWorkspace.CommandBar}">
                                     <WrapPanel>
                                         <TextBlock Margin="0,4,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
                                         <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Single" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" />
@@ -486,10 +480,6 @@
                                         <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Single" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" />
                                         <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Parallel" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" />
                                         <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="All" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" />
-
-                                        <TextBlock Margin="10,4,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="View" />
-                                        <RadioButton GroupName="ViewportMode" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Matrix" Command="{Binding SelectViewportModeCommand}" CommandParameter="{x:Static local:EditorViewportMode.Matrix}" IsChecked="{Binding IsMatrixViewportSelected, Mode=OneWay}" />
-                                        <RadioButton GroupName="ViewportMode" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Focused" Command="{Binding SelectViewportModeCommand}" CommandParameter="{x:Static local:EditorViewportMode.Focused}" IsChecked="{Binding IsFocusedViewportSelected, Mode=OneWay}" />
 
                                         <TextBlock Margin="10,4,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Display" />
                                         <CheckBox Margin="0,0,8,4" IsChecked="{Binding MirrorAcrossDirections}" Content="Mirror" />
@@ -506,54 +496,55 @@
                                     </WrapPanel>
                                 </Border>
 
-                                <Grid Grid.Row="1" Margin="0,6,0,8">
+                                <Grid Grid.Row="1" Margin="0,4,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock DataContext="{Binding EditorWorkspace}" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding HoverAndStatusSummary}" />
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" DataContext="{Binding EditorWorkspace.CommandBar}" Visibility="{Binding IsFocusedViewportSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Focused view" />
-                                        <ComboBox Width="120" Margin="0,0,6,0" ItemsSource="{Binding AvailableDirections}" SelectedItem="{Binding SelectedDirection}" Visibility="{Binding ShowFocusedDirectionPicker, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                        <Button Padding="10,4" Command="{Binding SelectViewportModeCommand}" CommandParameter="{x:Static local:EditorViewportMode.Matrix}" Content="Matrix" />
-                                    </StackPanel>
+                                    <Grid Grid.Column="1" DataContext="{Binding EditorWorkspace.CommandBar}">
+                                        <Button Padding="8,3" Foreground="{StaticResource Brush.TextSecondary}" Command="{Binding SelectViewportModeCommand}" CommandParameter="{x:Static local:EditorViewportMode.Focused}" Content="Focused view" Visibility="{Binding IsMatrixViewportSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Visibility="{Binding IsFocusedViewportSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <TextBlock Margin="0,0,6,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Focused" />
+                                            <ComboBox Width="112" Margin="0,0,6,0" ItemsSource="{Binding AvailableDirections}" SelectedItem="{Binding SelectedDirection}" Visibility="{Binding ShowFocusedDirectionPicker, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                            <Button Padding="8,3" Command="{Binding SelectViewportModeCommand}" CommandParameter="{x:Static local:EditorViewportMode.Matrix}" Content="Matrix" />
+                                        </StackPanel>
+                                    </Grid>
                                 </Grid>
 
-                                <Border Grid.Row="2" Padding="6" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12" ClipToBounds="True">
+                                <Border Grid.Row="2" Padding="2" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12" ClipToBounds="True">
                                     <Grid DataContext="{Binding EditorWorkspace.DirectionMatrix}">
                                         <Grid Visibility="{Binding IsMatrixMode, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                            <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                                                <Grid>
-                                                    <ItemsControl ItemsSource="{Binding Tiles}">
-                                                        <ItemsControl.Style>
-                                                            <Style TargetType="ItemsControl">
-                                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding MatrixColumns}" Value="2">
-                                                                        <Setter Property="Visibility" Value="Visible" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </ItemsControl.Style>
-                                                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                                                        <ItemsControl.ItemTemplate><StaticResource ResourceKey="DirectionTileTemplate" /></ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                    <ItemsControl ItemsSource="{Binding Tiles}">
-                                                        <ItemsControl.Style>
-                                                            <Style TargetType="ItemsControl">
-                                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding MatrixColumns}" Value="4">
-                                                                        <Setter Property="Visibility" Value="Visible" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </ItemsControl.Style>
-                                                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                                                        <ItemsControl.ItemTemplate><StaticResource ResourceKey="DirectionTileTemplate" /></ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </Grid>
-                                            </Viewbox>
+                                            <Grid>
+                                                <ItemsControl ItemsSource="{Binding Tiles}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                                    <ItemsControl.Style>
+                                                        <Style TargetType="ItemsControl">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding MatrixColumns}" Value="2">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ItemsControl.Style>
+                                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate><StaticResource ResourceKey="DirectionTileTemplate" /></ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <ItemsControl ItemsSource="{Binding Tiles}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                                    <ItemsControl.Style>
+                                                        <Style TargetType="ItemsControl">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding MatrixColumns}" Value="4">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ItemsControl.Style>
+                                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate><StaticResource ResourceKey="DirectionTileTemplate" /></ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Grid>
                                         </Grid>
                                         <Grid Visibility="{Binding IsFocusedMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
@@ -585,7 +576,7 @@
                             </Grid>
                         </Border>
 
-                        <Border Grid.Row="0" Grid.Column="4" Padding="10" Background="#FFF9F2" CornerRadius="16" DataContext="{Binding PreviewPanel}">
+                        <Border Grid.Row="0" Grid.Column="4" Padding="8" Background="#FFF9F2" CornerRadius="16" DataContext="{Binding PreviewPanel}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -593,16 +584,13 @@
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <StackPanel>
-                                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Preview" />
-                                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding PreviewSelectionSummary}" />
-                                </StackPanel>
-                                <Grid Grid.Row="1" Margin="0,8,0,0">
+                                <TextBlock FontSize="14" FontWeight="SemiBold" Text="Preview" />
+                                <Grid Grid.Row="1" Margin="0,6,0,0">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                     <ComboBox ItemsSource="{Binding PreviewDisplayModes}" SelectedItem="{Binding SelectedPreviewDisplayMode}" />
-                                    <Button Grid.Column="1" Margin="8,0,0,0" Padding="10,4" Command="{Binding BuildPreviewCommand}" Content="Refresh" />
+                                    <Button Grid.Column="1" Margin="6,0,0,0" Padding="8,3" Command="{Binding BuildPreviewCommand}" Content="Refresh" />
                                 </Grid>
-                                <Border Grid.Row="2" Margin="0,8,0,0" Padding="6" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
+                                <Border Grid.Row="2" Margin="0,6,0,0" Padding="4" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
                                     <Grid>
                                         <Border Visibility="{Binding IsPreviewImageVisible, Converter={StaticResource BooleanToVisibilityConverter}}" CornerRadius="10" Background="White">
                                             <Image Source="{Binding CurrentPreviewImage}"
@@ -625,46 +613,23 @@
                                         <TextBox Visibility="{Binding IsPreviewTextVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Background="White" BorderThickness="0" FontFamily="Consolas" FontSize="12" IsReadOnly="True" Text="{Binding PreviewTextGrid, Mode=OneWay}" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" />
                                     </Grid>
                                 </Border>
-                                <StackPanel Grid.Row="3" Margin="0,8,0,0">
+                                <StackPanel Grid.Row="3" Margin="0,6,0,0">
                                     <CheckBox IsChecked="{Binding IsAutoPreviewEnabled}" Content="Auto refresh" />
-                                    <TextBlock Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding PreviewSummary}" />
+                                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding PreviewSelectionSummary}" />
                                 </StackPanel>
                             </Grid>
                         </Border>
 
-                        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Padding="10" Background="#FFF9F2" CornerRadius="16">
+                        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Padding="8" Background="#FFF9F2" CornerRadius="16">
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <StackPanel>
-                                    <TextBlock FontWeight="SemiBold" Text="Workspace" />
-                                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="States, config, and mappings stay visible while you edit the matrix." />
-                                </StackPanel>
-                                <Grid Grid.Row="1" Margin="0,8,0,0">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="1.05*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="0.95*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="1.2*" /></Grid.ColumnDefinitions>
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="0.95*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="1.25*" /></Grid.ColumnDefinitions>
 
-                                    <Border Grid.Column="0" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding EditorWorkspace}">
-                                        <Grid>
-                                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                            <TextBlock FontWeight="SemiBold" Text="States" />
-                                            <ListBox Grid.Row="1" Margin="0,8,0,0" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" BorderBrush="{StaticResource Brush.PanelBorder}" />
-                                            <UniformGrid Grid.Row="2" Margin="0,8,0,0" Columns="2">
-                                                <Button Margin="0,0,4,4" Padding="8,5" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Base" />
-                                                <Button Margin="4,0,0,4" Padding="8,5" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Landmark" />
-                                                <Button Margin="0,4,4,0" Padding="8,5" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Overlay" />
-                                                <Button Margin="4,4,0,0" Padding="8,5" Command="{Binding ClearOptionalPreviewLayersCommand}" Content="Clear" />
-                                            </UniformGrid>
-                                            <StackPanel Grid.Row="3" Margin="0,8,0,0">
-                                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding RolesSummary}" />
-                                                <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding SelectionSummary}" />
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-
-                                    <Border Grid.Column="2" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding ConfigWorkspace}">
+                                    <Border Grid.Column="0" Padding="8" Background="White" CornerRadius="12" DataContext="{Binding ConfigWorkspace}">
                                         <Grid>
                                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                                             <DockPanel>
@@ -689,7 +654,7 @@
                                         </Grid>
                                     </Border>
 
-                                    <Border Grid.Column="4" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding BottomWorkspace}">
+                                    <Border Grid.Column="2" Padding="8" Background="White" CornerRadius="12" DataContext="{Binding BottomWorkspace}">
                                         <Grid>
                                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                                             <TextBlock FontWeight="SemiBold" Text="Mappings" />
@@ -707,7 +672,7 @@
                                     </Border>
                                 </Grid>
 
-                                <Border Grid.Row="2" Margin="0,8,0,0" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding BottomWorkspace}" Visibility="{Binding HasBatchResults, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Border Grid.Row="1" Margin="0,8,0,0" Padding="8" Background="White" CornerRadius="12" DataContext="{Binding BottomWorkspace}" Visibility="{Binding HasBatchResults, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <Grid MinHeight="100" MaxHeight="140">
                                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                                         <TextBlock FontWeight="SemiBold" Text="Batch results" />
