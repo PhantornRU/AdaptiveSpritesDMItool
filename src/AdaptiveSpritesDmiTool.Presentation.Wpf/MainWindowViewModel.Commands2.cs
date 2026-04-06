@@ -357,6 +357,17 @@ public partial class WorkspaceShellViewModel
     }
 
     [RelayCommand]
+    private void SelectDirection(SpriteDirection direction)
+    {
+        if (SelectedDirection == direction)
+        {
+            return;
+        }
+
+        SelectedDirection = direction;
+    }
+
+    [RelayCommand]
     private void SelectViewportMode(EditorViewportMode mode)
     {
         if (SelectedEditorViewportMode == mode)
@@ -375,6 +386,9 @@ public partial class WorkspaceShellViewModel
     {
         SelectedBottomWorkspaceTab = tab;
     }
+
+    [RelayCommand]
+    private void ResetEditorZoom() => ActiveEditorZoom = 2.0;
 
     [RelayCommand]
     private async Task ResetWorkspaceAsync()
@@ -459,4 +473,22 @@ public partial class WorkspaceShellViewModel
     }
 
     partial void OnBatchOutputDirectoryChanged(string value) => PersistWorkspaceSettingsInBackground();
+
+    public bool AdjustActiveEditorZoom(int mouseWheelDelta)
+    {
+        var step = mouseWheelDelta > 0 ? ZoomStep : mouseWheelDelta < 0 ? -ZoomStep : 0d;
+        if (step == 0d)
+        {
+            return false;
+        }
+
+        var nextZoom = Math.Clamp(ActiveEditorZoom + step, MinEditorZoom, MaxEditorZoom);
+        if (Math.Abs(nextZoom - ActiveEditorZoom) < 0.001d)
+        {
+            return false;
+        }
+
+        ActiveEditorZoom = nextZoom;
+        return true;
+    }
 }

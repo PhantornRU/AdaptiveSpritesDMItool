@@ -338,6 +338,24 @@ public sealed class DirectionMatrixViewModel(WorkspaceShellViewModel shell) : Sh
     public DirectionTileViewModel? FocusedTile => Shell.FocusedDirectionTile;
 }
 
+public sealed partial class DirectionNavigatorItemViewModel : ObservableObject
+{
+    public DirectionNavigatorItemViewModel(SpriteDirection direction)
+    {
+        Direction = direction;
+        Label = direction.ToString();
+    }
+
+    public SpriteDirection Direction { get; }
+
+    public string Label { get; }
+
+    public ObservableCollection<PixelRowViewModel> PreviewRows { get; } = [];
+
+    [ObservableProperty]
+    private bool isActive;
+}
+
 public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
 {
     public bool IsAvailable => Shell.HasEditorWorkflow;
@@ -363,7 +381,15 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public string SelectionSummary => $"{Shell.SelectedSourceSummary}  {Shell.SelectedAreaSummary}";
 
+    public string ActiveDirectionLabel => Shell.SelectedDirection.ToString();
+
+    public double ActiveEditorZoom => Shell.ActiveEditorZoom;
+
+    public string ActiveEditorZoomLabel => Shell.ActiveEditorZoomLabel;
+
     public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
+
+    public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems => Shell.DirectionNavigatorItems;
 
     public string SelectedExplorerState
     {
@@ -382,6 +408,10 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public IRelayCommand UseSelectedStateAsOverlayCommand => Shell.UseSelectedStateAsOverlayCommand;
 
     public IRelayCommand ClearOptionalPreviewLayersCommand => Shell.ClearOptionalPreviewLayersCommand;
+
+    public IRelayCommand ResetEditorZoomCommand => Shell.ResetEditorZoomCommand;
+
+    public IRelayCommand<SpriteDirection> SelectDirectionCommand => Shell.SelectDirectionCommand;
 }
 
 public sealed class ConfigWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)

@@ -57,4 +57,12 @@ public partial class MainWindow : Window
     {
         ViewModel.HandleBatchSourceSelection(e.NewValue as BatchSourceTreeItemViewModel);
     }
+
+    private void EditorSurfaceHost_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (ViewModel.AdjustActiveEditorZoom(e.Delta))
+        {
+            e.Handled = true;
+        }
+    }
 }

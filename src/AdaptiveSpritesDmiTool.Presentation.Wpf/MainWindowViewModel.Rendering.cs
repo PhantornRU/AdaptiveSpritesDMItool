@@ -2,6 +2,7 @@ using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using Microsoft.Extensions.Logging;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using Brush = System.Windows.Media.Brush;
@@ -148,10 +149,12 @@ public partial class WorkspaceShellViewModel
         SelectedBatchSourceItem = null;
         FocusedDirectionTile = null;
         DirectionMatrixColumns = 2;
+        ActiveEditorZoom = 2.0;
         BatchResults.Clear();
         ConfigQueueItems.Clear();
         BatchStateStripItems.Clear();
         BatchSourceTreeItems.Clear();
+        DirectionNavigatorItems.Clear();
         DirectionTiles.Clear();
         ClearPreviewArtifacts();
         SelectedShellSection = ShellSectionKind.Start;
@@ -532,7 +535,7 @@ public partial class WorkspaceShellViewModel
                 ? "unsaved draft"
                 : Path.GetFileName(_editorSession.CurrentConfigPath);
             ConfigSummary = $"{config.Name} | {mappingCount} mappings | {storageLabel}";
-            WorkspaceNotes = "Editor workflow is active. Keep the matrix centered and use the lower panels while editing.";
+            WorkspaceNotes = "Editor workflow is active. Edit one direction in the center and use the right navigator to switch directions.";
         }
         else
         {
@@ -565,11 +568,56 @@ public partial class WorkspaceShellViewModel
         RefreshMappingRows();
         RebuildPixelRows(SourceRows, false);
         RebuildPixelRows(TargetRows, ShowOverlay);
-        RebuildDirectionTiles();
+        RebuildDirectionNavigatorItems();
         RebuildPreviewGridRows();
         RefreshActivePreviewPresentation();
         OnPropertyChanged(string.Empty);
     }
+
+    private void RebuildDirectionNavigatorItems()
+    {
+        DirectionNavigatorItems.Clear();
+        var activeDirection = GetSafeSelectedDirection();
+
+        foreach (var direction in AvailableDirections)
+        {
+            var previewRows = new ObservableCollection<PixelRowViewModel>();
+            RebuildPixelRows(previewRows, direction, ShowOverlay);
+
+            var item = new DirectionNavigatorItemViewModel(direction)
+            {
+                IsActive = direction == activeDirection
+            };
+
+            foreach (var row in CloneNavigatorRows(previewRows))
+            {
+                item.PreviewRows.Add(row);
+            }
+
+            DirectionNavigatorItems.Add(item);
+        }
+
+        DirectionTiles.Clear();
+        FocusedDirectionTile = null;
+    }
+
+    private static IEnumerable<PixelRowViewModel> CloneNavigatorRows(IEnumerable<PixelRowViewModel> sourceRows)
+    {
+        foreach (var row in sourceRows)
+        {
+            yield return new PixelRowViewModel(row.Cells.Select(CloneNavigatorCell));
+        }
+    }
+
+    private static PixelCellViewModel CloneNavigatorCell(PixelCellViewModel cell) =>
+        new(cell.Direction, cell.Coordinate.X, cell.Coordinate.Y)
+        {
+            Fill = cell.Fill,
+            Border = cell.Border,
+            Foreground = Brushes.Transparent,
+            Caption = string.Empty,
+            ToolTip = cell.ToolTip
+        };
 
     public void NavigateToSection(ShellSectionKind section)
     {

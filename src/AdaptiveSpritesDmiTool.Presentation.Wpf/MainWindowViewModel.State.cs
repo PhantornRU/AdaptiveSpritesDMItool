@@ -1,12 +1,17 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.ObjectModel;
 using System.Windows.Media.Imaging;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
 public partial class WorkspaceShellViewModel
 {
+    private readonly double _minEditorZoom = 1.0;
+    private readonly double _maxEditorZoom = 12.0;
+    private readonly double _zoomStep = 0.25;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedShellSectionIndex))]
     [NotifyPropertyChangedFor(nameof(IsStartSectionSelected))]
@@ -130,6 +135,10 @@ public partial class WorkspaceShellViewModel
     private SpriteDirection selectedDirection = SpriteDirection.South;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ActiveEditorZoomLabel))]
+    private double activeEditorZoom = 2.0;
+
+    [ObservableProperty]
     private EditorTool selectedEditorTool = EditorTool.Single;
 
     [ObservableProperty]
@@ -192,6 +201,16 @@ public partial class WorkspaceShellViewModel
 
     [ObservableProperty]
     private bool isPreviewTextVisible;
+
+    public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems { get; } = [];
+
+    public double MinEditorZoom => _minEditorZoom;
+
+    public double MaxEditorZoom => _maxEditorZoom;
+
+    public double ZoomStep => _zoomStep;
+
+    public string ActiveEditorZoomLabel => $"{Math.Round(ActiveEditorZoom * 100):0}%";
 
     public bool HasLoadedAsset => _editorSession.LoadedAsset is not null;
 
