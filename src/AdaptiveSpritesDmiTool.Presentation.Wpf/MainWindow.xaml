@@ -9,34 +9,105 @@
         Height="920"
         MinWidth="1200"
         MinHeight="760"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
         Background="{StaticResource Brush.WindowBackground}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <Style x:Key="ShellModeRadioButtonStyle" TargetType="RadioButton">
+            <Setter Property="Padding" Value="14,7" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="999">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.Accent}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.AccentMuted}" />
+                                <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                    <Condition Property="IsChecked" Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.Accent}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </MultiTrigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ShellTabControlStyle" TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <ContentPresenter ContentSource="SelectedContent" Margin="{TemplateBinding Padding}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="StartPrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="MinHeight" Value="50" />
+            <Setter Property="FontSize" Value="15" />
+        </Style>
+        <Style x:Key="StartSecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="MinHeight" Value="42" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
         <DataTemplate x:Key="SourceCellTemplate">
-            <Button Width="20" Height="20" Margin="1" Padding="0" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" Content="{Binding Caption}" Foreground="{Binding Foreground}" FontSize="10" ToolTip="{Binding ToolTip}" PreviewMouseLeftButtonDown="SourceCellButton_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="SourceCellButton_PreviewMouseLeftButtonUp" MouseEnter="SourceCellButton_MouseEnter" />
+            <Button Width="14" Height="14" Margin="1" Padding="0" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" Content="{Binding Caption}" Foreground="{Binding Foreground}" FontSize="8" ToolTip="{Binding ToolTip}" PreviewMouseLeftButtonDown="SourceCellButton_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="SourceCellButton_PreviewMouseLeftButtonUp" MouseEnter="SourceCellButton_MouseEnter" />
         </DataTemplate>
         <DataTemplate x:Key="TargetCellTemplate">
-            <Button Width="20" Height="20" Margin="1" Padding="0" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" Content="{Binding Caption}" Foreground="{Binding Foreground}" FontSize="10" ToolTip="{Binding ToolTip}" PreviewMouseLeftButtonUp="TargetCellButton_PreviewMouseLeftButtonUp" />
+            <Button Width="14" Height="14" Margin="1" Padding="0" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" Content="{Binding Caption}" Foreground="{Binding Foreground}" FontSize="8" ToolTip="{Binding ToolTip}" PreviewMouseLeftButtonUp="TargetCellButton_PreviewMouseLeftButtonUp" />
         </DataTemplate>
         <DataTemplate x:Key="PreviewCellTemplate">
-            <Border Width="18" Height="18" Margin="1" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" ToolTip="{Binding ToolTip}">
-                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9" Text="{Binding Caption}" />
+            <Border Width="12" Height="12" Margin="1" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" ToolTip="{Binding ToolTip}">
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="7" Text="{Binding Caption}" />
             </Border>
         </DataTemplate>
     </Window.Resources>
 
     <DockPanel Margin="18">
-        <Border DockPanel.Dock="Top" Margin="0,0,0,18" Padding="18,16" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="18">
+        <Border DockPanel.Dock="Top" Margin="0,0,0,12" Padding="14,10" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="18">
             <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock FontSize="28" FontWeight="SemiBold" Text="Adaptive Sprites DMI Tool" />
-                    <TextBlock Margin="0,6,0,0" FontSize="16" FontWeight="SemiBold" Text="{Binding WorkspaceTitle}" />
-                    <TextBlock Margin="0,3,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding SpriteContractSummary}" />
+                    <TextBlock FontSize="24" FontWeight="SemiBold" Text="Adaptive Sprites DMI Tool" />
+                    <TextBlock Margin="0,3,0,0" FontSize="15" FontWeight="SemiBold" Text="{Binding WorkspaceTitle}" />
+                    <TextBlock Margin="0,2,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding SpriteContractSummary}" />
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Margin="0,0,12,0" Padding="16,8" Command="{Binding OpenDmiCommand}" Content="Open DMI" />
-                    <Button Padding="16,8" Command="{Binding SaveConfigCommand}" Content="Save Config" />
+
+                <Border Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="5" Background="#FFF9F2" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="999">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton GroupName="ShellMode" Style="{StaticResource ShellModeRadioButtonStyle}" IsChecked="{Binding IsStartSelected, Mode=TwoWay}" Content="Start" />
+                        <RadioButton GroupName="ShellMode" Margin="4,0,0,0" Style="{StaticResource ShellModeRadioButtonStyle}" IsEnabled="{Binding EditorTab.IsAvailable}" IsChecked="{Binding IsEditorSelected, Mode=TwoWay}" Content="Editor" />
+                        <RadioButton GroupName="ShellMode" Margin="4,0,0,0" Style="{StaticResource ShellModeRadioButtonStyle}" IsEnabled="{Binding BatchTab.IsAvailable}" IsChecked="{Binding IsBatchSelected, Mode=TwoWay}" Content="Batch" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Margin="0,0,10,0" Padding="14,8" Command="{Binding OpenDmiCommand}" Content="Open DMI" />
+                    <Button Padding="14,8" Command="{Binding SaveConfigCommand}" Content="Save Config" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -56,59 +127,112 @@
             </Grid>
         </Border>
 
-        <Border Padding="8" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="18">
-            <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+        <Border Padding="10" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="18">
+            <TabControl Style="{StaticResource ShellTabControlStyle}" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
                 <TabItem Header="Start">
-                    <Grid DataContext="{Binding StartTab}" Margin="10">
-                        <Border Width="900" MaxWidth="900" Padding="28" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#FFF9F2" CornerRadius="22">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
+                    <Grid DataContext="{Binding StartTab}" Margin="8">
+                        <Border MaxWidth="520" Padding="18" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,0" Background="#FFF9F2" CornerRadius="20">
+                            <StackPanel>
+                                <TextBlock FontSize="24" FontWeight="SemiBold" Text="{Binding WelcomeTitle}" />
+                                <TextBlock Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding WelcomeBody}" />
+                                <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Text="{Binding ResumeEditorHint}" />
 
-                                <StackPanel>
-                                    <TextBlock FontSize="30" FontWeight="SemiBold" Text="{Binding WelcomeTitle}" />
-                                    <TextBlock Margin="0,10,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding WelcomeBody}" />
-                                    <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" Text="{Binding ResumeEditorHint}" />
-                                </StackPanel>
+                                <Button Margin="0,16,0,0" Command="{Binding ContinueToEditorCommand}" Content="Continue in Editor">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource StartPrimaryButtonStyle}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ShowContinueEditorAction}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
 
-                                <Grid Grid.Row="1" Margin="0,26,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
+                                <Button Margin="0,16,0,0" Command="{Binding OpenDmiCommand}" Content="Open DMI">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource StartPrimaryButtonStyle}">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ShowOpenDmiPrimaryAction}" Value="False">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
 
-                                    <Button Margin="0,0,10,10" Padding="18" MinHeight="80" FontSize="16" Command="{Binding OpenDmiCommand}" Content="Open DMI" />
-                                    <Button Grid.Column="1" Margin="10,0,0,10" Padding="18" MinHeight="80" FontSize="16" Command="{Binding LoadConfigCommand}" Content="Load JSON Config" />
-                                    <Button Grid.Row="1" Margin="0,10,10,0" Padding="18" MinHeight="80" FontSize="16" Command="{Binding ImportLegacyConfigCommand}" Content="Import Legacy CSV" />
-
-                                    <Border Grid.Row="1" Grid.Column="1" Margin="10,10,0,0" Padding="16" Background="{StaticResource Brush.PanelBackground}" CornerRadius="16" Visibility="{Binding ShowCreateConfigAction, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <StackPanel>
-                                            <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Create a config for the loaded sprite" />
-                                            <DockPanel Margin="0,10,0,0" LastChildFill="True">
-                                                <Button DockPanel.Dock="Right" Width="138" Margin="12,0,0,0" Padding="14,8" Command="{Binding CreateConfigCommand}" Content="Create Config" />
-                                                <TextBox Padding="12,8" Text="{Binding DraftConfigName, UpdateSourceTrigger=PropertyChanged}" />
-                                            </DockPanel>
-                                        </StackPanel>
-                                    </Border>
-                                </Grid>
-
-                                <Border Grid.Row="2" Margin="0,24,0,0" Padding="18" Background="{StaticResource Brush.PanelBackground}" CornerRadius="16">
+                                <Border Margin="0,12,0,0" Padding="12" Background="{StaticResource Brush.PanelBackground}" CornerRadius="14" Visibility="{Binding ShowCreateConfigAction, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <StackPanel>
-                                        <TextBlock FontSize="18" FontWeight="SemiBold" Text="Recent paths" />
-                                        <TextBlock Margin="0,10,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding RecentSummary}" />
+                                        <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Create a config for the loaded sprite" />
+                                        <Grid Margin="0,8,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Padding="12,7" Text="{Binding DraftConfigName, UpdateSourceTrigger=PropertyChanged}" />
+                                            <Button Grid.Column="1" Width="140" Margin="10,0,0,0" Padding="12,7" Command="{Binding CreateConfigCommand}" Content="Create Config" />
+                                        </Grid>
                                     </StackPanel>
                                 </Border>
 
-                                <Button Grid.Row="3" Margin="0,18,0,0" HorizontalAlignment="Left" Padding="14,8" Command="{Binding ResetWorkspaceCommand}" Content="Reset Workspace" />
-                            </Grid>
+                                <UniformGrid Margin="0,10,0,0" Columns="3">
+                                    <Button Margin="0,0,6,0" Command="{Binding OpenDmiCommand}" Content="Open DMI">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource StartSecondaryButtonStyle}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ShowCreateConfigAction}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                    <Button Margin="0,0,6,0" Style="{StaticResource StartSecondaryButtonStyle}" Command="{Binding LoadConfigCommand}" Content="Load JSON" />
+                                    <Button Margin="0" Style="{StaticResource StartSecondaryButtonStyle}" Command="{Binding ImportLegacyConfigCommand}" Content="Import CSV" />
+                                </UniformGrid>
+
+                                <Expander Margin="0,14,0,0" Header="Recent paths" Visibility="{Binding ShowRecentPaths, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <StackPanel Margin="0,10,0,0">
+                                        <Button Padding="12,8" Command="{Binding ResumeLastWorkspaceCommand}" Content="Resume last workspace">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource StartSecondaryButtonStyle}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasRecentWorkspace}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        <Button Margin="0,8,0,0" Padding="10,8" Command="{Binding OpenRecentDmiCommand}" IsEnabled="{Binding HasRecentDmi}">
+                                            <StackPanel>
+                                                <TextBlock FontWeight="SemiBold" Text="Open last DMI" />
+                                                <TextBlock Margin="0,2,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding LastDmiPathSummary}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Margin="0,8,0,0" Padding="10,8" Command="{Binding OpenRecentConfigCommand}" IsEnabled="{Binding HasRecentConfig}">
+                                            <StackPanel>
+                                                <TextBlock FontWeight="SemiBold" Text="Load last JSON config" />
+                                                <TextBlock Margin="0,2,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding LastConfigPathSummary}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Margin="0,8,0,0" Padding="10,8" Command="{Binding ImportRecentLegacyCsvCommand}" IsEnabled="{Binding HasRecentLegacyCsv}">
+                                            <StackPanel>
+                                                <TextBlock FontWeight="SemiBold" Text="Import last legacy CSV" />
+                                                <TextBlock Margin="0,2,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding LastLegacyImportSummary}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <DockPanel Margin="0,10,0,0" LastChildFill="True">
+                                            <Button DockPanel.Dock="Right" Margin="12,0,0,0" Padding="12,7" Command="{Binding ResetWorkspaceCommand}" Content="Reset" />
+                                            <TextBlock Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding LastBatchOutputSummary}" />
+                                        </DockPanel>
+                                    </StackPanel>
+                                </Expander>
+                            </StackPanel>
                         </Border>
                     </Grid>
                 </TabItem>
@@ -116,73 +240,68 @@
                 <TabItem Header="Editor" IsEnabled="{Binding EditorTab.IsAvailable}">
                     <Grid Margin="10">
                         <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="260" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="310" /></Grid.ColumnDefinitions>
-                        <Border Grid.Row="0" Grid.Column="0" Padding="16" Background="#FFF9F2" CornerRadius="18" DataContext="{Binding EditorTab}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="170" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="210" /></Grid.ColumnDefinitions>
+                        <Border Grid.Row="0" Grid.Column="0" Padding="12" Background="#FFF9F2" CornerRadius="18" DataContext="{Binding EditorTab}">
                             <Grid>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                                 <StackPanel>
-                                    <TextBlock FontSize="22" FontWeight="SemiBold" Text="Sprite States" />
-                                    <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Text="{Binding SpriteContractSummary}" />
-                                    <TextBlock Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding LeftRailSummary}" />
-                                    <TextBlock Margin="0,12,0,0" FontWeight="SemiBold" Text="Assigned roles" />
-                                    <TextBlock Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding RolesSummary}" />
+                                    <TextBlock FontSize="18" FontWeight="SemiBold" Text="States" />
+                                    <TextBlock Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding RolesSummary}" />
                                 </StackPanel>
-                                <StackPanel Grid.Row="1" Margin="0,18,0,0">
-                                    <TextBlock FontWeight="SemiBold" Text="Direction" />
-                                    <ComboBox Margin="0,8,0,0" ItemsSource="{Binding AvailableDirections}" SelectedItem="{Binding SelectedDirection}" />
-                                </StackPanel>
-                                <StackPanel Grid.Row="2" Margin="0,18,0,0">
+                                <StackPanel Grid.Row="1" Margin="0,14,0,0">
                                     <TextBlock FontWeight="SemiBold" Text="Available states" />
-                                    <TextBlock Margin="0,6,0,10" Foreground="{StaticResource Brush.TextSecondary}" Text="Pick a state once, then assign it to base, landmark, or overlay." />
-                                    <ListBox MinHeight="180" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" />
+                                    <TextBlock Margin="0,4,0,8" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="Pick a state, then assign a role." />
+                                    <ListBox MinHeight="220" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" />
                                 </StackPanel>
-                                <StackPanel Grid.Row="3" Margin="0,16,0,0">
-                                    <Button Padding="10,6" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Set as Base" />
-                                    <Button Margin="0,8,0,0" Padding="10,6" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Set as Landmark" />
-                                    <Button Margin="0,8,0,0" Padding="10,6" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Set as Overlay" />
-                                    <Button Margin="0,12,0,0" Padding="10,6" Command="{Binding ClearOptionalPreviewLayersCommand}" Content="Clear Optional Layers" />
-                                </StackPanel>
+                                <UniformGrid Grid.Row="2" Margin="0,14,0,0" Columns="2">
+                                    <Button Margin="0,0,6,6" Padding="8,6" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Base" />
+                                    <Button Margin="6,0,0,6" Padding="8,6" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Landmark" />
+                                    <Button Margin="0,6,6,0" Padding="8,6" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Overlay" />
+                                    <Button Margin="6,6,0,0" Padding="8,6" Command="{Binding ClearOptionalPreviewLayersCommand}" Content="Clear" />
+                                </UniformGrid>
                             </Grid>
                         </Border>
 
                         <GridSplitter Grid.Row="0" Grid.Column="1" Width="8" HorizontalAlignment="Stretch" Background="Transparent" />
 
-                        <Border Grid.Row="0" Grid.Column="2" Padding="16" Background="#FFF9F2" CornerRadius="18">
+                        <Border Grid.Row="0" Grid.Column="2" Padding="12" Background="#FFF9F2" CornerRadius="18">
                             <Grid DataContext="{Binding EditorTab}">
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                                 <WrapPanel>
+                                    <TextBlock Margin="0,0,10,8" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Direction" />
+                                    <ComboBox Width="108" Margin="0,0,12,8" ItemsSource="{Binding AvailableDirections}" SelectedItem="{Binding SelectedDirection}" />
                                     <TextBlock Margin="0,0,10,8" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Tool" />
-                                    <ComboBox Width="120" Margin="0,0,14,8" ItemsSource="{Binding EditorTools}" SelectedItem="{Binding SelectedEditorTool}" />
+                                    <ComboBox Width="108" Margin="0,0,12,8" ItemsSource="{Binding EditorTools}" SelectedItem="{Binding SelectedEditorTool}" />
                                     <TextBlock Margin="0,0,10,8" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Scope" />
-                                    <ComboBox Width="120" Margin="0,0,14,8" ItemsSource="{Binding DirectionScopes}" SelectedItem="{Binding SelectedDirectionScope}" />
-                                    <Button Margin="0,0,10,8" Padding="12,6" Command="{Binding UndoCommand}" Content="Undo" />
-                                    <Button Margin="0,0,10,8" Padding="12,6" Command="{Binding RedoCommand}" Content="Redo" />
+                                    <ComboBox Width="108" Margin="0,0,12,8" ItemsSource="{Binding DirectionScopes}" SelectedItem="{Binding SelectedDirectionScope}" />
+                                    <Button Margin="0,0,8,8" Padding="12,6" Command="{Binding UndoCommand}" Content="Undo" />
+                                    <Button Margin="0,0,8,8" Padding="12,6" Command="{Binding RedoCommand}" Content="Redo" />
                                     <Button Margin="0,0,0,8" Padding="12,6" Command="{Binding ClearSelectionCommand}" Content="Clear Selection" />
                                 </WrapPanel>
-                                <StackPanel Grid.Row="1" Margin="0,8,0,14">
+                                <StackPanel Grid.Row="1" Margin="0,6,0,12">
                                     <TextBlock Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding HoverAndStatusSummary}" />
-                                    <TextBlock Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding SelectionSummary}" />
+                                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding SelectionSummary}" />
                                 </StackPanel>
                                 <Grid Grid.Row="2">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                    <Border Margin="0,0,10,0" Padding="12" Background="#FFFDF8" CornerRadius="14">
+                                    <Border Margin="0,0,8,0" Padding="10" Background="#FFFDF8" CornerRadius="14">
                                         <StackPanel>
                                             <TextBlock FontSize="16" FontWeight="SemiBold" Text="Source" />
-                                            <ScrollViewer Margin="0,10,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                            <Viewbox Margin="0,10,0,0" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <ItemsControl ItemsSource="{Binding SourceRows}">
                                                     <ItemsControl.ItemTemplate><DataTemplate><ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource SourceCellTemplate}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl></DataTemplate></ItemsControl.ItemTemplate>
                                                 </ItemsControl>
-                                            </ScrollViewer>
+                                            </Viewbox>
                                         </StackPanel>
                                     </Border>
-                                    <Border Grid.Column="1" Margin="10,0,0,0" Padding="12" Background="#FFFDF8" CornerRadius="14">
+                                    <Border Grid.Column="1" Margin="8,0,0,0" Padding="10" Background="#FFFDF8" CornerRadius="14">
                                         <StackPanel>
                                             <TextBlock FontSize="16" FontWeight="SemiBold" Text="Editable" />
-                                            <ScrollViewer Margin="0,10,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                            <Viewbox Margin="0,10,0,0" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <ItemsControl ItemsSource="{Binding TargetRows}">
                                                     <ItemsControl.ItemTemplate><DataTemplate><ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource TargetCellTemplate}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl></DataTemplate></ItemsControl.ItemTemplate>
                                                 </ItemsControl>
-                                            </ScrollViewer>
+                                            </Viewbox>
                                         </StackPanel>
                                     </Border>
                                 </Grid>
@@ -191,49 +310,54 @@
 
                         <GridSplitter Grid.Row="0" Grid.Column="3" Width="8" HorizontalAlignment="Stretch" Background="Transparent" />
 
-                        <Border Grid.Row="0" Grid.Column="4" Padding="16" Background="#FFF9F2" CornerRadius="18" DataContext="{Binding PreviewPanel}">
+                        <Border Grid.Row="0" Grid.Column="4" Padding="12" Background="#FFF9F2" CornerRadius="18" DataContext="{Binding PreviewPanel}">
                             <Grid>
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                                 <StackPanel>
-                                    <TextBlock FontSize="22" FontWeight="SemiBold" Text="Preview" />
-                                    <TextBlock Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding PreviewSelectionSummary}" />
+                                    <TextBlock FontSize="18" FontWeight="SemiBold" Text="Preview" />
+                                    <TextBlock Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding PreviewSelectionSummary}" />
                                 </StackPanel>
-                                <Grid Grid.Row="1" Margin="0,16,0,0">
+                                <Grid Grid.Row="1" Margin="0,12,0,0">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                     <ComboBox ItemsSource="{Binding PreviewDisplayModes}" SelectedItem="{Binding SelectedPreviewDisplayMode}" />
-                                    <Button Grid.Column="1" Margin="12,0,0,0" Padding="12,6" Command="{Binding BuildPreviewCommand}" Content="Refresh" />
+                                    <Button Grid.Column="1" Margin="10,0,0,0" Padding="12,6" Command="{Binding BuildPreviewCommand}" Content="Refresh" />
                                 </Grid>
-                                <StackPanel Grid.Row="2" Margin="0,12,0,0">
+                                <StackPanel Grid.Row="2" Margin="0,8,0,0">
                                     <CheckBox IsChecked="{Binding IsAutoPreviewEnabled}" Content="Auto refresh preview" />
-                                    <TextBlock Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding PreviewModeSummary}" />
-                                    <Expander Margin="0,14,0,0" Header="Advanced display" DataContext="{Binding DataContext.EditorTab, RelativeSource={RelativeSource AncestorType=Window}}">
+                                    <Expander Margin="0,10,0,0" Header="Advanced display" DataContext="{Binding DataContext.EditorTab, RelativeSource={RelativeSource AncestorType=Window}}">
                                         <WrapPanel Margin="0,10,0,0">
-                                            <CheckBox Margin="0,0,14,8" IsChecked="{Binding MirrorAcrossDirections}" Content="Mirror" />
-                                            <CheckBox Margin="0,0,14,8" IsChecked="{Binding UseCentralizedPropagation}" Content="Centralize" />
-                                            <CheckBox Margin="0,0,14,8" IsChecked="{Binding ShowGrid}" Content="Grid" />
-                                            <CheckBox Margin="0,0,14,8" IsChecked="{Binding GridAboveImage}" Content="Grid Above" />
-                                            <CheckBox Margin="0,0,14,8" IsChecked="{Binding ShowOverlay}" Content="Overlay" />
-                                            <CheckBox Margin="0,0,14,8" IsChecked="{Binding ShowTextGrid}" Content="Text Grid" />
+                                            <CheckBox Margin="0,0,8,6" IsChecked="{Binding MirrorAcrossDirections}" Content="Mirror" />
+                                            <CheckBox Margin="0,0,8,6" IsChecked="{Binding UseCentralizedPropagation}" Content="Centralize" />
+                                            <CheckBox Margin="0,0,8,6" IsChecked="{Binding ShowGrid}" Content="Grid" />
+                                            <CheckBox Margin="0,0,8,6" IsChecked="{Binding GridAboveImage}" Content="Grid Above" />
+                                            <CheckBox Margin="0,0,8,6" IsChecked="{Binding ShowOverlay}" Content="Overlay" />
+                                            <CheckBox Margin="0,0,8,6" IsChecked="{Binding ShowTextGrid}" Content="Text Grid" />
                                         </WrapPanel>
                                     </Expander>
                                 </StackPanel>
-                                <Grid Grid.Row="3" Margin="0,16,0,0">
-                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                    <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding PreviewSummary}" />
-                                    <Grid Grid.Row="1" Margin="0,12,0,0">
-                                        <Border Visibility="{Binding IsPreviewImageVisible, Converter={StaticResource BooleanToVisibilityConverter}}" CornerRadius="14" Background="#FFFDF8"><Viewbox Stretch="Uniform"><Image Source="{Binding CurrentPreviewImage}" Stretch="None" SnapsToDevicePixels="True" /></Viewbox></Border>
-                                        <ScrollViewer Visibility="{Binding IsPreviewGridVisible, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding PreviewGridRows}"><ItemsControl.ItemTemplate><DataTemplate><ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource PreviewCellTemplate}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></ScrollViewer>
+                                <Expander Grid.Row="3" Margin="0,12,0,0" Header="Preview pane" IsExpanded="True">
+                                    <Grid Margin="0,10,0,0">
+                                        <Border Visibility="{Binding IsPreviewImageVisible, Converter={StaticResource BooleanToVisibilityConverter}}" CornerRadius="14" Background="#FFFDF8">
+                                            <Image Source="{Binding CurrentPreviewImage}"
+                                                   Stretch="Uniform"
+                                                   SnapsToDevicePixels="True"
+                                                   UseLayoutRounding="True"
+                                                   RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                        </Border>
+                                        <Viewbox Visibility="{Binding IsPreviewGridVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <ItemsControl ItemsSource="{Binding PreviewGridRows}"><ItemsControl.ItemTemplate><DataTemplate><ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource PreviewCellTemplate}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                                        </Viewbox>
                                         <TextBox Visibility="{Binding IsPreviewTextVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Background="#FFFDF8" BorderThickness="0" FontFamily="Consolas" FontSize="12" IsReadOnly="True" Text="{Binding PreviewTextGrid, Mode=OneWay}" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" />
                                     </Grid>
-                                </Grid>
+                                </Expander>
                             </Grid>
                         </Border>
 
-                        <Expander Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3" Margin="0,12,0,0" Header="{Binding EditorTab.MappingsHeader}" IsExpanded="{Binding EditorTab.HasMappings, Mode=OneWay}">
-                            <Border Padding="14" Background="#FFF9F2" CornerRadius="16">
+                        <Expander Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3" Margin="0,10,0,0" Header="{Binding EditorTab.MappingsHeader}" Visibility="{Binding EditorTab.HasMappings, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Border MaxHeight="220" Padding="14" Background="#FFF9F2" CornerRadius="16">
                                 <Grid DataContext="{Binding EditorTab}">
                                     <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                    <DataGrid ItemsSource="{Binding MappingRows}" SelectedItem="{Binding SelectedMapping}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="160">
+                                    <DataGrid ItemsSource="{Binding MappingRows}" SelectedItem="{Binding SelectedMapping}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MinHeight="120" MaxHeight="150">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Source" Binding="{Binding SourceText}" Width="*" />
                                             <DataGridTextColumn Header="Target" Binding="{Binding TargetText}" Width="*" />

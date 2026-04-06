@@ -159,6 +159,50 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task ResumeLastWorkspaceCommandShouldRestoreRecentDmiAndConfig()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(),
+            configRepository: new SuccessfulConfigRepository(CreateConfig("Restored Config")));
+
+        await viewModel.InitializeAsync();
+
+        viewModel.DmiPath = "recent-sprite.dmi";
+        viewModel.ConfigPath = "recent-config.json";
+
+        await viewModel.ResumeLastWorkspaceCommand.ExecuteAsync(null);
+
+        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Editor);
+        viewModel.EditorTab.IsAvailable.Should().BeTrue();
+        viewModel.ConfigSummary.Should().Contain("Restored Config");
+        viewModel.StartTab.ShowContinueEditorAction.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task OpenRecentConfigCommandShouldPreloadRecentDmiWhenWorkspaceIsEmpty()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(),
+            configRepository: new SuccessfulConfigRepository(CreateConfig("Recent Config")));
+
+        await viewModel.InitializeAsync();
+
+        viewModel.DmiPath = "recent-sprite.dmi";
+        viewModel.ConfigPath = "recent-config.json";
+
+        await viewModel.OpenRecentConfigCommand.ExecuteAsync(null);
+
+        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Editor);
+        viewModel.EditorTab.IsAvailable.Should().BeTrue();
+        viewModel.AvailableStates.Should().Contain("idle");
+        viewModel.ConfigSummary.Should().Contain("Recent Config");
+    }
+
+    [Fact]
     public async Task ImportLegacyConfigAsyncShouldSwitchToEditorTab()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);

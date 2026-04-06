@@ -238,40 +238,7 @@ public partial class WorkspaceShellViewModel
         }
 
         await RunBusyOperationAsync(
-            async cancellationToken =>
-            {
-                var result = await _loadDmiFileUseCase.ExecuteAsync(DmiPath, cancellationToken);
-                if (result.IsFailure)
-                {
-                    StatusMessage = result.Error.Message;
-                    return;
-                }
-
-                BaseStateName = result.Value.States.FirstOrDefault()?.Name ?? string.Empty;
-                LandmarkStateName = string.Empty;
-                OverlayStateName = string.Empty;
-                DraftConfigName = Path.GetFileNameWithoutExtension(result.Value.DisplayName);
-                BatchInputDirectory = Path.GetDirectoryName(result.Value.SourcePath ?? DmiPath) ?? string.Empty;
-                BatchOutputDirectory = string.IsNullOrWhiteSpace(BatchOutputDirectory)
-                    ? Path.Combine(BatchInputDirectory, "processed")
-                    : BatchOutputDirectory;
-                NormalizeSelectedDirection();
-                StatusMessage = $"Loaded DMI '{result.Value.DisplayName}' with {result.Value.States.Count} states.";
-                RefreshWorkspaceState();
-                RefreshPreviewSelectionSummary();
-                RefreshEditorSurface();
-                NavigateToTab(ShellTabKind.Editor);
-                if (_editorSession.CurrentConfig is not null)
-                {
-                    await TryBuildPreviewAsync(userInitiated: false, cancellationToken);
-                }
-                else
-                {
-                    ClearPreviewArtifacts();
-                }
-
-                await PersistWorkspaceSettingsAsync();
-            });
+            cancellationToken => OpenDmiFromPathAsync(DmiPath, navigateToEditor: true, persistSettings: true, cancellationToken));
     }
 
     [RelayCommand(CanExecute = nameof(CanCreateConfig))]
@@ -348,25 +315,7 @@ public partial class WorkspaceShellViewModel
         }
 
         await RunBusyOperationAsync(
-            async cancellationToken =>
-            {
-                var result = await _loadConfigUseCase.ExecuteAsync(ConfigPath, cancellationToken);
-                if (result.IsFailure)
-                {
-                    StatusMessage = result.Error.Message;
-                    return;
-                }
-
-                SaveConfigPath = ConfigPath;
-                DraftConfigName = result.Value.Name;
-                StatusMessage = $"Loaded config '{result.Value.Name}'.";
-                RefreshWorkspaceState();
-                RefreshPreviewSelectionSummary();
-                RefreshEditorSurface();
-                NavigateToTab(ShellTabKind.Editor);
-                await TryBuildPreviewAsync(userInitiated: false, cancellationToken);
-                await PersistWorkspaceSettingsAsync();
-            });
+            cancellationToken => LoadConfigFromPathAsync(ConfigPath, navigateToEditor: true, persistSettings: true, cancellationToken));
     }
 
     [RelayCommand]
@@ -384,23 +333,109 @@ public partial class WorkspaceShellViewModel
         }
 
         await RunBusyOperationAsync(
-            async cancellationToken =>
-            {
-                var result = await _importLegacyCsvConfigUseCase.ExecuteAsync(LegacyCsvPath, cancellationToken);
-                if (result.IsFailure)
-                {
-                    StatusMessage = result.Error.Message;
-                    return;
-                }
+            cancellationToken => ImportLegacyConfigFromPathAsync(LegacyCsvPath, navigateToEditor: true, persistSettings: true, cancellationToken));
+    }
 
-                DraftConfigName = result.Value.Name;
-                StatusMessage = $"Imported legacy CSV '{Path.GetFileName(LegacyCsvPath)}' as config '{result.Value.Name}'.";
-                RefreshWorkspaceState();
-                RefreshPreviewSelectionSummary();
-                RefreshEditorSurface();
-                NavigateToTab(ShellTabKind.Editor);
-                await TryBuildPreviewAsync(userInitiated: false, cancellationToken);
-                await PersistWorkspaceSettingsAsync();
-            });
+    private async Task OpenDmiFromPathAsync(string path, bool navigateToEditor, bool persistSettings, CancellationToken cancellationToken)
+    {
+        var result = await _loadDmiFileUseCase.ExecuteAsync(path, cancellationToken);
+        if (result.IsFailure)
+        {
+            StatusMessage = result.Error.Message;
+            return;
+        }
+
+        DmiPath = path;
+        BaseStateName = result.Value.States.FirstOrDefault()?.Name ?? string.Empty;
+        LandmarkStateName = string.Empty;
+        OverlayStateName = string.Empty;
+        DraftConfigName = Path.GetFileNameWithoutExtension(result.Value.DisplayName);
+        BatchInputDirectory = Path.GetDirectoryName(result.Value.SourcePath ?? path) ?? string.Empty;
+        BatchOutputDirectory = string.IsNullOrWhiteSpace(BatchOutputDirectory)
+            ? Path.Combine(BatchInputDirectory, "processed")
+            : BatchOutputDirectory;
+        NormalizeSelectedDirection();
+        StatusMessage = $"Loaded DMI '{result.Value.DisplayName}' with {result.Value.States.Count} states.";
+        RefreshWorkspaceState();
+        RefreshPreviewSelectionSummary();
+        RefreshEditorSurface();
+
+        if (navigateToEditor)
+        {
+            NavigateToTab(ShellTabKind.Editor);
+        }
+
+        if (_editorSession.CurrentConfig is not null)
+        {
+            await TryBuildPreviewAsync(userInitiated: false, cancellationToken);
+        }
+        else
+        {
+            ClearPreviewArtifacts();
+        }
+
+        if (persistSettings)
+        {
+            await PersistWorkspaceSettingsAsync();
+        }
+    }
+
+    private async Task LoadConfigFromPathAsync(string path, bool navigateToEditor, bool persistSettings, CancellationToken cancellationToken)
+    {
+        var result = await _loadConfigUseCase.ExecuteAsync(path, cancellationToken);
+        if (result.IsFailure)
+        {
+            StatusMessage = result.Error.Message;
+            return;
+        }
+
+        ConfigPath = path;
+        SaveConfigPath = path;
+        DraftConfigName = result.Value.Name;
+        StatusMessage = $"Loaded config '{result.Value.Name}'.";
+        RefreshWorkspaceState();
+        RefreshPreviewSelectionSummary();
+        RefreshEditorSurface();
+
+        if (navigateToEditor)
+        {
+            NavigateToTab(ShellTabKind.Editor);
+        }
+
+        await TryBuildPreviewAsync(userInitiated: false, cancellationToken);
+
+        if (persistSettings)
+        {
+            await PersistWorkspaceSettingsAsync();
+        }
+    }
+
+    private async Task ImportLegacyConfigFromPathAsync(string path, bool navigateToEditor, bool persistSettings, CancellationToken cancellationToken)
+    {
+        var result = await _importLegacyCsvConfigUseCase.ExecuteAsync(path, cancellationToken);
+        if (result.IsFailure)
+        {
+            StatusMessage = result.Error.Message;
+            return;
+        }
+
+        LegacyCsvPath = path;
+        DraftConfigName = result.Value.Name;
+        StatusMessage = $"Imported legacy CSV '{Path.GetFileName(path)}' as config '{result.Value.Name}'.";
+        RefreshWorkspaceState();
+        RefreshPreviewSelectionSummary();
+        RefreshEditorSurface();
+
+        if (navigateToEditor)
+        {
+            NavigateToTab(ShellTabKind.Editor);
+        }
+
+        await TryBuildPreviewAsync(userInitiated: false, cancellationToken);
+
+        if (persistSettings)
+        {
+            await PersistWorkspaceSettingsAsync();
+        }
     }
 }

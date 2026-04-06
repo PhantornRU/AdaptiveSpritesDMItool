@@ -6,6 +6,104 @@ namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
 public partial class WorkspaceShellViewModel
 {
+    private bool CanContinueToEditor() => HasEditorWorkflow && !IsBusy;
+
+    private bool CanResumeLastWorkspace() =>
+        !IsBusy &&
+        (HasEditorWorkflow ||
+         !string.IsNullOrWhiteSpace(DmiPath) ||
+         !string.IsNullOrWhiteSpace(ConfigPath) ||
+         !string.IsNullOrWhiteSpace(LegacyCsvPath));
+
+    private bool CanOpenRecentDmi() => !IsBusy && !string.IsNullOrWhiteSpace(DmiPath);
+
+    private bool CanOpenRecentConfig() => !IsBusy && !string.IsNullOrWhiteSpace(ConfigPath);
+
+    private bool CanImportRecentLegacyCsv() => !IsBusy && !string.IsNullOrWhiteSpace(LegacyCsvPath);
+
+    [RelayCommand(CanExecute = nameof(CanContinueToEditor))]
+    private void ContinueToEditor()
+    {
+        NavigateToTab(ShellTabKind.Editor);
+        StatusMessage = "Returned to the editor workspace.";
+    }
+
+    [RelayCommand(CanExecute = nameof(CanResumeLastWorkspace))]
+    private async Task ResumeLastWorkspaceAsync()
+    {
+        if (HasEditorWorkflow)
+        {
+            NavigateToTab(ShellTabKind.Editor);
+            StatusMessage = "Returned to the active workspace.";
+            return;
+        }
+
+        await RunBusyOperationAsync(
+            async cancellationToken =>
+            {
+                var recentDmiPath = DmiPath;
+                var recentConfigPath = ConfigPath;
+                var recentLegacyCsvPath = LegacyCsvPath;
+
+                if (!string.IsNullOrWhiteSpace(recentDmiPath))
+                {
+                    await OpenDmiFromPathAsync(recentDmiPath, navigateToEditor: false, persistSettings: false, cancellationToken);
+                }
+
+                if (!string.IsNullOrWhiteSpace(recentConfigPath))
+                {
+                    await LoadConfigFromPathAsync(recentConfigPath, navigateToEditor: false, persistSettings: false, cancellationToken);
+                }
+                else if (!string.IsNullOrWhiteSpace(recentLegacyCsvPath))
+                {
+                    await ImportLegacyConfigFromPathAsync(recentLegacyCsvPath, navigateToEditor: false, persistSettings: false, cancellationToken);
+                }
+
+                NavigateToTab(HasEditorWorkflow ? ShellTabKind.Editor : ShellTabKind.Start);
+                StatusMessage = HasEditorWorkflow
+                    ? "Last workspace restored."
+                    : "No recent workspace could be restored.";
+                await PersistWorkspaceSettingsAsync();
+            });
+    }
+
+    [RelayCommand(CanExecute = nameof(CanOpenRecentDmi))]
+    private async Task OpenRecentDmiAsync()
+    {
+        await RunBusyOperationAsync(
+            cancellationToken => OpenDmiFromPathAsync(DmiPath, navigateToEditor: true, persistSettings: true, cancellationToken));
+    }
+
+    [RelayCommand(CanExecute = nameof(CanOpenRecentConfig))]
+    private async Task OpenRecentConfigAsync()
+    {
+        await RunBusyOperationAsync(
+            async cancellationToken =>
+            {
+                if (_editorSession.LoadedAsset is null && !string.IsNullOrWhiteSpace(DmiPath))
+                {
+                    await OpenDmiFromPathAsync(DmiPath, navigateToEditor: false, persistSettings: false, cancellationToken);
+                }
+
+                await LoadConfigFromPathAsync(ConfigPath, navigateToEditor: true, persistSettings: true, cancellationToken);
+            });
+    }
+
+    [RelayCommand(CanExecute = nameof(CanImportRecentLegacyCsv))]
+    private async Task ImportRecentLegacyCsvAsync()
+    {
+        await RunBusyOperationAsync(
+            async cancellationToken =>
+            {
+                if (_editorSession.LoadedAsset is null && !string.IsNullOrWhiteSpace(DmiPath))
+                {
+                    await OpenDmiFromPathAsync(DmiPath, navigateToEditor: false, persistSettings: false, cancellationToken);
+                }
+
+                await ImportLegacyConfigFromPathAsync(LegacyCsvPath, navigateToEditor: true, persistSettings: true, cancellationToken);
+            });
+    }
+
     [RelayCommand(CanExecute = nameof(CanBuildPreview))]
     private async Task BuildPreviewAsync()
     {

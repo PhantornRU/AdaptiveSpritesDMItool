@@ -154,6 +154,11 @@ public partial class WorkspaceShellViewModel
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
         CancelCommand.NotifyCanExecuteChanged();
+        ContinueToEditorCommand.NotifyCanExecuteChanged();
+        ResumeLastWorkspaceCommand.NotifyCanExecuteChanged();
+        OpenRecentDmiCommand.NotifyCanExecuteChanged();
+        OpenRecentConfigCommand.NotifyCanExecuteChanged();
+        ImportRecentLegacyCsvCommand.NotifyCanExecuteChanged();
     }
 
     private Brush CreateCellFill(SpriteImage? image, PixelCoordinate coordinate, bool hasMapping, PixelMapping mapping)

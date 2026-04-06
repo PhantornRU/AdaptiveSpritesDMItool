@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Media.Imaging;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using System.IO;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
@@ -130,6 +131,20 @@ public sealed class StartTabViewModel(WorkspaceShellViewModel shell) : ShellSect
 
     public bool ShowResumeEditorHint => Shell.HasEditorWorkflow;
 
+    public bool ShowContinueEditorAction => Shell.HasActiveConfig;
+
+    public bool ShowOpenDmiPrimaryAction => !ShowCreateConfigAction && !ShowContinueEditorAction;
+
+    public bool HasRecentDmi => !string.IsNullOrWhiteSpace(Shell.DmiPath);
+
+    public bool HasRecentConfig => !string.IsNullOrWhiteSpace(Shell.ConfigPath);
+
+    public bool HasRecentLegacyCsv => !string.IsNullOrWhiteSpace(Shell.LegacyCsvPath);
+
+    public bool HasRecentWorkspace => Shell.HasEditorWorkflow || HasRecentDmi || HasRecentConfig || HasRecentLegacyCsv;
+
+    public bool ShowRecentPaths => HasRecentDmi || HasRecentConfig || HasRecentLegacyCsv || !string.IsNullOrWhiteSpace(Shell.BatchOutputDirectory);
+
     public string ResumeEditorHint => Shell.HasActiveConfig
         ? "A sprite and config are already staged. Switch to Editor to continue working."
         : Shell.HasLoadedAsset
@@ -143,6 +158,12 @@ public sealed class StartTabViewModel(WorkspaceShellViewModel shell) : ShellSect
     public string LastLegacyImportSummary => string.IsNullOrWhiteSpace(Shell.LegacyCsvPath) ? "No legacy CSV imported yet." : Shell.LegacyCsvPath;
 
     public string LastBatchOutputSummary => string.IsNullOrWhiteSpace(Shell.BatchOutputDirectory) ? "No batch output folder selected yet." : Shell.BatchOutputDirectory;
+
+    public string LastDmiDisplayName => HasRecentDmi ? Path.GetFileName(Shell.DmiPath) : "No DMI selected yet.";
+
+    public string LastConfigDisplayName => HasRecentConfig ? Path.GetFileName(Shell.ConfigPath) : "No JSON config selected yet.";
+
+    public string LastLegacyCsvDisplayName => HasRecentLegacyCsv ? Path.GetFileName(Shell.LegacyCsvPath) : "No legacy CSV imported yet.";
 
     public string DraftConfigName
     {
@@ -161,6 +182,16 @@ public sealed class StartTabViewModel(WorkspaceShellViewModel shell) : ShellSect
         });
 
     public IAsyncRelayCommand OpenDmiCommand => Shell.OpenDmiCommand;
+
+    public IRelayCommand ContinueToEditorCommand => Shell.ContinueToEditorCommand;
+
+    public IAsyncRelayCommand ResumeLastWorkspaceCommand => Shell.ResumeLastWorkspaceCommand;
+
+    public IAsyncRelayCommand OpenRecentDmiCommand => Shell.OpenRecentDmiCommand;
+
+    public IAsyncRelayCommand OpenRecentConfigCommand => Shell.OpenRecentConfigCommand;
+
+    public IAsyncRelayCommand ImportRecentLegacyCsvCommand => Shell.ImportRecentLegacyCsvCommand;
 
     public IRelayCommand CreateConfigCommand => Shell.CreateConfigCommand;
 
