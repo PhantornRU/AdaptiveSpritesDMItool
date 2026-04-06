@@ -52,4 +52,9 @@ public partial class MainWindow : Window
             e.Handled = true;
         }
     }
+
+    private void BatchSourceTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        ViewModel.HandleBatchSourceSelection(e.NewValue as BatchSourceTreeItemViewModel);
+    }
 }

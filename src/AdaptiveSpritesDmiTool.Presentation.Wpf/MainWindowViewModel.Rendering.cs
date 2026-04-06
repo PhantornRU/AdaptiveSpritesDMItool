@@ -49,6 +49,10 @@ public partial class WorkspaceShellViewModel
         OverlayStateName = settings.LastOverlayState ?? string.Empty;
         SelectedDirection = settings.LastSelectedDirection ?? SelectedDirection;
         SelectedOverwritePolicy = settings.LastOverwritePolicy;
+        SelectedEditorViewportMode = ParseEditorViewportMode(settings.LastEditorViewportMode);
+        SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
+        IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded;
+        IsBottomWorkspaceExpanded = true;
     }
 
     private async Task RestoreWorkspaceAsync()
@@ -96,7 +100,10 @@ public partial class WorkspaceShellViewModel
             string.IsNullOrWhiteSpace(LandmarkStateName) ? null : LandmarkStateName.Trim(),
             string.IsNullOrWhiteSpace(OverlayStateName) ? null : OverlayStateName.Trim(),
             GetSafeSelectedDirection(),
-            SelectedOverwritePolicy);
+            SelectedOverwritePolicy,
+            SelectedEditorViewportMode.ToString(),
+            SelectedBottomWorkspaceTab.ToString(),
+            IsPreviewInspectorExpanded);
 
     private void ResetWorkspaceCore()
     {
@@ -134,9 +141,20 @@ public partial class WorkspaceShellViewModel
         OperationProgressValue = 0;
         OperationProgressMaximum = 1;
         IsProgressIndeterminate = false;
+        SelectedEditorViewportMode = EditorViewportMode.Matrix;
+        SelectedBottomWorkspaceTab = BottomWorkspaceTab.Assets;
+        IsBottomWorkspaceExpanded = true;
+        IsPreviewInspectorExpanded = true;
+        SelectedBatchSourceItem = null;
+        FocusedDirectionTile = null;
+        DirectionMatrixColumns = 2;
         BatchResults.Clear();
+        ConfigQueueItems.Clear();
+        BatchStateStripItems.Clear();
+        BatchSourceTreeItems.Clear();
+        DirectionTiles.Clear();
         ClearPreviewArtifacts();
-        SelectedShellTab = ShellTabKind.Start;
+        SelectedShellSection = ShellSectionKind.Start;
     }
 
     private async Task RunBusyOperationAsync(Func<CancellationToken, Task> operation)
@@ -470,7 +488,7 @@ public partial class WorkspaceShellViewModel
         CurrentDirectionText = _editorSession.SelectedDirection.ToString();
 
         AvailableDirections.Clear();
-        foreach (var direction in (_editorSession.LoadedAsset?.SupportedDirections ?? _editorSession.CurrentConfig?.SupportedDirections ?? SupportedDirectionSet.Four).GetDirections())
+        foreach (var direction in GetPresentationDirectionOrder(_editorSession.LoadedAsset?.SupportedDirections ?? _editorSession.CurrentConfig?.SupportedDirections ?? SupportedDirectionSet.Four))
         {
             AvailableDirections.Add(direction);
         }
@@ -480,6 +498,18 @@ public partial class WorkspaceShellViewModel
                      .OrderBy(static state => state.Name, StringComparer.Ordinal))
         {
             AvailableStates.Add(state.Name);
+        }
+
+        DirectionMatrixColumns = AvailableDirections.Count > 4 ? 4 : 2;
+
+        if (!string.IsNullOrWhiteSpace(SelectedExplorerState) && !AvailableStates.Contains(SelectedExplorerState))
+        {
+            SelectedExplorerState = string.Empty;
+        }
+
+        if (string.IsNullOrWhiteSpace(SelectedExplorerState))
+        {
+            SelectedExplorerState = AvailableStates.FirstOrDefault() ?? string.Empty;
         }
 
         if (_editorSession.LoadedAsset is { } asset)
@@ -502,13 +532,16 @@ public partial class WorkspaceShellViewModel
                 ? "unsaved draft"
                 : Path.GetFileName(_editorSession.CurrentConfigPath);
             ConfigSummary = $"{config.Name} | {mappingCount} mappings | {storageLabel}";
-            WorkspaceNotes = "Editor workflow is active. Use the source pane, editable pane, direction scope, and batch tools without touching legacy static controllers.";
+            WorkspaceNotes = "Editor workflow is active. Use the direction matrix, direct toolbar, and lower workspace panels.";
         }
         else
         {
             ConfigSummary = "No config loaded";
-            WorkspaceNotes = "Empty workspace first. Open a DMI, create or load a JSON config, then edit mappings through the new MVVM shell.";
+            WorkspaceNotes = "Open a DMI, create or load a JSON config, then move into the editor.";
         }
+
+        RefreshConfigQueueItems();
+        RefreshBatchPipelineState();
 
         OnPropertyChanged(nameof(HasLoadedAsset));
         OnPropertyChanged(nameof(HasActiveConfig));
@@ -532,12 +565,28 @@ public partial class WorkspaceShellViewModel
         RefreshMappingRows();
         RebuildPixelRows(SourceRows, false);
         RebuildPixelRows(TargetRows, ShowOverlay);
+        RebuildDirectionTiles();
         RebuildPreviewGridRows();
         RefreshActivePreviewPresentation();
         OnPropertyChanged(string.Empty);
     }
 
-    private void NavigateToTab(ShellTabKind tab) => SelectedShellTab = tab;
+    public void NavigateToSection(ShellSectionKind section)
+    {
+        if (section == ShellSectionKind.Editor && !EditorWorkspace.IsAvailable)
+        {
+            SelectedShellSection = ShellSectionKind.Start;
+            return;
+        }
+
+        if (section == ShellSectionKind.Batch && !BatchWorkspace.IsAvailable)
+        {
+            SelectedShellSection = HasEditorWorkflow ? ShellSectionKind.Editor : ShellSectionKind.Start;
+            return;
+        }
+
+        SelectedShellSection = section;
+    }
 
     private SpriteDirection GetSafeSelectedDirection()
     {
@@ -622,5 +671,32 @@ public partial class WorkspaceShellViewModel
         }
 
         return string.Empty;
+    }
+
+    private static EditorViewportMode ParseEditorViewportMode(string? value) =>
+        Enum.TryParse<EditorViewportMode>(value, true, out var mode)
+            ? mode
+            : EditorViewportMode.Matrix;
+
+    private static BottomWorkspaceTab ParseBottomWorkspaceTab(string? value) =>
+        Enum.TryParse<BottomWorkspaceTab>(value, true, out var tab)
+            ? tab
+            : BottomWorkspaceTab.Assets;
+
+    private static IReadOnlyList<SpriteDirection> GetPresentationDirectionOrder(SupportedDirectionSet supportedDirections)
+    {
+        var orderedDirections = new[]
+        {
+            SpriteDirection.South,
+            SpriteDirection.North,
+            SpriteDirection.East,
+            SpriteDirection.West,
+            SpriteDirection.SouthEast,
+            SpriteDirection.NorthWest,
+            SpriteDirection.SouthWest,
+            SpriteDirection.NorthEast
+        };
+
+        return orderedDirections.Where(supportedDirections.Supports).ToArray();
     }
 }

@@ -7,7 +7,7 @@ namespace AdaptiveSpritesDmiTool.Infrastructure.Settings;
 
 public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettingsRepository
 {
-    private const int CurrentVersion = 1;
+    private const int CurrentVersion = 2;
 
     public async Task<Result<WorkspaceSettings>> LoadAsync(CancellationToken cancellationToken)
     {
@@ -30,7 +30,7 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
                 return Result.Failure<WorkspaceSettings>(Errors.Validation("Workspace settings file is empty or malformed."));
             }
 
-            if (document.Version != CurrentVersion)
+            if (document.Version is < 1 or > CurrentVersion)
             {
                 return Result.Failure<WorkspaceSettings>(Errors.Validation($"Unsupported workspace settings version '{document.Version}'."));
             }
@@ -86,7 +86,10 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             Normalize(document.LastLandmarkState),
             Normalize(document.LastOverlayState),
             ParseDirection(document.LastSelectedDirection),
-            ParseOverwritePolicy(document.LastOverwritePolicy));
+            ParseOverwritePolicy(document.LastOverwritePolicy),
+            Normalize(document.LastEditorViewportMode),
+            Normalize(document.LastBottomWorkspaceTab),
+            document.IsPreviewInspectorExpanded);
 
     private static WorkspaceSettingsDocument FromDomain(WorkspaceSettings settings) =>
         new()
@@ -102,7 +105,10 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             LastLandmarkState = settings.LastLandmarkState,
             LastOverlayState = settings.LastOverlayState,
             LastSelectedDirection = settings.LastSelectedDirection?.ToString(),
-            LastOverwritePolicy = settings.LastOverwritePolicy.ToString()
+            LastOverwritePolicy = settings.LastOverwritePolicy.ToString(),
+            LastEditorViewportMode = settings.LastEditorViewportMode,
+            LastBottomWorkspaceTab = settings.LastBottomWorkspaceTab,
+            IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded
         };
 
     private static string? Normalize(string? value) =>
@@ -158,5 +164,11 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         public string? LastSelectedDirection { get; set; }
 
         public string LastOverwritePolicy { get; set; } = OverwritePolicy.SkipExisting.ToString();
+
+        public string? LastEditorViewportMode { get; set; }
+
+        public string? LastBottomWorkspaceTab { get; set; }
+
+        public bool IsPreviewInspectorExpanded { get; set; } = true;
     }
 }

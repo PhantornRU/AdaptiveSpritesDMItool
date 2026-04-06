@@ -11,7 +11,6 @@
    - [AGENTS/WORKFLOW_RULES.md](./AGENTS/WORKFLOW_RULES.md)
    - [AGENTS/POLICIES.md](./AGENTS/POLICIES.md)
    - [AGENTS/REQUEST_PATTERNS.md](./AGENTS/REQUEST_PATTERNS.md)
-3. Локальный task-state для текущей задачи:
    - [AGENTS/local/README.md](./AGENTS/local/README.md)
    - `AGENTS/local/PLAN.md`
    - `AGENTS/local/TODO.md`

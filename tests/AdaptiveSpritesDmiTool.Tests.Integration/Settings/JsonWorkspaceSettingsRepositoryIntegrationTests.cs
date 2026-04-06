@@ -30,7 +30,10 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
             "landmark",
             "overlay",
             SpriteDirection.NorthEast,
-            OverwritePolicy.FailIfExists);
+            OverwritePolicy.FailIfExists,
+            "Focused",
+            "Mappings",
+            false);
 
         (await repository.SaveAsync(settings, CancellationToken.None)).IsSuccess.Should().BeTrue();
 
@@ -41,14 +44,14 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
     }
 
     [Fact]
-    public async Task RepositoryShouldRejectUnsupportedVersion()
+    public async Task RepositoryShouldLoadVersionOneDocumentsAndDefaultMissingFields()
     {
-        var path = Path.Combine(_tempDirectory, "invalid-version.json");
+        var path = Path.Combine(_tempDirectory, "version1.json");
         await File.WriteAllTextAsync(
             path,
             """
             {
-              "version": 2,
+              "version": 1,
               "lastOpenedDmiPath": "sprite.dmi",
               "lastOpenedConfigPath": "config.json",
               "lastImportedLegacyCsvPath": "legacy.csv",
@@ -60,6 +63,42 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
               "lastOverlayState": "overlay",
               "lastSelectedDirection": "North",
               "lastOverwritePolicy": "SkipExisting"
+            }
+            """);
+
+        var repository = new JsonWorkspaceSettingsRepository(path);
+
+        var result = await repository.LoadAsync(CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.LastEditorViewportMode.Should().BeNull();
+        result.Value.LastBottomWorkspaceTab.Should().BeNull();
+        result.Value.IsPreviewInspectorExpanded.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task RepositoryShouldRejectUnsupportedVersion()
+    {
+        var path = Path.Combine(_tempDirectory, "invalid-version.json");
+        await File.WriteAllTextAsync(
+            path,
+            """
+            {
+              "version": 3,
+              "lastOpenedDmiPath": "sprite.dmi",
+              "lastOpenedConfigPath": "config.json",
+              "lastImportedLegacyCsvPath": "legacy.csv",
+              "lastInputDirectory": "input",
+              "lastOutputDirectory": "output",
+              "lastDraftConfigName": "draft",
+              "lastBaseState": "base",
+              "lastLandmarkState": "landmark",
+              "lastOverlayState": "overlay",
+              "lastSelectedDirection": "North",
+              "lastOverwritePolicy": "SkipExisting",
+              "lastEditorViewportMode": "Matrix",
+              "lastBottomWorkspaceTab": "Assets",
+              "isPreviewInspectorExpanded": true
             }
             """);
 

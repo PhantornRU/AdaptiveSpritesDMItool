@@ -1,6 +1,7 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using System.Collections.ObjectModel;
+using System.IO;
 using Brush = System.Windows.Media.Brush;
 using Color = System.Windows.Media.Color;
 using Brushes = System.Windows.Media.Brushes;
@@ -35,6 +36,9 @@ public partial class WorkspaceShellViewModel
     }
 
     private void RebuildPixelRows(ObservableCollection<PixelRowViewModel> targetRows, bool useCompositeImage)
+        => RebuildPixelRows(targetRows, GetSafeSelectedDirection(), useCompositeImage);
+
+    private void RebuildPixelRows(ObservableCollection<PixelRowViewModel> targetRows, SpriteDirection direction, bool useCompositeImage)
     {
         targetRows.Clear();
         var resolution = _editorSession.CurrentConfig?.Resolution ?? _editorSession.LoadedAsset?.Resolution;
@@ -44,7 +48,6 @@ public partial class WorkspaceShellViewModel
         }
 
         var referenceImage = useCompositeImage ? _compositeImage ?? _baseImage : _baseImage;
-        var direction = GetSafeSelectedDirection();
         var mappings = _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
         var selectedTarget = _selectedSourceCoordinate is { } source && mappings.TryGetValue(source, out var mapping)
             ? mapping.Target
@@ -57,7 +60,7 @@ public partial class WorkspaceShellViewModel
             {
                 var coordinate = new PixelCoordinate(x, y);
                 var hasMapping = mappings.TryGetValue(coordinate, out var pixelMapping);
-                var cell = new PixelCellViewModel(x, y)
+                var cell = new PixelCellViewModel(direction, x, y)
                 {
                     Fill = CreateCellFill(referenceImage, coordinate, hasMapping, pixelMapping),
                     Border = CreateCellBorder(coordinate, hasMapping, selectedTarget),
@@ -97,7 +100,7 @@ public partial class WorkspaceShellViewModel
                 var isMoved = effectiveTarget != coordinate;
                 rowText[x] = isTransparent ? 'T' : isMoved ? 'M' : '.';
 
-                cells.Add(new PixelCellViewModel(x, y)
+                cells.Add(new PixelCellViewModel(direction, x, y)
                 {
                     Fill = isTransparent ? TransparentBrush : isMoved ? MappedBrush : NeutralBrush,
                     Border = ShowGrid ? GridBrush : Brushes.Transparent,
@@ -112,6 +115,64 @@ public partial class WorkspaceShellViewModel
         }
 
         PreviewTextGrid = string.Join(Environment.NewLine, textRows);
+    }
+
+    private void RebuildDirectionTiles()
+    {
+        DirectionTiles.Clear();
+        var activeDirection = GetSafeSelectedDirection();
+
+        foreach (var direction in AvailableDirections)
+        {
+            var tile = new DirectionTileViewModel(direction)
+            {
+                IsActive = direction == activeDirection
+            };
+
+            RebuildPixelRows(tile.SourceRows, direction, useCompositeImage: false);
+            RebuildPixelRows(tile.TargetRows, direction, useCompositeImage: ShowOverlay);
+            DirectionTiles.Add(tile);
+        }
+
+        FocusedDirectionTile = DirectionTiles.FirstOrDefault(tile => tile.Direction == activeDirection);
+    }
+
+    private void RefreshConfigQueueItems()
+    {
+        ConfigQueueItems.Clear();
+        if (_editorSession.CurrentConfig is null)
+        {
+            return;
+        }
+
+        var pathSummary = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath)
+            ? "Unsaved draft"
+            : _editorSession.CurrentConfigPath!;
+        ConfigQueueItems.Add(new ConfigQueueItemViewModel(_editorSession.CurrentConfig.Name, pathSummary, IsActive: true));
+    }
+
+    private void RefreshBatchPipelineState()
+    {
+        BatchStateStripItems.Clear();
+        foreach (var state in _editorSession.LoadedAsset?.States ?? Array.Empty<DmiStateInfo>())
+        {
+            BatchStateStripItems.Add(new BatchStateStripItemViewModel(state.Name));
+        }
+
+        BatchSourceTreeItems.Clear();
+        if (!string.IsNullOrWhiteSpace(BatchInputDirectory) && Directory.Exists(BatchInputDirectory))
+        {
+            foreach (var item in BuildBatchSourceTreeItems(BatchInputDirectory))
+            {
+                BatchSourceTreeItems.Add(item);
+            }
+        }
+
+        if (SelectedBatchSourceItem is not null &&
+            BatchSourceTreeItems.All(item => !string.Equals(item.FullPath, SelectedBatchSourceItem.FullPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            SelectedBatchSourceItem = null;
+        }
     }
 
     private void RefreshActivePreviewPresentation()
@@ -269,6 +330,26 @@ public partial class WorkspaceShellViewModel
 
     private static string? NormalizeOptionalPath(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static IEnumerable<BatchSourceTreeItemViewModel> BuildBatchSourceTreeItems(string rootDirectory)
+    {
+        foreach (var directory in Directory.EnumerateDirectories(rootDirectory).OrderBy(static path => path, StringComparer.OrdinalIgnoreCase))
+        {
+            yield return new BatchSourceTreeItemViewModel(
+                Path.GetFileName(directory),
+                directory,
+                isDirectory: true,
+                BuildBatchSourceTreeItems(directory));
+        }
+
+        foreach (var file in Directory.EnumerateFiles(rootDirectory, "*.dmi").OrderBy(static path => path, StringComparer.OrdinalIgnoreCase))
+        {
+            yield return new BatchSourceTreeItemViewModel(
+                Path.GetFileName(file),
+                file,
+                isDirectory: false);
+        }
+    }
 
     private readonly record struct PixelAreaSelection(PixelCoordinate Start, PixelCoordinate End)
     {

@@ -24,7 +24,7 @@ public partial class WorkspaceShellViewModel
     [RelayCommand(CanExecute = nameof(CanContinueToEditor))]
     private void ContinueToEditor()
     {
-        NavigateToTab(ShellTabKind.Editor);
+        NavigateToSection(ShellSectionKind.Editor);
         StatusMessage = "Returned to the editor workspace.";
     }
 
@@ -33,7 +33,7 @@ public partial class WorkspaceShellViewModel
     {
         if (HasEditorWorkflow)
         {
-            NavigateToTab(ShellTabKind.Editor);
+            NavigateToSection(ShellSectionKind.Editor);
             StatusMessage = "Returned to the active workspace.";
             return;
         }
@@ -59,7 +59,7 @@ public partial class WorkspaceShellViewModel
                     await ImportLegacyConfigFromPathAsync(recentLegacyCsvPath, navigateToEditor: false, persistSettings: false, cancellationToken);
                 }
 
-                NavigateToTab(HasEditorWorkflow ? ShellTabKind.Editor : ShellTabKind.Start);
+                NavigateToSection(HasEditorWorkflow ? ShellSectionKind.Editor : ShellSectionKind.Start);
                 StatusMessage = HasEditorWorkflow
                     ? "Last workspace restored."
                     : "No recent workspace could be restored.";
@@ -145,11 +145,16 @@ public partial class WorkspaceShellViewModel
                     OperationProgressValue = Math.Min(value.ProcessedFiles, OperationProgressMaximum);
                 });
 
+                var explicitFiles = SelectedBatchSourceItem is { IsDirectory: false, FullPath: not null }
+                    ? new[] { SelectedBatchSourceItem.FullPath }
+                    : null;
+
                 var result = await _applyConfigToDmiBatchUseCase.ExecuteAsync(
                     BatchInputDirectory,
                     BatchOutputDirectory,
                     SelectedOverwritePolicy,
                     progress,
+                    explicitFiles,
                     cancellationToken);
 
                 if (result.IsFailure)
@@ -175,7 +180,7 @@ public partial class WorkspaceShellViewModel
                     $"{failedCount} failed, " +
                     $"{cancelledCount} cancelled.";
                 StatusMessage = BatchSummary;
-                NavigateToTab(ShellTabKind.Batch);
+                NavigateToSection(ShellSectionKind.Batch);
                 await PersistWorkspaceSettingsAsync();
             });
     }
@@ -327,6 +332,52 @@ public partial class WorkspaceShellViewModel
     }
 
     [RelayCommand]
+    private void SelectShellSection(ShellSectionKind section) => NavigateToSection(section);
+
+    [RelayCommand]
+    private void SelectEditorTool(EditorTool tool)
+    {
+        if (SelectedEditorTool == tool)
+        {
+            return;
+        }
+
+        SelectedEditorTool = tool;
+    }
+
+    [RelayCommand]
+    private void SelectDirectionScope(DirectionScope scope)
+    {
+        if (SelectedDirectionScope == scope)
+        {
+            return;
+        }
+
+        SelectedDirectionScope = scope;
+    }
+
+    [RelayCommand]
+    private void SelectViewportMode(EditorViewportMode mode)
+    {
+        if (SelectedEditorViewportMode == mode)
+        {
+            return;
+        }
+
+        SelectedEditorViewportMode = mode;
+        StatusMessage = mode == EditorViewportMode.Matrix
+            ? "Matrix editor mode activated."
+            : "Focused editor mode activated.";
+    }
+
+    [RelayCommand]
+    private void SelectBottomWorkspaceTab(BottomWorkspaceTab tab)
+    {
+        SelectedBottomWorkspaceTab = tab;
+        IsBottomWorkspaceExpanded = true;
+    }
+
+    [RelayCommand]
     private async Task ResetWorkspaceAsync()
     {
         await RunBusyOperationAsync(
@@ -336,7 +387,7 @@ public partial class WorkspaceShellViewModel
                 RefreshWorkspaceState();
                 RefreshPreviewSelectionSummary();
                 RefreshEditorSurface();
-                NavigateToTab(ShellTabKind.Start);
+                NavigateToSection(ShellSectionKind.Start);
                 await PersistWorkspaceSettingsAsync();
             });
     }
@@ -376,6 +427,8 @@ public partial class WorkspaceShellViewModel
         {
             RequestAutoPreviewRefresh();
         }
+
+        PersistWorkspaceSettingsInBackground();
     }
 
     partial void OnShowGridChanged(bool value) => RefreshEditorSurface();
@@ -389,4 +442,22 @@ public partial class WorkspaceShellViewModel
     }
 
     partial void OnShowTextGridChanged(bool value) => RefreshActivePreviewPresentation();
+
+    partial void OnSelectedEditorViewportModeChanged(EditorViewportMode value)
+    {
+        RefreshEditorSurface();
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    partial void OnSelectedBottomWorkspaceTabChanged(BottomWorkspaceTab value) => PersistWorkspaceSettingsInBackground();
+
+    partial void OnIsPreviewInspectorExpandedChanged(bool value) => PersistWorkspaceSettingsInBackground();
+
+    partial void OnBatchInputDirectoryChanged(string value)
+    {
+        RefreshBatchPipelineState();
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    partial void OnBatchOutputDirectoryChanged(string value) => PersistWorkspaceSettingsInBackground();
 }

@@ -1,19 +1,20 @@
 using AdaptiveSpritesDmiTool.Application;
+using AdaptiveSpritesDmiTool.Domain.Configurations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Windows.Media.Imaging;
-using AdaptiveSpritesDmiTool.Domain.Configurations;
 using System.IO;
+using System.Windows.Media.Imaging;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
-public enum ShellTabKind
+public enum ShellSectionKind
 {
     Start = 0,
     Editor = 1,
-    Batch = 2
+    Batch = 2,
+    Settings = 3
 }
 
 public enum AutoPreviewMode
@@ -119,17 +120,42 @@ public abstract class ShellSectionViewModel(WorkspaceShellViewModel shell) : Obs
     }
 }
 
+public sealed class NavigationRailViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public ObservableCollection<NavigationRailItemViewModel> Items { get; } =
+    [
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Start, "Start", "\uE80F", () => true),
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Editor, "Editor", "\uE70F", () => shell.EditorWorkspace.IsAvailable),
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Batch, "Batch", "\uE8B7", () => shell.BatchWorkspace.IsAvailable),
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Settings, "Settings", "\uE713", () => true)
+    ];
+
+    public ShellSectionKind SelectedSection
+    {
+        get => Shell.SelectedShellSection;
+        set => Shell.NavigateToSection(value);
+    }
+
+    protected override void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        base.OnShellPropertyChanged(sender, e);
+
+        foreach (var item in Items)
+        {
+            item.Refresh();
+        }
+    }
+}
+
 public sealed class StartTabViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
 {
     public string WelcomeTitle => Shell.HasLoadedAsset ? "Continue with this sprite" : "Open or import a workspace";
 
     public string WelcomeBody => Shell.HasLoadedAsset
-        ? "The sprite is ready. Create or load a config to move into the editor."
+        ? "The sprite is ready. Create, load, or resume a config to move into the editor."
         : "Open a DMI first, then load JSON or import a legacy CSV when you need an existing mapping set.";
 
     public bool ShowCreateConfigAction => Shell.HasLoadedAsset && !Shell.HasActiveConfig;
-
-    public bool ShowResumeEditorHint => Shell.HasEditorWorkflow;
 
     public bool ShowContinueEditorAction => Shell.HasActiveConfig;
 
@@ -146,7 +172,7 @@ public sealed class StartTabViewModel(WorkspaceShellViewModel shell) : ShellSect
     public bool ShowRecentPaths => HasRecentDmi || HasRecentConfig || HasRecentLegacyCsv || !string.IsNullOrWhiteSpace(Shell.BatchOutputDirectory);
 
     public string ResumeEditorHint => Shell.HasActiveConfig
-        ? "A sprite and config are already staged. Switch to Editor to continue working."
+        ? "A sprite and config are already staged. Continue in Editor to keep working."
         : Shell.HasLoadedAsset
             ? "A sprite is loaded. Create a config to begin editing."
             : "Start by opening a DMI.";
@@ -159,27 +185,11 @@ public sealed class StartTabViewModel(WorkspaceShellViewModel shell) : ShellSect
 
     public string LastBatchOutputSummary => string.IsNullOrWhiteSpace(Shell.BatchOutputDirectory) ? "No batch output folder selected yet." : Shell.BatchOutputDirectory;
 
-    public string LastDmiDisplayName => HasRecentDmi ? Path.GetFileName(Shell.DmiPath) : "No DMI selected yet.";
-
-    public string LastConfigDisplayName => HasRecentConfig ? Path.GetFileName(Shell.ConfigPath) : "No JSON config selected yet.";
-
-    public string LastLegacyCsvDisplayName => HasRecentLegacyCsv ? Path.GetFileName(Shell.LegacyCsvPath) : "No legacy CSV imported yet.";
-
     public string DraftConfigName
     {
         get => Shell.DraftConfigName;
         set => Shell.DraftConfigName = value;
     }
-
-    public string RecentSummary => string.Join(
-        Environment.NewLine,
-        new[]
-        {
-            $"Last DMI: {LastDmiPathSummary}",
-            $"Last JSON: {LastConfigPathSummary}",
-            $"Last CSV: {LastLegacyImportSummary}",
-            $"Last Batch Output: {LastBatchOutputSummary}"
-        });
 
     public IAsyncRelayCommand OpenDmiCommand => Shell.OpenDmiCommand;
 
@@ -202,67 +212,19 @@ public sealed class StartTabViewModel(WorkspaceShellViewModel shell) : ShellSect
     public IAsyncRelayCommand ResetWorkspaceCommand => Shell.ResetWorkspaceCommand;
 }
 
-public sealed class EditorTabViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+public sealed class EditorCommandBarViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
 {
-    public bool IsAvailable => Shell.HasEditorWorkflow;
+    public IReadOnlyList<EditorTool> PaintTools { get; } = [EditorTool.Single, EditorTool.Fill];
 
-    public bool HasLoadedAsset => Shell.HasLoadedAsset;
+    public IReadOnlyList<EditorTool> EditTools { get; } = [EditorTool.Move, EditorTool.Select, EditorTool.Delete, EditorTool.Undo, EditorTool.UndoArea];
 
-    public bool HasActiveConfig => Shell.HasActiveConfig;
+    public IReadOnlyList<EditorTool> EditorTools { get; } = [EditorTool.Single, EditorTool.Fill, EditorTool.Delete, EditorTool.Undo, EditorTool.UndoArea, EditorTool.Select, EditorTool.Move];
 
-    public string SpriteContractSummary => Shell.SpriteContractSummary;
-
-    public string ConfigSummary => Shell.ConfigSummary;
-
-    public string CurrentStateSummary => Shell.CurrentStateSummary;
-
-    public string PreviewSelectionSummary => Shell.PreviewSelectionSummary;
-
-    public string LeftRailSummary => Shell.HasActiveConfig
-        ? Shell.ConfigSummary
-        : "No config yet. Load JSON, import CSV, or create a fresh config from Start.";
-
-    public string EditorStatus => Shell.EditorStatus;
-
-    public string SelectedSourceSummary => Shell.SelectedSourceSummary;
-
-    public string SelectedAreaSummary => Shell.SelectedAreaSummary;
-
-    public string HoverSummary => Shell.HoverSummary;
-
-    public string BaseStateSummary => string.IsNullOrWhiteSpace(Shell.BaseStateName) ? "Base: not selected" : $"Base: {Shell.BaseStateName}";
-
-    public string LandmarkStateSummary => string.IsNullOrWhiteSpace(Shell.LandmarkStateName) ? "Landmark: none" : $"Landmark: {Shell.LandmarkStateName}";
-
-    public string OverlayStateSummary => string.IsNullOrWhiteSpace(Shell.OverlayStateName) ? "Overlay: none" : $"Overlay: {Shell.OverlayStateName}";
-
-    public string RolesSummary => $"{BaseStateSummary}   {LandmarkStateSummary}   {OverlayStateSummary}";
-
-    public string SelectionSummary =>
-        $"{Shell.SelectedSourceSummary}  {Shell.SelectedAreaSummary}";
-
-    public string HoverAndStatusSummary =>
-        $"{Shell.EditorStatus}  {Shell.HoverSummary}";
-
-    public ObservableCollection<SpriteDirection> AvailableDirections => Shell.AvailableDirections;
-
-    public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
-
-    public ObservableCollection<PixelRowViewModel> SourceRows => Shell.SourceRows;
-
-    public ObservableCollection<PixelRowViewModel> TargetRows => Shell.TargetRows;
-
-    public ObservableCollection<MappingRowViewModel> MappingRows => Shell.MappingRows;
-
-    public int MappingCount => MappingRows.Count;
-
-    public string MappingsHeader => MappingCount == 0 ? "Mappings" : $"Mappings ({MappingCount})";
-
-    public bool HasMappings => MappingCount > 0;
-
-    public IReadOnlyList<EditorTool> EditorTools => Shell.EditorTools;
+    public IReadOnlyList<EditorViewportMode> ViewportModes { get; } = [EditorViewportMode.Matrix, EditorViewportMode.Focused];
 
     public IReadOnlyList<DirectionScope> DirectionScopes => Shell.DirectionScopes;
+
+    public IReadOnlyList<SpriteDirection> AvailableDirections => Shell.AvailableDirections;
 
     public SpriteDirection SelectedDirection
     {
@@ -280,6 +242,12 @@ public sealed class EditorTabViewModel(WorkspaceShellViewModel shell) : ShellSec
     {
         get => Shell.SelectedDirectionScope;
         set => Shell.SelectedDirectionScope = value;
+    }
+
+    public EditorViewportMode SelectedViewportMode
+    {
+        get => Shell.SelectedEditorViewportMode;
+        set => Shell.SelectedEditorViewportMode = value;
     }
 
     public bool MirrorAcrossDirections
@@ -318,17 +286,94 @@ public sealed class EditorTabViewModel(WorkspaceShellViewModel shell) : ShellSec
         set => Shell.ShowTextGrid = value;
     }
 
+    public bool IsSingleToolSelected => SelectedEditorTool == EditorTool.Single;
+
+    public bool IsFillToolSelected => SelectedEditorTool == EditorTool.Fill;
+
+    public bool IsMoveToolSelected => SelectedEditorTool == EditorTool.Move;
+
+    public bool IsSelectToolSelected => SelectedEditorTool == EditorTool.Select;
+
+    public bool IsDeleteToolSelected => SelectedEditorTool == EditorTool.Delete;
+
+    public bool IsUndoToolSelected => SelectedEditorTool == EditorTool.Undo;
+
+    public bool IsUndoAreaToolSelected => SelectedEditorTool == EditorTool.UndoArea;
+
+    public bool IsSingleScopeSelected => SelectedDirectionScope == DirectionScope.Single;
+
+    public bool IsParallelScopeSelected => SelectedDirectionScope == DirectionScope.Parallel;
+
+    public bool IsAllScopeSelected => SelectedDirectionScope == DirectionScope.All;
+
+    public bool IsMatrixViewportSelected => SelectedViewportMode == EditorViewportMode.Matrix;
+
+    public bool IsFocusedViewportSelected => SelectedViewportMode == EditorViewportMode.Focused;
+
+    public bool ShowFocusedDirectionPicker => IsFocusedViewportSelected && AvailableDirections.Count > 1;
+
+    public IRelayCommand<EditorTool> SelectEditorToolCommand => Shell.SelectEditorToolCommand;
+
+    public IRelayCommand<DirectionScope> SelectDirectionScopeCommand => Shell.SelectDirectionScopeCommand;
+
+    public IRelayCommand<EditorViewportMode> SelectViewportModeCommand => Shell.SelectViewportModeCommand;
+
+    public IRelayCommand ClearSelectionCommand => Shell.ClearSelectionCommand;
+
+    public IRelayCommand UndoCommand => Shell.UndoCommand;
+
+    public IRelayCommand RedoCommand => Shell.RedoCommand;
+}
+
+public sealed class DirectionMatrixViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public ObservableCollection<DirectionTileViewModel> Tiles => Shell.DirectionTiles;
+
+    public bool IsMatrixMode => Shell.SelectedEditorViewportMode == EditorViewportMode.Matrix;
+
+    public bool IsFocusedMode => Shell.SelectedEditorViewportMode == EditorViewportMode.Focused;
+
+    public int MatrixColumns => Shell.DirectionMatrixColumns;
+
+    public DirectionTileViewModel? FocusedTile => Shell.FocusedDirectionTile;
+}
+
+public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public bool IsAvailable => Shell.HasEditorWorkflow;
+
+    public string SpriteContractSummary => Shell.SpriteContractSummary;
+
+    public string ConfigSummary => Shell.ConfigSummary;
+
+    public string RolesSummary =>
+        $"{BaseStateSummary}  {LandmarkStateSummary}  {OverlayStateSummary}";
+
+    public string BaseStateSummary => string.IsNullOrWhiteSpace(Shell.BaseStateName) ? "Base: not selected" : $"Base: {Shell.BaseStateName}";
+
+    public string LandmarkStateSummary => string.IsNullOrWhiteSpace(Shell.LandmarkStateName) ? "Landmark: none" : $"Landmark: {Shell.LandmarkStateName}";
+
+    public string OverlayStateSummary => string.IsNullOrWhiteSpace(Shell.OverlayStateName) ? "Overlay: none" : $"Overlay: {Shell.OverlayStateName}";
+
+    public string LeftRailSummary => Shell.HasActiveConfig
+        ? Shell.ConfigSummary
+        : "No config yet. Load JSON, import CSV, or create a fresh config from Start.";
+
+    public string HoverAndStatusSummary => $"{Shell.EditorStatus}  {Shell.HoverSummary}";
+
+    public string SelectionSummary => $"{Shell.SelectedSourceSummary}  {Shell.SelectedAreaSummary}";
+
+    public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
+
     public string SelectedExplorerState
     {
         get => Shell.SelectedExplorerState;
         set => Shell.SelectedExplorerState = value;
     }
 
-    public MappingRowViewModel? SelectedMapping
-    {
-        get => Shell.SelectedMapping;
-        set => Shell.SelectedMapping = value;
-    }
+    public DirectionMatrixViewModel DirectionMatrix { get; } = new(shell);
+
+    public EditorCommandBarViewModel CommandBar { get; } = new(shell);
 
     public IRelayCommand UseSelectedStateAsBaseCommand => Shell.UseSelectedStateAsBaseCommand;
 
@@ -337,19 +382,116 @@ public sealed class EditorTabViewModel(WorkspaceShellViewModel shell) : ShellSec
     public IRelayCommand UseSelectedStateAsOverlayCommand => Shell.UseSelectedStateAsOverlayCommand;
 
     public IRelayCommand ClearOptionalPreviewLayersCommand => Shell.ClearOptionalPreviewLayersCommand;
+}
 
-    public IRelayCommand ClearSelectionCommand => Shell.ClearSelectionCommand;
+public sealed class ConfigWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public ObservableCollection<ConfigQueueItemViewModel> Items => Shell.ConfigQueueItems;
 
-    public IRelayCommand UndoCommand => Shell.UndoCommand;
+    public string ActiveConfigSummary => Shell.ConfigSummary;
 
-    public IRelayCommand RedoCommand => Shell.RedoCommand;
+    public IRelayCommand CreateConfigCommand => Shell.CreateConfigCommand;
+
+    public IAsyncRelayCommand LoadConfigCommand => Shell.LoadConfigCommand;
+
+    public IAsyncRelayCommand SaveConfigCommand => Shell.SaveConfigCommand;
+}
+
+public sealed class BottomWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public BottomWorkspaceTab SelectedTab
+    {
+        get => Shell.SelectedBottomWorkspaceTab;
+        set => Shell.SelectedBottomWorkspaceTab = value;
+    }
+
+    public bool IsExpanded
+    {
+        get => Shell.IsBottomWorkspaceExpanded;
+        set => Shell.IsBottomWorkspaceExpanded = value;
+    }
+
+    public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
+
+    public ObservableCollection<ConfigQueueItemViewModel> ConfigQueueItems => Shell.ConfigQueueItems;
+
+    public ObservableCollection<MappingRowViewModel> MappingRows => Shell.MappingRows;
+
+    public ObservableCollection<BatchResultRowViewModel> BatchResults => Shell.BatchResults;
+
+    public string MappingSummary => Shell.MappingRows.Count == 0
+        ? "No mappings captured yet."
+        : $"{Shell.MappingRows.Count} mapping(s) in the active direction.";
+
+    public bool HasBatchResults => Shell.BatchResults.Count > 0;
+
+    public MappingRowViewModel? SelectedMapping
+    {
+        get => Shell.SelectedMapping;
+        set => Shell.SelectedMapping = value;
+    }
+
+    public IRelayCommand<BottomWorkspaceTab> SelectBottomWorkspaceTabCommand => Shell.SelectBottomWorkspaceTabCommand;
 
     public IRelayCommand RemoveSelectedMappingCommand => Shell.RemoveSelectedMappingCommand;
 }
 
-public sealed class BatchTabViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+public sealed class PreviewPanelViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public IReadOnlyList<PreviewDisplayMode> PreviewDisplayModes => Shell.PreviewDisplayModes;
+
+    public PreviewDisplayMode SelectedPreviewDisplayMode
+    {
+        get => Shell.SelectedPreviewDisplayMode;
+        set => Shell.SelectedPreviewDisplayMode = value;
+    }
+
+    public AutoPreviewMode AutoPreviewMode
+    {
+        get => Shell.AutoPreviewMode;
+        set => Shell.AutoPreviewMode = value;
+    }
+
+    public bool IsAutoPreviewEnabled
+    {
+        get => Shell.AutoPreviewMode == AutoPreviewMode.Enabled;
+        set => Shell.AutoPreviewMode = value ? AutoPreviewMode.Enabled : AutoPreviewMode.Disabled;
+    }
+
+    public bool IsExpanded
+    {
+        get => Shell.IsPreviewInspectorExpanded;
+        set => Shell.IsPreviewInspectorExpanded = value;
+    }
+
+    public string PreviewSelectionSummary => Shell.PreviewSelectionSummary;
+
+    public string PreviewSummary => Shell.PreviewSummary;
+
+    public BitmapSource? CurrentPreviewImage => Shell.CurrentPreviewImage;
+
+    public bool IsPreviewImageVisible => Shell.IsPreviewImageVisible;
+
+    public bool IsPreviewGridVisible => Shell.IsPreviewGridVisible;
+
+    public bool IsPreviewTextVisible => Shell.IsPreviewTextVisible;
+
+    public ObservableCollection<PixelRowViewModel> PreviewGridRows => Shell.PreviewGridRows;
+
+    public string PreviewTextGrid => Shell.PreviewTextGrid;
+
+    public IAsyncRelayCommand BuildPreviewCommand => Shell.BuildPreviewCommand;
+}
+
+public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
 {
     public bool IsAvailable => Shell.HasActiveConfig;
+
+    public ObservableCollection<BatchSourceTreeItemViewModel> SourceTreeItems => Shell.BatchSourceTreeItems;
+
+    public ObservableCollection<BatchStateStripItemViewModel> StateStripItems => Shell.BatchStateStripItems;
+
+    public ObservableCollection<ConfigQueueItemViewModel> ConfigQueueItems => Shell.ConfigQueueItems;
 
     public string BatchInputDirectory
     {
@@ -377,28 +519,20 @@ public sealed class BatchTabViewModel(WorkspaceShellViewModel shell) : ShellSect
 
     public string BatchCurrentFile => Shell.BatchCurrentFile;
 
-    public int BatchProcessedFiles => Shell.BatchProcessedFiles;
-
-    public int BatchTotalFiles => Shell.BatchTotalFiles;
-
     public IRelayCommand BrowseBatchInputDirectoryCommand => Shell.BrowseBatchInputDirectoryCommand;
 
     public IRelayCommand BrowseBatchOutputDirectoryCommand => Shell.BrowseBatchOutputDirectoryCommand;
+
+    public IAsyncRelayCommand LoadConfigCommand => Shell.LoadConfigCommand;
 
     public IAsyncRelayCommand RunBatchCommand => Shell.RunBatchCommand;
 
     public IRelayCommand CancelCommand => Shell.CancelCommand;
 }
 
-public sealed class PreviewPanelViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+public sealed class SettingsTabViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
 {
-    public IReadOnlyList<PreviewDisplayMode> PreviewDisplayModes => Shell.PreviewDisplayModes;
-
-    public PreviewDisplayMode SelectedPreviewDisplayMode
-    {
-        get => Shell.SelectedPreviewDisplayMode;
-        set => Shell.SelectedPreviewDisplayMode = value;
-    }
+    public IReadOnlyList<EditorViewportMode> ViewportModes { get; } = [EditorViewportMode.Matrix, EditorViewportMode.Focused];
 
     public AutoPreviewMode AutoPreviewMode
     {
@@ -406,50 +540,42 @@ public sealed class PreviewPanelViewModel(WorkspaceShellViewModel shell) : Shell
         set => Shell.AutoPreviewMode = value;
     }
 
-    public bool IsAutoPreviewEnabled
+    public EditorViewportMode SelectedViewportMode
     {
-        get => Shell.AutoPreviewMode == AutoPreviewMode.Enabled;
-        set => Shell.AutoPreviewMode = value ? AutoPreviewMode.Enabled : AutoPreviewMode.Disabled;
+        get => Shell.SelectedEditorViewportMode;
+        set => Shell.SelectedEditorViewportMode = value;
     }
 
-    public string PreviewSelectionSummary => Shell.PreviewSelectionSummary;
+    public bool IsPreviewInspectorExpanded
+    {
+        get => Shell.IsPreviewInspectorExpanded;
+        set => Shell.IsPreviewInspectorExpanded = value;
+    }
 
-    public string PreviewSummary => Shell.PreviewSummary;
-
-    public string BaseStateSummary => string.IsNullOrWhiteSpace(Shell.BaseStateName) ? "Base: not selected" : $"Base: {Shell.BaseStateName}";
-
-    public string LandmarkStateSummary => string.IsNullOrWhiteSpace(Shell.LandmarkStateName) ? "Landmark: none" : $"Landmark: {Shell.LandmarkStateName}";
-
-    public string OverlayStateSummary => string.IsNullOrWhiteSpace(Shell.OverlayStateName) ? "Overlay: none" : $"Overlay: {Shell.OverlayStateName}";
-
-    public string PreviewModeSummary => Shell.IsPreviewRefreshing
-        ? "Refreshing preview..."
-        : Shell.PreviewSummary;
-
-    public BitmapSource? CurrentPreviewImage => Shell.CurrentPreviewImage;
-
-    public bool IsPreviewImageVisible => Shell.IsPreviewImageVisible;
-
-    public bool IsPreviewGridVisible => Shell.IsPreviewGridVisible;
-
-    public bool IsPreviewTextVisible => Shell.IsPreviewTextVisible;
-
-    public ObservableCollection<PixelRowViewModel> PreviewGridRows => Shell.PreviewGridRows;
-
-    public string PreviewTextGrid => Shell.PreviewTextGrid;
-
-    public bool IsPreviewRefreshing => Shell.IsPreviewRefreshing;
-
-    public IAsyncRelayCommand BuildPreviewCommand => Shell.BuildPreviewCommand;
+    public bool IsBottomWorkspaceExpanded
+    {
+        get => Shell.IsBottomWorkspaceExpanded;
+        set => Shell.IsBottomWorkspaceExpanded = value;
+    }
 }
 
-public sealed class StatusBarViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+public sealed class OperationalStatusBarViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
 {
     public string StatusMessage => Shell.StatusMessage;
 
-    public string BatchSummary => Shell.BatchSummary;
+    public string CurrentStateSummary => Shell.CurrentStateSummary;
 
-    public string BatchCurrentFile => Shell.BatchCurrentFile;
+    public string ActiveDirection => Shell.SelectedDirection.ToString();
+
+    public string ActiveTool => Shell.SelectedEditorTool.ToString();
+
+    public string HoverSummary => Shell.HoverSummary;
+
+    public string SelectionSummary => $"{Shell.SelectedSourceSummary} | {Shell.SelectedAreaSummary}";
+
+    public string MappingSummary => Shell.MappingRows.Count == 0 ? "Mappings: 0" : $"Mappings: {Shell.MappingRows.Count}";
+
+    public string BatchSummary => Shell.BatchSummary;
 
     public bool IsBusy => Shell.IsBusy;
 

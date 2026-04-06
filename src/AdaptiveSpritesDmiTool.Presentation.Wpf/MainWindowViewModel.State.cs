@@ -8,11 +8,12 @@ namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 public partial class WorkspaceShellViewModel
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedTabIndex))]
-    [NotifyPropertyChangedFor(nameof(IsStartSelected))]
-    [NotifyPropertyChangedFor(nameof(IsEditorSelected))]
-    [NotifyPropertyChangedFor(nameof(IsBatchSelected))]
-    private ShellTabKind selectedShellTab = ShellTabKind.Start;
+    [NotifyPropertyChangedFor(nameof(SelectedShellSectionIndex))]
+    [NotifyPropertyChangedFor(nameof(IsStartSectionSelected))]
+    [NotifyPropertyChangedFor(nameof(IsEditorSectionSelected))]
+    [NotifyPropertyChangedFor(nameof(IsBatchSectionSelected))]
+    [NotifyPropertyChangedFor(nameof(IsSettingsSectionSelected))]
+    private ShellSectionKind selectedShellSection = ShellSectionKind.Start;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
@@ -26,7 +27,7 @@ public partial class WorkspaceShellViewModel
 
     [ObservableProperty]
     private string workspaceNotes =
-        "Empty workspace first. Open a DMI, create or load a JSON config, then edit mappings through the new MVVM shell.";
+        "Empty workspace first. Open a DMI, create or load a JSON config, then edit mappings through the MVVM shell.";
 
     [ObservableProperty]
     private string statusMessage = "Ready. Empty workspace created. No demo assets were loaded.";
@@ -101,6 +102,9 @@ public partial class WorkspaceShellViewModel
     private MappingRowViewModel? selectedMapping;
 
     [ObservableProperty]
+    private BatchSourceTreeItemViewModel? selectedBatchSourceItem;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     private bool isBusy;
 
@@ -141,6 +145,19 @@ public partial class WorkspaceShellViewModel
     private OverwritePolicy selectedOverwritePolicy = OverwritePolicy.SkipExisting;
 
     [ObservableProperty]
+    private EditorViewportMode selectedEditorViewportMode = EditorViewportMode.Matrix;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedBottomWorkspaceTabIndex))]
+    private BottomWorkspaceTab selectedBottomWorkspaceTab = BottomWorkspaceTab.Assets;
+
+    [ObservableProperty]
+    private bool isBottomWorkspaceExpanded;
+
+    [ObservableProperty]
+    private bool isPreviewInspectorExpanded = true;
+
+    [ObservableProperty]
     private bool mirrorAcrossDirections;
 
     [ObservableProperty]
@@ -159,6 +176,12 @@ public partial class WorkspaceShellViewModel
     private bool showTextGrid = true;
 
     [ObservableProperty]
+    private int directionMatrixColumns = 2;
+
+    [ObservableProperty]
+    private DirectionTileViewModel? focusedDirectionTile;
+
+    [ObservableProperty]
     private BitmapSource? currentPreviewImage;
 
     [ObservableProperty]
@@ -170,59 +193,41 @@ public partial class WorkspaceShellViewModel
     [ObservableProperty]
     private bool isPreviewTextVisible;
 
-    public int SelectedTabIndex
-    {
-        get => (int)SelectedShellTab;
-        set
-        {
-            if (!Enum.IsDefined(typeof(ShellTabKind), value))
-            {
-                return;
-            }
-
-            SelectedShellTab = (ShellTabKind)value;
-        }
-    }
-
     public bool HasLoadedAsset => _editorSession.LoadedAsset is not null;
 
     public bool HasActiveConfig => _editorSession.CurrentConfig is not null;
 
     public bool HasEditorWorkflow => HasLoadedAsset || HasActiveConfig;
 
-    public bool IsStartSelected
+    public int SelectedShellSectionIndex
     {
-        get => SelectedShellTab == ShellTabKind.Start;
+        get => (int)SelectedShellSection;
         set
         {
-            if (value)
+            if (Enum.IsDefined(typeof(ShellSectionKind), value))
             {
-                SelectedShellTab = ShellTabKind.Start;
+                NavigateToSection((ShellSectionKind)value);
             }
         }
     }
 
-    public bool IsEditorSelected
+    public int SelectedBottomWorkspaceTabIndex
     {
-        get => SelectedShellTab == ShellTabKind.Editor;
+        get => (int)SelectedBottomWorkspaceTab;
         set
         {
-            if (value)
+            if (Enum.IsDefined(typeof(BottomWorkspaceTab), value))
             {
-                SelectedShellTab = ShellTabKind.Editor;
+                SelectedBottomWorkspaceTab = (BottomWorkspaceTab)value;
             }
         }
     }
 
-    public bool IsBatchSelected
-    {
-        get => SelectedShellTab == ShellTabKind.Batch;
-        set
-        {
-            if (value)
-            {
-                SelectedShellTab = ShellTabKind.Batch;
-            }
-        }
-    }
+    public bool IsStartSectionSelected => SelectedShellSection == ShellSectionKind.Start;
+
+    public bool IsEditorSectionSelected => SelectedShellSection == ShellSectionKind.Editor;
+
+    public bool IsBatchSectionSelected => SelectedShellSection == ShellSectionKind.Batch;
+
+    public bool IsSettingsSectionSelected => SelectedShellSection == ShellSectionKind.Settings;
 }

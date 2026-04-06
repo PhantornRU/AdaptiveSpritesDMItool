@@ -3,7 +3,6 @@ using AdaptiveSpritesDmiTool.Domain.Configurations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
-using System.Windows.Media.Imaging;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
@@ -89,20 +88,33 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         PreviewGridRows = [];
         MappingRows = [];
         BatchResults = [];
-        EditorTools = Enum.GetValues<EditorTool>();
-        DirectionScopes = Enum.GetValues<DirectionScope>();
+        DirectionTiles = [];
+        ConfigQueueItems = [];
+        BatchStateStripItems = [];
+        BatchSourceTreeItems = [];
         PreviewDisplayModes = Enum.GetValues<PreviewDisplayMode>();
         OverwritePolicies = Enum.GetValues<OverwritePolicy>();
+        DirectionScopes = Enum.GetValues<DirectionScope>();
+
+        NavigationRail = new NavigationRailViewModel(this);
         StartTab = new StartTabViewModel(this);
-        EditorTab = new EditorTabViewModel(this);
-        BatchTab = new BatchTabViewModel(this);
+        EditorWorkspace = new EditorWorkspaceViewModel(this);
+        ConfigWorkspace = new ConfigWorkspaceViewModel(this);
+        BottomWorkspace = new BottomWorkspaceViewModel(this);
         PreviewPanel = new PreviewPanelViewModel(this);
-        StatusBar = new StatusBarViewModel(this);
+        BatchWorkspace = new BatchWorkspaceViewModel(this);
+        SettingsTab = new SettingsTabViewModel(this);
+        OperationalStatusBar = new OperationalStatusBarViewModel(this);
+
+        NavigationRail.Attach();
         StartTab.Attach();
-        EditorTab.Attach();
-        BatchTab.Attach();
+        EditorWorkspace.Attach();
+        ConfigWorkspace.Attach();
+        BottomWorkspace.Attach();
         PreviewPanel.Attach();
-        StatusBar.Attach();
+        BatchWorkspace.Attach();
+        SettingsTab.Attach();
+        OperationalStatusBar.Attach();
     }
 
     public string WindowTitle => WorkspaceTitle == "Empty workspace"
@@ -123,31 +135,49 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<BatchResultRowViewModel> BatchResults { get; }
 
-    public IReadOnlyList<EditorTool> EditorTools { get; }
+    public ObservableCollection<DirectionTileViewModel> DirectionTiles { get; }
 
-    public IReadOnlyList<DirectionScope> DirectionScopes { get; }
+    public ObservableCollection<ConfigQueueItemViewModel> ConfigQueueItems { get; }
+
+    public ObservableCollection<BatchStateStripItemViewModel> BatchStateStripItems { get; }
+
+    public ObservableCollection<BatchSourceTreeItemViewModel> BatchSourceTreeItems { get; }
 
     public IReadOnlyList<PreviewDisplayMode> PreviewDisplayModes { get; }
 
     public IReadOnlyList<OverwritePolicy> OverwritePolicies { get; }
 
+    public IReadOnlyList<DirectionScope> DirectionScopes { get; }
+
+    public NavigationRailViewModel NavigationRail { get; }
+
     public StartTabViewModel StartTab { get; }
 
-    public EditorTabViewModel EditorTab { get; }
+    public EditorWorkspaceViewModel EditorWorkspace { get; }
 
-    public BatchTabViewModel BatchTab { get; }
+    public ConfigWorkspaceViewModel ConfigWorkspace { get; }
+
+    public BottomWorkspaceViewModel BottomWorkspace { get; }
 
     public PreviewPanelViewModel PreviewPanel { get; }
 
-    public StatusBarViewModel StatusBar { get; }
+    public BatchWorkspaceViewModel BatchWorkspace { get; }
+
+    public SettingsTabViewModel SettingsTab { get; }
+
+    public OperationalStatusBarViewModel OperationalStatusBar { get; }
 
     public void Dispose()
     {
+        NavigationRail.Detach();
         StartTab.Detach();
-        EditorTab.Detach();
-        BatchTab.Detach();
+        EditorWorkspace.Detach();
+        ConfigWorkspace.Detach();
+        BottomWorkspace.Detach();
         PreviewPanel.Detach();
-        StatusBar.Detach();
+        BatchWorkspace.Detach();
+        SettingsTab.Detach();
+        OperationalStatusBar.Detach();
         _previewRefreshCoordinator.Dispose();
         _workspaceSettingsPersistenceGate.Dispose();
         GC.SuppressFinalize(this);

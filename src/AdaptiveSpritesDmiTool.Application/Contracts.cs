@@ -81,7 +81,10 @@ public sealed record WorkspaceSettings(
     string? LastLandmarkState,
     string? LastOverlayState,
     SpriteDirection? LastSelectedDirection,
-    OverwritePolicy LastOverwritePolicy)
+    OverwritePolicy LastOverwritePolicy,
+    string? LastEditorViewportMode,
+    string? LastBottomWorkspaceTab,
+    bool IsPreviewInspectorExpanded)
 {
     public static WorkspaceSettings Empty { get; } = new(
         LastOpenedDmiPath: null,
@@ -94,7 +97,10 @@ public sealed record WorkspaceSettings(
         LastLandmarkState: null,
         LastOverlayState: null,
         LastSelectedDirection: null,
-        LastOverwritePolicy: OverwritePolicy.OverwriteExisting);
+        LastOverwritePolicy: OverwritePolicy.OverwriteExisting,
+        LastEditorViewportMode: null,
+        LastBottomWorkspaceTab: null,
+        IsPreviewInspectorExpanded: true);
 }
 
 public interface IConfigRepository

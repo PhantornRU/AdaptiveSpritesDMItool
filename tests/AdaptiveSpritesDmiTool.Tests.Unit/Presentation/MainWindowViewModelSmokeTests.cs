@@ -10,117 +10,72 @@ namespace AdaptiveSpritesDmiTool.Tests.Unit.Presentation;
 public sealed class MainWindowViewModelSmokeTests
 {
     [Fact]
-    public async Task InitializeAsyncShouldStartOnStartTabWithoutDemoAssets()
+    public async Task InitializeAsyncShouldStartOnStartSectionWithoutDemoAssets()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var viewModel = CreateViewModel(settingsRepository);
 
         await viewModel.InitializeAsync();
 
-        viewModel.ConfigSummary.Should().Be("No config loaded");
-        viewModel.StatusMessage.Should().Contain("Empty workspace");
-        viewModel.SpriteContractSummary.Should().Contain("No sprite loaded");
-        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Start);
-        viewModel.SelectedTabIndex.Should().Be((int)ShellTabKind.Start);
-        viewModel.IsStartSelected.Should().BeTrue();
-        viewModel.IsEditorSelected.Should().BeFalse();
-        viewModel.IsBatchSelected.Should().BeFalse();
+        viewModel.SelectedShellSection.Should().Be(ShellSectionKind.Start);
+        viewModel.NavigationRail.SelectedSection.Should().Be(ShellSectionKind.Start);
+        viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
+        viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Assets);
+        viewModel.NavigationRail.Items.Should().HaveCount(4);
+        viewModel.EditorWorkspace.IsAvailable.Should().BeFalse();
+        viewModel.BatchWorkspace.IsAvailable.Should().BeFalse();
+        viewModel.StartTab.ShowCreateConfigAction.Should().BeFalse();
         viewModel.StartTab.WelcomeTitle.Should().Contain("Open or import");
-        viewModel.StartTab.ShowCreateConfigAction.Should().BeFalse();
-        viewModel.StartTab.ShowResumeEditorHint.Should().BeFalse();
-        viewModel.StartTab.ResumeEditorHint.Should().Contain("Start by opening a DMI");
-        viewModel.StartTab.RecentSummary.Should().Contain("Last DMI: No DMI selected yet.");
-        viewModel.StartTab.RecentSummary.Should().Contain("Last JSON: No JSON config selected yet.");
         viewModel.PreviewPanel.IsAutoPreviewEnabled.Should().BeTrue();
-        viewModel.PreviewPanel.AutoPreviewMode.Should().Be(AutoPreviewMode.Enabled);
-        viewModel.EditorTab.IsAvailable.Should().BeFalse();
-        viewModel.BatchTab.IsAvailable.Should().BeFalse();
-        viewModel.EditorTab.LeftRailSummary.Should().Contain("No config yet");
-        viewModel.EditorTab.MappingsHeader.Should().Be("Mappings");
-        viewModel.EditorTab.HasMappings.Should().BeFalse();
-        viewModel.EditorTab.SelectionSummary.Should().Contain("No source pixel selected");
-        viewModel.EditorTab.HoverAndStatusSummary.Should().Contain("Hover a cell");
-        viewModel.PreviewPanel.PreviewModeSummary.Should().Contain("Build a preview");
+        viewModel.IsBottomWorkspaceExpanded.Should().BeTrue();
     }
 
     [Fact]
-    public async Task TabSelectionFlagsShouldMirrorTheSelectedShellTab()
-    {
-        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
-        var viewModel = CreateViewModel(settingsRepository);
-
-        await viewModel.InitializeAsync();
-
-        viewModel.IsEditorSelected = true;
-
-        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Editor);
-        viewModel.IsStartSelected.Should().BeFalse();
-        viewModel.IsEditorSelected.Should().BeTrue();
-        viewModel.IsBatchSelected.Should().BeFalse();
-
-        viewModel.SelectedTabIndex = (int)ShellTabKind.Batch;
-
-        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Batch);
-        viewModel.IsStartSelected.Should().BeFalse();
-        viewModel.IsEditorSelected.Should().BeFalse();
-        viewModel.IsBatchSelected.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task CreateConfigAvailabilityShouldTrackDmiLoadedWorkspaceState()
+    public async Task NavigationRailShouldSwitchTheSelectedSection()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
         var viewModel = CreateViewModel(
             settingsRepository,
-            dmiReader: new SuccessfulDmiReader(),
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
             fileDialogService: dialogService);
 
         await viewModel.InitializeAsync();
 
-        viewModel.StartTab.ShowCreateConfigAction.Should().BeFalse();
-
         await viewModel.OpenDmiCommand.ExecuteAsync(null);
-
-        viewModel.StartTab.ShowCreateConfigAction.Should().BeTrue();
-        viewModel.StartTab.ResumeEditorHint.Should().Contain("Create a config");
-        viewModel.EditorTab.IsAvailable.Should().BeTrue();
-        viewModel.BatchTab.IsAvailable.Should().BeFalse();
-
         viewModel.CreateConfigCommand.Execute(null);
 
-        viewModel.StartTab.ShowCreateConfigAction.Should().BeFalse();
-        viewModel.StartTab.ResumeEditorHint.Should().Contain("Switch to Editor");
+        viewModel.NavigationRail.SelectedSection = ShellSectionKind.Batch;
+
+        viewModel.SelectedShellSection.Should().Be(ShellSectionKind.Batch);
+        viewModel.NavigationRail.SelectedSection.Should().Be(ShellSectionKind.Batch);
+
+        viewModel.SelectedShellSection = ShellSectionKind.Editor;
+
+        viewModel.NavigationRail.SelectedSection.Should().Be(ShellSectionKind.Editor);
+        viewModel.SelectedShellSectionIndex.Should().Be((int)ShellSectionKind.Editor);
     }
 
     [Fact]
-    public async Task OpenDmiAsyncShouldSwitchToEditorTab()
+    public async Task OpenDmiShouldEnterEditorWithATwoByTwoMatrixForFourDirections()
+    {
+        await AssertOpenDmiMatrixLayoutAsync(SupportedDirectionSet.Four, 2);
+    }
+
+    [Fact]
+    public async Task OpenDmiShouldEnterEditorWithAFourByTwoMatrixForEightDirections()
+    {
+        await AssertOpenDmiMatrixLayoutAsync(SupportedDirectionSet.Eight, 4);
+    }
+
+    [Fact]
+    public async Task CreateConfigShouldEnableBatchWorkflowAndStayOnEditorSection()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
         var viewModel = CreateViewModel(
             settingsRepository,
-            dmiReader: new SuccessfulDmiReader(),
-            fileDialogService: dialogService);
-
-        await viewModel.InitializeAsync();
-        await viewModel.OpenDmiCommand.ExecuteAsync(null);
-
-        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Editor);
-        viewModel.SelectedTabIndex.Should().Be((int)ShellTabKind.Editor);
-        viewModel.EditorTab.IsAvailable.Should().BeTrue();
-        viewModel.AvailableStates.Should().Contain("idle");
-        viewModel.EditorTab.LeftRailSummary.Should().Contain("No config yet");
-    }
-
-    [Fact]
-    public async Task CreateConfigShouldEnableBatchWorkflowAndStayOnEditorTab()
-    {
-        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
-        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
-        var viewModel = CreateViewModel(
-            settingsRepository,
-            dmiReader: new SuccessfulDmiReader(),
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
             fileDialogService: dialogService);
 
         await viewModel.InitializeAsync();
@@ -128,230 +83,129 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.CreateConfigCommand.Execute(null);
 
-        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Editor);
-        viewModel.BatchTab.IsAvailable.Should().BeTrue();
+        viewModel.SelectedShellSection.Should().Be(ShellSectionKind.Editor);
+        viewModel.BatchWorkspace.IsAvailable.Should().BeTrue();
         viewModel.ConfigSummary.Should().Contain("sprite");
         viewModel.ConfigSummary.Should().Contain("unsaved draft");
-        viewModel.StartTab.ShowCreateConfigAction.Should().BeFalse();
-        viewModel.EditorTab.RolesSummary.Should().Contain("Base:");
-        viewModel.EditorTab.RolesSummary.Should().Contain("Landmark:");
-        viewModel.EditorTab.RolesSummary.Should().Contain("Overlay:");
-        viewModel.EditorTab.LeftRailSummary.Should().Contain("sprite");
-        viewModel.EditorTab.PreviewSelectionSummary.Should().Contain("Direction: South");
+        viewModel.EditorWorkspace.RolesSummary.Should().Contain("Base:");
+        viewModel.EditorWorkspace.RolesSummary.Should().Contain("Landmark:");
+        viewModel.EditorWorkspace.RolesSummary.Should().Contain("Overlay:");
+        viewModel.EditorWorkspace.SelectionSummary.Should().Contain("No source pixel selected");
     }
 
     [Fact]
-    public async Task LoadConfigAsyncShouldSwitchToEditorTab()
-    {
-        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
-        var dialogService = new StubFileDialogService { ConfigPath = "config.json" };
-        var viewModel = CreateViewModel(
-            settingsRepository,
-            configRepository: new SuccessfulConfigRepository(CreateConfig("Loaded Config")),
-            fileDialogService: dialogService);
-
-        await viewModel.InitializeAsync();
-        await viewModel.LoadConfigCommand.ExecuteAsync(null);
-
-        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Editor);
-        viewModel.ConfigSummary.Should().Contain("Loaded Config");
-        viewModel.StartTab.ShowCreateConfigAction.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task ResumeLastWorkspaceCommandShouldRestoreRecentDmiAndConfig()
-    {
-        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
-        var viewModel = CreateViewModel(
-            settingsRepository,
-            dmiReader: new SuccessfulDmiReader(),
-            configRepository: new SuccessfulConfigRepository(CreateConfig("Restored Config")));
-
-        await viewModel.InitializeAsync();
-
-        viewModel.DmiPath = "recent-sprite.dmi";
-        viewModel.ConfigPath = "recent-config.json";
-
-        await viewModel.ResumeLastWorkspaceCommand.ExecuteAsync(null);
-
-        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Editor);
-        viewModel.EditorTab.IsAvailable.Should().BeTrue();
-        viewModel.ConfigSummary.Should().Contain("Restored Config");
-        viewModel.StartTab.ShowContinueEditorAction.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task OpenRecentConfigCommandShouldPreloadRecentDmiWhenWorkspaceIsEmpty()
-    {
-        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
-        var viewModel = CreateViewModel(
-            settingsRepository,
-            dmiReader: new SuccessfulDmiReader(),
-            configRepository: new SuccessfulConfigRepository(CreateConfig("Recent Config")));
-
-        await viewModel.InitializeAsync();
-
-        viewModel.DmiPath = "recent-sprite.dmi";
-        viewModel.ConfigPath = "recent-config.json";
-
-        await viewModel.OpenRecentConfigCommand.ExecuteAsync(null);
-
-        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Editor);
-        viewModel.EditorTab.IsAvailable.Should().BeTrue();
-        viewModel.AvailableStates.Should().Contain("idle");
-        viewModel.ConfigSummary.Should().Contain("Recent Config");
-    }
-
-    [Fact]
-    public async Task ImportLegacyConfigAsyncShouldSwitchToEditorTab()
-    {
-        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
-        var dialogService = new StubFileDialogService { LegacyCsvPath = "legacy.csv" };
-        var viewModel = CreateViewModel(
-            settingsRepository,
-            legacyImporter: new SuccessfulLegacyImporter(CreateConfig("Imported Config")),
-            fileDialogService: dialogService);
-
-        await viewModel.InitializeAsync();
-        await viewModel.ImportLegacyConfigCommand.ExecuteAsync(null);
-
-        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Editor);
-        viewModel.ConfigSummary.Should().Contain("Imported Config");
-        viewModel.StartTab.ShowCreateConfigAction.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task SelectedTabIndexShouldStayInSyncWithSelectedShellTab()
+    public async Task BottomWorkspaceAndPreviewPreferencesShouldPersist()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var viewModel = CreateViewModel(settingsRepository);
 
         await viewModel.InitializeAsync();
 
-        viewModel.SelectedTabIndex = (int)ShellTabKind.Editor;
-        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Editor);
+        viewModel.SelectedEditorViewportMode = EditorViewportMode.Focused;
+        viewModel.SelectedBottomWorkspaceTab = BottomWorkspaceTab.Mappings;
+        viewModel.IsPreviewInspectorExpanded = false;
 
-        viewModel.SelectedShellTab = ShellTabKind.Batch;
-        viewModel.SelectedTabIndex.Should().Be((int)ShellTabKind.Batch);
+        await viewModel.PersistWorkspaceSettingsAsync();
+
+        settingsRepository.Saved.Should().NotBeNull();
+        settingsRepository.Saved!.LastEditorViewportMode.Should().Be(nameof(EditorViewportMode.Focused));
+        settingsRepository.Saved.LastBottomWorkspaceTab.Should().Be(nameof(BottomWorkspaceTab.Mappings));
+        settingsRepository.Saved.IsPreviewInspectorExpanded.Should().BeFalse();
     }
 
     [Fact]
-    public async Task BatchTabShouldBecomeAvailableOnceConfigExistsAndBatchRunShouldNavigateThere()
+    public async Task EditorCommandBarShouldSupportDirectToolbarSelection()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var viewModel = CreateViewModel(settingsRepository);
+
+        await viewModel.InitializeAsync();
+
+        viewModel.EditorWorkspace.CommandBar.SelectEditorToolCommand.Execute(EditorTool.Move);
+        viewModel.EditorWorkspace.CommandBar.SelectDirectionScopeCommand.Execute(DirectionScope.All);
+
+        viewModel.SelectedEditorTool.Should().Be(EditorTool.Move);
+        viewModel.SelectedDirectionScope.Should().Be(DirectionScope.All);
+        viewModel.EditorWorkspace.CommandBar.IsMoveToolSelected.Should().BeTrue();
+        viewModel.EditorWorkspace.CommandBar.IsAllScopeSelected.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ResumeLastWorkspaceShouldRestoreRecentPathsAndReturnToEditor()
+    {
+        var settingsRepository = new InMemorySettingsRepository(
+            new WorkspaceSettings(
+                "sprite.dmi",
+                "config.json",
+                "legacy.csv",
+                "input",
+                "output",
+                "draft",
+                "base",
+                "landmark",
+                "overlay",
+                SpriteDirection.East,
+                OverwritePolicy.FailIfExists,
+                nameof(EditorViewportMode.Focused),
+                nameof(BottomWorkspaceTab.Configs),
+                false));
+
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            configRepository: new SuccessfulConfigRepository(CreateConfig("Restored Config")),
+            legacyImporter: new SuccessfulLegacyImporter(CreateConfig("Imported Config")));
+
+        await viewModel.InitializeAsync();
+        await viewModel.ResumeLastWorkspaceCommand.ExecuteAsync(null);
+
+        viewModel.SelectedShellSection.Should().Be(ShellSectionKind.Editor);
+        viewModel.ConfigSummary.Should().Contain("Restored Config");
+        viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Focused);
+        viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Configs);
+        viewModel.StartTab.HasRecentWorkspace.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task BatchWorkspaceShouldExposePipelineStateAndResults()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var tempRoot = CreateTempDirectory();
+        var inputDirectory = Path.Combine(tempRoot, "input");
+        var outputDirectory = Path.Combine(tempRoot, "output");
+        Directory.CreateDirectory(inputDirectory);
+        Directory.CreateDirectory(outputDirectory);
+        await File.WriteAllTextAsync(Path.Combine(inputDirectory, "sprite.dmi"), "placeholder");
+
         var dialogService = new StubFileDialogService
         {
             DmiPath = "sprite.dmi",
-            BatchDirectory = "batch"
+            BatchDirectory = inputDirectory
         };
+
         var batchService = new RecordingBatchProcessingService();
         var viewModel = CreateViewModel(
             settingsRepository,
-            dmiReader: new SuccessfulDmiReader(),
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
             batchProcessingService: batchService,
             fileDialogService: dialogService);
 
         await viewModel.InitializeAsync();
         await viewModel.OpenDmiCommand.ExecuteAsync(null);
         viewModel.CreateConfigCommand.Execute(null);
-
-        viewModel.BatchTab.IsAvailable.Should().BeTrue();
-        viewModel.BatchTab.BatchInputDirectory = "input";
-        viewModel.BatchTab.BatchOutputDirectory = "output";
+        viewModel.BatchInputDirectory = inputDirectory;
+        viewModel.BatchOutputDirectory = outputDirectory;
 
         await viewModel.RunBatchCommand.ExecuteAsync(null);
 
         batchService.CallCount.Should().Be(1);
-        viewModel.SelectedShellTab.Should().Be(ShellTabKind.Batch);
+        viewModel.SelectedShellSection.Should().Be(ShellSectionKind.Batch);
+        viewModel.BatchWorkspace.IsAvailable.Should().BeTrue();
+        viewModel.BatchWorkspace.SourceTreeItems.Should().NotBeEmpty();
+        viewModel.BatchWorkspace.StateStripItems.Should().NotBeEmpty();
+        viewModel.BatchWorkspace.ConfigQueueItems.Should().NotBeEmpty();
         viewModel.BatchResults.Should().NotBeEmpty();
-        viewModel.BatchTab.BatchProcessedFiles.Should().BeGreaterThan(0);
-    }
-
-    [Fact]
-    public async Task MappingDrawerStateShouldTrackSelectedMappingAndRemoval()
-    {
-        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
-        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
-        var viewModel = CreateViewModel(
-            settingsRepository,
-            dmiReader: new SuccessfulDmiReader(),
-            fileDialogService: dialogService);
-
-        await viewModel.InitializeAsync();
-        await viewModel.OpenDmiCommand.ExecuteAsync(null);
-        viewModel.CreateConfigCommand.Execute(null);
-
-        viewModel.SourceRows.Should().NotBeEmpty();
-        viewModel.TargetRows.Should().NotBeEmpty();
-
-        var sourceCell = viewModel.SourceRows[0].Cells[0];
-        var targetCell = viewModel.TargetRows[0].Cells[1];
-
-        viewModel.HandleSourceCellPointerDown(sourceCell);
-        viewModel.HandleTargetCellPointerUp(targetCell);
-
-        viewModel.MappingRows.Should().HaveCount(1);
-        viewModel.SelectedMapping.Should().BeNull();
-        viewModel.EditorTab.HasMappings.Should().BeTrue();
-        viewModel.EditorTab.MappingsHeader.Should().Be("Mappings (1)");
-
-        viewModel.SelectedMapping = viewModel.MappingRows[0];
-        viewModel.RemoveSelectedMappingCommand.Execute(null);
-
-        viewModel.MappingRows.Should().BeEmpty();
-        viewModel.EditorTab.HasMappings.Should().BeFalse();
-        viewModel.EditorTab.MappingsHeader.Should().Be("Mappings");
-    }
-
-    [Fact]
-    public async Task CompactEditorSummariesShouldReflectSelectionAndPreviewMode()
-    {
-        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
-        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
-        var previewBuilder = new RecordingPreviewBuilder();
-        var viewModel = CreateViewModel(
-            settingsRepository,
-            dmiReader: new SuccessfulDmiReader(),
-            previewBuilder: previewBuilder,
-            fileDialogService: dialogService);
-
-        await viewModel.InitializeAsync();
-        await viewModel.OpenDmiCommand.ExecuteAsync(null);
-        viewModel.CreateConfigCommand.Execute(null);
-        viewModel.SelectedExplorerState = "idle";
-        viewModel.UseSelectedStateAsBaseCommand.Execute(null);
-
-        viewModel.EditorTab.LeftRailSummary.Should().Contain("sprite");
-        viewModel.EditorTab.RolesSummary.Should().Contain("Base: idle");
-        viewModel.EditorTab.SelectionSummary.Should().Contain("No source pixel selected");
-        viewModel.EditorTab.HoverAndStatusSummary.Should().Contain("Select a source pixel");
-        viewModel.PreviewPanel.PreviewModeSummary.Should().Contain("Build a preview");
-        viewModel.PreviewPanel.IsAutoPreviewEnabled.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task PersistWorkspaceSettingsAsyncShouldStoreShellState()
-    {
-        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
-        var viewModel = CreateViewModel(settingsRepository);
-        await viewModel.InitializeAsync();
-
-        viewModel.DmiPath = "sprite.dmi";
-        viewModel.ConfigPath = "config.json";
-        viewModel.DraftConfigName = "draft";
-        viewModel.BaseStateName = "base";
-        viewModel.LandmarkStateName = "landmark";
-        viewModel.OverlayStateName = "overlay";
-        viewModel.SelectedDirection = SpriteDirection.East;
-        viewModel.SelectedOverwritePolicy = OverwritePolicy.FailIfExists;
-
-        await viewModel.PersistWorkspaceSettingsAsync();
-
-        settingsRepository.Saved.Should().NotBeNull();
-        settingsRepository.Saved!.LastDraftConfigName.Should().Be("draft");
-        settingsRepository.Saved.LastBaseState.Should().Be("base");
-        settingsRepository.Saved.LastSelectedDirection.Should().Be(SpriteDirection.East);
-        settingsRepository.Saved.LastOverwritePolicy.Should().Be(OverwritePolicy.FailIfExists);
+        viewModel.BatchWorkspace.BatchSummary.Should().Contain("processed");
     }
 
     [Fact]
@@ -362,7 +216,7 @@ public sealed class MainWindowViewModelSmokeTests
         var previewBuilder = new RecordingPreviewBuilder();
         var viewModel = CreateViewModel(
             settingsRepository,
-            dmiReader: new SuccessfulDmiReader(),
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
             previewBuilder: previewBuilder,
             fileDialogService: dialogService);
 
@@ -412,12 +266,39 @@ public sealed class MainWindowViewModelSmokeTests
             NullLogger<MainWindowViewModel>.Instance);
     }
 
+    private static string CreateTempDirectory()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "AdaptiveSpritesDmiTool.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(path);
+        return path;
+    }
+
     private static SpriteConfig CreateConfig(string name) =>
         SpriteConfig.CreateEmpty(
             name,
             new SpriteResolution(4, 4),
             SupportedDirectionSet.Four,
             ConfigMetadata.CreateNew(ConfigSource.UserCreated, "tests"));
+
+    private static async Task AssertOpenDmiMatrixLayoutAsync(SupportedDirectionSet directions, int expectedColumns)
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(directions),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.SelectedShellSection.Should().Be(ShellSectionKind.Editor);
+        viewModel.EditorWorkspace.IsAvailable.Should().BeTrue();
+        viewModel.DirectionMatrixColumns.Should().Be(expectedColumns);
+        viewModel.EditorWorkspace.DirectionMatrix.MatrixColumns.Should().Be(expectedColumns);
+        viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Assets);
+        viewModel.EditorWorkspace.LeftRailSummary.Should().Contain("config");
+    }
 
     private sealed class InMemorySettingsRepository(WorkspaceSettings settings) : ISettingsRepository
     {
@@ -472,7 +353,7 @@ public sealed class MainWindowViewModelSmokeTests
             Task.FromResult(Result.Failure<DmiAssetInfo>(Errors.NotFound(path)));
     }
 
-    private sealed class SuccessfulDmiReader : IDmiReader
+    private sealed class SuccessfulDmiReader(SupportedDirectionSet directions) : IDmiReader
     {
         public Task<Result<DmiAssetInfo>> LoadAsync(string path, CancellationToken cancellationToken) =>
             Task.FromResult(
@@ -481,7 +362,7 @@ public sealed class MainWindowViewModelSmokeTests
                         "sprite",
                         path,
                         new SpriteResolution(4, 4),
-                        SupportedDirectionSet.Four,
+                        directions,
                         [new DmiStateInfo("idle", 1), new DmiStateInfo("blink", 1)])));
     }
 

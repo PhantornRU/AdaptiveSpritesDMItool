@@ -93,6 +93,7 @@ public sealed class SessionWorkflowTests
             "output",
             OverwritePolicy.FailIfExists,
             progress,
+            explicitFiles: null,
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -114,6 +115,7 @@ public sealed class SessionWorkflowTests
             "output",
             OverwritePolicy.OverwriteExisting,
             progress: null,
+            explicitFiles: null,
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();

@@ -25,7 +25,7 @@ public partial class WorkspaceShellViewModel
         RefreshWorkspaceState();
         RefreshPreviewSelectionSummary();
         RefreshEditorSurface();
-        NavigateToTab(HasEditorWorkflow ? ShellTabKind.Editor : ShellTabKind.Start);
+        NavigateToSection(HasEditorWorkflow ? ShellSectionKind.Editor : ShellSectionKind.Start);
     }
 
     public async Task PersistWorkspaceSettingsAsync()
@@ -51,6 +51,16 @@ public partial class WorkspaceShellViewModel
 
     private void PersistWorkspaceSettingsInBackground() => _ = PersistWorkspaceSettingsAsync();
 
+    private void EnsureActiveDirection(SpriteDirection direction)
+    {
+        if (SelectedDirection == direction)
+        {
+            return;
+        }
+
+        TryApplySelectedDirection(direction, refreshUi: false);
+    }
+
     public void HandleSourceCellPointerDown(PixelCellViewModel cell)
     {
         ArgumentNullException.ThrowIfNull(cell);
@@ -59,6 +69,8 @@ public partial class WorkspaceShellViewModel
         {
             return;
         }
+
+        EnsureActiveDirection(cell.Direction);
 
         switch (SelectedEditorTool)
         {
@@ -88,6 +100,7 @@ public partial class WorkspaceShellViewModel
     public void HandleSourceCellPointerEnter(PixelCellViewModel cell)
     {
         ArgumentNullException.ThrowIfNull(cell);
+        EnsureActiveDirection(cell.Direction);
         HoverSummary = $"Hovering {cell.Coordinate}.";
 
         if (!_isDraggingSourceArea || _dragAnchor is null)
@@ -103,6 +116,7 @@ public partial class WorkspaceShellViewModel
     public void HandleSourceCellPointerUp(PixelCellViewModel cell)
     {
         ArgumentNullException.ThrowIfNull(cell);
+        EnsureActiveDirection(cell.Direction);
 
         if (!_isDraggingSourceArea || _dragAnchor is null)
         {
@@ -143,6 +157,8 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        EnsureActiveDirection(cell.Direction);
+
         switch (SelectedEditorTool)
         {
             case EditorTool.Single when _selectedSourceCoordinate is { } source:
@@ -161,6 +177,16 @@ public partial class WorkspaceShellViewModel
                 }
                 break;
         }
+    }
+
+    public void HandleBatchSourceSelection(BatchSourceTreeItemViewModel? item)
+    {
+        SelectedBatchSourceItem = item;
+        BatchCurrentFile = item is null
+            ? string.Empty
+            : item.IsDirectory
+                ? item.FullPath
+                : Path.GetFileName(item.FullPath);
     }
 
     [RelayCommand]
@@ -264,7 +290,7 @@ public partial class WorkspaceShellViewModel
         RefreshWorkspaceState();
         RefreshPreviewSelectionSummary();
         RefreshEditorSurface();
-        NavigateToTab(ShellTabKind.Editor);
+        NavigateToSection(ShellSectionKind.Editor);
         RequestAutoPreviewRefresh();
         PersistWorkspaceSettingsInBackground();
     }
@@ -362,7 +388,7 @@ public partial class WorkspaceShellViewModel
 
         if (navigateToEditor)
         {
-            NavigateToTab(ShellTabKind.Editor);
+            NavigateToSection(ShellSectionKind.Editor);
         }
 
         if (_editorSession.CurrentConfig is not null)
@@ -399,7 +425,7 @@ public partial class WorkspaceShellViewModel
 
         if (navigateToEditor)
         {
-            NavigateToTab(ShellTabKind.Editor);
+            NavigateToSection(ShellSectionKind.Editor);
         }
 
         await TryBuildPreviewAsync(userInitiated: false, cancellationToken);
@@ -428,7 +454,7 @@ public partial class WorkspaceShellViewModel
 
         if (navigateToEditor)
         {
-            NavigateToTab(ShellTabKind.Editor);
+            NavigateToSection(ShellSectionKind.Editor);
         }
 
         await TryBuildPreviewAsync(userInitiated: false, cancellationToken);

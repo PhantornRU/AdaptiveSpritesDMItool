@@ -1,6 +1,7 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.ObjectModel;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 
@@ -34,11 +35,35 @@ public enum PreviewDisplayMode
     TextGrid = 5
 }
 
-public sealed partial class PixelCellViewModel(int x, int y) : ObservableObject
+public enum EditorViewportMode
 {
-    public PixelCoordinate Coordinate { get; } = new(x, y);
+    Matrix = 0,
+    Focused = 1
+}
 
-    public string CoordinateText => $"{x},{y}";
+public enum BottomWorkspaceTab
+{
+    Assets = 0,
+    Configs = 1,
+    Mappings = 2,
+    BatchResults = 3
+}
+
+public sealed partial class PixelCellViewModel : ObservableObject
+{
+    public PixelCellViewModel(SpriteDirection direction, int x, int y)
+    {
+        Direction = direction;
+        Coordinate = new PixelCoordinate(x, y);
+        CoordinateText = $"{x},{y}";
+        ToolTip = $"{x},{y}";
+    }
+
+    public SpriteDirection Direction { get; }
+
+    public PixelCoordinate Coordinate { get; }
+
+    public string CoordinateText { get; }
 
     [ObservableProperty]
     private Brush fill = Brushes.WhiteSmoke;
@@ -53,12 +78,32 @@ public sealed partial class PixelCellViewModel(int x, int y) : ObservableObject
     private string caption = string.Empty;
 
     [ObservableProperty]
-    private string toolTip = $"{x},{y}";
+    private string toolTip = string.Empty;
 }
 
 public sealed class PixelRowViewModel(IEnumerable<PixelCellViewModel> cells)
 {
     public IReadOnlyList<PixelCellViewModel> Cells { get; } = cells.ToArray();
+}
+
+public sealed partial class DirectionTileViewModel : ObservableObject
+{
+    public DirectionTileViewModel(SpriteDirection direction)
+    {
+        Direction = direction;
+        Label = direction.ToString();
+    }
+
+    public SpriteDirection Direction { get; }
+
+    public string Label { get; }
+
+    public ObservableCollection<PixelRowViewModel> SourceRows { get; } = [];
+
+    public ObservableCollection<PixelRowViewModel> TargetRows { get; } = [];
+
+    [ObservableProperty]
+    private bool isActive;
 }
 
 public sealed class MappingRowViewModel(PixelMapping mapping)
@@ -83,4 +128,68 @@ public sealed class BatchResultRowViewModel(BatchFileResult result)
     public string OutputPath { get; } = result.OutputPath ?? string.Empty;
 
     public string Message { get; } = result.Message;
+}
+
+public sealed class NavigationRailItemViewModel : ObservableObject
+{
+    private readonly WorkspaceShellViewModel _shell;
+    private readonly Func<bool> _isAvailable;
+
+    public NavigationRailItemViewModel(
+        WorkspaceShellViewModel shell,
+        ShellSectionKind section,
+        string label,
+        string glyph,
+        Func<bool> isAvailable)
+    {
+        _shell = shell;
+        Section = section;
+        Label = label;
+        Glyph = glyph;
+        _isAvailable = isAvailable;
+    }
+
+    public ShellSectionKind Section { get; }
+
+    public string Label { get; }
+
+    public string Glyph { get; }
+
+    public bool IsAvailable => _isAvailable();
+
+    public bool IsSelected => _shell.SelectedShellSection == Section;
+
+    public void Refresh()
+    {
+        OnPropertyChanged(nameof(IsAvailable));
+        OnPropertyChanged(nameof(IsSelected));
+    }
+}
+
+public sealed class EditorCommandBarOptions
+{
+    public static IReadOnlyList<EditorTool> EditorTools { get; } = Enum.GetValues<EditorTool>();
+
+    public static IReadOnlyList<EditorViewportMode> ViewportModes { get; } = Enum.GetValues<EditorViewportMode>();
+}
+
+public sealed record ConfigQueueItemViewModel(string Name, string PathSummary, bool IsActive);
+
+public sealed record BatchStateStripItemViewModel(string Name);
+
+public sealed class BatchSourceTreeItemViewModel(
+    string name,
+    string fullPath,
+    bool isDirectory,
+    IEnumerable<BatchSourceTreeItemViewModel>? children = null)
+{
+    public string Name { get; } = name;
+
+    public string FullPath { get; } = fullPath;
+
+    public bool IsDirectory { get; } = isDirectory;
+
+    public ObservableCollection<BatchSourceTreeItemViewModel> Children { get; } = children is null
+        ? []
+        : new ObservableCollection<BatchSourceTreeItemViewModel>(children);
 }
