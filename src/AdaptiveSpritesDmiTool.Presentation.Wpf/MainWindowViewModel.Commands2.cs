@@ -4,12 +4,18 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
-public partial class MainWindowViewModel
+public partial class WorkspaceShellViewModel
 {
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanBuildPreview))]
     private async Task BuildPreviewAsync()
     {
-        await RunBusyOperationAsync(TryBuildPreviewAsync);
+        if (IsBusy)
+        {
+            StatusMessage = "Wait for the active operation to finish before refreshing preview.";
+            return;
+        }
+
+        await RefreshPreviewNowAsync(userInitiated: true, CancellationToken.None);
     }
 
     [RelayCommand(CanExecute = nameof(CanRunBatch))]
@@ -71,6 +77,7 @@ public partial class MainWindowViewModel
                     $"{failedCount} failed, " +
                     $"{cancelledCount} cancelled.";
                 StatusMessage = BatchSummary;
+                NavigateToTab(ShellTabKind.Batch);
                 await PersistWorkspaceSettingsAsync();
             });
     }
@@ -88,6 +95,7 @@ public partial class MainWindowViewModel
         StatusMessage = "Undo applied.";
         RefreshWorkspaceState();
         RefreshEditorSurface();
+        RequestAutoPreviewRefresh();
     }
 
     [RelayCommand(CanExecute = nameof(CanRedo))]
@@ -103,6 +111,7 @@ public partial class MainWindowViewModel
         StatusMessage = "Redo applied.";
         RefreshWorkspaceState();
         RefreshEditorSurface();
+        RequestAutoPreviewRefresh();
     }
 
     [RelayCommand]
@@ -142,6 +151,7 @@ public partial class MainWindowViewModel
     {
         BaseStateName = stateName;
         RefreshPreviewSelectionSummary();
+        RequestAutoPreviewRefresh();
         PersistWorkspaceSettingsInBackground();
     }
 
@@ -150,6 +160,7 @@ public partial class MainWindowViewModel
     {
         LandmarkStateName = stateName;
         RefreshPreviewSelectionSummary();
+        RequestAutoPreviewRefresh();
         PersistWorkspaceSettingsInBackground();
     }
 
@@ -158,6 +169,17 @@ public partial class MainWindowViewModel
     {
         OverlayStateName = stateName;
         RefreshPreviewSelectionSummary();
+        RequestAutoPreviewRefresh();
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    [RelayCommand]
+    private void ClearOptionalPreviewLayers()
+    {
+        LandmarkStateName = string.Empty;
+        OverlayStateName = string.Empty;
+        RefreshPreviewSelectionSummary();
+        RequestAutoPreviewRefresh();
         PersistWorkspaceSettingsInBackground();
     }
 
@@ -216,6 +238,7 @@ public partial class MainWindowViewModel
                 RefreshWorkspaceState();
                 RefreshPreviewSelectionSummary();
                 RefreshEditorSurface();
+                NavigateToTab(ShellTabKind.Start);
                 await PersistWorkspaceSettingsAsync();
             });
     }
@@ -240,10 +263,22 @@ public partial class MainWindowViewModel
             return;
         }
 
-        TryApplySelectedDirection(value, refreshUi: true);
+        if (TryApplySelectedDirection(value, refreshUi: true))
+        {
+            RequestAutoPreviewRefresh();
+            PersistWorkspaceSettingsInBackground();
+        }
     }
 
     partial void OnSelectedPreviewDisplayModeChanged(PreviewDisplayMode value) => RefreshActivePreviewPresentation();
+
+    partial void OnAutoPreviewModeChanged(AutoPreviewMode value)
+    {
+        if (value == AutoPreviewMode.Enabled)
+        {
+            RequestAutoPreviewRefresh();
+        }
+    }
 
     partial void OnShowGridChanged(bool value) => RefreshEditorSurface();
 

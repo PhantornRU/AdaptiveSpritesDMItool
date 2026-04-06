@@ -10,7 +10,7 @@ using Brushes = System.Windows.Media.Brushes;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
-public partial class MainWindowViewModel
+public partial class WorkspaceShellViewModel
 {
     private static readonly Brush MappedBrush = CreateBrush(Color.FromRgb(198, 224, 206));
     private static readonly Brush TransparentBrush = CreateBrush(Color.FromRgb(245, 210, 197));
@@ -24,6 +24,8 @@ public partial class MainWindowViewModel
     private bool CanEditConfig() => _editorSession.CurrentConfig is not null && !IsBusy;
 
     private bool CanSaveConfig() => CanEditConfig();
+
+    private bool CanBuildPreview() => HasEditorWorkflow && !IsBusy;
 
     private bool CanRunBatch() => CanEditConfig() && !IsBusy;
 
@@ -78,7 +80,7 @@ public partial class MainWindowViewModel
 
         if (_editorSession.LoadedAsset is not null && _editorSession.CurrentConfig is not null && !string.IsNullOrWhiteSpace(BaseStateName))
         {
-            await TryBuildPreviewAsync(CancellationToken.None);
+            await TryBuildPreviewAsync(userInitiated: false, CancellationToken.None);
         }
     }
 
@@ -98,6 +100,7 @@ public partial class MainWindowViewModel
 
     private void ResetWorkspaceCore()
     {
+        _previewRefreshCoordinator.Cancel();
         var result = _startEmptyWorkspaceUseCase.Execute();
         StatusMessage = result.IsSuccess
             ? "Ready. Empty workspace created. No demo assets were loaded."
@@ -133,6 +136,7 @@ public partial class MainWindowViewModel
         IsProgressIndeterminate = false;
         BatchResults.Clear();
         ClearPreviewArtifacts();
+        SelectedShellTab = ShellTabKind.Start;
     }
 
     private async Task RunBusyOperationAsync(Func<CancellationToken, Task> operation)
@@ -144,6 +148,7 @@ public partial class MainWindowViewModel
         }
 
         using var cancellationSource = new CancellationTokenSource();
+        _previewRefreshCoordinator.Cancel();
         _activeOperationCts = cancellationSource;
         IsBusy = true;
         IsProgressIndeterminate = true;
@@ -170,7 +175,28 @@ public partial class MainWindowViewModel
         }
     }
 
-    private async Task TryBuildPreviewAsync(CancellationToken cancellationToken)
+    private async Task RefreshPreviewNowAsync(bool userInitiated, CancellationToken cancellationToken)
+    {
+        await _previewRefreshCoordinator.RefreshNowAsync(token => TryBuildPreviewAsync(userInitiated, token));
+    }
+
+    private void RequestAutoPreviewRefresh()
+    {
+        if (AutoPreviewMode != AutoPreviewMode.Enabled || !CanAttemptPreviewRefresh())
+        {
+            return;
+        }
+
+        _previewRefreshCoordinator.Request(token => TryBuildPreviewAsync(userInitiated: false, token));
+    }
+
+    private bool CanAttemptPreviewRefresh() =>
+        !IsBusy &&
+        _editorSession.LoadedAsset is not null &&
+        _editorSession.CurrentConfig is not null &&
+        !string.IsNullOrWhiteSpace(BaseStateName);
+
+    private async Task TryBuildPreviewAsync(bool userInitiated, CancellationToken cancellationToken)
     {
         if (_editorSession.LoadedAsset is null || _editorSession.CurrentConfig is null)
         {
@@ -179,10 +205,19 @@ public partial class MainWindowViewModel
             return;
         }
 
+        IsPreviewRefreshing = true;
+
+        try
+        {
         var selectionResult = _setPreviewSelectionUseCase.Execute(BaseStateName, LandmarkStateName, OverlayStateName);
         if (selectionResult.IsFailure)
         {
-            StatusMessage = selectionResult.Error.Message;
+            ClearPreviewArtifacts();
+            PreviewSummary = selectionResult.Error.Message;
+            if (userInitiated)
+            {
+                StatusMessage = selectionResult.Error.Message;
+            }
             return;
         }
 
@@ -191,8 +226,12 @@ public partial class MainWindowViewModel
         var result = await _buildPreviewUseCase.ExecuteAsync(cancellationToken);
         if (result.IsFailure)
         {
-            StatusMessage = result.Error.Message;
             ClearPreviewArtifacts();
+            PreviewSummary = result.Error.Message;
+            if (userInitiated)
+            {
+                StatusMessage = result.Error.Message;
+            }
             RefreshActivePreviewPresentation();
             return;
         }
@@ -205,10 +244,34 @@ public partial class MainWindowViewModel
             $"Preview built for direction {direction}. " +
             $"Landmark {(result.Value.LandmarkImage is null ? "missing or not selected" : "available")}, " +
             $"overlay {(result.Value.OverlayImage is null ? "missing or not selected" : "available")}.";
-        StatusMessage = "Preview built successfully.";
+        if (userInitiated)
+        {
+            StatusMessage = "Preview refreshed.";
+        }
         RefreshPreviewSelectionSummary();
         RefreshActivePreviewPresentation();
         RefreshEditorSurface();
+        }
+        catch (OperationCanceledException)
+        {
+            if (userInitiated)
+            {
+                PreviewSummary = "Preview refresh cancelled.";
+            }
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Preview refresh failed.");
+            PreviewSummary = "Preview refresh failed.";
+            if (userInitiated)
+            {
+                StatusMessage = $"Preview refresh failed: {exception.Message}";
+            }
+        }
+        finally
+        {
+            IsPreviewRefreshing = false;
+        }
     }
 
     private void ApplyMappedArea(PixelAreaSelection area, PixelCoordinate targetAnchor, string successMessage)
@@ -393,10 +456,10 @@ public partial class MainWindowViewModel
         }
 
         StatusMessage = successMessage;
-        PreviewSummary = "Config changed. Build preview again to render the updated mappings.";
         NormalizeSelectedDirection();
         RefreshWorkspaceState();
         RefreshEditorSurface();
+        RequestAutoPreviewRefresh();
         PersistWorkspaceSettingsInBackground();
     }
 
@@ -447,6 +510,10 @@ public partial class MainWindowViewModel
             WorkspaceNotes = "Empty workspace first. Open a DMI, create or load a JSON config, then edit mappings through the new MVVM shell.";
         }
 
+        OnPropertyChanged(nameof(HasLoadedAsset));
+        OnPropertyChanged(nameof(HasActiveConfig));
+        OnPropertyChanged(nameof(HasEditorWorkflow));
+        OnPropertyChanged(string.Empty);
         RefreshCommandStates();
     }
 
@@ -456,6 +523,7 @@ public partial class MainWindowViewModel
         PreviewSelectionSummary = string.IsNullOrWhiteSpace(BaseStateName)
             ? $"Direction: {direction}. Base state is not selected yet."
             : $"Direction: {direction}. Base '{BaseStateName}', landmark '{NormalizeOptionalText(LandmarkStateName)}', overlay '{NormalizeOptionalText(OverlayStateName)}'.";
+        OnPropertyChanged(string.Empty);
     }
 
     private void RefreshEditorSurface()
@@ -466,7 +534,10 @@ public partial class MainWindowViewModel
         RebuildPixelRows(TargetRows, ShowOverlay);
         RebuildPreviewGridRows();
         RefreshActivePreviewPresentation();
+        OnPropertyChanged(string.Empty);
     }
+
+    private void NavigateToTab(ShellTabKind tab) => SelectedShellTab = tab;
 
     private SpriteDirection GetSafeSelectedDirection()
     {

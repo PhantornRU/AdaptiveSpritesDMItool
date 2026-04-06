@@ -5,8 +5,15 @@ using System.Windows.Media.Imaging;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
-public partial class MainWindowViewModel
+public partial class WorkspaceShellViewModel
 {
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedTabIndex))]
+    [NotifyPropertyChangedFor(nameof(IsStartSelected))]
+    [NotifyPropertyChangedFor(nameof(IsEditorSelected))]
+    [NotifyPropertyChangedFor(nameof(IsBatchSelected))]
+    private ShellTabKind selectedShellTab = ShellTabKind.Start;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
     private string workspaceTitle = "Empty workspace";
@@ -98,6 +105,9 @@ public partial class MainWindowViewModel
     private bool isBusy;
 
     [ObservableProperty]
+    private bool isPreviewRefreshing;
+
+    [ObservableProperty]
     private bool isProgressIndeterminate;
 
     [ObservableProperty]
@@ -123,6 +133,9 @@ public partial class MainWindowViewModel
 
     [ObservableProperty]
     private PreviewDisplayMode selectedPreviewDisplayMode = PreviewDisplayMode.Composite;
+
+    [ObservableProperty]
+    private AutoPreviewMode autoPreviewMode = AutoPreviewMode.Enabled;
 
     [ObservableProperty]
     private OverwritePolicy selectedOverwritePolicy = OverwritePolicy.SkipExisting;
@@ -156,4 +169,60 @@ public partial class MainWindowViewModel
 
     [ObservableProperty]
     private bool isPreviewTextVisible;
+
+    public int SelectedTabIndex
+    {
+        get => (int)SelectedShellTab;
+        set
+        {
+            if (!Enum.IsDefined(typeof(ShellTabKind), value))
+            {
+                return;
+            }
+
+            SelectedShellTab = (ShellTabKind)value;
+        }
+    }
+
+    public bool HasLoadedAsset => _editorSession.LoadedAsset is not null;
+
+    public bool HasActiveConfig => _editorSession.CurrentConfig is not null;
+
+    public bool HasEditorWorkflow => HasLoadedAsset || HasActiveConfig;
+
+    public bool IsStartSelected
+    {
+        get => SelectedShellTab == ShellTabKind.Start;
+        set
+        {
+            if (value)
+            {
+                SelectedShellTab = ShellTabKind.Start;
+            }
+        }
+    }
+
+    public bool IsEditorSelected
+    {
+        get => SelectedShellTab == ShellTabKind.Editor;
+        set
+        {
+            if (value)
+            {
+                SelectedShellTab = ShellTabKind.Editor;
+            }
+        }
+    }
+
+    public bool IsBatchSelected
+    {
+        get => SelectedShellTab == ShellTabKind.Batch;
+        set
+        {
+            if (value)
+            {
+                SelectedShellTab = ShellTabKind.Batch;
+            }
+        }
+    }
 }

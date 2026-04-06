@@ -7,7 +7,7 @@ using System.Windows.Media.Imaging;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
-public partial class MainWindowViewModel : ObservableObject, IDisposable
+public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
 {
     private readonly StartEmptyWorkspaceUseCase _startEmptyWorkspaceUseCase;
     private readonly CreateConfigUseCase _createConfigUseCase;
@@ -27,8 +27,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly SpriteImageBitmapSourceFactory _bitmapSourceFactory;
     private readonly IFileDialogService _fileDialogService;
     private readonly EditorSession _editorSession;
-    private readonly ILogger<MainWindowViewModel> _logger;
+    private readonly ILogger<WorkspaceShellViewModel> _logger;
     private readonly SemaphoreSlim _workspaceSettingsPersistenceGate = new(1, 1);
+    private readonly PreviewRefreshCoordinator _previewRefreshCoordinator = new(TimeSpan.FromMilliseconds(250));
     private CancellationTokenSource? _activeOperationCts;
     private PixelCoordinate? _selectedSourceCoordinate;
     private PixelCoordinate? _dragAnchor;
@@ -40,7 +41,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private SpriteImage? _overlayImage;
     private SpriteImage? _compositeImage;
 
-    public MainWindowViewModel(
+    public WorkspaceShellViewModel(
         StartEmptyWorkspaceUseCase startEmptyWorkspaceUseCase,
         CreateConfigUseCase createConfigUseCase,
         SaveConfigUseCase saveConfigUseCase,
@@ -59,7 +60,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         SpriteImageBitmapSourceFactory bitmapSourceFactory,
         IFileDialogService fileDialogService,
         EditorSession editorSession,
-        ILogger<MainWindowViewModel> logger)
+        ILogger<WorkspaceShellViewModel> logger)
     {
         _startEmptyWorkspaceUseCase = startEmptyWorkspaceUseCase;
         _createConfigUseCase = createConfigUseCase;
@@ -92,6 +93,16 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         DirectionScopes = Enum.GetValues<DirectionScope>();
         PreviewDisplayModes = Enum.GetValues<PreviewDisplayMode>();
         OverwritePolicies = Enum.GetValues<OverwritePolicy>();
+        StartTab = new StartTabViewModel(this);
+        EditorTab = new EditorTabViewModel(this);
+        BatchTab = new BatchTabViewModel(this);
+        PreviewPanel = new PreviewPanelViewModel(this);
+        StatusBar = new StatusBarViewModel(this);
+        StartTab.Attach();
+        EditorTab.Attach();
+        BatchTab.Attach();
+        PreviewPanel.Attach();
+        StatusBar.Attach();
     }
 
     public string WindowTitle => WorkspaceTitle == "Empty workspace"
@@ -120,8 +131,24 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public IReadOnlyList<OverwritePolicy> OverwritePolicies { get; }
 
+    public StartTabViewModel StartTab { get; }
+
+    public EditorTabViewModel EditorTab { get; }
+
+    public BatchTabViewModel BatchTab { get; }
+
+    public PreviewPanelViewModel PreviewPanel { get; }
+
+    public StatusBarViewModel StatusBar { get; }
+
     public void Dispose()
     {
+        StartTab.Detach();
+        EditorTab.Detach();
+        BatchTab.Detach();
+        PreviewPanel.Detach();
+        StatusBar.Detach();
+        _previewRefreshCoordinator.Dispose();
         _workspaceSettingsPersistenceGate.Dispose();
         GC.SuppressFinalize(this);
     }

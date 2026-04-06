@@ -7,7 +7,7 @@ using Brushes = System.Windows.Media.Brushes;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
-public partial class MainWindowViewModel
+public partial class WorkspaceShellViewModel
 {
     private void RefreshMappingRows()
     {
@@ -149,6 +149,7 @@ public partial class MainWindowViewModel
     {
         CreateConfigCommand.NotifyCanExecuteChanged();
         SaveConfigCommand.NotifyCanExecuteChanged();
+        BuildPreviewCommand.NotifyCanExecuteChanged();
         RunBatchCommand.NotifyCanExecuteChanged();
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();

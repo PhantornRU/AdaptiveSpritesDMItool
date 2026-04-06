@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
-public partial class MainWindowViewModel
+public partial class WorkspaceShellViewModel
 {
     public async Task InitializeAsync()
     {
@@ -25,6 +25,7 @@ public partial class MainWindowViewModel
         RefreshWorkspaceState();
         RefreshPreviewSelectionSummary();
         RefreshEditorSurface();
+        NavigateToTab(HasEditorWorkflow ? ShellTabKind.Editor : ShellTabKind.Start);
     }
 
     public async Task PersistWorkspaceSettingsAsync()
@@ -256,10 +257,19 @@ public partial class MainWindowViewModel
                     : BatchOutputDirectory;
                 NormalizeSelectedDirection();
                 StatusMessage = $"Loaded DMI '{result.Value.DisplayName}' with {result.Value.States.Count} states.";
-                ClearPreviewArtifacts();
                 RefreshWorkspaceState();
                 RefreshPreviewSelectionSummary();
                 RefreshEditorSurface();
+                NavigateToTab(ShellTabKind.Editor);
+                if (_editorSession.CurrentConfig is not null)
+                {
+                    await TryBuildPreviewAsync(userInitiated: false, cancellationToken);
+                }
+                else
+                {
+                    ClearPreviewArtifacts();
+                }
+
                 await PersistWorkspaceSettingsAsync();
             });
     }
@@ -287,6 +297,8 @@ public partial class MainWindowViewModel
         RefreshWorkspaceState();
         RefreshPreviewSelectionSummary();
         RefreshEditorSurface();
+        NavigateToTab(ShellTabKind.Editor);
+        RequestAutoPreviewRefresh();
         PersistWorkspaceSettingsInBackground();
     }
 
@@ -351,7 +363,8 @@ public partial class MainWindowViewModel
                 RefreshWorkspaceState();
                 RefreshPreviewSelectionSummary();
                 RefreshEditorSurface();
-                await TryBuildPreviewAsync(cancellationToken);
+                NavigateToTab(ShellTabKind.Editor);
+                await TryBuildPreviewAsync(userInitiated: false, cancellationToken);
                 await PersistWorkspaceSettingsAsync();
             });
     }
@@ -385,7 +398,8 @@ public partial class MainWindowViewModel
                 RefreshWorkspaceState();
                 RefreshPreviewSelectionSummary();
                 RefreshEditorSurface();
-                await TryBuildPreviewAsync(cancellationToken);
+                NavigateToTab(ShellTabKind.Editor);
+                await TryBuildPreviewAsync(userInitiated: false, cancellationToken);
                 await PersistWorkspaceSettingsAsync();
             });
     }
