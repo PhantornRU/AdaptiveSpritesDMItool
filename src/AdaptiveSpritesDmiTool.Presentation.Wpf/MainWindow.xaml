@@ -125,31 +125,31 @@
             </Setter>
         </Style>
         <Style x:Key="DenseToolbarActionButtonStyle" TargetType="Button">
-            <Setter Property="Padding" Value="10,6" />
-            <Setter Property="MinHeight" Value="34" />
-            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Margin" Value="0,0,4,4" />
         </Style>
         <Style x:Key="EditorToolbarRadioButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource ShellModeRadioButtonStyle}">
-            <Setter Property="Margin" Value="0,0,6,6" />
-            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="Margin" Value="0,0,4,4" />
+            <Setter Property="Padding" Value="8,4" />
             <Setter Property="Background" Value="#FFFDF8" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <DataTemplate x:Key="SourceCellTemplate">
-            <Button Width="10" Height="10" Margin="0.5" Padding="0" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" Content="{Binding Caption}" Foreground="{Binding Foreground}" FontSize="6" ToolTip="{Binding ToolTip}" PreviewMouseLeftButtonDown="SourceCellButton_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="SourceCellButton_PreviewMouseLeftButtonUp" MouseEnter="SourceCellButton_MouseEnter" />
+            <Button Width="10" Height="10" Margin="0.25" Padding="0" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" Content="{Binding Caption}" Foreground="{Binding Foreground}" FontSize="6" ToolTip="{Binding ToolTip}" PreviewMouseLeftButtonDown="SourceCellButton_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="SourceCellButton_PreviewMouseLeftButtonUp" MouseEnter="SourceCellButton_MouseEnter" />
         </DataTemplate>
         <DataTemplate x:Key="TargetCellTemplate">
-            <Button Width="10" Height="10" Margin="0.5" Padding="0" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" Content="{Binding Caption}" Foreground="{Binding Foreground}" FontSize="6" ToolTip="{Binding ToolTip}" PreviewMouseLeftButtonUp="TargetCellButton_PreviewMouseLeftButtonUp" />
+            <Button Width="10" Height="10" Margin="0.25" Padding="0" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" Content="{Binding Caption}" Foreground="{Binding Foreground}" FontSize="6" ToolTip="{Binding ToolTip}" PreviewMouseLeftButtonUp="TargetCellButton_PreviewMouseLeftButtonUp" />
         </DataTemplate>
         <DataTemplate x:Key="PreviewCellTemplate">
-            <Border Width="8" Height="8" Margin="0.5" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" ToolTip="{Binding ToolTip}">
+            <Border Width="8" Height="8" Margin="0.25" Background="{Binding Fill}" BorderBrush="{Binding Border}" BorderThickness="1" ToolTip="{Binding ToolTip}">
                 <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="5" Text="{Binding Caption}" />
             </Border>
         </DataTemplate>
 
         <DataTemplate x:Key="DirectionTileTemplate">
-            <Border Margin="0,0,6,6" Padding="6" Background="#FFFDF8" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
+            <Border Margin="0,0,4,4" Padding="4" Background="#FFFFFCF7" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="10">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Style.Triggers>
@@ -162,14 +162,14 @@
                 </Border.Style>
                 <Grid>
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                    <TextBlock FontWeight="SemiBold" Text="{Binding Label}" />
-                    <Grid Grid.Row="1" Margin="0,6,0,0">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <Border Margin="0,0,3,0" Padding="4" Background="White" CornerRadius="8">
+                    <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding Label}" />
+                    <Grid Grid.Row="1" Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="6" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <Border Padding="3" Background="#FFF7FAFD" BorderBrush="#FFC7D3E4" BorderThickness="1" CornerRadius="7">
                             <Grid>
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                <TextBlock FontSize="11" FontWeight="SemiBold" Text="Source" />
-                                <Viewbox Grid.Row="1" Margin="0,4,0,0" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#FF4D627A" Text="Source" />
+                                <Viewbox Grid.Row="1" Margin="0,3,0,0" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <ItemsControl ItemsSource="{Binding SourceRows}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
@@ -182,11 +182,11 @@
                                 </Viewbox>
                             </Grid>
                         </Border>
-                        <Border Grid.Column="1" Margin="3,0,0,0" Padding="4" Background="White" CornerRadius="8">
+                        <Border Grid.Column="2" Padding="3" Background="#FFFFFAF3" BorderBrush="#FFD9BF9B" BorderThickness="1" CornerRadius="7">
                             <Grid>
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                <TextBlock FontSize="11" FontWeight="SemiBold" Text="Editable" />
-                                <Viewbox Grid.Row="1" Margin="0,4,0,0" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#FF8B5C28" Text="Editable" />
+                                <Viewbox Grid.Row="1" Margin="0,3,0,0" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <ItemsControl ItemsSource="{Binding TargetRows}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
@@ -209,32 +209,25 @@
     </Window.Resources>
 
     <DockPanel Margin="18">
-        <Border DockPanel.Dock="Bottom" Padding="10,8" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="16">
+        <Border DockPanel.Dock="Bottom" Padding="8,6" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
             <Grid DataContext="{Binding OperationalStatusBar}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock VerticalAlignment="Center" Text="{Binding StatusMessage}" />
-                <TextBlock Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding CurrentStateSummary}" />
-                <TextBlock Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ActiveDirection, StringFormat=Direction: {0}}" />
-                <TextBlock Grid.Column="3" Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ActiveTool, StringFormat=Tool: {0}}" />
-                <TextBlock Grid.Column="4" Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding HoverSummary}" />
-                <TextBlock Grid.Column="5" Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding SelectionSummary}" />
-                <TextBlock Grid.Column="6" Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding MappingSummary}" />
-                <StackPanel Grid.Column="7" Orientation="Horizontal" VerticalAlignment="Center" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <TextBlock Margin="0,0,12,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding BatchSummary}" />
-                    <ProgressBar Width="220" Height="10" Margin="0,0,12,0" VerticalAlignment="Center"
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock VerticalAlignment="Center" Text="{Binding StatusMessage}" />
+                    <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding CurrentStateSummary}" />
+                    <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ActiveDirection, StringFormat=Dir {0}}" />
+                    <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding MappingSummary}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding BatchSummary}" />
+                    <ProgressBar Width="180" Height="8" Margin="0,0,10,0" VerticalAlignment="Center"
                                  IsIndeterminate="{Binding IsProgressIndeterminate, Mode=OneWay}"
                                  Maximum="{Binding OperationProgressMaximum, Mode=OneWay}"
                                  Value="{Binding OperationProgressValue, Mode=OneWay}" />
-                    <Button Padding="12,6" Command="{Binding CancelCommand}" Content="Cancel" />
+                    <Button Padding="10,4" Command="{Binding CancelCommand}" Content="Cancel" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -430,49 +423,57 @@
                 </TabItem>
 
                 <TabItem Header="Editor" IsEnabled="{Binding EditorWorkspace.IsAvailable}">
-                    <Grid Margin="8">
+                    <Grid Margin="6">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="250" />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="168" />
-                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="144" />
+                            <ColumnDefinition Width="10" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="8" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="206" />
                         </Grid.ColumnDefinitions>
-                        <Border Grid.Row="0" Grid.Column="0" Padding="12" Background="#FFF9F2" CornerRadius="18" DataContext="{Binding EditorWorkspace}">
+
+                        <Border Grid.Row="0" Grid.Column="0" Padding="10" Background="#FFF9F2" CornerRadius="16" DataContext="{Binding EditorWorkspace}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock FontSize="16" FontWeight="SemiBold" Text="Roles" />
+                                <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding RolesSummary}" />
+                                <Border Grid.Row="2" Margin="0,8,0,0" Padding="8" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="10">
+                                    <StackPanel>
+                                        <TextBlock FontSize="11" FontWeight="SemiBold" Text="Selected state" />
+                                        <TextBlock Margin="0,4,0,0" FontSize="12" Text="{Binding SelectedExplorerState, StringFormat={}{0}}" />
+                                        <TextBlock Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding LeftRailSummary}" />
+                                    </StackPanel>
+                                </Border>
+                                <UniformGrid Grid.Row="3" Margin="0,10,0,0" Columns="2">
+                                    <Button Margin="0,0,4,4" Padding="8,5" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Base" />
+                                    <Button Margin="4,0,0,4" Padding="8,5" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Landmark" />
+                                    <Button Margin="0,4,4,0" Padding="8,5" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Overlay" />
+                                    <Button Margin="4,4,0,0" Padding="8,5" Command="{Binding ClearOptionalPreviewLayersCommand}" Content="Clear" />
+                                </UniformGrid>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Row="0" Grid.Column="2" Padding="10" Background="#FFF9F2" CornerRadius="16">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <StackPanel>
-                                    <TextBlock FontSize="18" FontWeight="SemiBold" Text="States" />
-                                    <TextBlock Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding RolesSummary}" />
-                                </StackPanel>
-                                <TextBlock Grid.Row="1" Margin="0,10,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding LeftRailSummary}" />
-                                <StackPanel Grid.Row="2" Margin="0,12,0,0">
-                                    <TextBlock FontWeight="SemiBold" Text="Available states" />
-                                    <ListBox Margin="0,8,0,0" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" BorderBrush="{StaticResource Brush.PanelBorder}" />
-                                </StackPanel>
-                                <UniformGrid Grid.Row="3" Margin="0,12,0,0" Columns="2">
-                                    <Button Margin="0,0,6,6" Padding="8,6" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Base" />
-                                    <Button Margin="6,0,0,6" Padding="8,6" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Landmark" />
-                                    <Button Margin="0,6,6,0" Padding="8,6" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Overlay" />
-                                    <Button Margin="6,6,0,0" Padding="8,6" Command="{Binding ClearOptionalPreviewLayersCommand}" Content="Clear" />
-                                </UniformGrid>
-                            </Grid>
-                        </Border>
-                        <Border Grid.Row="0" Grid.Column="2" Padding="12" Background="#FFF9F2" CornerRadius="18">
-                            <Grid>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                <StackPanel DataContext="{Binding EditorWorkspace.CommandBar}">
+
+                                <Border Padding="8" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12" DataContext="{Binding EditorWorkspace.CommandBar}">
                                     <WrapPanel>
-                                        <TextBlock Margin="0,6,10,0" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
+                                        <TextBlock Margin="0,4,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
                                         <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Single" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" />
                                         <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Fill" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" />
                                         <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Move" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" />
@@ -480,86 +481,98 @@
                                         <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Delete" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" />
                                         <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Undo" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Undo}" IsChecked="{Binding IsUndoToolSelected, Mode=OneWay}" />
                                         <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Undo Area" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.UndoArea}" IsChecked="{Binding IsUndoAreaToolSelected, Mode=OneWay}" />
-                                        <TextBlock Margin="12,6,10,0" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="States" />
+
+                                        <TextBlock Margin="10,4,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Scope" />
                                         <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Single" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" />
                                         <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Parallel" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" />
                                         <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="All" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" />
-                                        <TextBlock Margin="12,6,10,0" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Display" />
-                                        <CheckBox Margin="0,0,10,6" IsChecked="{Binding MirrorAcrossDirections}" Content="Mirror" />
-                                        <CheckBox Margin="0,0,10,6" IsChecked="{Binding UseCentralizedPropagation}" Content="Centralize" />
-                                        <CheckBox Margin="0,0,10,6" IsChecked="{Binding ShowGrid}" Content="Grid" />
-                                        <CheckBox Margin="0,0,10,6" IsChecked="{Binding GridAboveImage}" Content="Grid Above" />
-                                        <CheckBox Margin="0,0,10,6" IsChecked="{Binding ShowTextGrid}" Content="Text Grid" />
-                                        <CheckBox Margin="0,0,10,6" IsChecked="{Binding ShowOverlay}" Content="Overlay" />
-                                        <TextBlock Margin="12,6,10,0" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Actions" />
+
+                                        <TextBlock Margin="10,4,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="View" />
+                                        <RadioButton GroupName="ViewportMode" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Matrix" Command="{Binding SelectViewportModeCommand}" CommandParameter="{x:Static local:EditorViewportMode.Matrix}" IsChecked="{Binding IsMatrixViewportSelected, Mode=OneWay}" />
+                                        <RadioButton GroupName="ViewportMode" Style="{StaticResource EditorToolbarRadioButtonStyle}" Content="Focused" Command="{Binding SelectViewportModeCommand}" CommandParameter="{x:Static local:EditorViewportMode.Focused}" IsChecked="{Binding IsFocusedViewportSelected, Mode=OneWay}" />
+
+                                        <TextBlock Margin="10,4,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Display" />
+                                        <CheckBox Margin="0,0,8,4" IsChecked="{Binding MirrorAcrossDirections}" Content="Mirror" />
+                                        <CheckBox Margin="0,0,8,4" IsChecked="{Binding UseCentralizedPropagation}" Content="Centralize" />
+                                        <CheckBox Margin="0,0,8,4" IsChecked="{Binding ShowGrid}" Content="Grid" />
+                                        <CheckBox Margin="0,0,8,4" IsChecked="{Binding GridAboveImage}" Content="Grid Above" />
+                                        <CheckBox Margin="0,0,8,4" IsChecked="{Binding ShowTextGrid}" Content="Text Grid" />
+                                        <CheckBox Margin="0,0,8,4" IsChecked="{Binding ShowOverlay}" Content="Overlay" />
+
+                                        <TextBlock Margin="10,4,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Actions" />
                                         <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding UndoCommand}" Content="Undo" />
                                         <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding RedoCommand}" Content="Redo" />
                                         <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding ClearSelectionCommand}" Content="Clear" />
                                     </WrapPanel>
-                                </StackPanel>
-                                <StackPanel Grid.Row="1" Margin="0,4,0,10">
-                                    <TextBlock DataContext="{Binding EditorWorkspace}" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding HoverAndStatusSummary}" />
-                                    <Border Margin="0,8,0,0" Padding="10,8" Background="#FFFDF8" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12" DataContext="{Binding EditorWorkspace.CommandBar}" Visibility="{Binding IsFocusedViewportSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <DockPanel LastChildFill="False">
-                                            <StackPanel DockPanel.Dock="Left" Margin="0,0,12,0">
-                                                <TextBlock FontWeight="SemiBold" Text="Focused mode is experimental" />
-                                                <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="Matrix remains the merge-path editor surface. Use focused mode only as a temporary inspection view." />
-                                            </StackPanel>
-                                            <ComboBox DockPanel.Dock="Right" Width="140" Margin="12,0,0,0" ItemsSource="{Binding AvailableDirections}" SelectedItem="{Binding SelectedDirection}" Visibility="{Binding ShowFocusedDirectionPicker, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                            <Button DockPanel.Dock="Right" Padding="12,6" Command="{Binding SelectViewportModeCommand}" CommandParameter="{x:Static local:EditorViewportMode.Matrix}" Content="Return to Matrix" />
-                                        </DockPanel>
-                                    </Border>
-                                </StackPanel>
-                                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" CanContentScroll="False">
+                                </Border>
+
+                                <Grid Grid.Row="1" Margin="0,6,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock DataContext="{Binding EditorWorkspace}" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding HoverAndStatusSummary}" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" DataContext="{Binding EditorWorkspace.CommandBar}" Visibility="{Binding IsFocusedViewportSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="Focused view" />
+                                        <ComboBox Width="120" Margin="0,0,6,0" ItemsSource="{Binding AvailableDirections}" SelectedItem="{Binding SelectedDirection}" Visibility="{Binding ShowFocusedDirectionPicker, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                        <Button Padding="10,4" Command="{Binding SelectViewportModeCommand}" CommandParameter="{x:Static local:EditorViewportMode.Matrix}" Content="Matrix" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Grid.Row="2" Padding="6" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12" ClipToBounds="True">
                                     <Grid DataContext="{Binding EditorWorkspace.DirectionMatrix}">
                                         <Grid Visibility="{Binding IsMatrixMode, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                            <ItemsControl ItemsSource="{Binding Tiles}">
-                                                <ItemsControl.Style>
-                                                    <Style TargetType="ItemsControl">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding MatrixColumns}" Value="2">
-                                                                <Setter Property="Visibility" Value="Visible" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </ItemsControl.Style>
-                                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                                                <ItemsControl.ItemTemplate><StaticResource ResourceKey="DirectionTileTemplate" /></ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                            <ItemsControl ItemsSource="{Binding Tiles}">
-                                                <ItemsControl.Style>
-                                                    <Style TargetType="ItemsControl">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding MatrixColumns}" Value="4">
-                                                                <Setter Property="Visibility" Value="Visible" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </ItemsControl.Style>
-                                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                                                <ItemsControl.ItemTemplate><StaticResource ResourceKey="DirectionTileTemplate" /></ItemsControl.ItemTemplate>
-                                            </ItemsControl>
+                                            <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                                <Grid>
+                                                    <ItemsControl ItemsSource="{Binding Tiles}">
+                                                        <ItemsControl.Style>
+                                                            <Style TargetType="ItemsControl">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding MatrixColumns}" Value="2">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </ItemsControl.Style>
+                                                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate><StaticResource ResourceKey="DirectionTileTemplate" /></ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <ItemsControl ItemsSource="{Binding Tiles}">
+                                                        <ItemsControl.Style>
+                                                            <Style TargetType="ItemsControl">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding MatrixColumns}" Value="4">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </ItemsControl.Style>
+                                                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate><StaticResource ResourceKey="DirectionTileTemplate" /></ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Grid>
+                                            </Viewbox>
                                         </Grid>
                                         <Grid Visibility="{Binding IsFocusedMode, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                            <Border Margin="0,0,6,0" Padding="10" Background="White" CornerRadius="14">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <Border Padding="8" Background="#FFF7FAFD" BorderBrush="#FFC7D3E4" BorderThickness="1" CornerRadius="10">
                                                 <Grid>
                                                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Source" />
-                                                    <Viewbox Grid.Row="1" Margin="0,10,0,0" Stretch="Uniform" StretchDirection="DownOnly">
+                                                    <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#FF4D627A" Text="Source" />
+                                                    <Viewbox Grid.Row="1" Margin="0,8,0,0" Stretch="Uniform" StretchDirection="DownOnly">
                                                         <ItemsControl ItemsSource="{Binding DataContext.SourceRows, RelativeSource={RelativeSource AncestorType=Window}}">
                                                             <ItemsControl.ItemTemplate><DataTemplate><ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource SourceCellTemplate}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl></DataTemplate></ItemsControl.ItemTemplate>
                                                         </ItemsControl>
                                                     </Viewbox>
                                                 </Grid>
                                             </Border>
-                                            <Border Grid.Column="1" Margin="6,0,0,0" Padding="10" Background="White" CornerRadius="14">
+                                            <Border Grid.Column="2" Padding="8" Background="#FFFFFAF3" BorderBrush="#FFD9BF9B" BorderThickness="1" CornerRadius="10">
                                                 <Grid>
                                                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Editable" />
-                                                    <Viewbox Grid.Row="1" Margin="0,10,0,0" Stretch="Uniform" StretchDirection="DownOnly">
+                                                    <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#FF8B5C28" Text="Editable" />
+                                                    <Viewbox Grid.Row="1" Margin="0,8,0,0" Stretch="Uniform" StretchDirection="DownOnly">
                                                         <ItemsControl ItemsSource="{Binding DataContext.TargetRows, RelativeSource={RelativeSource AncestorType=Window}}">
                                                             <ItemsControl.ItemTemplate><DataTemplate><ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource TargetCellTemplate}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl></DataTemplate></ItemsControl.ItemTemplate>
                                                         </ItemsControl>
@@ -568,31 +581,30 @@
                                             </Border>
                                         </Grid>
                                     </Grid>
-                                </ScrollViewer>
+                                </Border>
                             </Grid>
                         </Border>
 
-                        <Expander Grid.Row="0" Grid.Column="4" DataContext="{Binding PreviewPanel}" IsExpanded="{Binding IsExpanded, Mode=TwoWay}">
-                            <Expander.Header>
+                        <Border Grid.Row="0" Grid.Column="4" Padding="10" Background="#FFF9F2" CornerRadius="16" DataContext="{Binding PreviewPanel}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
                                 <StackPanel>
-                                    <TextBlock FontWeight="SemiBold" Text="Preview" />
-                                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding PreviewSelectionSummary}" />
+                                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Preview" />
+                                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding PreviewSelectionSummary}" />
                                 </StackPanel>
-                            </Expander.Header>
-                            <Border Width="188" Margin="0,8,0,0" Padding="12" Background="#FFF9F2" CornerRadius="18">
-                                <Grid>
-                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                <Grid Grid.Row="1" Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <ComboBox ItemsSource="{Binding PreviewDisplayModes}" SelectedItem="{Binding SelectedPreviewDisplayMode}" />
+                                    <Button Grid.Column="1" Margin="8,0,0,0" Padding="10,4" Command="{Binding BuildPreviewCommand}" Content="Refresh" />
+                                </Grid>
+                                <Border Grid.Row="2" Margin="0,8,0,0" Padding="6" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
                                     <Grid>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <ComboBox ItemsSource="{Binding PreviewDisplayModes}" SelectedItem="{Binding SelectedPreviewDisplayMode}" />
-                                        <Button Grid.Column="1" Margin="10,0,0,0" Padding="12,6" Command="{Binding BuildPreviewCommand}" Content="Refresh" />
-                                    </Grid>
-                                    <StackPanel Grid.Row="1" Margin="0,8,0,0">
-                                        <CheckBox IsChecked="{Binding IsAutoPreviewEnabled}" Content="Auto refresh preview" />
-                                        <TextBlock Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding PreviewSummary}" />
-                                    </StackPanel>
-                                    <Grid Grid.Row="2" Margin="0,12,0,0">
-                                        <Border Visibility="{Binding IsPreviewImageVisible, Converter={StaticResource BooleanToVisibilityConverter}}" CornerRadius="14" Background="White">
+                                        <Border Visibility="{Binding IsPreviewImageVisible, Converter={StaticResource BooleanToVisibilityConverter}}" CornerRadius="10" Background="White">
                                             <Image Source="{Binding CurrentPreviewImage}"
                                                    Stretch="Uniform"
                                                    SnapsToDevicePixels="True"
@@ -612,87 +624,105 @@
                                         </Viewbox>
                                         <TextBox Visibility="{Binding IsPreviewTextVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Background="White" BorderThickness="0" FontFamily="Consolas" FontSize="12" IsReadOnly="True" Text="{Binding PreviewTextGrid, Mode=OneWay}" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" />
                                     </Grid>
-                                </Grid>
-                            </Border>
-                        </Expander>
+                                </Border>
+                                <StackPanel Grid.Row="3" Margin="0,8,0,0">
+                                    <CheckBox IsChecked="{Binding IsAutoPreviewEnabled}" Content="Auto refresh" />
+                                    <TextBlock Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding PreviewSummary}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
 
-                        <Expander Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Margin="0,10,0,0" Header="Workspace panels" IsExpanded="{Binding BottomWorkspace.IsExpanded}">
-                            <Border MinHeight="250" Padding="10" Background="#FFF9F2" CornerRadius="16">
-                                <Grid>
-                                    <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="1.2*" /></Grid.ColumnDefinitions>
-                                    <Border Grid.Row="0" Grid.Column="0" Margin="0,0,10,0" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding EditorWorkspace}">
+                        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Padding="10" Background="#FFF9F2" CornerRadius="16">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <StackPanel>
+                                    <TextBlock FontWeight="SemiBold" Text="Workspace" />
+                                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="States, config, and mappings stay visible while you edit the matrix." />
+                                </StackPanel>
+                                <Grid Grid.Row="1" Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="1.05*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="0.95*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="1.2*" /></Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding EditorWorkspace}">
                                         <Grid>
                                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                            <TextBlock FontWeight="SemiBold" Text="States and preview selection" />
-                                            <ListBox Grid.Row="1" Margin="0,8,0,0" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" />
-                                            <Border Grid.Row="2" Margin="0,10,0,0" Padding="10" Background="#FFF9F2" CornerRadius="10" DataContext="{Binding DataContext.PreviewPanel, RelativeSource={RelativeSource AncestorType=Window}}">
-                                                <StackPanel>
-                                                    <TextBlock FontWeight="SemiBold" Text="Preview selection" />
-                                                    <TextBlock Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding PreviewSelectionSummary}" />
-                                                    <TextBlock Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding PreviewSummary}" />
-                                                </StackPanel>
-                                            </Border>
-                                            <TextBlock Grid.Row="3" Margin="0,10,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding SelectionSummary}" />
+                                            <TextBlock FontWeight="SemiBold" Text="States" />
+                                            <ListBox Grid.Row="1" Margin="0,8,0,0" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" BorderBrush="{StaticResource Brush.PanelBorder}" />
+                                            <UniformGrid Grid.Row="2" Margin="0,8,0,0" Columns="2">
+                                                <Button Margin="0,0,4,4" Padding="8,5" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Base" />
+                                                <Button Margin="4,0,0,4" Padding="8,5" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Landmark" />
+                                                <Button Margin="0,4,4,0" Padding="8,5" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Overlay" />
+                                                <Button Margin="4,4,0,0" Padding="8,5" Command="{Binding ClearOptionalPreviewLayersCommand}" Content="Clear" />
+                                            </UniformGrid>
+                                            <StackPanel Grid.Row="3" Margin="0,8,0,0">
+                                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding RolesSummary}" />
+                                                <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding SelectionSummary}" />
+                                            </StackPanel>
                                         </Grid>
                                     </Border>
-                                    <Border Grid.Row="0" Grid.Column="1" Margin="0,0,10,0" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding ConfigWorkspace}">
+
+                                    <Border Grid.Column="2" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding ConfigWorkspace}">
                                         <Grid>
                                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                                             <DockPanel>
-                                                <TextBlock FontWeight="SemiBold" Text="Config workspace" />
+                                                <TextBlock FontWeight="SemiBold" Text="Config" />
                                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                                     <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding CreateConfigCommand}" Content="New" />
                                                     <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding LoadConfigCommand}" Content="Load" />
                                                     <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding SaveConfigCommand}" Content="Save" />
                                                 </StackPanel>
                                             </DockPanel>
-                                            <TextBlock Grid.Row="1" Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding ActiveConfigSummary}" />
-                                            <ListBox Grid.Row="2" Margin="0,10,0,0" ItemsSource="{Binding Items}">
+                                            <TextBlock Grid.Row="1" Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" TextWrapping="Wrap" Text="{Binding ActiveConfigSummary}" />
+                                            <ListBox Grid.Row="2" Margin="0,8,0,0" ItemsSource="{Binding Items}">
                                                 <ListBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Margin="0,0,0,8">
                                                             <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
-                                                            <TextBlock Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" Text="{Binding PathSummary}" />
+                                                            <TextBlock Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" Text="{Binding PathSummary}" />
                                                         </StackPanel>
                                                     </DataTemplate>
                                                 </ListBox.ItemTemplate>
                                             </ListBox>
                                         </Grid>
                                     </Border>
-                                    <Border Grid.Row="0" Grid.Column="2" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding BottomWorkspace}">
+
+                                    <Border Grid.Column="4" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding BottomWorkspace}">
                                         <Grid>
                                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                                             <TextBlock FontWeight="SemiBold" Text="Mappings" />
-                                            <DataGrid Grid.Row="1" Margin="0,10,0,0" ItemsSource="{Binding MappingRows}" SelectedItem="{Binding SelectedMapping}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
+                                            <DataGrid Grid.Row="1" Margin="0,8,0,0" ItemsSource="{Binding MappingRows}" SelectedItem="{Binding SelectedMapping}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="Source" Binding="{Binding SourceText}" Width="*" />
                                                     <DataGridTextColumn Header="Target" Binding="{Binding TargetText}" Width="*" />
                                                 </DataGrid.Columns>
                                             </DataGrid>
-                                            <DockPanel Grid.Row="2" Margin="0,10,0,0" LastChildFill="False">
-                                                <TextBlock VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding MappingSummary}" />
-                                                <Button DockPanel.Dock="Right" Padding="12,6" Command="{Binding RemoveSelectedMappingCommand}" Content="Remove Selected Mapping" />
+                                            <DockPanel Grid.Row="2" Margin="0,8,0,0" LastChildFill="False">
+                                                <TextBlock VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" Text="{Binding MappingSummary}" />
+                                                <Button DockPanel.Dock="Right" Padding="10,4" Command="{Binding RemoveSelectedMappingCommand}" Content="Remove selected" />
                                             </DockPanel>
                                         </Grid>
                                     </Border>
-                                    <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,10,0,0" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding BottomWorkspace}" Visibility="{Binding HasBatchResults, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <Grid MinHeight="120" MaxHeight="180">
-                                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                            <TextBlock FontWeight="SemiBold" Text="Batch results" />
-                                            <DataGrid Grid.Row="1" Margin="0,10,0,0" ItemsSource="{Binding BatchResults}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
-                                                <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110" />
-                                                    <DataGridTextColumn Header="Input" Binding="{Binding InputPath}" Width="*" />
-                                                    <DataGridTextColumn Header="Output" Binding="{Binding OutputPath}" Width="*" />
-                                                    <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="1.25*" />
-                                                </DataGrid.Columns>
-                                            </DataGrid>
-                                        </Grid>
-                                    </Border>
                                 </Grid>
-                            </Border>
-                        </Expander>
+
+                                <Border Grid.Row="2" Margin="0,8,0,0" Padding="10" Background="White" CornerRadius="12" DataContext="{Binding BottomWorkspace}" Visibility="{Binding HasBatchResults, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Grid MinHeight="100" MaxHeight="140">
+                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                        <TextBlock FontWeight="SemiBold" Text="Batch results" />
+                                        <DataGrid Grid.Row="1" Margin="0,8,0,0" ItemsSource="{Binding BatchResults}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110" />
+                                                <DataGridTextColumn Header="Input" Binding="{Binding InputPath}" Width="*" />
+                                                <DataGridTextColumn Header="Output" Binding="{Binding OutputPath}" Width="*" />
+                                                <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="1.25*" />
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </Border>
                     </Grid>
                 </TabItem>
 

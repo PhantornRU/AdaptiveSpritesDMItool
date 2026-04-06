@@ -366,15 +366,14 @@ public partial class WorkspaceShellViewModel
 
         SelectedEditorViewportMode = mode;
         StatusMessage = mode == EditorViewportMode.Matrix
-            ? "Matrix editor mode activated."
-            : "Focused editor mode activated.";
+            ? "Matrix view active."
+            : "Focused inspection view active.";
     }
 
     [RelayCommand]
     private void SelectBottomWorkspaceTab(BottomWorkspaceTab tab)
     {
         SelectedBottomWorkspaceTab = tab;
-        IsBottomWorkspaceExpanded = true;
     }
 
     [RelayCommand]

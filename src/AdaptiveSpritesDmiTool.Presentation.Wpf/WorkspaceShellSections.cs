@@ -347,7 +347,7 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public string ConfigSummary => Shell.ConfigSummary;
 
     public string RolesSummary =>
-        $"{BaseStateSummary}  {LandmarkStateSummary}  {OverlayStateSummary}";
+        $"{BaseStateSummary} • {LandmarkStateSummary} • {OverlayStateSummary}";
 
     public string BaseStateSummary => string.IsNullOrWhiteSpace(Shell.BaseStateName) ? "Base: not selected" : $"Base: {Shell.BaseStateName}";
 
@@ -356,10 +356,10 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public string OverlayStateSummary => string.IsNullOrWhiteSpace(Shell.OverlayStateName) ? "Overlay: none" : $"Overlay: {Shell.OverlayStateName}";
 
     public string LeftRailSummary => Shell.HasActiveConfig
-        ? Shell.ConfigSummary
-        : "No config yet. Load JSON, import CSV, or create a fresh config from Start.";
+        ? $"Config: {Shell.ConfigSummary}"
+        : "Load or create a config to edit mappings.";
 
-    public string HoverAndStatusSummary => $"{Shell.EditorStatus}  {Shell.HoverSummary}";
+    public string HoverAndStatusSummary => $"{Shell.SelectedSourceSummary}  {Shell.SelectedAreaSummary}";
 
     public string SelectionSummary => $"{Shell.SelectedSourceSummary}  {Shell.SelectedAreaSummary}";
 
@@ -420,7 +420,7 @@ public sealed class BottomWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public ObservableCollection<BatchResultRowViewModel> BatchResults => Shell.BatchResults;
 
     public string MappingSummary => Shell.MappingRows.Count == 0
-        ? "No mappings captured yet."
+        ? "No mappings yet."
         : $"{Shell.MappingRows.Count} mapping(s) in the active direction.";
 
     public bool HasBatchResults => Shell.BatchResults.Count > 0;
@@ -573,7 +573,7 @@ public sealed class OperationalStatusBarViewModel(WorkspaceShellViewModel shell)
 
     public string SelectionSummary => $"{Shell.SelectedSourceSummary} | {Shell.SelectedAreaSummary}";
 
-    public string MappingSummary => Shell.MappingRows.Count == 0 ? "Mappings: 0" : $"Mappings: {Shell.MappingRows.Count}";
+    public string MappingSummary => Shell.MappingRows.Count == 0 ? "Mappings 0" : $"Mappings {Shell.MappingRows.Count}";
 
     public string BatchSummary => Shell.BatchSummary;
 

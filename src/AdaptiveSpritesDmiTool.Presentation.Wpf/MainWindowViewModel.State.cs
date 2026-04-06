@@ -27,10 +27,10 @@ public partial class WorkspaceShellViewModel
 
     [ObservableProperty]
     private string workspaceNotes =
-        "Empty workspace first. Open a DMI, create or load a JSON config, then edit mappings through the MVVM shell.";
+        "Open a DMI, create or load a config, then edit mappings directly in the matrix.";
 
     [ObservableProperty]
-    private string statusMessage = "Ready. Empty workspace created. No demo assets were loaded.";
+    private string statusMessage = "Ready.";
 
     [ObservableProperty]
     private string currentDirectionText = SpriteDirection.South.ToString();
@@ -39,22 +39,22 @@ public partial class WorkspaceShellViewModel
     private string currentStateSummary = "No DMI state selected yet.";
 
     [ObservableProperty]
-    private string editorStatus = "Select a source pixel or drag an area to begin editing.";
+    private string editorStatus = "Edit mappings directly in the matrix.";
 
     [ObservableProperty]
-    private string selectedSourceSummary = "No source pixel selected.";
+    private string selectedSourceSummary = "Source: none selected.";
 
     [ObservableProperty]
-    private string selectedAreaSummary = "No area selected.";
+    private string selectedAreaSummary = "Area: none selected.";
 
     [ObservableProperty]
-    private string hoverSummary = "Hover a cell to inspect coordinates.";
+    private string hoverSummary = "Hover to inspect coordinates.";
 
     [ObservableProperty]
-    private string previewSelectionSummary = "Preview selection is not staged yet.";
+    private string previewSelectionSummary = "Preview follows the current base, landmark, and overlay states.";
 
     [ObservableProperty]
-    private string previewSummary = "Build a preview to render the selected base, landmark, and overlay states.";
+    private string previewSummary = "Preview becomes available after loading a sprite and config.";
 
     [ObservableProperty]
     private string previewTextGrid = "No config grid is available yet.";
@@ -152,10 +152,10 @@ public partial class WorkspaceShellViewModel
     private BottomWorkspaceTab selectedBottomWorkspaceTab = BottomWorkspaceTab.Assets;
 
     [ObservableProperty]
-    private bool isBottomWorkspaceExpanded;
+    private bool isBottomWorkspaceExpanded = true;
 
     [ObservableProperty]
-    private bool isPreviewInspectorExpanded = true;
+    private bool isPreviewInspectorExpanded;
 
     [ObservableProperty]
     private bool mirrorAcrossDirections;

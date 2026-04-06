@@ -110,7 +110,7 @@ public partial class WorkspaceShellViewModel
         _previewRefreshCoordinator.Cancel();
         var result = _startEmptyWorkspaceUseCase.Execute();
         StatusMessage = result.IsSuccess
-            ? "Ready. Empty workspace created. No demo assets were loaded."
+            ? "Ready."
             : result.Error.Message;
 
         _selectedSourceCoordinate = null;
@@ -130,10 +130,10 @@ public partial class WorkspaceShellViewModel
         LandmarkStateName = string.Empty;
         OverlayStateName = string.Empty;
         CurrentStateSummary = "No DMI state selected yet.";
-        EditorStatus = "Select a source pixel or drag an area to begin editing.";
-        SelectedSourceSummary = "No source pixel selected.";
-        SelectedAreaSummary = "No area selected.";
-        HoverSummary = "Hover a cell to inspect coordinates.";
+        EditorStatus = "Edit mappings directly in the matrix.";
+        SelectedSourceSummary = "Source: none selected.";
+        SelectedAreaSummary = "Area: none selected.";
+        HoverSummary = "Hover to inspect coordinates.";
         BatchSummary = "Batch processing is idle.";
         BatchCurrentFile = string.Empty;
         BatchProcessedFiles = 0;
@@ -144,7 +144,7 @@ public partial class WorkspaceShellViewModel
         SelectedEditorViewportMode = EditorViewportMode.Matrix;
         SelectedBottomWorkspaceTab = BottomWorkspaceTab.Assets;
         IsBottomWorkspaceExpanded = true;
-        IsPreviewInspectorExpanded = true;
+        IsPreviewInspectorExpanded = false;
         SelectedBatchSourceItem = null;
         FocusedDirectionTile = null;
         DirectionMatrixColumns = 2;
@@ -516,8 +516,8 @@ public partial class WorkspaceShellViewModel
         {
             SpriteContractSummary = $"{asset.Resolution} | {asset.SupportedDirections} directions | {asset.States.Count} states";
             CurrentStateSummary = string.IsNullOrWhiteSpace(BaseStateName)
-                ? "Choose a base state from the explorer or type a name."
-                : $"Base '{BaseStateName}', landmark '{NormalizeOptionalText(LandmarkStateName)}', overlay '{NormalizeOptionalText(OverlayStateName)}'.";
+                ? "Base state not selected."
+                : $"Base {BaseStateName} | Landmark {NormalizeOptionalText(LandmarkStateName)} | Overlay {NormalizeOptionalText(OverlayStateName)}";
         }
         else
         {
@@ -532,12 +532,12 @@ public partial class WorkspaceShellViewModel
                 ? "unsaved draft"
                 : Path.GetFileName(_editorSession.CurrentConfigPath);
             ConfigSummary = $"{config.Name} | {mappingCount} mappings | {storageLabel}";
-            WorkspaceNotes = "Editor workflow is active. Use the direction matrix, direct toolbar, and lower workspace panels.";
+            WorkspaceNotes = "Editor workflow is active. Keep the matrix centered and use the lower panels while editing.";
         }
         else
         {
             ConfigSummary = "No config loaded";
-            WorkspaceNotes = "Open a DMI, create or load a JSON config, then move into the editor.";
+            WorkspaceNotes = "Open a DMI, create or load a config, then move into the editor.";
         }
 
         RefreshConfigQueueItems();
@@ -554,8 +554,8 @@ public partial class WorkspaceShellViewModel
     {
         var direction = GetSafeSelectedDirection();
         PreviewSelectionSummary = string.IsNullOrWhiteSpace(BaseStateName)
-            ? $"Direction: {direction}. Base state is not selected yet."
-            : $"Direction: {direction}. Base '{BaseStateName}', landmark '{NormalizeOptionalText(LandmarkStateName)}', overlay '{NormalizeOptionalText(OverlayStateName)}'.";
+            ? $"Dir {direction}. Base state not selected."
+            : $"Dir {direction}. Base {BaseStateName} | Landmark {NormalizeOptionalText(LandmarkStateName)} | Overlay {NormalizeOptionalText(OverlayStateName)}";
         OnPropertyChanged(string.Empty);
     }
 

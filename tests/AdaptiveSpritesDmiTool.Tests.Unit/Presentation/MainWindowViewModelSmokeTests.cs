@@ -21,6 +21,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.NavigationRail.SelectedSection.Should().Be(ShellSectionKind.Start);
         viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
         viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Assets);
+        viewModel.StatusMessage.Should().Be("Ready.");
         viewModel.NavigationRail.Items.Should().HaveCount(4);
         viewModel.EditorWorkspace.IsAvailable.Should().BeFalse();
         viewModel.BatchWorkspace.IsAvailable.Should().BeFalse();
