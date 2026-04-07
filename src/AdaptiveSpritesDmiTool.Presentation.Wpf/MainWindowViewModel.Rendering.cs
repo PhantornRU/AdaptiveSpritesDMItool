@@ -3,6 +3,7 @@ using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Media.Imaging;
@@ -160,6 +161,7 @@ public partial class WorkspaceShellViewModel
         SelectedAreaBounds = null;
         ActiveSourceSurface = null;
         ActiveTargetSurface = null;
+        InvalidateNavigatorSnapshotCache();
         BatchResults.Clear();
         ConfigQueueItems.Clear();
         BatchStateStripItems.Clear();
@@ -271,6 +273,7 @@ public partial class WorkspaceShellViewModel
         _landmarkImage = result.Value.LandmarkImage;
         _overlayImage = result.Value.OverlayImage;
         _compositeImage = result.Value.CompositeImage;
+        InvalidateNavigatorSnapshotCache();
         PreviewSummary =
             $"Preview built for direction {direction}. " +
             $"Landmark {(result.Value.LandmarkImage is null ? "missing or not selected" : "available")}, " +
@@ -488,6 +491,7 @@ public partial class WorkspaceShellViewModel
 
         StatusMessage = successMessage;
         NormalizeSelectedDirection();
+        InvalidateNavigatorSnapshotCache();
         RefreshWorkspaceState();
         RefreshEditorSurface();
         RequestAutoPreviewRefresh();
@@ -606,6 +610,19 @@ public partial class WorkspaceShellViewModel
 
     private BitmapSource? BuildNavigatorPreviewImage(SpriteDirection direction)
     {
+        var cacheKey = (direction, ShowOverlay, NavigatorSnapshotVersion);
+        if (NavigatorSnapshotCache.TryGetValue(cacheKey, out var cached))
+        {
+#if DEBUG
+            Debug.WriteLine($"[NavigatorSnapshotCache] HIT direction={direction} overlay={ShowOverlay} version={NavigatorSnapshotVersion}");
+#endif
+            return cached;
+        }
+
+#if DEBUG
+        Debug.WriteLine($"[NavigatorSnapshotCache] MISS direction={direction} overlay={ShowOverlay} version={NavigatorSnapshotVersion}");
+#endif
+
         var surface = BuildEditorSurfaceRenderState(direction, useCompositeImage: ShowOverlay);
         if (surface is null)
         {
@@ -628,7 +645,18 @@ public partial class WorkspaceShellViewModel
 
         var bitmap = BitmapSource.Create(surface.Width, surface.Height, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, pixels, surface.Width * 4);
         bitmap.Freeze();
+        NavigatorSnapshotCache[cacheKey] = bitmap;
         return bitmap;
+    }
+
+    private void InvalidateNavigatorSnapshotCache()
+    {
+        NavigatorSnapshotVersion++;
+        NavigatorSnapshotCache.Clear();
+
+#if DEBUG
+        Debug.WriteLine($"[NavigatorSnapshotCache] INVALIDATE version={NavigatorSnapshotVersion}");
+#endif
     }
 
     public void NavigateToSection(ShellSectionKind section)

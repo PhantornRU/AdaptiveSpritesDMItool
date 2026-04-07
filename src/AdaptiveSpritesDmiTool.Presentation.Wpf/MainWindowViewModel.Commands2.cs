@@ -451,6 +451,7 @@ public partial class WorkspaceShellViewModel
 
     partial void OnShowOverlayChanged(bool value)
     {
+        InvalidateNavigatorSnapshotCache();
         RefreshEditorSurface();
         RefreshActivePreviewPresentation();
     }

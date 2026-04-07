@@ -223,7 +223,12 @@ public partial class WorkspaceShellViewModel
     [ObservableProperty]
     private int directionNavigatorColumns = 2;
 
+    [ObservableProperty]
+    private int navigatorSnapshotVersion;
+
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems { get; } = [];
+
+    internal Dictionary<(SpriteDirection Direction, bool ShowOverlay, int Version), BitmapSource> NavigatorSnapshotCache { get; } = [];
 
     public double MinEditorZoom => _minEditorZoom;
 
