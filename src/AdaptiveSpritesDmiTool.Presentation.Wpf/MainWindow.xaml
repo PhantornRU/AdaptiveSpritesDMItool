@@ -226,9 +226,12 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="ViewModeToggleRadioButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource EditorToolbarRadioButtonStyle}">
+        <Style x:Key="ViewModeToggleRadioButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource ShellModeRadioButtonStyle}">
             <Setter Property="Padding" Value="8,4" />
             <Setter Property="MinWidth" Value="52" />
+            <Setter Property="Background" Value="#FFFDF8" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style x:Key="ViewportShellBorderStyle" TargetType="Border">
             <Setter Property="Padding" Value="4" />
