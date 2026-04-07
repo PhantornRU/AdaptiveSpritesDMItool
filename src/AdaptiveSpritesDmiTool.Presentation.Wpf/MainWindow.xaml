@@ -575,7 +575,6 @@
                                     <TextBlock Grid.Column="1" Margin="8,0,6,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ActiveEditorZoomLabel}" />
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                         <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Margin="0,0,4,0" Command="{Binding ResetEditorZoomCommand}" Content="100%" MinWidth="46" />
-                                        <Button Style="{StaticResource DenseToolbarActionButtonStyle}" DataContext="{Binding CommandBar}" Command="{Binding SelectViewportModeCommand}" CommandParameter="{x:Static local:EditorViewportMode.Focused}" Content="Focused" MinWidth="58" />
                                     </StackPanel>
                                 </Grid>
                             </Grid>
@@ -623,24 +622,17 @@
                                             </Grid.RowDefinitions>
                                             <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#FF4D627A" Text="Source" />
                                             <ScrollViewer Grid.Row="1" Margin="0,4,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" PreviewMouseWheel="EditorSurfaceHost_PreviewMouseWheel">
-                                                <Border HorizontalAlignment="Left" VerticalAlignment="Top">
-                                                    <Border.LayoutTransform>
-                                                        <ScaleTransform ScaleX="{Binding ActiveEditorZoom}" ScaleY="{Binding ActiveEditorZoom}" />
-                                                    </Border.LayoutTransform>
-                                                    <ItemsControl ItemsSource="{Binding DataContext.SourceRows, RelativeSource={RelativeSource AncestorType=Window}}">
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource SourceCellTemplate}">
-                                                                    <ItemsControl.ItemsPanel>
-                                                                        <ItemsPanelTemplate>
-                                                                            <StackPanel Orientation="Horizontal" />
-                                                                        </ItemsPanelTemplate>
-                                                                    </ItemsControl.ItemsPanel>
-                                                                </ItemsControl>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </Border>
+                                                <local:EditorSurfaceControl Surface="{Binding ActiveSourceSurface}"
+                                                                           Zoom="{Binding ActiveEditorZoom}"
+                                                                           ShowGrid="{Binding ShowGrid}"
+                                                                           ShowCaptions="{Binding ShowGridCaptions}"
+                                                                           SelectedSourceCoordinate="{Binding SelectedSourceCoordinate}"
+                                                                           SelectedAreaBounds="{Binding SelectedAreaBounds}"
+                                                                           HoveredCoordinate="{Binding HoveredCoordinate}"
+                                                                           PreviewMouseLeftButtonDown="SourceSurface_PreviewMouseLeftButtonDown"
+                                                                           PreviewMouseLeftButtonUp="SourceSurface_PreviewMouseLeftButtonUp"
+                                                                           MouseMove="SourceSurface_MouseMove"
+                                                                           MouseLeave="SourceSurface_MouseLeave" />
                                             </ScrollViewer>
                                         </Grid>
                                     </Border>
@@ -653,24 +645,15 @@
                                             </Grid.RowDefinitions>
                                             <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#FF8B5C28" Text="Editable" />
                                             <ScrollViewer Grid.Row="1" Margin="0,4,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" PreviewMouseWheel="EditorSurfaceHost_PreviewMouseWheel">
-                                                <Border HorizontalAlignment="Left" VerticalAlignment="Top">
-                                                    <Border.LayoutTransform>
-                                                        <ScaleTransform ScaleX="{Binding ActiveEditorZoom}" ScaleY="{Binding ActiveEditorZoom}" />
-                                                    </Border.LayoutTransform>
-                                                    <ItemsControl ItemsSource="{Binding DataContext.TargetRows, RelativeSource={RelativeSource AncestorType=Window}}">
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource TargetCellTemplate}">
-                                                                    <ItemsControl.ItemsPanel>
-                                                                        <ItemsPanelTemplate>
-                                                                            <StackPanel Orientation="Horizontal" />
-                                                                        </ItemsPanelTemplate>
-                                                                    </ItemsControl.ItemsPanel>
-                                                                </ItemsControl>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </Border>
+                                                <local:EditorSurfaceControl Surface="{Binding ActiveTargetSurface}"
+                                                                           Zoom="{Binding ActiveEditorZoom}"
+                                                                           ShowGrid="{Binding ShowGrid}"
+                                                                           ShowCaptions="{Binding ShowGridCaptions}"
+                                                                           SelectedSourceCoordinate="{Binding SelectedSourceCoordinate}"
+                                                                           SelectedTargetCoordinate="{Binding SelectedTargetCoordinate}"
+                                                                           SelectedAreaBounds="{Binding SelectedAreaBounds}"
+                                                                           HoveredCoordinate="{Binding HoveredCoordinate}"
+                                                                           PreviewMouseLeftButtonUp="TargetSurface_PreviewMouseLeftButtonUp" />
                                             </ScrollViewer>
                                         </Grid>
                                     </Border>

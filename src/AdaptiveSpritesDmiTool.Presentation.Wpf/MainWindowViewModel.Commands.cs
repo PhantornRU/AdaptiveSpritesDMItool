@@ -83,13 +83,13 @@ public partial class WorkspaceShellViewModel
                 _selectedArea = new PixelAreaSelection(cell.Coordinate, cell.Coordinate);
                 _isDraggingSourceArea = true;
                 EditorStatus = $"{SelectedEditorTool} drag started at {cell.Coordinate}.";
-                RefreshEditorSurface();
+                RefreshInteractionState();
                 break;
             case EditorTool.Single:
                 _selectedSourceCoordinate = cell.Coordinate;
                 SelectedSourceSummary = $"Source pixel {cell.Coordinate} selected.";
                 EditorStatus = "Pick a target pixel in the editable pane to apply the mapping.";
-                RefreshEditorSurface();
+                RefreshInteractionState();
                 break;
             case EditorTool.Undo:
                 ApplyRestoreOperation(new PixelAreaSelection(cell.Coordinate, cell.Coordinate), "Restored source pixel.");
@@ -101,6 +101,7 @@ public partial class WorkspaceShellViewModel
     {
         ArgumentNullException.ThrowIfNull(cell);
         EnsureActiveDirection(cell.Direction);
+        HoveredCoordinate = cell.Coordinate;
         HoverSummary = $"Hovering {cell.Coordinate}.";
 
         if (!_isDraggingSourceArea || _dragAnchor is null)
@@ -110,7 +111,13 @@ public partial class WorkspaceShellViewModel
 
         _selectedArea = new PixelAreaSelection(_dragAnchor.Value, cell.Coordinate);
         SelectedAreaSummary = DescribeArea(_selectedArea.Value);
-        RefreshEditorSurface();
+        RefreshInteractionState();
+    }
+
+    public void HandleSourceSurfacePointerLeave()
+    {
+        HoveredCoordinate = null;
+        HoverSummary = "Hover to inspect coordinates.";
     }
 
     public void HandleSourceCellPointerUp(PixelCellViewModel cell)
@@ -145,7 +152,7 @@ public partial class WorkspaceShellViewModel
                 break;
         }
 
-        RefreshEditorSurface();
+        RefreshInteractionState();
     }
 
     public void HandleTargetCellPointerUp(PixelCellViewModel cell)

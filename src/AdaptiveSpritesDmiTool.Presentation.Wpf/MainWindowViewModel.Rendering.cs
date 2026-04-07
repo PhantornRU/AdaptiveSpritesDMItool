@@ -19,6 +19,9 @@ public partial class WorkspaceShellViewModel
     private static readonly Brush SelectedBrush = CreateBrush(Color.FromRgb(30, 92, 84));
     private static readonly Brush NeutralBrush = CreateBrush(Color.FromRgb(244, 239, 231));
     private static readonly Brush GridBrush = CreateBrush(Color.FromRgb(217, 207, 192));
+    private static readonly Color MappedColor = Color.FromRgb(198, 224, 206);
+    private static readonly Color TransparentColor = Color.FromRgb(245, 210, 197);
+    private static readonly Color NeutralColor = Color.FromRgb(244, 239, 231);
 
     private bool CanCreateConfig() => _editorSession.LoadedAsset is not null && !IsBusy;
 
@@ -50,7 +53,7 @@ public partial class WorkspaceShellViewModel
         OverlayStateName = settings.LastOverlayState ?? string.Empty;
         SelectedDirection = settings.LastSelectedDirection ?? SelectedDirection;
         SelectedOverwritePolicy = settings.LastOverwritePolicy;
-        SelectedEditorViewportMode = ParseEditorViewportMode(settings.LastEditorViewportMode);
+        SelectedEditorViewportMode = EditorViewportMode.Matrix;
         SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
         IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded;
         IsBottomWorkspaceExpanded = true;
@@ -150,6 +153,12 @@ public partial class WorkspaceShellViewModel
         FocusedDirectionTile = null;
         DirectionMatrixColumns = 2;
         ActiveEditorZoom = 2.0;
+        HoveredCoordinate = null;
+        SelectedSourceCoordinateView = null;
+        SelectedTargetCoordinate = null;
+        SelectedAreaBounds = null;
+        ActiveSourceSurface = null;
+        ActiveTargetSurface = null;
         BatchResults.Clear();
         ConfigQueueItems.Clear();
         BatchStateStripItems.Clear();
@@ -566,12 +575,11 @@ public partial class WorkspaceShellViewModel
     {
         NormalizeSelectedDirection();
         RefreshMappingRows();
-        RebuildPixelRows(SourceRows, false);
-        RebuildPixelRows(TargetRows, ShowOverlay);
+        RefreshInteractionState();
+        RebuildActiveSurfaceRenderStates();
         RebuildDirectionNavigatorItems();
         RebuildPreviewGridRows();
         RefreshActivePreviewPresentation();
-        OnPropertyChanged(string.Empty);
     }
 
     private void RebuildDirectionNavigatorItems()

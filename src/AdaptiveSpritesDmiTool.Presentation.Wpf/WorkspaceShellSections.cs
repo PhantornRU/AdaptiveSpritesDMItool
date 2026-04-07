@@ -387,6 +387,22 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public string ActiveEditorZoomLabel => Shell.ActiveEditorZoomLabel;
 
+    public EditorSurfaceRenderState? ActiveSourceSurface => Shell.ActiveSourceSurface;
+
+    public EditorSurfaceRenderState? ActiveTargetSurface => Shell.ActiveTargetSurface;
+
+    public PixelCoordinate? HoveredCoordinate => Shell.HoveredCoordinate;
+
+    public PixelCoordinate? SelectedSourceCoordinate => Shell.SelectedSourceCoordinateView;
+
+    public PixelCoordinate? SelectedTargetCoordinate => Shell.SelectedTargetCoordinate;
+
+    public PixelAreaBounds? SelectedAreaBounds => Shell.SelectedAreaBounds;
+
+    public bool ShowGrid => Shell.ShowGrid;
+
+    public bool ShowGridCaptions => Shell.GridAboveImage;
+
     public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
 
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems => Shell.DirectionNavigatorItems;

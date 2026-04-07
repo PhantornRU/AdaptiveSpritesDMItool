@@ -227,7 +227,8 @@ public partial class WorkspaceShellViewModel
         SelectedSourceSummary = "No source pixel selected.";
         SelectedAreaSummary = "No area selected.";
         EditorStatus = "Selection cleared.";
-        RefreshEditorSurface();
+        HoveredCoordinate = null;
+        RefreshInteractionState();
     }
 
     [RelayCommand]

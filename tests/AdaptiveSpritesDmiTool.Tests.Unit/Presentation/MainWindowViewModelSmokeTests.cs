@@ -115,6 +115,67 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task HoverAndDragShouldNotRebuildActiveEditorSurfacesOrNavigatorItems()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.SelectedEditorTool = EditorTool.Select;
+        var sourceSurface = viewModel.ActiveSourceSurface;
+        var targetSurface = viewModel.ActiveTargetSurface;
+        var navigatorPreview = viewModel.DirectionNavigatorItems[0].PreviewRows;
+
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleSourceCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 4, 4));
+        viewModel.HandleSourceCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 4, 4));
+
+        viewModel.ActiveSourceSurface.Should().BeSameAs(sourceSurface);
+        viewModel.ActiveTargetSurface.Should().BeSameAs(targetSurface);
+        viewModel.DirectionNavigatorItems[0].PreviewRows.Should().BeSameAs(navigatorPreview);
+        viewModel.SelectedAreaBounds.Should().NotBeNull();
+        viewModel.HoverSummary.Should().Contain("Hovering");
+    }
+
+    [Fact]
+    public async Task RestoreWorkspaceShouldForceMatrixViewportWhileFocusedPathIsDisabled()
+    {
+        var settingsRepository = new InMemorySettingsRepository(
+            new WorkspaceSettings(
+                "sprite.dmi",
+                "config.json",
+                "legacy.csv",
+                "input",
+                "output",
+                "draft",
+                "base",
+                "landmark",
+                "overlay",
+                SpriteDirection.East,
+                OverwritePolicy.FailIfExists,
+                nameof(EditorViewportMode.Focused),
+                nameof(BottomWorkspaceTab.Configs),
+                false));
+
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            configRepository: new SuccessfulConfigRepository(CreateConfig("Restored Config")),
+            legacyImporter: new SuccessfulLegacyImporter(CreateConfig("Imported Config")));
+
+        await viewModel.InitializeAsync();
+
+        viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
+    }
+
+    [Fact]
     public async Task EditorCommandBarShouldSupportDirectToolbarSelection()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -162,7 +223,7 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.SelectedShellSection.Should().Be(ShellSectionKind.Editor);
         viewModel.ConfigSummary.Should().Contain("Restored Config");
-        viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Focused);
+        viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
         viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Configs);
         viewModel.StartTab.HasRecentWorkspace.Should().BeTrue();
     }

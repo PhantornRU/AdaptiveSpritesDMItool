@@ -38,6 +38,69 @@ public partial class WorkspaceShellViewModel
     private void RebuildPixelRows(ObservableCollection<PixelRowViewModel> targetRows, bool useCompositeImage)
         => RebuildPixelRows(targetRows, GetSafeSelectedDirection(), useCompositeImage);
 
+    private void RefreshInteractionState()
+    {
+        SelectedSourceCoordinateView = _selectedSourceCoordinate;
+        SelectedAreaBounds = _selectedArea is { } area
+            ? new PixelAreaBounds(area.Left, area.Top, area.Right, area.Bottom)
+            : null;
+        SelectedTargetCoordinate = ResolveSelectedTargetCoordinate();
+    }
+
+    private PixelCoordinate? ResolveSelectedTargetCoordinate()
+    {
+        if (_selectedSourceCoordinate is not { } source || _editorSession.CurrentConfig is null)
+        {
+            return null;
+        }
+
+        var direction = GetSafeSelectedDirection();
+        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction))
+        {
+            if (mapping.Source == source)
+            {
+                return mapping.Target;
+            }
+        }
+
+        return null;
+    }
+
+    private void RebuildActiveSurfaceRenderStates()
+    {
+        var direction = GetSafeSelectedDirection();
+        ActiveSourceSurface = BuildEditorSurfaceRenderState(direction, useCompositeImage: false);
+        ActiveTargetSurface = BuildEditorSurfaceRenderState(direction, useCompositeImage: ShowOverlay);
+    }
+
+    private EditorSurfaceRenderState? BuildEditorSurfaceRenderState(SpriteDirection direction, bool useCompositeImage)
+    {
+        var resolution = _editorSession.CurrentConfig?.Resolution ?? _editorSession.LoadedAsset?.Resolution;
+        if (resolution is null)
+        {
+            return null;
+        }
+
+        var referenceImage = useCompositeImage ? _compositeImage ?? _baseImage : _baseImage;
+        var mappings = _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
+        var colors = new Color[resolution.Value.Width * resolution.Value.Height];
+        var captions = new string[colors.Length];
+
+        for (var y = 0; y < resolution.Value.Height; y++)
+        {
+            for (var x = 0; x < resolution.Value.Width; x++)
+            {
+                var coordinate = new PixelCoordinate(x, y);
+                var index = (y * resolution.Value.Width) + x;
+                var hasMapping = mappings.TryGetValue(coordinate, out var mapping);
+                colors[index] = ResolveSurfaceCellColor(referenceImage, coordinate, hasMapping, mapping);
+                captions[index] = BuildStaticCaption(hasMapping, mapping);
+            }
+        }
+
+        return new EditorSurfaceRenderState(direction, resolution.Value.Width, resolution.Value.Height, colors, captions);
+    }
+
     private void RebuildPixelRows(ObservableCollection<PixelRowViewModel> targetRows, SpriteDirection direction, bool useCompositeImage)
     {
         targetRows.Clear();
@@ -249,6 +312,23 @@ public partial class WorkspaceShellViewModel
             : NeutralBrush;
     }
 
+    private static Color ResolveSurfaceCellColor(SpriteImage? image, PixelCoordinate coordinate, bool hasMapping, PixelMapping mapping)
+    {
+        if (hasMapping && mapping.IsTransparent)
+        {
+            return TransparentColor;
+        }
+
+        if (hasMapping && mapping.Target is not null)
+        {
+            return MappedColor;
+        }
+
+        return TryReadPixelColor(image, coordinate, out var color)
+            ? color
+            : NeutralColor;
+    }
+
     private Brush CreateCellBorder(PixelCoordinate coordinate, bool hasMapping, PixelCoordinate? selectedTarget)
     {
         if (!ShowGrid)
@@ -297,6 +377,16 @@ public partial class WorkspaceShellViewModel
             : mapping.Target == coordinate
                 ? $"{coordinate} -> unchanged"
                 : $"{coordinate} -> {mapping.Target}";
+
+    private string BuildStaticCaption(bool hasMapping, PixelMapping mapping)
+    {
+        if (!GridAboveImage || !hasMapping)
+        {
+            return string.Empty;
+        }
+
+        return mapping.IsTransparent ? "X" : mapping.Target is not null ? "M" : string.Empty;
+    }
 
     private static bool TryReadPixelColor(SpriteImage? image, PixelCoordinate coordinate, out Color color)
     {

@@ -139,6 +139,24 @@ public partial class WorkspaceShellViewModel
     private double activeEditorZoom = 2.0;
 
     [ObservableProperty]
+    private PixelCoordinate? hoveredCoordinate;
+
+    [ObservableProperty]
+    private PixelCoordinate? selectedSourceCoordinateView;
+
+    [ObservableProperty]
+    private PixelCoordinate? selectedTargetCoordinate;
+
+    [ObservableProperty]
+    private PixelAreaBounds? selectedAreaBounds;
+
+    [ObservableProperty]
+    private EditorSurfaceRenderState? activeSourceSurface;
+
+    [ObservableProperty]
+    private EditorSurfaceRenderState? activeTargetSurface;
+
+    [ObservableProperty]
     private EditorTool selectedEditorTool = EditorTool.Single;
 
     [ObservableProperty]
@@ -211,6 +229,8 @@ public partial class WorkspaceShellViewModel
     public double ZoomStep => _zoomStep;
 
     public string ActiveEditorZoomLabel => $"{Math.Round(ActiveEditorZoom * 100):0}%";
+
+    public bool HasSelectedAreaBounds => SelectedAreaBounds is not null;
 
     public bool HasLoadedAsset => _editorSession.LoadedAsset is not null;
 
