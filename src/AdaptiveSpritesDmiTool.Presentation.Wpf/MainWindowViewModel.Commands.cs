@@ -120,6 +120,22 @@ public partial class WorkspaceShellViewModel
         HoverSummary = "Hover to inspect coordinates.";
     }
 
+    public void HandleSourceSurfaceHover(PixelCellViewModel cell)
+    {
+        ArgumentNullException.ThrowIfNull(cell);
+        EnsureActiveDirection(cell.Direction);
+        HoveredCoordinate = cell.Coordinate;
+        HoverSummary = $"Hovering {cell.Coordinate}.";
+    }
+
+    public void HandleTargetSurfaceHover(PixelCellViewModel cell)
+    {
+        ArgumentNullException.ThrowIfNull(cell);
+        EnsureActiveDirection(cell.Direction);
+        HoveredCoordinate = cell.Coordinate;
+        HoverSummary = $"Editable {cell.Coordinate}.";
+    }
+
     public void HandleSourceCellPointerUp(PixelCellViewModel cell)
     {
         ArgumentNullException.ThrowIfNull(cell);

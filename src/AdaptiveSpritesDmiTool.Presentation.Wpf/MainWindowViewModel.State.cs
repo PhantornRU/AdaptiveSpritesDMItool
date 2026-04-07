@@ -220,6 +220,9 @@ public partial class WorkspaceShellViewModel
     [ObservableProperty]
     private bool isPreviewTextVisible;
 
+    [ObservableProperty]
+    private int directionNavigatorColumns = 2;
+
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems { get; } = [];
 
     public double MinEditorZoom => _minEditorZoom;

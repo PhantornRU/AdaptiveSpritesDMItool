@@ -1,5 +1,6 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
@@ -26,30 +27,37 @@ public sealed class EditorSurfaceControl : FrameworkElement
     private static readonly Pen HoverPen = CreatePen(Color.FromRgb(196, 137, 16), 1d);
     private static readonly Pen GridPen = CreatePen(Color.FromRgb(217, 207, 192), 0.5d);
     private static readonly Typeface CaptionTypeface = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
+    private DrawingGroup? _contentDrawing;
+    private bool _isContentDirty = true;
+
+#if DEBUG
+    private static int _contentRedrawCount;
+    private static int _overlayRenderCount;
+#endif
 
     public static readonly DependencyProperty SurfaceProperty = DependencyProperty.Register(
         nameof(Surface),
         typeof(EditorSurfaceRenderState),
         typeof(EditorSurfaceControl),
-        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender, OnContentInputChanged));
 
     public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(
         nameof(Zoom),
         typeof(double),
         typeof(EditorSurfaceControl),
-        new FrameworkPropertyMetadata(1d, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+        new FrameworkPropertyMetadata(1d, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender, OnContentInputChanged));
 
     public static readonly DependencyProperty ShowGridProperty = DependencyProperty.Register(
         nameof(ShowGrid),
         typeof(bool),
         typeof(EditorSurfaceControl),
-        new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+        new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender, OnContentInputChanged));
 
     public static readonly DependencyProperty ShowCaptionsProperty = DependencyProperty.Register(
         nameof(ShowCaptions),
         typeof(bool),
         typeof(EditorSurfaceControl),
-        new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+        new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender, OnContentInputChanged));
 
     public static readonly DependencyProperty SelectedSourceCoordinateProperty = DependencyProperty.Register(
         nameof(SelectedSourceCoordinate),
@@ -164,23 +172,14 @@ public sealed class EditorSurfaceControl : FrameworkElement
             return;
         }
 
+        EnsureContentDrawing();
         var cellSize = GetCellSize();
-        drawingContext.DrawRectangle(Brushes.White, null, new Rect(0, 0, Surface.Width * cellSize, Surface.Height * cellSize));
+        drawingContext.DrawDrawing(_contentDrawing);
 
-        for (var y = 0; y < Surface.Height; y++)
-        {
-            for (var x = 0; x < Surface.Width; x++)
-            {
-                var index = Surface.GetIndex(x, y);
-                var rect = new Rect(x * cellSize, y * cellSize, cellSize, cellSize);
-                drawingContext.DrawRectangle(GetBrush(Surface.FillColors[index]), null, rect);
-
-                if (ShowCaptions && !string.IsNullOrEmpty(Surface.Captions[index]))
-                {
-                    DrawCaption(drawingContext, Surface.Captions[index], rect);
-                }
-            }
-        }
+#if DEBUG
+        var overlayRenderCount = Interlocked.Increment(ref _overlayRenderCount);
+        Debug.WriteLine($"[EditorSurfaceControl] overlay render #{overlayRenderCount} for {Surface.Direction} {Surface.Width}x{Surface.Height}");
+#endif
 
         if (SelectedAreaBounds is { } area)
         {
@@ -214,20 +213,83 @@ public sealed class EditorSurfaceControl : FrameworkElement
             drawingContext.DrawRectangle(HoverBrush, HoverPen, rect);
         }
 
-        if (ShowGrid)
+    }
+
+    public void InvalidateOverlayOnly() => InvalidateVisual();
+
+    private static void OnContentInputChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is EditorSurfaceControl control)
         {
-            for (var x = 0; x <= Surface.Width; x++)
+            control._isContentDirty = true;
+        }
+    }
+
+    private void EnsureContentDrawing()
+    {
+        if (!_isContentDirty && _contentDrawing is not null)
+        {
+            return;
+        }
+
+        _contentDrawing = BuildContentDrawing();
+        _isContentDirty = false;
+
+#if DEBUG
+        var contentRedrawCount = Interlocked.Increment(ref _contentRedrawCount);
+        if (Surface is not null)
+        {
+            Debug.WriteLine($"[EditorSurfaceControl] content redraw #{contentRedrawCount} for {Surface.Direction} {Surface.Width}x{Surface.Height}");
+        }
+#endif
+    }
+
+    private DrawingGroup BuildContentDrawing()
+    {
+        var drawing = new DrawingGroup();
+        if (Surface is null)
+        {
+            return drawing;
+        }
+
+        var cellSize = GetCellSize();
+        using (var context = drawing.Open())
+        {
+            context.DrawRectangle(Brushes.White, null, new Rect(0, 0, Surface.Width * cellSize, Surface.Height * cellSize));
+
+            for (var y = 0; y < Surface.Height; y++)
             {
-                var offset = x * cellSize;
-                drawingContext.DrawLine(GridPen, new Point(offset, 0), new Point(offset, Surface.Height * cellSize));
+                for (var x = 0; x < Surface.Width; x++)
+                {
+                    var index = Surface.GetIndex(x, y);
+                    var rect = new Rect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    context.DrawRectangle(GetBrush(Surface.FillColors[index]), null, rect);
+
+                    if (ShowCaptions && !string.IsNullOrEmpty(Surface.Captions[index]))
+                    {
+                        DrawCaption(context, Surface.Captions[index], rect);
+                    }
+                }
             }
 
-            for (var y = 0; y <= Surface.Height; y++)
+            if (ShowGrid)
             {
-                var offset = y * cellSize;
-                drawingContext.DrawLine(GridPen, new Point(0, offset), new Point(Surface.Width * cellSize, offset));
+                for (var x = 0; x <= Surface.Width; x++)
+                {
+                    var offset = x * cellSize;
+                    context.DrawLine(GridPen, new Point(offset, 0), new Point(offset, Surface.Height * cellSize));
+                }
+
+                for (var y = 0; y <= Surface.Height; y++)
+                {
+                    var offset = y * cellSize;
+                    context.DrawLine(GridPen, new Point(0, offset), new Point(Surface.Width * cellSize, offset));
+                }
             }
         }
+
+        drawing.Freeze();
+        return drawing;
     }
 
     private double GetCellSize() => Math.Max(1d, EditorSurfaceRenderState.BaseCellSize * Zoom);

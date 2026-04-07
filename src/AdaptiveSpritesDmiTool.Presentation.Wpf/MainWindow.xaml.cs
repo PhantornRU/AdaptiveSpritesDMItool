@@ -79,15 +79,26 @@ public partial class MainWindow : Window
 
     private void SourceSurface_MouseMove(object sender, MouseEventArgs e)
     {
-        if (e.LeftButton != MouseButtonState.Pressed)
+        if (!TryCreateSurfaceCell(sender, e.GetPosition((IInputElement)sender), out var cell))
         {
             return;
         }
 
-        if (TryCreateSurfaceCell(sender, e.GetPosition((IInputElement)sender), out var cell))
+        if (e.LeftButton == MouseButtonState.Pressed)
         {
             ViewModel.HandleSourceCellPointerEnter(cell);
             e.Handled = true;
+            return;
+        }
+
+        ViewModel.HandleSourceSurfaceHover(cell);
+    }
+
+    private void TargetSurface_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (TryCreateSurfaceCell(sender, e.GetPosition((IInputElement)sender), out var cell))
+        {
+            ViewModel.HandleTargetSurfaceHover(cell);
         }
     }
 
@@ -101,6 +112,8 @@ public partial class MainWindow : Window
     }
 
     private void SourceSurface_MouseLeave(object sender, MouseEventArgs e) => ViewModel.HandleSourceSurfacePointerLeave();
+
+    private void TargetSurface_MouseLeave(object sender, MouseEventArgs e) => ViewModel.HandleSourceSurfacePointerLeave();
 
     private void TargetSurface_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {

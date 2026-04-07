@@ -4,8 +4,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Media.Imaging;
+using ImageSource = System.Windows.Media.ImageSource;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
@@ -28,6 +30,10 @@ public sealed class PreviewRefreshCoordinator(TimeSpan? debounce = null) : IDisp
     private readonly TimeSpan _debounce = debounce ?? TimeSpan.FromMilliseconds(250);
     private CancellationTokenSource? _refreshCts;
 
+#if DEBUG
+    private int _requestId;
+#endif
+
     public void Request(Func<CancellationToken, Task> refreshAsync)
     {
         ArgumentNullException.ThrowIfNull(refreshAsync);
@@ -35,7 +41,15 @@ public sealed class PreviewRefreshCoordinator(TimeSpan? debounce = null) : IDisp
 
         var cts = new CancellationTokenSource();
         _refreshCts = cts;
-        _ = RunAsync(refreshAsync, cts);
+
+#if DEBUG
+        var requestId = Interlocked.Increment(ref _requestId);
+        Debug.WriteLine($"[PreviewRefreshCoordinator] Request #{requestId} created cts={cts.GetHashCode()}");
+#else
+        const int requestId = 0;
+#endif
+
+        _ = RunAsync(refreshAsync, cts, requestId);
     }
 
     public async Task RefreshNowAsync(Func<CancellationToken, Task> refreshAsync)
@@ -52,6 +66,12 @@ public sealed class PreviewRefreshCoordinator(TimeSpan? debounce = null) : IDisp
         }
         catch (OperationCanceledException)
         {
+        }
+        catch (ObjectDisposedException)
+        {
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RefreshNowAsync disposed cts={cts.GetHashCode()}");
+#endif
         }
         finally
         {
@@ -73,20 +93,39 @@ public sealed class PreviewRefreshCoordinator(TimeSpan? debounce = null) : IDisp
         }
 
         cts.Cancel();
-        cts.Dispose();
+
+#if DEBUG
+        Debug.WriteLine($"[PreviewRefreshCoordinator] Cancel cts={cts.GetHashCode()}");
+#endif
     }
 
     public void Dispose() => Cancel();
 
-    private async Task RunAsync(Func<CancellationToken, Task> refreshAsync, CancellationTokenSource cts)
+    private async Task RunAsync(Func<CancellationToken, Task> refreshAsync, CancellationTokenSource cts, int requestId)
     {
         try
         {
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RunAsync #{requestId} delay start cts={cts.GetHashCode()}");
+#endif
             await Task.Delay(_debounce, cts.Token);
+
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RunAsync #{requestId} invoke refresh cts={cts.GetHashCode()}");
+#endif
             await refreshAsync(cts.Token);
         }
         catch (OperationCanceledException)
         {
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RunAsync #{requestId} cancelled cts={cts.GetHashCode()}");
+#endif
+        }
+        catch (ObjectDisposedException)
+        {
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RunAsync #{requestId} disposed cts={cts.GetHashCode()}");
+#endif
         }
         finally
         {
@@ -95,6 +134,9 @@ public sealed class PreviewRefreshCoordinator(TimeSpan? debounce = null) : IDisp
                 _refreshCts = null;
             }
 
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RunAsync #{requestId} disposing cts={cts.GetHashCode()}");
+#endif
             cts.Dispose();
         }
     }
@@ -350,7 +392,13 @@ public sealed partial class DirectionNavigatorItemViewModel : ObservableObject
 
     public string Label { get; }
 
-    public ObservableCollection<PixelRowViewModel> PreviewRows { get; } = [];
+    public ImageSource? PreviewImage
+    {
+        get => previewImage;
+        set => SetProperty(ref previewImage, value);
+    }
+
+    private ImageSource? previewImage;
 
     [ObservableProperty]
     private bool isActive;
@@ -379,6 +427,8 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public string HoverAndStatusSummary => $"{Shell.SelectedSourceSummary}  {Shell.SelectedAreaSummary}";
 
+    public string HoverSummary => Shell.HoverSummary;
+
     public string SelectionSummary => $"{Shell.SelectedSourceSummary}  {Shell.SelectedAreaSummary}";
 
     public string ActiveDirectionLabel => Shell.SelectedDirection.ToString();
@@ -406,6 +456,8 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
 
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems => Shell.DirectionNavigatorItems;
+
+    public int DirectionNavigatorColumns => Shell.DirectionNavigatorColumns;
 
     public string SelectedExplorerState
     {

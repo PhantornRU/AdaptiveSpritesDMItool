@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Windows.Media.Imaging;
 using Brush = System.Windows.Media.Brush;
 using Color = System.Windows.Media.Color;
 using Brushes = System.Windows.Media.Brushes;
@@ -504,6 +505,7 @@ public partial class WorkspaceShellViewModel
         {
             AvailableDirections.Add(direction);
         }
+        DirectionNavigatorColumns = AvailableDirections.Count > 4 ? 4 : 2;
 
         AvailableStates.Clear();
         foreach (var state in (_editorSession.LoadedAsset?.States ?? Array.Empty<DmiStateInfo>())
@@ -589,18 +591,11 @@ public partial class WorkspaceShellViewModel
 
         foreach (var direction in AvailableDirections)
         {
-            var previewRows = new ObservableCollection<PixelRowViewModel>();
-            RebuildPixelRows(previewRows, direction, ShowOverlay);
-
             var item = new DirectionNavigatorItemViewModel(direction)
             {
-                IsActive = direction == activeDirection
+                IsActive = direction == activeDirection,
+                PreviewImage = BuildNavigatorPreviewImage(direction)
             };
-
-            foreach (var row in CloneNavigatorRows(previewRows))
-            {
-                item.PreviewRows.Add(row);
-            }
 
             DirectionNavigatorItems.Add(item);
         }
@@ -609,23 +604,32 @@ public partial class WorkspaceShellViewModel
         FocusedDirectionTile = null;
     }
 
-    private static IEnumerable<PixelRowViewModel> CloneNavigatorRows(IEnumerable<PixelRowViewModel> sourceRows)
+    private BitmapSource? BuildNavigatorPreviewImage(SpriteDirection direction)
     {
-        foreach (var row in sourceRows)
+        var surface = BuildEditorSurfaceRenderState(direction, useCompositeImage: ShowOverlay);
+        if (surface is null)
         {
-            yield return new PixelRowViewModel(row.Cells.Select(CloneNavigatorCell));
+            return null;
         }
-    }
 
-    private static PixelCellViewModel CloneNavigatorCell(PixelCellViewModel cell) =>
-        new(cell.Direction, cell.Coordinate.X, cell.Coordinate.Y)
+        var pixels = new byte[surface.Width * surface.Height * 4];
+        for (var y = 0; y < surface.Height; y++)
         {
-            Fill = cell.Fill,
-            Border = cell.Border,
-            Foreground = Brushes.Transparent,
-            Caption = string.Empty,
-            ToolTip = cell.ToolTip
-        };
+            for (var x = 0; x < surface.Width; x++)
+            {
+                var color = surface.FillColors[surface.GetIndex(x, y)];
+                var offset = ((y * surface.Width) + x) * 4;
+                pixels[offset] = color.B;
+                pixels[offset + 1] = color.G;
+                pixels[offset + 2] = color.R;
+                pixels[offset + 3] = color.A;
+            }
+        }
+
+        var bitmap = BitmapSource.Create(surface.Width, surface.Height, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, pixels, surface.Width * 4);
+        bitmap.Freeze();
+        return bitmap;
+    }
 
     public void NavigateToSection(ShellSectionKind section)
     {

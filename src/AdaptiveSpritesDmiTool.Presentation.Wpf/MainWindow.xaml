@@ -218,21 +218,7 @@
                         </Grid.RowDefinitions>
                         <TextBlock FontSize="10" FontWeight="SemiBold" Text="{Binding Label}" />
                         <Border Grid.Row="1" Margin="0,4,0,0" Padding="2" Background="#FFFFFCF7" CornerRadius="6">
-                            <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <ItemsControl ItemsSource="{Binding PreviewRows}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource DirectionNavigatorPreviewCellTemplate}">
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <StackPanel Orientation="Horizontal" />
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                            </ItemsControl>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Viewbox>
+                            <Image Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" SnapsToDevicePixels="True" />
                         </Border>
                     </Grid>
                 </Border>
@@ -672,7 +658,7 @@
                                 <ItemsControl Grid.Row="1" Margin="0,4,0,0" DataContext="{Binding EditorWorkspace}" ItemsSource="{Binding DirectionNavigatorItems}" ItemTemplate="{StaticResource DirectionNavigatorItemTemplate}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                            <UniformGrid Columns="2" Rows="2" />
+                                            <UniformGrid Columns="{Binding DirectionNavigatorColumns}" />
                                         </ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
                                 </ItemsControl>

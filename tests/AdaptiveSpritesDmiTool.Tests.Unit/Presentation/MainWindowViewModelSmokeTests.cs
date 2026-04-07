@@ -131,7 +131,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.SelectedEditorTool = EditorTool.Select;
         var sourceSurface = viewModel.ActiveSourceSurface;
         var targetSurface = viewModel.ActiveTargetSurface;
-        var navigatorPreview = viewModel.DirectionNavigatorItems[0].PreviewRows;
+        var navigatorPreview = viewModel.DirectionNavigatorItems[0].PreviewImage;
 
         viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
         viewModel.HandleSourceCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 4, 4));
@@ -139,7 +139,7 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.ActiveSourceSurface.Should().BeSameAs(sourceSurface);
         viewModel.ActiveTargetSurface.Should().BeSameAs(targetSurface);
-        viewModel.DirectionNavigatorItems[0].PreviewRows.Should().BeSameAs(navigatorPreview);
+        viewModel.DirectionNavigatorItems[0].PreviewImage.Should().BeSameAs(navigatorPreview);
         viewModel.SelectedAreaBounds.Should().NotBeNull();
         viewModel.HoverSummary.Should().Contain("Hovering");
     }
