@@ -151,6 +151,7 @@ public partial class WorkspaceShellViewModel
     [NotifyPropertyChangedFor(nameof(IsOverlayCompareMode))]
     [NotifyPropertyChangedFor(nameof(IsReferencePaneVisible))]
     [NotifyPropertyChangedFor(nameof(ShowOverlayCompareLayer))]
+    [NotifyPropertyChangedFor(nameof(ShowCompactCanvasHeader))]
     private EditorViewMode editorViewMode = EditorViewMode.EditableOnly;
 
     [ObservableProperty]
@@ -201,6 +202,12 @@ public partial class WorkspaceShellViewModel
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsReferencePaneVisible))]
+    [NotifyPropertyChangedFor(nameof(ShowEditorLeftRail))]
+    [NotifyPropertyChangedFor(nameof(ShowStateLayersPanel))]
+    [NotifyPropertyChangedFor(nameof(ShowSourcePalettePane))]
+    [NotifyPropertyChangedFor(nameof(ShowDirectionsInSidebar))]
+    [NotifyPropertyChangedFor(nameof(ShowBottomStatusBar))]
+    [NotifyPropertyChangedFor(nameof(ShowCompactCanvasHeader))]
     [NotifyPropertyChangedFor(nameof(ShowStatesRail))]
     [NotifyPropertyChangedFor(nameof(ShowSingleStateStrip))]
     [NotifyPropertyChangedFor(nameof(UseHorizontalDirectionsStrip))]
@@ -272,6 +279,18 @@ public partial class WorkspaceShellViewModel
     public bool IsReferencePaneVisible => IsCompareSplitMode && !IsFocusMode;
 
     public bool ShowOverlayCompareLayer => IsOverlayCompareMode && !IsFocusMode;
+
+    public bool ShowEditorLeftRail => !IsFocusMode;
+
+    public bool ShowStateLayersPanel => !IsFocusMode;
+
+    public bool ShowSourcePalettePane => !IsFocusMode;
+
+    public bool ShowDirectionsInSidebar => HasDirectionSelector && !IsFocusMode;
+
+    public bool ShowBottomStatusBar => !IsFocusMode;
+
+    public bool ShowCompactCanvasHeader => !IsFocusMode;
 
     public bool HasSelectedAreaBounds => SelectedAreaBounds is not null;
 

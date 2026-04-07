@@ -432,6 +432,19 @@ public sealed partial class DirectionNavigatorItemViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isActive;
+
+    public string ShortLabel => Direction switch
+    {
+        SpriteDirection.South => "S",
+        SpriteDirection.North => "N",
+        SpriteDirection.East => "E",
+        SpriteDirection.West => "W",
+        SpriteDirection.SouthEast => "SE",
+        SpriteDirection.SouthWest => "SW",
+        SpriteDirection.NorthEast => "NE",
+        SpriteDirection.NorthWest => "NW",
+        _ => Label
+    };
 }
 
 public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
@@ -493,9 +506,39 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public bool ShowGrid => Shell.ShowGrid;
 
+    public bool ShowGridToggle
+    {
+        get => Shell.ShowGrid;
+        set => Shell.ShowGrid = value;
+    }
+
     public bool ShowGridCaptions => Shell.GridAboveImage;
 
+    public bool ShowGridCaptionsToggle
+    {
+        get => Shell.GridAboveImage;
+        set => Shell.GridAboveImage = value;
+    }
+
+    public bool ShowOverlayToggle
+    {
+        get => Shell.ShowOverlay;
+        set => Shell.ShowOverlay = value;
+    }
+
     public bool ShowStatesRail => Shell.ShowStatesRail;
+
+    public bool ShowEditorLeftRail => Shell.ShowEditorLeftRail;
+
+    public bool ShowStateLayersPanel => Shell.ShowStateLayersPanel;
+
+    public bool ShowSourcePalettePane => Shell.ShowSourcePalettePane;
+
+    public bool ShowDirectionsInSidebar => Shell.ShowDirectionsInSidebar;
+
+    public bool ShowBottomStatusBar => Shell.ShowBottomStatusBar;
+
+    public bool ShowCompactCanvasHeader => Shell.ShowCompactCanvasHeader;
 
     public bool ShowSingleStateStrip => Shell.ShowSingleStateStrip;
 
@@ -527,6 +570,12 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
         ? NormalizeStateLabel(Shell.BaseStateName)
         : Shell.SelectedExplorerState;
 
+    public string StateCountLabel => Shell.AvailableStates.Count switch
+    {
+        1 => "1 state",
+        _ => $"{Shell.AvailableStates.Count} states"
+    };
+
     public DirectionMatrixViewModel DirectionMatrix { get; } = new(shell);
 
     public EditorCommandBarViewModel CommandBar { get; } = new(shell);
@@ -540,6 +589,8 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public IRelayCommand ClearOptionalPreviewLayersCommand => Shell.ClearOptionalPreviewLayersCommand;
 
     public IRelayCommand ResetEditorZoomCommand => Shell.ResetEditorZoomCommand;
+
+    public IRelayCommand FitViewportCommand => Shell.FitViewportCommand;
 
     public IRelayCommand<SpriteDirection> SelectDirectionCommand => Shell.SelectDirectionCommand;
 

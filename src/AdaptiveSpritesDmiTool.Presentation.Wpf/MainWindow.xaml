@@ -151,6 +151,99 @@
             <Setter Property="MinHeight" Value="28" />
             <Setter Property="Margin" Value="0,0,4,0" />
         </Style>
+        <Style x:Key="EditorPrimaryToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource CompactActionButtonStyle}">
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+        </Style>
+        <Style x:Key="EditorPrimaryToolbarToggleStyle" TargetType="RadioButton" BasedOn="{StaticResource ShellModeRadioButtonStyle}">
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="Background" Value="#FFFDF8" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style x:Key="EditorPrimaryToolbarCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="#FFFDF8" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="999">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.Accent}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.AccentMuted}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SidebarSectionBorderStyle" TargetType="Border">
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+            <Setter Property="Background" Value="#FFFDF8EF" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style x:Key="StateListItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
+                                <Setter TargetName="Root" Property="BorderThickness" Value="2" />
+                                <Setter TargetName="Root" Property="Background" Value="#FFF6F1E8" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#FFFBF6EC" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SidebarDirectionListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,4,4" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
+                                <Setter TargetName="Root" Property="BorderThickness" Value="2" />
+                                <Setter TargetName="Root" Property="Background" Value="#FFF6F1E8" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#FFFBF6EC" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="RailListBoxItemStyle" TargetType="ListBoxItem">
             <Setter Property="Margin" Value="0,0,0,6" />
             <Setter Property="Padding" Value="8,10" />
@@ -337,6 +430,38 @@
                     <Image Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" SnapsToDevicePixels="True" />
                 </Border>
                 <TextBlock Grid.Row="1" Margin="0,4,0,0" HorizontalAlignment="Center" FontSize="11" FontWeight="SemiBold" Text="{Binding Label}" />
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="SidebarDirectionItemTemplate">
+            <Grid MinHeight="52">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="42" />
+                    <ColumnDefinition Width="6" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Width="42" Height="42" Padding="2" Background="#FFFFFCF7" CornerRadius="6">
+                    <Image Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" SnapsToDevicePixels="True" />
+                </Border>
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock FontWeight="SemiBold" Text="{Binding Label}" />
+                    <TextBlock FontSize="10" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ShortLabel}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="StateSidebarItemTemplate">
+            <Grid MinHeight="46">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="34" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Width="34" Height="34" Background="#FFF7EFE1" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="17">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="S" />
+                </Border>
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock FontWeight="SemiBold" Text="{Binding}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock FontSize="10" Foreground="{StaticResource Brush.TextSecondary}" Text="State layer" />
+                </StackPanel>
             </Grid>
         </DataTemplate>
 
@@ -590,7 +715,7 @@
                 </TabItem>
 
                 <TabItem Header="Editor" IsEnabled="{Binding EditorWorkspace.IsAvailable}">
-                    <Grid Margin="2">
+                    <Grid Margin="2" DataContext="{Binding EditorWorkspace}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
@@ -599,265 +724,281 @@
                         </Grid.RowDefinitions>
 
                         <Border Grid.Row="0" Margin="0,0,0,4" Padding="4" Background="#FFF9F2" CornerRadius="8">
-                            <Grid DataContext="{Binding EditorWorkspace}">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <Border Padding="4" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8" DataContext="{Binding CommandBar}">
-                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Margin="0,4,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
-                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Create a single cell on the editable preview using the selected source cell." Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="AddSquare24" Width="18" Height="18" /></RadioButton>
-                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Fill the editable area using the selected source cell." Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="Grid24" Width="18" Height="18" /></RadioButton>
-                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Move a single editable cell." Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="ArrowMove24" Width="18" Height="18" /></RadioButton>
-                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Move the selected editable area." Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="SquareHintApps24" Width="18" Height="18" /></RadioButton>
-                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Delete a pixel from the editable preview." Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="Eraser24" Width="18" Height="18" /></RadioButton>
-                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Undo changes to a single editable cell." Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Undo}" IsChecked="{Binding IsUndoToolSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="SquareEraser20" Width="18" Height="18" /></RadioButton>
-                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Undo changes to a selected area." Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.UndoArea}" IsChecked="{Binding IsUndoAreaToolSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="SquareHintArrowBack16" Width="18" Height="18" /></RadioButton>
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
+                                <DockPanel LastChildFill="False" DataContext="{Binding CommandBar}">
+                                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
+                                        <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" Content="Paint" />
+                                        <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" Content="Fill" />
+                                        <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" Content="Move" />
+                                        <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" Content="Select" />
+                                        <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" Content="Erase" />
 
-                                            <TextBlock Margin="8,4,6,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Scope" />
-                                            <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Edit single state." Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="Square24" Width="18" Height="18" /></RadioButton>
-                                            <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Edit parallel states." Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="TableCellsMerge24" Width="18" Height="18" /></RadioButton>
-                                            <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Edit all states." Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="Grid24" Width="18" Height="18" /></RadioButton>
+                                        <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Scope" />
+                                        <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" Content="Single" />
+                                        <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" Content="Parallel" />
+                                        <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" Content="All" />
 
-                                            <TextBlock Margin="8,4,6,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Display" />
-                                            <CheckBox Style="{StaticResource IconToolbarToggleCheckBoxStyle}" ToolTip="Toggle mirroring on parallel states." IsChecked="{Binding MirrorAcrossDirections}"><ui:SymbolIcon Symbol="DualScreenMirror24" Width="18" Height="18" /></CheckBox>
-                                            <CheckBox Style="{StaticResource IconToolbarToggleCheckBoxStyle}" ToolTip="Shift pixels to the left to centralize." IsChecked="{Binding UseCentralizedPropagation}"><ui:SymbolIcon Symbol="TableInsertColumn24" Width="18" Height="18" /></CheckBox>
-                                            <CheckBox Style="{StaticResource IconToolbarToggleCheckBoxStyle}" ToolTip="Toggle grid environment." IsChecked="{Binding ShowGrid}"><ui:SymbolIcon Symbol="TableSimple24" Width="18" Height="18" /></CheckBox>
-                                            <CheckBox Style="{StaticResource IconToolbarToggleCheckBoxStyle}" ToolTip="Toggle grid under overlay environment." IsChecked="{Binding GridAboveImage}"><ui:SymbolIcon Symbol="SubGrid24" Width="18" Height="18" /></CheckBox>
-                                            <CheckBox Style="{StaticResource IconToolbarToggleCheckBoxStyle}" ToolTip="Toggle view of text coordinates on points." IsChecked="{Binding ShowTextGrid}"><ui:SymbolIcon Symbol="NumberRow24" Width="18" Height="18" /></CheckBox>
-                                            <CheckBox Style="{StaticResource IconToolbarToggleCheckBoxStyle}" ToolTip="Toggle overlay preview." IsChecked="{Binding ShowOverlay}"><ui:SymbolIcon Symbol="BorderTop24" Width="18" Height="18" /></CheckBox>
+                                        <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="View" />
+                                        <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetEditableOnlyModeCommand}" IsChecked="{Binding IsEditableOnlyMode, Mode=OneWay}" Content="Edit" />
+                                        <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" Content="Compare" />
+                                        <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" Content="Overlay" />
+                                    </StackPanel>
 
-                                            <TextBlock Margin="8,4,6,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="View" />
-                                            <RadioButton GroupName="EditorViewModes" Style="{StaticResource ViewModeToggleRadioButtonStyle}" Command="{Binding SetEditableOnlyModeCommand}" IsChecked="{Binding IsEditableOnlyMode, Mode=OneWay}" Content="Edit" />
-                                            <RadioButton GroupName="EditorViewModes" Style="{StaticResource ViewModeToggleRadioButtonStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" Content="Compare" />
-                                            <RadioButton GroupName="EditorViewModes" Style="{StaticResource ViewModeToggleRadioButtonStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" Content="Overlay" />
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding UndoCommand}" Content="Undo" />
+                                        <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding RedoCommand}" Content="Redo" />
+                                        <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding ClearSelectionCommand}" Content="Clear" />
+                                        <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding FitViewportCommand}" Content="Fit" />
+                                        <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}" IsChecked="{Binding IsFocusMode}" Content="Focus" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </ScrollViewer>
+                        </Border>
 
-                                            <TextBlock Margin="8,4,6,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Actions" />
-                                            <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding UndoCommand}" Content="Undo" />
-                                            <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding RedoCommand}" Content="Redo" />
-                                            <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding ClearSelectionCommand}" Content="Clear" />
-                                            <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding FitViewportCommand}" Content="Fit" />
-                                            <CheckBox Style="{StaticResource IconToolbarToggleCheckBoxStyle}" IsChecked="{Binding IsFocusMode}">
-                                                <TextBlock Text="Focus" />
-                                            </CheckBox>
+                        <Border Grid.Row="1" Padding="4" Background="#FFF9F2" CornerRadius="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="5" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="5" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0" Width="264" Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                        <StackPanel>
+                                            <Border Style="{StaticResource SidebarSectionBorderStyle}" Visibility="{Binding ShowStateLayersPanel, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                    </Grid.RowDefinitions>
+                                                    <DockPanel>
+                                                        <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="States" />
+                                                        <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" Text="{Binding StateCountLabel}" />
+                                                    </DockPanel>
+                                                    <ListBox Grid.Row="1" Margin="0,6,0,0" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" ItemTemplate="{StaticResource StateSidebarItemTemplate}" ItemContainerStyle="{StaticResource StateListItemStyle}" BorderThickness="0" Background="Transparent" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                                                </Grid>
+                                            </Border>
+
+                                            <Border Style="{StaticResource SidebarSectionBorderStyle}" Visibility="{Binding ShowStateLayersPanel, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <StackPanel>
+                                                    <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Target layer" />
+                                                    <UniformGrid Margin="0,6,0,0" Columns="2">
+                                                        <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Base" />
+                                                        <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Landmark" />
+                                                        <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Overlay" />
+                                                        <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding ClearOptionalPreviewLayersCommand}" Content="Clear" />
+                                                    </UniformGrid>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Style="{StaticResource SidebarSectionBorderStyle}" Visibility="{Binding ShowSourcePalettePane, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="180" />
+                                                    </Grid.RowDefinitions>
+                                                    <DockPanel>
+                                                        <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Foreground="#FF4D627A" Text="Source" />
+                                                        <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" Text="Original" />
+                                                    </DockPanel>
+                                                    <StackPanel Grid.Row="1" Margin="0,6,0,0" Orientation="Horizontal">
+                                                        <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding FitViewportCommand}" Content="Fit" />
+                                                        <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding ResetEditorZoomCommand}" Content="1:1" />
+                                                    </StackPanel>
+                                                    <ScrollViewer x:Name="SidebarSourceViewportScrollViewer" Grid.Row="2" Margin="0,6,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" PreviewMouseWheel="EditorSurfaceHost_PreviewMouseWheel">
+                                                        <Grid MinWidth="{Binding ElementName=SidebarSourceViewportScrollViewer, Path=ViewportWidth}"
+                                                              MinHeight="{Binding ElementName=SidebarSourceViewportScrollViewer, Path=ViewportHeight}"
+                                                              Background="#FFF5EFE2">
+                                                            <local:EditorSurfaceControl HorizontalAlignment="Center"
+                                                                                       VerticalAlignment="Center"
+                                                                                       Surface="{Binding ActiveSourceSurface}"
+                                                                                       Zoom="{Binding ActiveEditorZoom}"
+                                                                                       ShowGrid="{Binding ShowGrid}"
+                                                                                       ShowCaptions="{Binding ShowGridCaptions}"
+                                                                                       SelectedSourceCoordinate="{Binding SelectedSourceCoordinate}"
+                                                                                       SelectedAreaBounds="{Binding SelectedAreaBounds}"
+                                                                                       HoveredCoordinate="{Binding HoveredCoordinate}"
+                                                                                       PreviewMouseLeftButtonDown="SourceSurface_PreviewMouseLeftButtonDown"
+                                                                                       PreviewMouseLeftButtonUp="SourceSurface_PreviewMouseLeftButtonUp"
+                                                                                       MouseMove="SourceSurface_MouseMove"
+                                                                                       MouseLeave="SourceSurface_MouseLeave" />
+                                                        </Grid>
+                                                    </ScrollViewer>
+                                                </Grid>
+                                            </Border>
+
+                                            <Border Style="{StaticResource SidebarSectionBorderStyle}" Visibility="{Binding ShowDirectionsInSidebar, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                    </Grid.RowDefinitions>
+                                                    <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Directions" />
+                                                    <ListBox Grid.Row="1"
+                                                             Margin="0,6,0,0"
+                                                             ItemsSource="{Binding DirectionNavigatorItems}"
+                                                             SelectedValuePath="Direction"
+                                                             SelectedValue="{Binding SelectedDirection, Mode=TwoWay}"
+                                                             BorderThickness="0"
+                                                             Background="Transparent"
+                                                             ItemTemplate="{StaticResource SidebarDirectionItemTemplate}"
+                                                             ItemContainerStyle="{StaticResource SidebarDirectionListBoxItemStyle}">
+                                                        <ListBox.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <UniformGrid Columns="2" />
+                                                            </ItemsPanelTemplate>
+                                                        </ListBox.ItemsPanel>
+                                                    </ListBox>
+                                                </Grid>
+                                            </Border>
                                         </StackPanel>
                                     </ScrollViewer>
                                 </Border>
 
-                                <Grid Grid.Row="1" Margin="0,4,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock FontWeight="SemiBold" Text="{Binding ActiveDirectionLabel, StringFormat=Active direction: {0}}" />
-                                        <TextBlock Margin="8,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding HoverAndStatusSummary}" />
-                                    </StackPanel>
+                                <GridSplitter Grid.Column="1"
+                                              Width="5"
+                                              Background="{StaticResource Brush.PanelBorder}"
+                                              HorizontalAlignment="Stretch"
+                                              VerticalAlignment="Stretch"
+                                              ResizeDirection="Columns"
+                                              ResizeBehavior="PreviousAndNext"
+                                              ShowsPreview="True"
+                                              Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                                    <StackPanel Grid.Column="1" Margin="8,0,0,0" Orientation="Horizontal" VerticalAlignment="Center" DataContext="{Binding DataContext.PreviewPanel, RelativeSource={RelativeSource AncestorType=Window}}">
-                                        <ComboBox Width="118" ItemsSource="{Binding PreviewDisplayModes}" SelectedItem="{Binding SelectedPreviewDisplayMode}" />
-                                        <Button Margin="6,0,0,0" Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding BuildPreviewCommand}" Content="Refresh" />
-                                        <CheckBox Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding IsAutoPreviewEnabled}" Content="Auto" />
-                                    </StackPanel>
+                                <Grid Grid.Column="2">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
 
-                                    <TextBlock Grid.Column="2" Margin="8,0,6,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ActiveEditorZoomLabel}" />
-                                    <Button Grid.Column="3" Style="{StaticResource DenseToolbarActionButtonStyle}" Margin="0,0,4,0" Command="{Binding ResetEditorZoomCommand}" Content="100%" MinWidth="46" />
-                                    <CheckBox Grid.Column="4" Margin="8,0,0,0" VerticalAlignment="Center" IsChecked="{Binding IsBottomWorkspaceExpanded}" Content="Bottom dock" />
+                                    <Border Grid.Row="0" Margin="0,0,0,4" Padding="6,4" Background="#FFFDF8EF" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8" Visibility="{Binding ShowCompactCanvasHeader, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <DockPanel>
+                                            <TextBlock FontWeight="SemiBold" Text="{Binding CurrentStateLabel}" />
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Dir:" />
+                                                <TextBlock Margin="4,0,0,0" FontWeight="SemiBold" Text="{Binding ActiveDirectionLabel}" />
+                                                <TextBlock Margin="12,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="Zoom:" />
+                                                <TextBlock Margin="4,0,0,0" FontWeight="SemiBold" Text="{Binding ActiveEditorZoomLabel}" />
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="5" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0" Style="{StaticResource ViewportShellBorderStyle}">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="*" />
+                                                </Grid.RowDefinitions>
+                                                <ScrollViewer x:Name="EditableViewportScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" PreviewMouseWheel="EditorSurfaceHost_PreviewMouseWheel">
+                                                    <Grid MinWidth="{Binding ElementName=EditableViewportScrollViewer, Path=ViewportWidth}"
+                                                          MinHeight="{Binding ElementName=EditableViewportScrollViewer, Path=ViewportHeight}"
+                                                          Background="#FFF5EFE2">
+                                                        <local:EditorSurfaceControl HorizontalAlignment="Center"
+                                                                                   VerticalAlignment="Center"
+                                                                                   Surface="{Binding ActiveTargetSurface}"
+                                                                                   Zoom="{Binding ActiveEditorZoom}"
+                                                                                   ShowGrid="{Binding ShowGrid}"
+                                                                                   ShowCaptions="{Binding ShowGridCaptions}"
+                                                                                   SelectedSourceCoordinate="{Binding SelectedSourceCoordinate}"
+                                                                                   SelectedTargetCoordinate="{Binding SelectedTargetCoordinate}"
+                                                                                   SelectedAreaBounds="{Binding SelectedAreaBounds}"
+                                                                                   HoveredCoordinate="{Binding HoveredCoordinate}"
+                                                                                   PreviewMouseLeftButtonUp="TargetSurface_PreviewMouseLeftButtonUp" />
+
+                                                        <local:EditorSurfaceControl HorizontalAlignment="Center"
+                                                                                   VerticalAlignment="Center"
+                                                                                   IsHitTestVisible="False"
+                                                                                   Opacity="0.35"
+                                                                                   Visibility="{Binding ShowOverlayCompareLayer, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                                                   Surface="{Binding ActiveSourceSurface}"
+                                                                                   Zoom="{Binding ActiveEditorZoom}"
+                                                                                   ShowGrid="False"
+                                                                                   ShowCaptions="False" />
+                                                    </Grid>
+                                                </ScrollViewer>
+                                            </Grid>
+                                        </Border>
+
+                                        <GridSplitter Grid.Column="1"
+                                                      Width="5"
+                                                      Background="{StaticResource Brush.PanelBorder}"
+                                                      HorizontalAlignment="Stretch"
+                                                      VerticalAlignment="Stretch"
+                                                      ResizeDirection="Columns"
+                                                      ResizeBehavior="PreviousAndNext"
+                                                      ShowsPreview="True"
+                                                      Visibility="{Binding IsReferencePaneVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                                        <Border Grid.Column="2" Width="248" Style="{StaticResource ViewportShellBorderStyle}" Visibility="{Binding IsReferencePaneVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="*" />
+                                                </Grid.RowDefinitions>
+                                                <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Foreground="#FF4D627A" Text="Compare source" />
+                                                <ScrollViewer x:Name="CompareSourceViewportScrollViewer" Grid.Row="1" Margin="0,4,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" PreviewMouseWheel="EditorSurfaceHost_PreviewMouseWheel">
+                                                    <Grid MinWidth="{Binding ElementName=CompareSourceViewportScrollViewer, Path=ViewportWidth}"
+                                                          MinHeight="{Binding ElementName=CompareSourceViewportScrollViewer, Path=ViewportHeight}"
+                                                          Background="#FFF5EFE2">
+                                                        <local:EditorSurfaceControl HorizontalAlignment="Center"
+                                                                                   VerticalAlignment="Center"
+                                                                                   Surface="{Binding ActiveSourceSurface}"
+                                                                                   Zoom="{Binding ActiveEditorZoom}"
+                                                                                   ShowGrid="{Binding ShowGrid}"
+                                                                                   ShowCaptions="{Binding ShowGridCaptions}"
+                                                                                   SelectedSourceCoordinate="{Binding SelectedSourceCoordinate}"
+                                                                                   SelectedAreaBounds="{Binding SelectedAreaBounds}"
+                                                                                   HoveredCoordinate="{Binding HoveredCoordinate}"
+                                                                                   PreviewMouseLeftButtonDown="SourceSurface_PreviewMouseLeftButtonDown"
+                                                                                   PreviewMouseLeftButtonUp="SourceSurface_PreviewMouseLeftButtonUp"
+                                                                                   MouseMove="SourceSurface_MouseMove"
+                                                                                   MouseLeave="SourceSurface_MouseLeave" />
+                                                    </Grid>
+                                                </ScrollViewer>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
                                 </Grid>
+
+                                <Border Grid.Column="4" Width="0" Visibility="Collapsed" />
                             </Grid>
                         </Border>
 
-                        <Border Grid.Row="1" Padding="4" Background="#FFF9F2" CornerRadius="8" DataContext="{Binding EditorWorkspace}">
+                        <Border Grid.Row="2" Margin="0,4,0,0" Padding="6,4" Background="#FFFDF8EF" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8" Visibility="{Binding ShowBottomStatusBar, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-                                <Border Grid.Row="0" Padding="6,4" Background="#FFFDF8EF" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8" Visibility="{Binding ShowSingleStateStrip, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <DockPanel LastChildFill="False">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock FontWeight="SemiBold" Text="State:" />
-                                            <TextBlock Margin="6,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding CurrentStateLabel}" />
-                                        </StackPanel>
-                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                            <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Base" />
-                                            <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Landmark" />
-                                            <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Overlay" />
-                                            <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding ClearOptionalPreviewLayersCommand}" Content="Clear" />
-                                        </StackPanel>
-                                    </DockPanel>
-                                </Border>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock FontWeight="SemiBold" Text="{Binding ActiveDirectionLabel, StringFormat=Dir {0}}" />
+                                    <TextBlock Margin="10,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding HoverAndStatusSummary}" />
+                                    <TextBlock Margin="10,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding SpriteContractSummary}" />
+                                    <TextBlock Margin="10,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ConfigSummary}" />
+                                </StackPanel>
 
-                                <Border Grid.Row="1" Margin="0,4,0,0" Padding="4" Background="#FFFDF8EF" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8" Visibility="{Binding UseHorizontalDirectionsStrip, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <ListBox ItemsSource="{Binding DirectionNavigatorItems}"
-                                             SelectedValuePath="Direction"
-                                             SelectedValue="{Binding SelectedDirection, Mode=TwoWay}"
-                                             BorderThickness="0"
-                                             Background="Transparent"
-                                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                             ItemTemplate="{StaticResource HorizontalDirectionStripItemTemplate}"
-                                             ItemContainerStyle="{StaticResource HorizontalDirectionStripListBoxItemStyle}">
-                                        <ListBox.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <StackPanel Orientation="Horizontal" />
-                                            </ItemsPanelTemplate>
-                                        </ListBox.ItemsPanel>
-                                    </ListBox>
-                                </Border>
-
-                                <Grid x:Name="EditorWorkspaceHostRoot" Grid.Row="2" Margin="0,4,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="4" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="5" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="4" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-
-                                    <Border Grid.Column="0" Width="118" Padding="4" Background="#FFFDF8EF" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8" ToolTip="{Binding RolesSummary}" Visibility="{Binding ShowStatesRail, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="*" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
-                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="States" />
-                                            <ListBox Grid.Row="1" Margin="0,4,0,0" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" BorderBrush="{StaticResource Brush.PanelBorder}" />
-                                            <UniformGrid Grid.Row="2" Margin="0,4,0,0" Columns="2">
-                                                <Button Margin="0,0,3,3" Padding="6,3" MinWidth="50" MinHeight="28" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Base" />
-                                                <Button Margin="3,0,0,3" Padding="6,3" MinWidth="50" MinHeight="28" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Landmark" />
-                                                <Button Margin="0,3,3,0" Padding="6,3" MinWidth="50" MinHeight="28" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Overlay" />
-                                                <Button Margin="3,3,0,0" Padding="6,3" MinWidth="50" MinHeight="28" Command="{Binding ClearOptionalPreviewLayersCommand}" Content="Clear" />
-                                            </UniformGrid>
-                                        </Grid>
-                                    </Border>
-
-                                    <Border Grid.Column="2" Width="236" Style="{StaticResource ViewportShellBorderStyle}" Visibility="{Binding IsReferencePaneVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="*" />
-                                            </Grid.RowDefinitions>
-                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Foreground="#FF4D627A" Text="Source" />
-                                            <ScrollViewer x:Name="SourceViewportScrollViewer" Grid.Row="1" Margin="0,4,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" PreviewMouseWheel="EditorSurfaceHost_PreviewMouseWheel">
-                                                <Grid MinWidth="{Binding ElementName=SourceViewportScrollViewer, Path=ViewportWidth}"
-                                                      MinHeight="{Binding ElementName=SourceViewportScrollViewer, Path=ViewportHeight}"
-                                                      Background="#FFF5EFE2">
-                                                    <local:EditorSurfaceControl HorizontalAlignment="Center"
-                                                                               VerticalAlignment="Center"
-                                                                               Surface="{Binding ActiveSourceSurface}"
-                                                                               Zoom="{Binding ActiveEditorZoom}"
-                                                                               ShowGrid="{Binding ShowGrid}"
-                                                                               ShowCaptions="{Binding ShowGridCaptions}"
-                                                                               SelectedSourceCoordinate="{Binding SelectedSourceCoordinate}"
-                                                                               SelectedAreaBounds="{Binding SelectedAreaBounds}"
-                                                                               HoveredCoordinate="{Binding HoveredCoordinate}"
-                                                                               PreviewMouseLeftButtonDown="SourceSurface_PreviewMouseLeftButtonDown"
-                                                                               PreviewMouseLeftButtonUp="SourceSurface_PreviewMouseLeftButtonUp"
-                                                                               MouseMove="SourceSurface_MouseMove"
-                                                                               MouseLeave="SourceSurface_MouseLeave" />
-                                                </Grid>
-                                            </ScrollViewer>
-                                        </Grid>
-                                    </Border>
-
-                                    <GridSplitter Grid.Column="3"
-                                                  Width="5"
-                                                  Background="{StaticResource Brush.PanelBorder}"
-                                                  HorizontalAlignment="Stretch"
-                                                  VerticalAlignment="Stretch"
-                                                  ResizeDirection="Columns"
-                                                  ResizeBehavior="PreviousAndNext"
-                                                  ShowsPreview="True"
-                                                  Visibility="{Binding IsReferencePaneVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
-
-                                    <Border Grid.Column="4" Style="{StaticResource ViewportShellBorderStyle}">
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="*" />
-                                            </Grid.RowDefinitions>
-                                            <DockPanel>
-                                                <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#FF8B5C28" Text="Editable" />
-                                                <TextBlock DockPanel.Dock="Right" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" Text="{Binding EditorViewMode}" />
-                                            </DockPanel>
-                                            <ScrollViewer x:Name="EditableViewportScrollViewer" Grid.Row="1" Margin="0,4,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" PreviewMouseWheel="EditorSurfaceHost_PreviewMouseWheel">
-                                                <Grid MinWidth="{Binding ElementName=EditableViewportScrollViewer, Path=ViewportWidth}"
-                                                      MinHeight="{Binding ElementName=EditableViewportScrollViewer, Path=ViewportHeight}"
-                                                      Background="#FFF5EFE2">
-                                                    <local:EditorSurfaceControl HorizontalAlignment="Center"
-                                                                               VerticalAlignment="Center"
-                                                                               Surface="{Binding ActiveTargetSurface}"
-                                                                               Zoom="{Binding ActiveEditorZoom}"
-                                                                               ShowGrid="{Binding ShowGrid}"
-                                                                               ShowCaptions="{Binding ShowGridCaptions}"
-                                                                               SelectedSourceCoordinate="{Binding SelectedSourceCoordinate}"
-                                                                               SelectedTargetCoordinate="{Binding SelectedTargetCoordinate}"
-                                                                               SelectedAreaBounds="{Binding SelectedAreaBounds}"
-                                                                               HoveredCoordinate="{Binding HoveredCoordinate}"
-                                                                               PreviewMouseLeftButtonUp="TargetSurface_PreviewMouseLeftButtonUp" />
-
-                                                    <local:EditorSurfaceControl HorizontalAlignment="Center"
-                                                                               VerticalAlignment="Center"
-                                                                               IsHitTestVisible="False"
-                                                                               Opacity="0.35"
-                                                                               Visibility="{Binding ShowOverlayCompareLayer, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                                               Surface="{Binding ActiveSourceSurface}"
-                                                                               Zoom="{Binding ActiveEditorZoom}"
-                                                                               ShowGrid="False"
-                                                                               ShowCaptions="False" />
-
-                                                    <Border HorizontalAlignment="Right"
-                                                            VerticalAlignment="Top"
-                                                            Margin="8"
-                                                            Padding="6,2"
-                                                            Background="#CCFFFFFF"
-                                                            BorderBrush="{StaticResource Brush.PanelBorder}"
-                                                            BorderThickness="1"
-                                                            CornerRadius="6"
-                                                            Visibility="{Binding ShowOverlayCompareLayer, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                                        <TextBlock FontSize="10" Foreground="{StaticResource Brush.TextSecondary}" Text="Source overlay" />
-                                                    </Border>
-                                                </Grid>
-                                            </ScrollViewer>
-                                        </Grid>
-                                    </Border>
-
-                                    <Border Grid.Column="6" Width="152" Padding="4" Background="#FFFDF8EF" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8" Visibility="{Binding UseVerticalDirectionsRail, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="*" />
-                                            </Grid.RowDefinitions>
-                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Directions" />
-                                            <ListBox Grid.Row="1"
-                                                     Margin="0,4,0,0"
-                                                     ItemsSource="{Binding DirectionNavigatorItems}"
-                                                     SelectedValuePath="Direction"
-                                                     SelectedValue="{Binding SelectedDirection, Mode=TwoWay}"
-                                                     BorderThickness="0"
-                                                     Background="Transparent"
-                                                     ItemTemplate="{StaticResource DirectionNavigatorItemTemplate}"
-                                                     ItemContainerStyle="{StaticResource DirectionNavigatorListBoxItemStyle}">
-                                                <ListBox.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <VirtualizingStackPanel Orientation="Vertical" />
-                                                    </ItemsPanelTemplate>
-                                                </ListBox.ItemsPanel>
-                                            </ListBox>
-                                        </Grid>
-                                    </Border>
-                                </Grid>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" DataContext="{Binding DataContext.PreviewPanel, RelativeSource={RelativeSource AncestorType=Window}}">
+                                    <ComboBox Width="118" ItemsSource="{Binding PreviewDisplayModes}" SelectedItem="{Binding SelectedPreviewDisplayMode}" />
+                                    <Button Margin="6,0,0,0" Style="{StaticResource CompactActionButtonStyle}" Command="{Binding BuildPreviewCommand}" Content="Refresh" />
+                                    <CheckBox Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding IsAutoPreviewEnabled}" Content="Auto" />
+                                    <CheckBox Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding DataContext.ShowGridToggle, RelativeSource={RelativeSource AncestorType=Window}}" Content="Grid" />
+                                    <CheckBox Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding DataContext.ShowOverlayToggle, RelativeSource={RelativeSource AncestorType=Window}}" Content="Overlay" />
+                                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding DataContext.ActiveEditorZoomLabel, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                    <Button Margin="6,0,0,0" Style="{StaticResource CompactActionButtonStyle}" Command="{Binding DataContext.ResetEditorZoomCommand, RelativeSource={RelativeSource AncestorType=Window}}" Content="100%" />
+                                    <CheckBox Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding DataContext.IsBottomWorkspaceExpanded, RelativeSource={RelativeSource AncestorType=Window}}" Content="Bottom dock" />
+                                </StackPanel>
                             </Grid>
                         </Border>
 
