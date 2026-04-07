@@ -389,6 +389,36 @@ public partial class WorkspaceShellViewModel
     }
 
     [RelayCommand]
+    private void SetEditableOnlyMode() => SetEditorViewMode(EditorViewMode.EditableOnly, "Editable viewport mode active.");
+
+    [RelayCommand]
+    private void SetCompareSplitMode() => SetEditorViewMode(EditorViewMode.CompareSplit, "Compare split mode active.");
+
+    [RelayCommand]
+    private void SetOverlayCompareMode() => SetEditorViewMode(EditorViewMode.OverlayCompare, "Overlay compare mode active.");
+
+    [RelayCommand]
+    private void ToggleFocusMode()
+    {
+        IsFocusMode = !IsFocusMode;
+        if (IsFocusMode)
+        {
+            IsBottomWorkspaceExpanded = false;
+        }
+
+        StatusMessage = IsFocusMode
+            ? "Focus mode enabled. Auxiliary editor panels are hidden."
+            : "Focus mode disabled. Auxiliary editor panels restored.";
+    }
+
+    [RelayCommand(CanExecute = nameof(CanFitViewport))]
+    private void FitViewport()
+    {
+        ApplyAdaptiveEditorZoom(force: true);
+        StatusMessage = $"Viewport fit applied at {ActiveEditorZoomLabel}.";
+    }
+
+    [RelayCommand]
     private void ResetEditorZoom() => ActiveEditorZoom = 2.0;
 
     [RelayCommand]
@@ -468,6 +498,14 @@ public partial class WorkspaceShellViewModel
 
     partial void OnIsPreviewInspectorExpandedChanged(bool value) => PersistWorkspaceSettingsInBackground();
 
+    partial void OnIsFocusModeChanged(bool value)
+    {
+        if (value)
+        {
+            IsBottomWorkspaceExpanded = false;
+        }
+    }
+
     partial void OnBatchInputDirectoryChanged(string value)
     {
         RefreshBatchPipelineState();
@@ -492,5 +530,16 @@ public partial class WorkspaceShellViewModel
 
         ActiveEditorZoom = nextZoom;
         return true;
+    }
+
+    private void SetEditorViewMode(EditorViewMode mode, string statusMessage)
+    {
+        if (EditorViewMode == mode)
+        {
+            return;
+        }
+
+        EditorViewMode = mode;
+        StatusMessage = statusMessage;
     }
 }

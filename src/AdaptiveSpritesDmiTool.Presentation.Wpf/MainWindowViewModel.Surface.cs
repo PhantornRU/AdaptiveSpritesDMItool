@@ -275,6 +275,7 @@ public partial class WorkspaceShellViewModel
         SaveConfigCommand.NotifyCanExecuteChanged();
         BuildPreviewCommand.NotifyCanExecuteChanged();
         RunBatchCommand.NotifyCanExecuteChanged();
+        FitViewportCommand.NotifyCanExecuteChanged();
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
         CancelCommand.NotifyCanExecuteChanged();

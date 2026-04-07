@@ -328,6 +328,26 @@ public sealed class EditorCommandBarViewModel(WorkspaceShellViewModel shell) : S
         set => Shell.ShowTextGrid = value;
     }
 
+    public EditorViewMode EditorViewMode
+    {
+        get => Shell.EditorViewMode;
+        set => Shell.EditorViewMode = value;
+    }
+
+    public bool IsEditableOnlyMode => Shell.IsEditableOnlyMode;
+
+    public bool IsCompareSplitMode => Shell.IsCompareSplitMode;
+
+    public bool IsOverlayCompareMode => Shell.IsOverlayCompareMode;
+
+    public bool IsFocusMode
+    {
+        get => Shell.IsFocusMode;
+        set => Shell.IsFocusMode = value;
+    }
+
+    public bool CanFitViewport => Shell.CanFitViewport;
+
     public bool IsSingleToolSelected => SelectedEditorTool == EditorTool.Single;
 
     public bool IsFillToolSelected => SelectedEditorTool == EditorTool.Fill;
@@ -365,6 +385,16 @@ public sealed class EditorCommandBarViewModel(WorkspaceShellViewModel shell) : S
     public IRelayCommand UndoCommand => Shell.UndoCommand;
 
     public IRelayCommand RedoCommand => Shell.RedoCommand;
+
+    public IRelayCommand SetEditableOnlyModeCommand => Shell.SetEditableOnlyModeCommand;
+
+    public IRelayCommand SetCompareSplitModeCommand => Shell.SetCompareSplitModeCommand;
+
+    public IRelayCommand SetOverlayCompareModeCommand => Shell.SetOverlayCompareModeCommand;
+
+    public IRelayCommand ToggleFocusModeCommand => Shell.ToggleFocusModeCommand;
+
+    public IRelayCommand FitViewportCommand => Shell.FitViewportCommand;
 }
 
 public sealed class DirectionMatrixViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
@@ -465,6 +495,22 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public bool ShowGridCaptions => Shell.GridAboveImage;
 
+    public bool ShowStatesRail => Shell.ShowStatesRail;
+
+    public bool ShowSingleStateStrip => Shell.ShowSingleStateStrip;
+
+    public bool UseHorizontalDirectionsStrip => Shell.UseHorizontalDirectionsStrip;
+
+    public bool UseVerticalDirectionsRail => Shell.UseVerticalDirectionsRail;
+
+    public bool HasDirectionSelector => Shell.HasDirectionSelector;
+
+    public bool IsReferencePaneVisible => Shell.IsReferencePaneVisible;
+
+    public bool ShowOverlayCompareLayer => Shell.ShowOverlayCompareLayer;
+
+    public bool IsFocusMode => Shell.IsFocusMode;
+
     public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
 
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems => Shell.DirectionNavigatorItems;
@@ -476,6 +522,10 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
         get => Shell.SelectedExplorerState;
         set => Shell.SelectedExplorerState = value;
     }
+
+    public string CurrentStateLabel => string.IsNullOrWhiteSpace(Shell.SelectedExplorerState)
+        ? NormalizeStateLabel(Shell.BaseStateName)
+        : Shell.SelectedExplorerState;
 
     public DirectionMatrixViewModel DirectionMatrix { get; } = new(shell);
 
@@ -492,6 +542,8 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public IRelayCommand ResetEditorZoomCommand => Shell.ResetEditorZoomCommand;
 
     public IRelayCommand<SpriteDirection> SelectDirectionCommand => Shell.SelectDirectionCommand;
+
+    private static string NormalizeStateLabel(string stateName) => string.IsNullOrWhiteSpace(stateName) ? "State not selected" : stateName;
 }
 
 public sealed class ConfigWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)

@@ -23,6 +23,11 @@ public partial class WorkspaceShellViewModel
         ApplyWorkspaceSettings(settingsResult.Value);
         await RestoreWorkspaceAsync();
         RefreshWorkspaceState();
+        if (HasEditorWorkflow)
+        {
+            ApplyAdaptiveEditorZoom(force: true);
+        }
+
         RefreshPreviewSelectionSummary();
         RefreshEditorSurface();
         NavigateToSection(HasEditorWorkflow ? ShellSectionKind.Editor : ShellSectionKind.Start);
@@ -311,6 +316,7 @@ public partial class WorkspaceShellViewModel
 
         StatusMessage = $"Created config '{result.Value.Name}'.";
         RefreshWorkspaceState();
+        ApplyAdaptiveEditorZoom(force: true);
         RefreshPreviewSelectionSummary();
         RefreshEditorSurface();
         NavigateToSection(ShellSectionKind.Editor);
@@ -406,6 +412,7 @@ public partial class WorkspaceShellViewModel
         NormalizeSelectedDirection();
         StatusMessage = $"Loaded DMI '{result.Value.DisplayName}' with {result.Value.States.Count} states.";
         RefreshWorkspaceState();
+        ApplyAdaptiveEditorZoom(force: true);
         RefreshPreviewSelectionSummary();
         RefreshEditorSurface();
 
@@ -443,6 +450,7 @@ public partial class WorkspaceShellViewModel
         DraftConfigName = result.Value.Name;
         StatusMessage = $"Loaded config '{result.Value.Name}'.";
         RefreshWorkspaceState();
+        ApplyAdaptiveEditorZoom(force: true);
         RefreshPreviewSelectionSummary();
         RefreshEditorSurface();
 
@@ -472,6 +480,7 @@ public partial class WorkspaceShellViewModel
         DraftConfigName = result.Value.Name;
         StatusMessage = $"Imported legacy CSV '{Path.GetFileName(path)}' as config '{result.Value.Name}'.";
         RefreshWorkspaceState();
+        ApplyAdaptiveEditorZoom(force: true);
         RefreshPreviewSelectionSummary();
         RefreshEditorSurface();
 

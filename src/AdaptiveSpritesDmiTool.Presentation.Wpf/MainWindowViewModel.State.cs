@@ -6,6 +6,13 @@ using System.Windows.Media.Imaging;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
+public enum EditorViewMode
+{
+    EditableOnly = 0,
+    CompareSplit = 1,
+    OverlayCompare = 2
+}
+
 public partial class WorkspaceShellViewModel
 {
     private readonly double _minEditorZoom = 1.0;
@@ -139,6 +146,14 @@ public partial class WorkspaceShellViewModel
     private double activeEditorZoom = 2.0;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEditableOnlyMode))]
+    [NotifyPropertyChangedFor(nameof(IsCompareSplitMode))]
+    [NotifyPropertyChangedFor(nameof(IsOverlayCompareMode))]
+    [NotifyPropertyChangedFor(nameof(IsReferencePaneVisible))]
+    [NotifyPropertyChangedFor(nameof(ShowOverlayCompareLayer))]
+    private EditorViewMode editorViewMode = EditorViewMode.EditableOnly;
+
+    [ObservableProperty]
     private PixelCoordinate? hoveredCoordinate;
 
     [ObservableProperty]
@@ -183,6 +198,16 @@ public partial class WorkspaceShellViewModel
 
     [ObservableProperty]
     private bool isPreviewInspectorExpanded;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsReferencePaneVisible))]
+    [NotifyPropertyChangedFor(nameof(ShowStatesRail))]
+    [NotifyPropertyChangedFor(nameof(ShowSingleStateStrip))]
+    [NotifyPropertyChangedFor(nameof(UseHorizontalDirectionsStrip))]
+    [NotifyPropertyChangedFor(nameof(UseVerticalDirectionsRail))]
+    [NotifyPropertyChangedFor(nameof(HasDirectionSelector))]
+    [NotifyPropertyChangedFor(nameof(ShowOverlayCompareLayer))]
+    private bool isFocusMode;
 
     [ObservableProperty]
     private bool mirrorAcrossDirections;
@@ -238,13 +263,39 @@ public partial class WorkspaceShellViewModel
 
     public string ActiveEditorZoomLabel => $"{Math.Round(ActiveEditorZoom * 100):0}%";
 
+    public bool IsEditableOnlyMode => EditorViewMode == EditorViewMode.EditableOnly;
+
+    public bool IsCompareSplitMode => EditorViewMode == EditorViewMode.CompareSplit;
+
+    public bool IsOverlayCompareMode => EditorViewMode == EditorViewMode.OverlayCompare;
+
+    public bool IsReferencePaneVisible => IsCompareSplitMode && !IsFocusMode;
+
+    public bool ShowOverlayCompareLayer => IsOverlayCompareMode && !IsFocusMode;
+
     public bool HasSelectedAreaBounds => SelectedAreaBounds is not null;
+
+    public bool HasMultipleStates => AvailableStates.Count > 1;
+
+    public bool IsSingleStateWorkflow => AvailableStates.Count <= 1;
+
+    public bool ShowStatesRail => HasMultipleStates && !IsFocusMode;
+
+    public bool ShowSingleStateStrip => IsSingleStateWorkflow && !IsFocusMode && !string.IsNullOrWhiteSpace(SelectedExplorerState);
+
+    public bool UseHorizontalDirectionsStrip => AvailableDirections.Count == 4 && !IsFocusMode;
+
+    public bool UseVerticalDirectionsRail => AvailableDirections.Count > 4 && !IsFocusMode;
+
+    public bool HasDirectionSelector => AvailableDirections.Count > 1 && !IsFocusMode;
 
     public bool HasLoadedAsset => _editorSession.LoadedAsset is not null;
 
     public bool HasActiveConfig => _editorSession.CurrentConfig is not null;
 
     public bool HasEditorWorkflow => HasLoadedAsset || HasActiveConfig;
+
+    public bool CanFitViewport => ResolveEditorResolution() is not null && !IsBusy;
 
     public int SelectedShellSectionIndex
     {

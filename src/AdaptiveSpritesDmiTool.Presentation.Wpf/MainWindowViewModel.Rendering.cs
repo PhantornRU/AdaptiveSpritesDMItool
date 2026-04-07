@@ -41,6 +41,39 @@ public partial class WorkspaceShellViewModel
 
     private bool CanCancel() => IsBusy;
 
+    private SpriteResolution? ResolveEditorResolution() => _editorSession.CurrentConfig?.Resolution ?? _editorSession.LoadedAsset?.Resolution;
+
+    private double DetermineAdaptiveEditorZoom(SpriteResolution? resolution = null)
+    {
+        var resolved = resolution ?? ResolveEditorResolution();
+        if (resolved is null)
+        {
+            return 2.0;
+        }
+
+        var maxDimension = Math.Max(resolved.Value.Width, resolved.Value.Height);
+        var zoom = maxDimension switch
+        {
+            <= 32 => 4.0,
+            <= 64 => 2.0,
+            <= 128 => 1.5,
+            _ => 1.0
+        };
+
+        return Math.Clamp(zoom, MinEditorZoom, MaxEditorZoom);
+    }
+
+    private void ApplyAdaptiveEditorZoom(bool force)
+    {
+        var nextZoom = DetermineAdaptiveEditorZoom();
+        if (!force && Math.Abs(nextZoom - ActiveEditorZoom) < 0.001d)
+        {
+            return;
+        }
+
+        ActiveEditorZoom = nextZoom;
+    }
+
     private void ApplyWorkspaceSettings(WorkspaceSettings settings)
     {
         DmiPath = settings.LastOpenedDmiPath ?? string.Empty;
@@ -56,9 +89,11 @@ public partial class WorkspaceShellViewModel
         SelectedDirection = settings.LastSelectedDirection ?? SelectedDirection;
         SelectedOverwritePolicy = settings.LastOverwritePolicy;
         SelectedEditorViewportMode = EditorViewportMode.Matrix;
+        EditorViewMode = EditorViewMode.EditableOnly;
         SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
         IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded;
         IsBottomWorkspaceExpanded = false;
+        IsFocusMode = false;
     }
 
     private async Task RestoreWorkspaceAsync()
@@ -148,9 +183,11 @@ public partial class WorkspaceShellViewModel
         OperationProgressMaximum = 1;
         IsProgressIndeterminate = false;
         SelectedEditorViewportMode = EditorViewportMode.Matrix;
+        EditorViewMode = EditorViewMode.EditableOnly;
         SelectedBottomWorkspaceTab = BottomWorkspaceTab.Assets;
         IsBottomWorkspaceExpanded = false;
         IsPreviewInspectorExpanded = false;
+        IsFocusMode = false;
         SelectedBatchSourceItem = null;
         FocusedDirectionTile = null;
         DirectionMatrixColumns = 2;
