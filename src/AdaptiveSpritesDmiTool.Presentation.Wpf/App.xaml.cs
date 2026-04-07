@@ -7,6 +7,7 @@ using AdaptiveSpritesDmiTool.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -151,10 +152,32 @@ public partial class App : System.Windows.Application
     private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
         e.SetObserved();
+
+#if DEBUG
+        Debug.WriteLine($"[App] OnUnobservedTaskException thread={Environment.CurrentManagedThreadId} dispatcherAccess={Dispatcher.CheckAccess()}");
+#endif
+
         HandleFatalException("A background task failed unexpectedly.", e.Exception);
     }
 
     private void HandleFatalException(string message, Exception exception)
+    {
+        _logger?.LogCritical(exception, message);
+
+#if DEBUG
+        Debug.WriteLine($"[App] HandleFatalException thread={Environment.CurrentManagedThreadId} dispatcherAccess={Dispatcher.CheckAccess()} message={message}");
+#endif
+
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.Invoke(() => HandleFatalExceptionOnUiThread(message, exception));
+            return;
+        }
+
+        HandleFatalExceptionOnUiThread(message, exception);
+    }
+
+    private void HandleFatalExceptionOnUiThread(string message, Exception exception)
     {
         _logger?.LogCritical(exception, message);
 
@@ -168,6 +191,9 @@ public partial class App : System.Windows.Application
         }
         finally
         {
+#if DEBUG
+            Debug.WriteLine($"[App] Shutdown on UI thread={Environment.CurrentManagedThreadId}");
+#endif
             Shutdown(-1);
         }
     }
