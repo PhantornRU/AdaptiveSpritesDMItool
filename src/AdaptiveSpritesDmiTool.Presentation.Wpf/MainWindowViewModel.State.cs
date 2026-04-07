@@ -179,7 +179,7 @@ public partial class WorkspaceShellViewModel
     private BottomWorkspaceTab selectedBottomWorkspaceTab = BottomWorkspaceTab.Assets;
 
     [ObservableProperty]
-    private bool isBottomWorkspaceExpanded = true;
+    private bool isBottomWorkspaceExpanded;
 
     [ObservableProperty]
     private bool isPreviewInspectorExpanded;

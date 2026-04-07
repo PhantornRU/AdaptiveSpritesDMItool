@@ -166,10 +166,10 @@ public sealed class NavigationRailViewModel(WorkspaceShellViewModel shell) : She
 {
     public ObservableCollection<NavigationRailItemViewModel> Items { get; } =
     [
-        new NavigationRailItemViewModel(shell, ShellSectionKind.Start, "Start", "\uE80F", () => true),
-        new NavigationRailItemViewModel(shell, ShellSectionKind.Editor, "Editor", "\uE70F", () => shell.EditorWorkspace.IsAvailable),
-        new NavigationRailItemViewModel(shell, ShellSectionKind.Batch, "Batch", "\uE8B7", () => shell.BatchWorkspace.IsAvailable),
-        new NavigationRailItemViewModel(shell, ShellSectionKind.Settings, "Settings", "\uE713", () => true)
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Start, "Start", "Home24", () => true),
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Editor, "Editor", "BoxEdit24", () => shell.EditorWorkspace.IsAvailable),
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Batch, "Data", "BookDatabase24", () => shell.BatchWorkspace.IsAvailable),
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Settings, "Settings", "Settings24", () => true)
     ];
 
     public ShellSectionKind SelectedSection
@@ -432,6 +432,18 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public string SelectionSummary => $"{Shell.SelectedSourceSummary}  {Shell.SelectedAreaSummary}";
 
     public string ActiveDirectionLabel => Shell.SelectedDirection.ToString();
+
+    public SpriteDirection SelectedDirection
+    {
+        get => Shell.SelectedDirection;
+        set => Shell.SelectedDirection = value;
+    }
+
+    public bool IsBottomWorkspaceExpanded
+    {
+        get => Shell.IsBottomWorkspaceExpanded;
+        set => Shell.IsBottomWorkspaceExpanded = value;
+    }
 
     public double ActiveEditorZoom => Shell.ActiveEditorZoom;
 

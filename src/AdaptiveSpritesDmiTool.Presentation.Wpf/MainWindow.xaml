@@ -7,6 +7,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
         Title="{Binding WindowTitle}"
+        Icon="pack://application:,,,/Assets/Brand/wpfui-icon.ico"
         Width="1460"
         Height="920"
         MinWidth="1200"
@@ -131,6 +132,76 @@
             <Setter Property="MinWidth" Value="52" />
             <Setter Property="Margin" Value="0,0,3,3" />
         </Style>
+        <Style x:Key="CompactPanelBorderStyle" TargetType="Border">
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="Background" Value="{StaticResource Brush.PanelBackground}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style x:Key="ThinHeaderStripStyle" TargetType="Border" BasedOn="{StaticResource CompactPanelBorderStyle}">
+            <Setter Property="Padding" Value="8,6" />
+        </Style>
+        <Style x:Key="EditorSectionHeaderTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style x:Key="CompactActionButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseToolbarActionButtonStyle}">
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+        </Style>
+        <Style x:Key="RailListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,0,6" />
+            <Setter Property="Padding" Value="8,10" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="IsEnabled" Value="{Binding IsAvailable}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="Transparent" CornerRadius="10">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.Accent}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.AccentMuted}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="DirectionNavigatorListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
+                                <Setter TargetName="Root" Property="BorderThickness" Value="2" />
+                                <Setter TargetName="Root" Property="Background" Value="#FFF6F1E8" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#FFFBF6EC" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="EditorToolbarRadioButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource ShellModeRadioButtonStyle}">
             <Setter Property="Margin" Value="0,0,3,3" />
             <Setter Property="Padding" Value="6,4" />
@@ -192,37 +263,31 @@
                     ToolTip="{Binding ToolTip}" />
         </DataTemplate>
         <DataTemplate x:Key="DirectionNavigatorItemTemplate">
-            <Button Padding="0"
-                    Margin="0"
-                    MinHeight="86"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Command="{Binding DataContext.EditorWorkspace.SelectDirectionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                    CommandParameter="{Binding Direction}">
-                <Border Padding="4" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                    <Setter Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
-                                    <Setter Property="BorderThickness" Value="2" />
-                                    <Setter Property="Background" Value="#FFF6F1E8" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <TextBlock FontSize="10" FontWeight="SemiBold" Text="{Binding Label}" />
-                        <Border Grid.Row="1" Margin="0,4,0,0" Padding="2" Background="#FFFFFCF7" CornerRadius="6">
-                            <Image Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" SnapsToDevicePixels="True" />
-                        </Border>
-                    </Grid>
+            <Grid MinHeight="56">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="56" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Width="56" Height="56" Padding="2" Background="#FFFFFCF7" CornerRadius="6">
+                    <Image Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" SnapsToDevicePixels="True" />
                 </Border>
-            </Button>
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding Label}" />
+                    <TextBlock FontSize="10" Foreground="{StaticResource Brush.TextSecondary}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="Select direction" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                        <Setter Property="Text" Value="Active direction" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
         </DataTemplate>
 
         <DataTemplate x:Key="DirectionTileTemplate">
@@ -285,8 +350,8 @@
         </HierarchicalDataTemplate>
     </Window.Resources>
 
-    <DockPanel Margin="18">
-        <Border DockPanel.Dock="Bottom" Padding="8,6" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
+    <DockPanel Margin="6">
+        <Border DockPanel.Dock="Bottom" Padding="8,5" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="6">
             <Grid DataContext="{Binding OperationalStatusBar}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -309,54 +374,26 @@
             </Grid>
         </Border>
 
-        <Grid Margin="0,0,0,12">
+        <Grid Margin="0,0,0,6">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="84" />
-                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="72" />
+                <ColumnDefinition Width="6" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Padding="12" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="18">
+            <Border Grid.Column="0" Style="{StaticResource CompactPanelBorderStyle}" Padding="6,8">
                 <ListBox DataContext="{Binding NavigationRail}"
                          ItemsSource="{Binding Items}"
                          SelectedValuePath="Section"
                          SelectedValue="{Binding SelectedSection, Mode=TwoWay}"
-                         Background="Transparent"
-                         BorderThickness="0">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Margin" Value="0,0,0,10" />
-                            <Setter Property="Padding" Value="10" />
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                            <Setter Property="IsEnabled" Value="{Binding IsAvailable}" />
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="Transparent" CornerRadius="16">
-                                            <ContentPresenter />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.Accent}" />
-                                                <Setter Property="Foreground" Value="White" />
-                                            </Trigger>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.AccentMuted}" />
-                                            </Trigger>
-                                            <Trigger Property="IsEnabled" Value="False">
-                                                <Setter TargetName="Root" Property="Opacity" Value="0.45" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
+                          Background="Transparent"
+                         BorderThickness="0"
+                         ItemContainerStyle="{StaticResource RailListBoxItemStyle}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel>
-                                <TextBlock HorizontalAlignment="Center" FontFamily="Segoe MDL2 Assets" FontSize="22" Text="{Binding Glyph}" />
-                                <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" FontSize="12" Text="{Binding Label}" />
+                                <ui:SymbolIcon HorizontalAlignment="Center" Width="22" Height="22" Symbol="{Binding IconSymbol}" />
+                                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="11" Text="{Binding Label}" />
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -369,27 +406,30 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Border Grid.Row="0" Margin="0,0,0,10" Padding="12,9" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="18">
+                <Border Grid.Row="0" Margin="0,0,0,6" Style="{StaticResource ThinHeaderStripStyle}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock FontSize="20" FontWeight="SemiBold" Text="{Binding WorkspaceTitle}" />
-                            <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
-                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding SpriteContractSummary}" />
-                                <TextBlock Margin="14,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ConfigSummary}" />
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Image Width="20" Height="20" Margin="0,0,8,0" Source="pack://application:,,,/Assets/Brand/AdaptiveToolLogo.png" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock FontSize="17" FontWeight="SemiBold" Text="{Binding WorkspaceTitle}" />
+                                <StackPanel Margin="0,1,0,0" Orientation="Horizontal">
+                                    <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding SpriteContractSummary}" />
+                                    <TextBlock Margin="10,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ConfigSummary}" />
+                                </StackPanel>
                             </StackPanel>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Margin="0,0,10,0" Padding="14,8" Command="{Binding OpenDmiCommand}" Content="Open DMI" />
-                            <Button Padding="14,8" Command="{Binding SaveConfigCommand}" Content="Save Config" />
+                            <Button Margin="0,0,6,0" Style="{StaticResource CompactActionButtonStyle}" Command="{Binding OpenDmiCommand}" Content="Open DMI" />
+                            <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding SaveConfigCommand}" Content="Save Config" />
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <Border Grid.Row="1" Padding="10" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="18">
+                <Border Grid.Row="1" Style="{StaticResource CompactPanelBorderStyle}">
                     <TabControl Style="{StaticResource ShellTabControlStyle}" SelectedIndex="{Binding SelectedShellSectionIndex, Mode=TwoWay}">
                 <TabItem Header="Start">
                     <Grid DataContext="{Binding StartTab}" Margin="8">
@@ -500,26 +540,28 @@
                 </TabItem>
 
                 <TabItem Header="Editor" IsEnabled="{Binding EditorWorkspace.IsAvailable}">
-                    <Grid Margin="4">
+                    <Grid Margin="2">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
-                            <RowDefinition Height="172" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="142" />
+                            <ColumnDefinition Width="128" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="168" />
+                            <ColumnDefinition Width="156" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,4" Padding="5" Background="#FFF9F2" CornerRadius="14">
+                        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,4" Padding="4" Background="#FFF9F2" CornerRadius="8">
                             <Grid DataContext="{Binding EditorWorkspace}">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <Border Padding="4" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="10" DataContext="{Binding CommandBar}">
-                                    <WrapPanel>
+                                <Border Padding="4" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8" DataContext="{Binding CommandBar}">
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
+                                        <StackPanel Orientation="Horizontal">
                                         <TextBlock Margin="0,4,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
                                         <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Create a single cell on the editable preview using the selected source cell." Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="AddSquare24" Width="18" Height="18" /></RadioButton>
                                         <RadioButton GroupName="EditorTools" Style="{StaticResource EditorToolbarRadioButtonStyle}" ToolTip="Fill the editable area using the selected source cell." Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}"><ui:SymbolIcon Symbol="Grid24" Width="18" Height="18" /></RadioButton>
@@ -546,11 +588,13 @@
                                         <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding UndoCommand}" Content="Undo" />
                                         <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding RedoCommand}" Content="Redo" />
                                         <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Command="{Binding ClearSelectionCommand}" Content="Clear" />
-                                    </WrapPanel>
+                                        </StackPanel>
+                                    </ScrollViewer>
                                 </Border>
                                 <Grid Grid.Row="1" Margin="0,4,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
@@ -562,22 +606,21 @@
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                         <Button Style="{StaticResource DenseToolbarActionButtonStyle}" Margin="0,0,4,0" Command="{Binding ResetEditorZoomCommand}" Content="100%" MinWidth="46" />
                                     </StackPanel>
+                                    <CheckBox Grid.Column="3" Margin="8,0,0,0" VerticalAlignment="Center" IsChecked="{Binding IsBottomWorkspaceExpanded}" Content="Bottom dock" />
                                 </Grid>
                             </Grid>
                         </Border>
 
-                        <Border Grid.Row="1" Grid.Column="0" Padding="6" Background="#FFF9F2" CornerRadius="14" DataContext="{Binding EditorWorkspace}">
+                        <Border Grid.Row="1" Grid.Column="0" Padding="4" Background="#FFF9F2" CornerRadius="8" DataContext="{Binding EditorWorkspace}" ToolTip="{Binding RolesSummary}">
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <TextBlock FontSize="14" FontWeight="SemiBold" Text="States" />
-                                <TextBlock Grid.Row="1" Margin="0,2,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding RolesSummary}" />
-                                <ListBox Grid.Row="2" Margin="0,6,0,0" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" BorderBrush="{StaticResource Brush.PanelBorder}" />
-                                <UniformGrid Grid.Row="3" Margin="0,6,0,0" Columns="2">
+                                <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="States" />
+                                <ListBox Grid.Row="1" Margin="0,4,0,0" ItemsSource="{Binding AvailableStates}" SelectedItem="{Binding SelectedExplorerState}" BorderBrush="{StaticResource Brush.PanelBorder}" />
+                                <UniformGrid Grid.Row="2" Margin="0,4,0,0" Columns="2">
                                     <Button Margin="0,0,3,3" Padding="6,3" MinWidth="56" MinHeight="28" Command="{Binding UseSelectedStateAsBaseCommand}" Content="Base" />
                                     <Button Margin="3,0,0,3" Padding="6,3" MinWidth="56" MinHeight="28" Command="{Binding UseSelectedStateAsLandmarkCommand}" Content="Landmark" />
                                     <Button Margin="0,3,3,0" Padding="6,3" MinWidth="56" MinHeight="28" Command="{Binding UseSelectedStateAsOverlayCommand}" Content="Overlay" />
@@ -586,21 +629,21 @@
                             </Grid>
                         </Border>
 
-                        <Border Grid.Row="1" Grid.Column="1" Margin="4,0" Padding="6" Background="#FFF9F2" CornerRadius="14" DataContext="{Binding EditorWorkspace}">
+                        <Border Grid.Row="1" Grid.Column="1" Margin="4,0" Padding="4" Background="#FFF9F2" CornerRadius="8" DataContext="{Binding EditorWorkspace}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <TextBlock FontSize="14" FontWeight="SemiBold" Text="{Binding ActiveDirectionLabel, StringFormat={}{0} editor}" />
+                                <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="{Binding ActiveDirectionLabel, StringFormat={}{0} editor}" />
                                 <Grid Grid.Row="1" Margin="0,4,0,0">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="224" />
                                         <ColumnDefinition Width="6" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
-                                    <Border Padding="5" Background="#FFF7FAFD" BorderBrush="#FFC7D3E4" BorderThickness="1" CornerRadius="10">
+                                    <Border Padding="4" Background="#FFF7FAFD" BorderBrush="#FFC7D3E4" BorderThickness="1" CornerRadius="8">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -623,7 +666,7 @@
                                         </Grid>
                                     </Border>
 
-                                    <Border Grid.Column="2" Padding="5" Background="#FFFFFAF3" BorderBrush="#FFD9BF9B" BorderThickness="1" CornerRadius="10">
+                                    <Border Grid.Column="2" Padding="4" Background="#FFFFFAF3" BorderBrush="#FFD9BF9B" BorderThickness="1" CornerRadius="8">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -647,22 +690,31 @@
                             </Grid>
                         </Border>
 
-                        <Border Grid.Row="1" Grid.Column="2" Padding="6" Background="#FFF9F2" CornerRadius="14">
+                        <Border Grid.Row="1" Grid.Column="2" Padding="4" Background="#FFF9F2" CornerRadius="8">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <TextBlock FontSize="13" FontWeight="SemiBold" Text="Directions" />
-                                <ItemsControl Grid.Row="1" Margin="0,4,0,0" DataContext="{Binding EditorWorkspace}" ItemsSource="{Binding DirectionNavigatorItems}" ItemTemplate="{StaticResource DirectionNavigatorItemTemplate}">
-                                    <ItemsControl.ItemsPanel>
+                                <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Directions" />
+                                <ListBox Grid.Row="1"
+                                         Margin="0,4,0,0"
+                                         DataContext="{Binding EditorWorkspace}"
+                                         ItemsSource="{Binding DirectionNavigatorItems}"
+                                         SelectedValuePath="Direction"
+                                         SelectedValue="{Binding SelectedDirection, Mode=TwoWay}"
+                                         BorderThickness="0"
+                                         Background="Transparent"
+                                         ItemTemplate="{StaticResource DirectionNavigatorItemTemplate}"
+                                         ItemContainerStyle="{StaticResource DirectionNavigatorListBoxItemStyle}">
+                                    <ListBox.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                            <UniformGrid Columns="{Binding DirectionNavigatorColumns}" />
+                                            <VirtualizingStackPanel Orientation="Vertical" />
                                         </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-                                <Border Grid.Row="2" Margin="0,4,0,0" Padding="6" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="10" DataContext="{Binding PreviewPanel}">
+                                    </ListBox.ItemsPanel>
+                                </ListBox>
+                                <Border Grid.Row="2" Margin="0,4,0,0" Padding="6" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8" DataContext="{Binding PreviewPanel}">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -677,15 +729,43 @@
                             </Grid>
                         </Border>
 
-                        <Border Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Margin="4,4,0,0" Padding="6" Background="#FFF9F2" CornerRadius="14">
+                        <GridSplitter Grid.Row="2"
+                                      Grid.Column="1"
+                                      Grid.ColumnSpan="2"
+                                      Margin="4,4,0,0"
+                                      Height="5"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Stretch"
+                                      ResizeDirection="Rows"
+                                      ResizeBehavior="PreviousAndNext"
+                                      ShowsPreview="True"
+                                      Visibility="{Binding IsBottomWorkspaceExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <GridSplitter.Style>
+                                <Style TargetType="GridSplitter">
+                                    <Setter Property="Background" Value="{StaticResource Brush.PanelBorder}" />
+                                </Style>
+                            </GridSplitter.Style>
+                        </GridSplitter>
+
+                        <Border Grid.Row="3"
+                                Grid.Column="1"
+                                Grid.ColumnSpan="2"
+                                Height="132"
+                                MinHeight="96"
+                                MaxHeight="220"
+                                Margin="4,4,0,0"
+                                Padding="6"
+                                Background="#FFF9F2"
+                                CornerRadius="8"
+                                Visibility="{Binding IsBottomWorkspaceExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="0.9*" />
+                                    <ColumnDefinition Width="0.92*" />
                                     <ColumnDefinition Width="6" />
-                                    <ColumnDefinition Width="1.3*" />
+                                    <ColumnDefinition Width="1.28*" />
                                 </Grid.ColumnDefinitions>
 
-                                <Border Grid.Column="0" Padding="6" Background="White" CornerRadius="10" DataContext="{Binding ConfigWorkspace}">
+                                <Border Grid.Column="0" Padding="6" Background="White" CornerRadius="8" DataContext="{Binding ConfigWorkspace}">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -695,9 +775,9 @@
                                         <DockPanel>
                                             <TextBlock FontWeight="SemiBold" Text="Config" />
                                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                                <Button Style="{StaticResource DenseToolbarActionButtonStyle}" MinHeight="28" Command="{Binding CreateConfigCommand}" Content="New" />
-                                                <Button Style="{StaticResource DenseToolbarActionButtonStyle}" MinHeight="28" Command="{Binding LoadConfigCommand}" Content="Load" />
-                                                <Button Style="{StaticResource DenseToolbarActionButtonStyle}" MinHeight="28" Command="{Binding SaveConfigCommand}" Content="Save" />
+                                                <Button Style="{StaticResource CompactActionButtonStyle}" MinHeight="28" Command="{Binding CreateConfigCommand}" Content="New" />
+                                                <Button Style="{StaticResource CompactActionButtonStyle}" MinHeight="28" Command="{Binding LoadConfigCommand}" Content="Load" />
+                                                <Button Style="{StaticResource CompactActionButtonStyle}" MinHeight="28" Command="{Binding SaveConfigCommand}" Content="Save" />
                                             </StackPanel>
                                         </DockPanel>
                                         <TextBlock Grid.Row="1" Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding ActiveConfigSummary}" />
@@ -714,7 +794,7 @@
                                     </Grid>
                                 </Border>
 
-                                <Border Grid.Column="2" Padding="6" Background="White" CornerRadius="10" DataContext="{Binding BottomWorkspace}">
+                                <Border Grid.Column="2" Padding="6" Background="White" CornerRadius="8" DataContext="{Binding BottomWorkspace}">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -739,7 +819,7 @@
                     </Grid>
                 </TabItem>
 
-                <TabItem Header="Batch" IsEnabled="{Binding BatchWorkspace.IsAvailable}">
+                <TabItem Header="Data" IsEnabled="{Binding BatchWorkspace.IsAvailable}">
                     <Grid DataContext="{Binding BatchWorkspace}" Margin="8">
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="220" /></Grid.RowDefinitions>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="1.4*" /><ColumnDefinition Width="1.1*" /><ColumnDefinition Width="0.95*" /></Grid.ColumnDefinitions>

@@ -58,7 +58,7 @@ public partial class WorkspaceShellViewModel
         SelectedEditorViewportMode = EditorViewportMode.Matrix;
         SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
         IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded;
-        IsBottomWorkspaceExpanded = true;
+        IsBottomWorkspaceExpanded = false;
     }
 
     private async Task RestoreWorkspaceAsync()
@@ -149,7 +149,7 @@ public partial class WorkspaceShellViewModel
         IsProgressIndeterminate = false;
         SelectedEditorViewportMode = EditorViewportMode.Matrix;
         SelectedBottomWorkspaceTab = BottomWorkspaceTab.Assets;
-        IsBottomWorkspaceExpanded = true;
+        IsBottomWorkspaceExpanded = false;
         IsPreviewInspectorExpanded = false;
         SelectedBatchSourceItem = null;
         FocusedDirectionTile = null;

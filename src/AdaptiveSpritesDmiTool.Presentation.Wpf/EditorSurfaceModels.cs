@@ -139,13 +139,13 @@ public sealed class NavigationRailItemViewModel : ObservableObject
         WorkspaceShellViewModel shell,
         ShellSectionKind section,
         string label,
-        string glyph,
+        string iconSymbol,
         Func<bool> isAvailable)
     {
         _shell = shell;
         Section = section;
         Label = label;
-        Glyph = glyph;
+        IconSymbol = iconSymbol;
         _isAvailable = isAvailable;
     }
 
@@ -153,7 +153,7 @@ public sealed class NavigationRailItemViewModel : ObservableObject
 
     public string Label { get; }
 
-    public string Glyph { get; }
+    public string IconSymbol { get; }
 
     public bool IsAvailable => _isAvailable();
 
