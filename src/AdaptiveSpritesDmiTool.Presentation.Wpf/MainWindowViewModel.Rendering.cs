@@ -89,7 +89,7 @@ public partial class WorkspaceShellViewModel
         SelectedDirection = settings.LastSelectedDirection ?? SelectedDirection;
         SelectedOverwritePolicy = settings.LastOverwritePolicy;
         SelectedEditorViewportMode = EditorViewportMode.Matrix;
-        EditorViewMode = EditorViewMode.EditableOnly;
+        EditorViewMode = EditorViewMode.CompareSplit;
         SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
         IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded;
         IsBottomWorkspaceExpanded = false;
@@ -183,8 +183,11 @@ public partial class WorkspaceShellViewModel
         OperationProgressMaximum = 1;
         IsProgressIndeterminate = false;
         SelectedEditorViewportMode = EditorViewportMode.Matrix;
-        EditorViewMode = EditorViewMode.EditableOnly;
-        SelectedBottomWorkspaceTab = BottomWorkspaceTab.Assets;
+        EditorViewMode = EditorViewMode.CompareSplit;
+        SelectedBottomWorkspaceTab = BottomWorkspaceTab.Mappings;
+        SelectedEditorLeftDockTab = EditorLeftDockTab.AssetsDmi;
+        SelectedEditorAssetTargetSurface = EditorAssetTargetSurface.Source;
+        SelectedEditorAssetTargetLayer = EditorAssetTargetLayer.Base;
         IsBottomWorkspaceExpanded = false;
         IsPreviewInspectorExpanded = false;
         IsFocusMode = false;
@@ -192,7 +195,10 @@ public partial class WorkspaceShellViewModel
         FocusedDirectionTile = null;
         DirectionMatrixColumns = 2;
         ActiveEditorZoom = 2.0;
-        HoveredCoordinate = null;
+        SourceHoveredCoordinate = null;
+        EditableHoveredCoordinate = null;
+        HoveredCanvasKind = null;
+        HoverMappingSummary = "No hover mapping.";
         SelectedSourceCoordinateView = null;
         SelectedTargetCoordinate = null;
         SelectedAreaBounds = null;
@@ -201,6 +207,7 @@ public partial class WorkspaceShellViewModel
         InvalidateNavigatorSnapshotCache();
         BatchResults.Clear();
         ConfigQueueItems.Clear();
+        EditorAssetItems.Clear();
         BatchStateStripItems.Clear();
         BatchSourceTreeItems.Clear();
         DirectionNavigatorItems.Clear();
@@ -596,6 +603,7 @@ public partial class WorkspaceShellViewModel
         }
 
         RefreshConfigQueueItems();
+        RefreshEditorAssetItems();
         RefreshBatchPipelineState();
 
         OnPropertyChanged(nameof(HasLoadedAsset));
@@ -806,7 +814,7 @@ public partial class WorkspaceShellViewModel
     private static BottomWorkspaceTab ParseBottomWorkspaceTab(string? value) =>
         Enum.TryParse<BottomWorkspaceTab>(value, true, out var tab)
             ? tab
-            : BottomWorkspaceTab.Assets;
+            : BottomWorkspaceTab.Mappings;
 
     private static IReadOnlyList<SpriteDirection> GetPresentationDirectionOrder(SupportedDirectionSet supportedDirections)
     {

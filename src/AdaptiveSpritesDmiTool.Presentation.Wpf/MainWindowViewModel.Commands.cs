@@ -106,8 +106,7 @@ public partial class WorkspaceShellViewModel
     {
         ArgumentNullException.ThrowIfNull(cell);
         EnsureActiveDirection(cell.Direction);
-        HoveredCoordinate = cell.Coordinate;
-        HoverSummary = $"Hovering {cell.Coordinate}.";
+        UpdateSourceHoverState(cell.Coordinate);
 
         if (!_isDraggingSourceArea || _dragAnchor is null)
         {
@@ -121,24 +120,21 @@ public partial class WorkspaceShellViewModel
 
     public void HandleSourceSurfacePointerLeave()
     {
-        HoveredCoordinate = null;
-        HoverSummary = "Hover to inspect coordinates.";
+        ClearHoverState();
     }
 
     public void HandleSourceSurfaceHover(PixelCellViewModel cell)
     {
         ArgumentNullException.ThrowIfNull(cell);
         EnsureActiveDirection(cell.Direction);
-        HoveredCoordinate = cell.Coordinate;
-        HoverSummary = $"Hovering {cell.Coordinate}.";
+        UpdateSourceHoverState(cell.Coordinate);
     }
 
     public void HandleTargetSurfaceHover(PixelCellViewModel cell)
     {
         ArgumentNullException.ThrowIfNull(cell);
         EnsureActiveDirection(cell.Direction);
-        HoveredCoordinate = cell.Coordinate;
-        HoverSummary = $"Editable {cell.Coordinate}.";
+        UpdateEditableHoverState(cell.Coordinate);
     }
 
     public void HandleSourceCellPointerUp(PixelCellViewModel cell)
@@ -205,6 +201,99 @@ public partial class WorkspaceShellViewModel
                 }
                 break;
         }
+    }
+
+    private void ClearHoverState()
+    {
+        HoveredCanvasKind = null;
+        SourceHoveredCoordinate = null;
+        EditableHoveredCoordinate = null;
+        HoverSummary = "Hover to inspect coordinates.";
+        HoverMappingSummary = "No hover mapping.";
+    }
+
+    private void UpdateSourceHoverState(PixelCoordinate coordinate)
+    {
+        HoveredCanvasKind = EditorCanvasKind.Source;
+        SourceHoveredCoordinate = coordinate;
+        HoverSummary = $"Source {coordinate}.";
+
+        if (TryResolveTargetFromSource(coordinate, out var targetCoordinate, out var isTransparent))
+        {
+            EditableHoveredCoordinate = targetCoordinate;
+            HoverMappingSummary = isTransparent
+                ? $"Source {coordinate} -> transparent."
+                : $"Source {coordinate} -> Editable {targetCoordinate}.";
+            return;
+        }
+
+        EditableHoveredCoordinate = null;
+        HoverMappingSummary = $"Source {coordinate} has no editable mapping.";
+    }
+
+    private void UpdateEditableHoverState(PixelCoordinate coordinate)
+    {
+        HoveredCanvasKind = EditorCanvasKind.Editable;
+        EditableHoveredCoordinate = coordinate;
+        HoverSummary = $"Editable {coordinate}.";
+
+        if (TryResolveSourceFromTarget(coordinate, out var sourceCoordinate))
+        {
+            SourceHoveredCoordinate = sourceCoordinate;
+            HoverMappingSummary = $"Source {sourceCoordinate} -> Editable {coordinate}.";
+            return;
+        }
+
+        SourceHoveredCoordinate = null;
+        HoverMappingSummary = $"Editable {coordinate} has no source mapping.";
+    }
+
+    private bool TryResolveTargetFromSource(PixelCoordinate source, out PixelCoordinate? target, out bool isTransparent)
+    {
+        target = null;
+        isTransparent = false;
+
+        if (_editorSession.CurrentConfig is null)
+        {
+            return false;
+        }
+
+        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(GetSafeSelectedDirection()))
+        {
+            if (mapping.Source != source)
+            {
+                continue;
+            }
+
+            target = mapping.Target;
+            isTransparent = mapping.IsTransparent || mapping.Target is null;
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryResolveSourceFromTarget(PixelCoordinate target, out PixelCoordinate source)
+    {
+        source = default;
+
+        if (_editorSession.CurrentConfig is null)
+        {
+            return false;
+        }
+
+        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(GetSafeSelectedDirection()))
+        {
+            if (mapping.Target != target)
+            {
+                continue;
+            }
+
+            source = mapping.Source;
+            return true;
+        }
+
+        return false;
     }
 
     public void HandleBatchSourceSelection(BatchSourceTreeItemViewModel? item)

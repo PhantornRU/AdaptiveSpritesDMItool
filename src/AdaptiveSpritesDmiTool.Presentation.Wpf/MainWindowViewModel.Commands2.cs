@@ -227,7 +227,7 @@ public partial class WorkspaceShellViewModel
         SelectedSourceSummary = "No source pixel selected.";
         SelectedAreaSummary = "No area selected.";
         EditorStatus = "Selection cleared.";
-        HoveredCoordinate = null;
+        ClearHoverState();
         RefreshInteractionState();
     }
 
@@ -389,10 +389,38 @@ public partial class WorkspaceShellViewModel
     }
 
     [RelayCommand]
-    private void SetEditableOnlyMode() => SetEditorViewMode(EditorViewMode.EditableOnly, "Editable viewport mode active.");
+    private void SelectEditorLeftDockTab(EditorLeftDockTab tab)
+    {
+        SelectedEditorLeftDockTab = tab;
+    }
 
     [RelayCommand]
-    private void SetCompareSplitMode() => SetEditorViewMode(EditorViewMode.CompareSplit, "Compare split mode active.");
+    private void CycleEditorAssetTargetSurface()
+    {
+        SelectedEditorAssetTargetSurface = SelectedEditorAssetTargetSurface switch
+        {
+            EditorAssetTargetSurface.Source => EditorAssetTargetSurface.Editable,
+            EditorAssetTargetSurface.Editable => EditorAssetTargetSurface.EditableBackground,
+            _ => EditorAssetTargetSurface.Source
+        };
+    }
+
+    [RelayCommand]
+    private void CycleEditorAssetTargetLayer()
+    {
+        SelectedEditorAssetTargetLayer = SelectedEditorAssetTargetLayer switch
+        {
+            EditorAssetTargetLayer.Base => EditorAssetTargetLayer.Landmark,
+            EditorAssetTargetLayer.Landmark => EditorAssetTargetLayer.Overlay,
+            _ => EditorAssetTargetLayer.Base
+        };
+    }
+
+    [RelayCommand]
+    private void SetEditableOnlyMode() => SetEditorViewMode(EditorViewMode.CompareSplit, "Dual workspace active.");
+
+    [RelayCommand]
+    private void SetCompareSplitMode() => SetEditorViewMode(EditorViewMode.CompareSplit, "Dual workspace active.");
 
     [RelayCommand]
     private void SetOverlayCompareMode() => SetEditorViewMode(EditorViewMode.OverlayCompare, "Overlay compare mode active.");
@@ -495,6 +523,20 @@ public partial class WorkspaceShellViewModel
     }
 
     partial void OnSelectedBottomWorkspaceTabChanged(BottomWorkspaceTab value) => PersistWorkspaceSettingsInBackground();
+
+    partial void OnSelectedEditorLeftDockTabChanged(EditorLeftDockTab value) => PersistWorkspaceSettingsInBackground();
+
+    partial void OnSelectedEditorAssetTargetSurfaceChanged(EditorAssetTargetSurface value)
+    {
+        RefreshEditorAssetItems();
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    partial void OnSelectedEditorAssetTargetLayerChanged(EditorAssetTargetLayer value)
+    {
+        RefreshEditorAssetItems();
+        PersistWorkspaceSettingsInBackground();
+    }
 
     partial void OnIsPreviewInspectorExpandedChanged(bool value) => PersistWorkspaceSettingsInBackground();
 

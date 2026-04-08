@@ -45,6 +45,7 @@ public partial class WorkspaceShellViewModel
             ? new PixelAreaBounds(area.Left, area.Top, area.Right, area.Bottom)
             : null;
         SelectedTargetCoordinate = ResolveSelectedTargetCoordinate();
+        OppositeHighlightedCoordinate = SelectedTargetCoordinate;
     }
 
     private PixelCoordinate? ResolveSelectedTargetCoordinate()
@@ -212,6 +213,31 @@ public partial class WorkspaceShellViewModel
             ? "Unsaved draft"
             : _editorSession.CurrentConfigPath!;
         ConfigQueueItems.Add(new ConfigQueueItemViewModel(_editorSession.CurrentConfig.Name, pathSummary, IsActive: true));
+    }
+
+    private void RefreshEditorAssetItems()
+    {
+        EditorAssetItems.Clear();
+
+        if (_editorSession.LoadedAsset is null)
+        {
+            return;
+        }
+
+        var assetName = string.IsNullOrWhiteSpace(SelectedExplorerState)
+            ? _editorSession.LoadedAsset.DisplayName ?? "Loaded DMI"
+            : SelectedExplorerState;
+
+        EditorAssetItems.Add(
+            new EditorAssetItemViewModel(
+                assetName,
+                "Active session resource",
+                string.IsNullOrWhiteSpace(_editorSession.LoadedAsset.SourcePath)
+                    ? "Current in-memory DMI"
+                    : _editorSession.LoadedAsset.SourcePath,
+                isActive: true,
+                SelectedEditorAssetTargetSurface,
+                SelectedEditorAssetTargetLayer));
     }
 
     private void RefreshBatchPipelineState()

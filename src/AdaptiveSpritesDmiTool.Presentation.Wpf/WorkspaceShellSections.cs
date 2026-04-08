@@ -496,7 +496,9 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public EditorSurfaceRenderState? ActiveTargetSurface => Shell.ActiveTargetSurface;
 
-    public PixelCoordinate? HoveredCoordinate => Shell.HoveredCoordinate;
+    public PixelCoordinate? SourceHoveredCoordinate => Shell.SourceHoveredCoordinate;
+
+    public PixelCoordinate? EditableHoveredCoordinate => Shell.EditableHoveredCoordinate;
 
     public PixelCoordinate? SelectedSourceCoordinate => Shell.SelectedSourceCoordinateView;
 
@@ -530,6 +532,8 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public bool ShowEditorLeftRail => Shell.ShowEditorLeftRail;
 
+    public bool ShowRightDirectionStrip => Shell.ShowRightDirectionStrip;
+
     public bool ShowStateLayersPanel => Shell.ShowStateLayersPanel;
 
     public bool ShowSourcePalettePane => Shell.ShowSourcePalettePane;
@@ -539,6 +543,10 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public bool ShowBottomStatusBar => Shell.ShowBottomStatusBar;
 
     public bool ShowCompactCanvasHeader => Shell.ShowCompactCanvasHeader;
+
+    public bool IsAssetsDmiLeftDockSelected => Shell.SelectedEditorLeftDockTab == EditorLeftDockTab.AssetsDmi;
+
+    public bool IsConfigsLeftDockSelected => Shell.SelectedEditorLeftDockTab == EditorLeftDockTab.Configs;
 
     public bool ShowSingleStateStrip => Shell.ShowSingleStateStrip;
 
@@ -553,6 +561,36 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public bool ShowOverlayCompareLayer => Shell.ShowOverlayCompareLayer;
 
     public bool IsFocusMode => Shell.IsFocusMode;
+
+    public PixelCoordinate? OppositeHighlightedCoordinate => Shell.OppositeHighlightedCoordinate;
+
+    public string HoverMappingSummary => Shell.HoverMappingSummary;
+
+    public ObservableCollection<EditorAssetItemViewModel> EditorAssetItems => Shell.EditorAssetItems;
+
+    public IReadOnlyList<EditorLeftDockTab> EditorLeftDockTabs => Shell.EditorLeftDockTabs;
+
+    public IReadOnlyList<EditorAssetTargetSurface> EditorAssetTargetSurfaces => Shell.EditorAssetTargetSurfaces;
+
+    public IReadOnlyList<EditorAssetTargetLayer> EditorAssetTargetLayers => Shell.EditorAssetTargetLayers;
+
+    public EditorLeftDockTab SelectedEditorLeftDockTab
+    {
+        get => Shell.SelectedEditorLeftDockTab;
+        set => Shell.SelectedEditorLeftDockTab = value;
+    }
+
+    public EditorAssetTargetSurface SelectedEditorAssetTargetSurface
+    {
+        get => Shell.SelectedEditorAssetTargetSurface;
+        set => Shell.SelectedEditorAssetTargetSurface = value;
+    }
+
+    public EditorAssetTargetLayer SelectedEditorAssetTargetLayer
+    {
+        get => Shell.SelectedEditorAssetTargetLayer;
+        set => Shell.SelectedEditorAssetTargetLayer = value;
+    }
 
     public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
 
@@ -576,6 +614,10 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
         _ => $"{Shell.AvailableStates.Count} states"
     };
 
+    public string CurrentAssetDisplayName => Shell.CurrentAssetDisplayName;
+
+    public string EditableBackgroundSummary => Shell.EditableBackgroundSummary;
+
     public DirectionMatrixViewModel DirectionMatrix { get; } = new(shell);
 
     public EditorCommandBarViewModel CommandBar { get; } = new(shell);
@@ -587,6 +629,12 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public IRelayCommand UseSelectedStateAsOverlayCommand => Shell.UseSelectedStateAsOverlayCommand;
 
     public IRelayCommand ClearOptionalPreviewLayersCommand => Shell.ClearOptionalPreviewLayersCommand;
+
+    public IRelayCommand<EditorLeftDockTab> SelectEditorLeftDockTabCommand => Shell.SelectEditorLeftDockTabCommand;
+
+    public IRelayCommand CycleEditorAssetTargetSurfaceCommand => Shell.CycleEditorAssetTargetSurfaceCommand;
+
+    public IRelayCommand CycleEditorAssetTargetLayerCommand => Shell.CycleEditorAssetTargetLayerCommand;
 
     public IRelayCommand ResetEditorZoomCommand => Shell.ResetEditorZoomCommand;
 
@@ -623,6 +671,10 @@ public sealed class BottomWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
         get => Shell.IsBottomWorkspaceExpanded;
         set => Shell.IsBottomWorkspaceExpanded = value;
     }
+
+    public bool IsMappingsSelected => SelectedTab == BottomWorkspaceTab.Mappings;
+
+    public bool IsAdvancedSelected => SelectedTab == BottomWorkspaceTab.Advanced;
 
     public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
 

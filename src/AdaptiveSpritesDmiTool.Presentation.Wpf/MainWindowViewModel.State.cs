@@ -13,6 +13,32 @@ public enum EditorViewMode
     OverlayCompare = 2
 }
 
+public enum EditorCanvasKind
+{
+    Source = 0,
+    Editable = 1
+}
+
+public enum EditorLeftDockTab
+{
+    AssetsDmi = 0,
+    Configs = 1
+}
+
+public enum EditorAssetTargetSurface
+{
+    Source = 0,
+    Editable = 1,
+    EditableBackground = 2
+}
+
+public enum EditorAssetTargetLayer
+{
+    Base = 0,
+    Landmark = 1,
+    Overlay = 2
+}
+
 public partial class WorkspaceShellViewModel
 {
     private readonly double _minEditorZoom = 1.0;
@@ -152,10 +178,13 @@ public partial class WorkspaceShellViewModel
     [NotifyPropertyChangedFor(nameof(IsReferencePaneVisible))]
     [NotifyPropertyChangedFor(nameof(ShowOverlayCompareLayer))]
     [NotifyPropertyChangedFor(nameof(ShowCompactCanvasHeader))]
-    private EditorViewMode editorViewMode = EditorViewMode.EditableOnly;
+    private EditorViewMode editorViewMode = EditorViewMode.CompareSplit;
 
     [ObservableProperty]
-    private PixelCoordinate? hoveredCoordinate;
+    private PixelCoordinate? sourceHoveredCoordinate;
+
+    [ObservableProperty]
+    private PixelCoordinate? editableHoveredCoordinate;
 
     [ObservableProperty]
     private PixelCoordinate? selectedSourceCoordinateView;
@@ -192,7 +221,25 @@ public partial class WorkspaceShellViewModel
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedBottomWorkspaceTabIndex))]
-    private BottomWorkspaceTab selectedBottomWorkspaceTab = BottomWorkspaceTab.Assets;
+    private BottomWorkspaceTab selectedBottomWorkspaceTab = BottomWorkspaceTab.Mappings;
+
+    [ObservableProperty]
+    private EditorLeftDockTab selectedEditorLeftDockTab = EditorLeftDockTab.AssetsDmi;
+
+    [ObservableProperty]
+    private EditorAssetTargetSurface selectedEditorAssetTargetSurface = EditorAssetTargetSurface.Source;
+
+    [ObservableProperty]
+    private EditorAssetTargetLayer selectedEditorAssetTargetLayer = EditorAssetTargetLayer.Base;
+
+    [ObservableProperty]
+    private EditorCanvasKind? hoveredCanvasKind;
+
+    [ObservableProperty]
+    private PixelCoordinate? oppositeHighlightedCoordinate;
+
+    [ObservableProperty]
+    private string hoverMappingSummary = "No hover mapping.";
 
     [ObservableProperty]
     private bool isBottomWorkspaceExpanded;
@@ -260,6 +307,14 @@ public partial class WorkspaceShellViewModel
 
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems { get; } = [];
 
+    public ObservableCollection<EditorAssetItemViewModel> EditorAssetItems { get; } = [];
+
+    public IReadOnlyList<EditorLeftDockTab> EditorLeftDockTabs { get; } = Enum.GetValues<EditorLeftDockTab>();
+
+    public IReadOnlyList<EditorAssetTargetSurface> EditorAssetTargetSurfaces { get; } = Enum.GetValues<EditorAssetTargetSurface>();
+
+    public IReadOnlyList<EditorAssetTargetLayer> EditorAssetTargetLayers { get; } = Enum.GetValues<EditorAssetTargetLayer>();
+
     internal Dictionary<(SpriteDirection Direction, bool ShowOverlay, int Version), BitmapSource> NavigatorSnapshotCache { get; } = [];
 
     public double MinEditorZoom => _minEditorZoom;
@@ -288,6 +343,8 @@ public partial class WorkspaceShellViewModel
 
     public bool ShowDirectionsInSidebar => HasDirectionSelector && !IsFocusMode;
 
+    public bool ShowRightDirectionStrip => HasDirectionSelector && !IsFocusMode;
+
     public bool ShowBottomStatusBar => !IsFocusMode;
 
     public bool ShowCompactCanvasHeader => !IsFocusMode;
@@ -315,6 +372,14 @@ public partial class WorkspaceShellViewModel
     public bool HasEditorWorkflow => HasLoadedAsset || HasActiveConfig;
 
     public bool CanFitViewport => ResolveEditorResolution() is not null && !IsBusy;
+
+    public string CurrentAssetDisplayName => string.IsNullOrWhiteSpace(SelectedExplorerState)
+        ? (HasLoadedAsset ? WorkspaceTitle : "No DMI loaded")
+        : SelectedExplorerState;
+
+    public string EditableBackgroundSummary => SelectedEditorAssetTargetSurface == EditorAssetTargetSurface.EditableBackground
+        ? "Background target reserved for staged v1. Multi-resource stacking arrives in a later pass."
+        : "Choose `EditableBackground` to stage future non-editable reference placement.";
 
     public int SelectedShellSectionIndex
     {

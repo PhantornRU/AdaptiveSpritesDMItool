@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Point = System.Windows.Point;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
@@ -7,6 +8,8 @@ namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
 public partial class MainWindow : Window
 {
+    private bool _isSynchronizingViewportScroll;
+
     public MainWindow(MainWindowViewModel viewModel)
     {
         InitializeComponent();
@@ -115,6 +118,12 @@ public partial class MainWindow : Window
 
     private void TargetSurface_MouseLeave(object sender, MouseEventArgs e) => ViewModel.HandleSourceSurfacePointerLeave();
 
+    private void SourceViewportScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        => SynchronizeViewportScroll(SourceViewportScrollViewer, EditableViewportScrollViewer, e);
+
+    private void EditableViewportScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        => SynchronizeViewportScroll(EditableViewportScrollViewer, SourceViewportScrollViewer, e);
+
     private void TargetSurface_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         if (TryCreateSurfaceCell(sender, e.GetPosition((IInputElement)sender), out var cell))
@@ -134,5 +143,33 @@ public partial class MainWindow : Window
 
         cell = null!;
         return false;
+    }
+
+    private void SynchronizeViewportScroll(ScrollViewer source, ScrollViewer target, ScrollChangedEventArgs e)
+    {
+        if (_isSynchronizingViewportScroll ||
+            (Math.Abs(e.HorizontalChange) < 0.01d && Math.Abs(e.VerticalChange) < 0.01d) ||
+            target is null)
+        {
+            return;
+        }
+
+        _isSynchronizingViewportScroll = true;
+        try
+        {
+            if (Math.Abs(target.HorizontalOffset - source.HorizontalOffset) >= 0.1d)
+            {
+                target.ScrollToHorizontalOffset(source.HorizontalOffset);
+            }
+
+            if (Math.Abs(target.VerticalOffset - source.VerticalOffset) >= 0.1d)
+            {
+                target.ScrollToVerticalOffset(source.VerticalOffset);
+            }
+        }
+        finally
+        {
+            _isSynchronizingViewportScroll = false;
+        }
     }
 }

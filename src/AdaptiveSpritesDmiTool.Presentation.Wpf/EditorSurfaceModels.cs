@@ -43,10 +43,8 @@ public enum EditorViewportMode
 
 public enum BottomWorkspaceTab
 {
-    Assets = 0,
-    Configs = 1,
-    Mappings = 2,
-    BatchResults = 3
+    Mappings = 0,
+    Advanced = 1
 }
 
 public sealed partial class PixelCellViewModel : ObservableObject
@@ -176,6 +174,40 @@ public sealed class EditorCommandBarOptions
 public sealed record ConfigQueueItemViewModel(string Name, string PathSummary, bool IsActive);
 
 public sealed record BatchStateStripItemViewModel(string Name);
+
+public sealed partial class EditorAssetItemViewModel : ObservableObject
+{
+    public EditorAssetItemViewModel(
+        string name,
+        string kindLabel,
+        string sourceSummary,
+        bool isActive,
+        EditorAssetTargetSurface targetSurface,
+        EditorAssetTargetLayer targetLayer)
+    {
+        Name = name;
+        KindLabel = kindLabel;
+        SourceSummary = sourceSummary;
+        this.isActive = isActive;
+        this.targetSurface = targetSurface;
+        this.targetLayer = targetLayer;
+    }
+
+    public string Name { get; }
+
+    public string KindLabel { get; }
+
+    public string SourceSummary { get; }
+
+    [ObservableProperty]
+    private bool isActive;
+
+    [ObservableProperty]
+    private EditorAssetTargetSurface targetSurface;
+
+    [ObservableProperty]
+    private EditorAssetTargetLayer targetLayer;
+}
 
 public sealed class BatchSourceTreeItemViewModel(
     string name,
