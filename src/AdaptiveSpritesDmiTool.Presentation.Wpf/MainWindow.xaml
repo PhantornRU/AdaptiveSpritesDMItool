@@ -152,22 +152,22 @@
             <Setter Property="Margin" Value="0,0,4,0" />
         </Style>
         <Style x:Key="EditorPrimaryToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource CompactActionButtonStyle}">
-            <Setter Property="Padding" Value="10,5" />
-            <Setter Property="MinHeight" Value="30" />
-            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Padding" Value="9,4" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Margin" Value="0,0,4,0" />
         </Style>
         <Style x:Key="EditorPrimaryToolbarToggleStyle" TargetType="RadioButton" BasedOn="{StaticResource ShellModeRadioButtonStyle}">
-            <Setter Property="Padding" Value="10,5" />
-            <Setter Property="MinHeight" Value="30" />
-            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="Padding" Value="9,4" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Margin" Value="0,0,3,0" />
             <Setter Property="Background" Value="#FFFDF8" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style x:Key="EditorPrimaryToolbarCheckBoxStyle" TargetType="CheckBox">
-            <Setter Property="Margin" Value="0,0,4,0" />
-            <Setter Property="MinHeight" Value="30" />
-            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Margin" Value="0,0,3,0" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Padding" Value="9,4" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -272,13 +272,13 @@
             </Setter>
         </Style>
         <Style x:Key="DirectionNavigatorListBoxItemStyle" TargetType="ListBoxItem">
-            <Setter Property="Margin" Value="0,0,0,4" />
-            <Setter Property="Padding" Value="6" />
+            <Setter Property="Margin" Value="0,0,0,2" />
+            <Setter Property="Padding" Value="2" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="#FFFEFBF5" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="4">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -327,11 +327,28 @@
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style x:Key="ViewportShellBorderStyle" TargetType="Border">
-            <Setter Property="Padding" Value="4" />
+            <Setter Property="Padding" Value="2" />
             <Setter Property="Background" Value="#FFF8F1E3" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style x:Key="StatusTokenBorderStyle" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,6,3" />
+            <Setter Property="Padding" Value="6,2" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="999" />
+        </Style>
+        <Style x:Key="StatusTokenLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
+        </Style>
+        <Style x:Key="StatusTokenValueStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}" />
         </Style>
         <Style x:Key="EditorToolbarRadioButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource ShellModeRadioButtonStyle}">
             <Setter Property="Margin" Value="0,0,3,3" />
@@ -433,18 +450,17 @@
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="SidebarDirectionItemTemplate">
-            <Grid MinHeight="52">
+            <Grid MinHeight="38" ToolTip="{Binding Label}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="42" />
-                    <ColumnDefinition Width="6" />
+                    <ColumnDefinition Width="28" />
+                    <ColumnDefinition Width="4" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Border Width="42" Height="42" Padding="2" Background="#FFFFFCF7" CornerRadius="6">
+                <Border Width="28" Height="28" Padding="1" Background="#FFFFFCF7" CornerRadius="4">
                     <Image Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" SnapsToDevicePixels="True" />
                 </Border>
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                    <TextBlock FontWeight="SemiBold" Text="{Binding Label}" />
-                    <TextBlock FontSize="10" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ShortLabel}" />
+                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="{Binding ShortLabel}" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -740,53 +756,148 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="236" />
+                            <ColumnDefinition Width="5" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="5" />
+                            <ColumnDefinition Width="156" />
+                        </Grid.ColumnDefinitions>
 
-                        <Border Grid.Row="0" Margin="0,0,0,4" Padding="4" Background="#FFF9F2" CornerRadius="8">
-                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
-                                <DockPanel LastChildFill="False" DataContext="{Binding CommandBar}">
-                                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
-                                        <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" Content="Paint" />
-                                        <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" Content="Fill" />
-                                        <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" Content="Move" />
-                                        <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" Content="Select" />
-                                        <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" Content="Erase" />
+                        <Border Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="0,0,0,4"
+                                Background="#FFF9F2"
+                                CornerRadius="8"
+                                Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                                        <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Scope" />
-                                        <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" Content="Single" />
-                                        <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" Content="Parallel" />
-                                        <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" Content="All" />
+                        <Border Grid.Row="0"
+                                Grid.Column="4"
+                                Margin="0,0,0,4"
+                                Background="#FFF9F2"
+                                CornerRadius="8"
+                                Visibility="{Binding ShowRightDirectionStrip, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                                        <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="View" />
-                                        <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" Content="Dual" />
-                                        <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" Content="Overlay" />
-                                    </StackPanel>
+                        <Border Grid.RowSpan="3"
+                                Grid.Column="0"
+                                Background="#FFF9F2"
+                                CornerRadius="8"
+                                Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding UndoCommand}" Content="Undo" />
-                                        <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding RedoCommand}" Content="Redo" />
-                                        <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding ClearSelectionCommand}" Content="Clear" />
-                                        <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding FitViewportCommand}" Content="Fit" />
-                                        <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}" IsChecked="{Binding IsFocusMode}" Content="Focus" />
-                                    </StackPanel>
-                                </DockPanel>
-                            </ScrollViewer>
-                        </Border>
+                        <Border Grid.RowSpan="3"
+                                Grid.Column="4"
+                                Background="#FFF9F2"
+                                CornerRadius="8"
+                                Visibility="{Binding ShowRightDirectionStrip, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                        <Border Grid.Row="1" Padding="4" Background="#FFF9F2" CornerRadius="8">
+                        <Grid Grid.Row="0" Grid.ColumnSpan="5" Margin="0,0,0,4" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="236" />
+                                <ColumnDefinition Width="5" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="5" />
+                                <ColumnDefinition Width="156" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="2" Padding="4" Background="#FFF9F2" CornerRadius="8">
+                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
+                                    <DockPanel LastChildFill="False" DataContext="{Binding CommandBar}">
+                                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
+                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" Content="Paint" />
+                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" Content="Fill" />
+                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" Content="Move" />
+                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" Content="Select" />
+                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" Content="Erase" />
+
+                                            <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Scope" />
+                                            <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" Content="Single" />
+                                            <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" Content="Parallel" />
+                                            <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" Content="All" />
+
+                                            <TextBlock Margin="10,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="View" />
+                                            <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" Content="Dual" />
+                                            <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" Content="Overlay" />
+                                            <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                      IsChecked="{Binding DataContext.EditorWorkspace.ShowGridToggle, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      Content="Grid" />
+                                            <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                      IsChecked="{Binding DataContext.EditorWorkspace.ShowOverlayToggle, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      Content="Layered" />
+                                        </StackPanel>
+
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding UndoCommand}" Content="Undo" />
+                                            <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding RedoCommand}" Content="Redo" />
+                                            <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding ClearSelectionCommand}" Content="Clear" />
+                                            <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding FitViewportCommand}" Content="Fit" />
+                                            <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}" IsChecked="{Binding IsFocusMode}" Content="Focus" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </ScrollViewer>
+                            </Border>
+                        </Grid>
+
+                        <Border Grid.Row="1" Grid.ColumnSpan="5" Padding="2" Background="#FFF9F2" CornerRadius="8">
                             <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="5" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="12" />
-                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="5" />
+                                    <ColumnDefinition Width="156" />
                                 </Grid.ColumnDefinitions>
 
-                                <Border Grid.Column="0" Width="264" Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Border Grid.Row="0"
+                                        Grid.Column="2"
+                                        Margin="0,0,0,4"
+                                        Padding="4"
+                                        Background="#FFF9F2"
+                                        CornerRadius="8">
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
+                                        <DockPanel LastChildFill="False" DataContext="{Binding CommandBar}">
+                                            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" Content="Paint" />
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" Content="Fill" />
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" Content="Move" />
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" Content="Select" />
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" Content="Erase" />
+
+                                                <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Scope" />
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" Content="Single" />
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" Content="Parallel" />
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" Content="All" />
+
+                                                <TextBlock Margin="10,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="View" />
+                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" Content="Dual" />
+                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" Content="Overlay" />
+                                                <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                          IsChecked="{Binding DataContext.EditorWorkspace.ShowGridToggle, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          Content="Grid" />
+                                                <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                          IsChecked="{Binding DataContext.EditorWorkspace.ShowOverlayToggle, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          Content="Layered" />
+                                            </StackPanel>
+
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding UndoCommand}" Content="Undo" />
+                                                <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding RedoCommand}" Content="Redo" />
+                                                <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding ClearSelectionCommand}" Content="Clear" />
+                                                <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding FitViewportCommand}" Content="Fit" />
+                                                <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}" IsChecked="{Binding IsFocusMode}" Content="Focus" />
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </ScrollViewer>
+                                </Border>
+
+                                <Border Grid.RowSpan="3" Grid.Column="0" Width="236" Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -828,7 +939,7 @@
                                                     <Grid.RowDefinitions>
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="*" />
+                                                        <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
                                                     </Grid.RowDefinitions>
                                                     <DockPanel>
@@ -839,60 +950,78 @@
                                                                 Content="Open DMI" />
                                                     </DockPanel>
                                                     <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding SpriteContractSummary}" />
-                                                    <ListBox Grid.Row="2" Margin="0,8,0,0" ItemsSource="{Binding EditorAssetItems}" BorderThickness="0" Background="Transparent">
-                                                        <ListBox.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <Border Padding="6" Margin="0,0,0,6" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
-                                                                    <StackPanel>
-                                                                        <DockPanel LastChildFill="False">
-                                                                            <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
-                                                                            <Border DockPanel.Dock="Right"
-                                                                                    Padding="6,2"
-                                                                                    Background="#FFF5EFE2"
-                                                                                    BorderBrush="{StaticResource Brush.PanelBorder}"
-                                                                                    BorderThickness="1"
-                                                                                    CornerRadius="999"
-                                                                                    Visibility="{Binding IsActive, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                                                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" Text="Active" />
-                                                                            </Border>
-                                                                        </DockPanel>
-                                                                        <TextBlock Margin="0,2,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" Text="{Binding KindLabel}" />
-                                                                        <TextBlock Margin="0,2,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding SourceSummary}" />
-                                                                        <WrapPanel Margin="0,6,0,0">
-                                                                            <Border Margin="0,0,6,0"
-                                                                                    Padding="6,2"
-                                                                                    Background="#FFF5EFE2"
-                                                                                    BorderBrush="{StaticResource Brush.PanelBorder}"
-                                                                                    BorderThickness="1"
-                                                                                    CornerRadius="999">
-                                                                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" Text="{Binding TargetSurface, StringFormat=Surface: {0}}" />
-                                                                            </Border>
-                                                                            <Border Padding="6,2"
-                                                                                    Background="#FFF5EFE2"
-                                                                                    BorderBrush="{StaticResource Brush.PanelBorder}"
-                                                                                    BorderThickness="1"
-                                                                                    CornerRadius="999">
-                                                                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" Text="{Binding TargetLayer, StringFormat=Layer: {0}}" />
-                                                                            </Border>
-                                                                        </WrapPanel>
-                                                                    </StackPanel>
-                                                                </Border>
-                                                            </DataTemplate>
-                                                        </ListBox.ItemTemplate>
-                                                    </ListBox>
-                                                    <StackPanel Grid.Row="3" Margin="0,8,0,0">
-                                                        <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Target surface" />
-                                                        <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
-                                                            <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding CycleEditorAssetTargetSurfaceCommand}" Content="Cycle surface" />
-                                                            <TextBlock Margin="6,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding SelectedEditorAssetTargetSurface}" />
+                                                    <WrapPanel Grid.Row="2"
+                                                               Margin="0,8,0,0"
+                                                               VerticalAlignment="Center"
+                                                               DataContext="{Binding DataContext.PreviewPanel, RelativeSource={RelativeSource AncestorType=Window}}">
+                                                        <ComboBox Width="118"
+                                                                  Height="28"
+                                                                  ItemsSource="{Binding PreviewDisplayModes}"
+                                                                  SelectedItem="{Binding SelectedPreviewDisplayMode}" />
+                                                        <Button Margin="4,0,0,0"
+                                                                Style="{StaticResource CompactActionButtonStyle}"
+                                                                Command="{Binding BuildPreviewCommand}"
+                                                                Content="Refresh" />
+                                                        <CheckBox Margin="4,0,0,0"
+                                                                  Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                                  IsChecked="{Binding IsAutoPreviewEnabled}"
+                                                                  Content="Auto" />
+                                                    </WrapPanel>
+                                                    <Border Grid.Row="3"
+                                                            Margin="0,8,0,0"
+                                                            Padding="6"
+                                                            Background="White"
+                                                            BorderBrush="{StaticResource Brush.PanelBorder}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="8">
+                                                        <StackPanel>
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock FontWeight="SemiBold" Text="Active resource" />
+                                                                <TextBlock Grid.Column="1"
+                                                                           Foreground="{StaticResource Brush.TextSecondary}"
+                                                                           FontSize="10"
+                                                                           Text="{Binding CurrentAssetDisplayName}" />
+                                                            </Grid>
+                                                            <Grid Margin="0,6,0,0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="Target surface" />
+                                                                <ComboBox Grid.Column="1"
+                                                                          Width="132"
+                                                                          Margin="10,0,0,0"
+                                                                          ItemsSource="{Binding EditorAssetTargetSurfaces}"
+                                                                          SelectedItem="{Binding SelectedEditorAssetTargetSurface, Mode=TwoWay}" />
+                                                            </Grid>
+                                                            <Grid Margin="0,6,0,0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="Target layer" />
+                                                                <ComboBox Grid.Column="1"
+                                                                          Width="132"
+                                                                          Margin="22,0,0,0"
+                                                                          ItemsSource="{Binding EditorAssetTargetLayers}"
+                                                                          SelectedItem="{Binding SelectedEditorAssetTargetLayer, Mode=TwoWay}" />
+                                                            </Grid>
+                                                            <TextBlock Margin="0,6,0,0"
+                                                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                                                       FontSize="10"
+                                                                       TextWrapping="Wrap"
+                                                                       Text="Assignment applies to the current active resource only." />
+                                                            <TextBlock Margin="0,4,0,0"
+                                                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                                                       FontSize="10"
+                                                                       TextWrapping="Wrap"
+                                                                       Text="{Binding EditableBackgroundSummary}" />
                                                         </StackPanel>
-                                                        <TextBlock Margin="0,8,0,0" Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Target layer" />
-                                                        <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
-                                                            <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding CycleEditorAssetTargetLayerCommand}" Content="Cycle layer" />
-                                                            <TextBlock Margin="6,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding SelectedEditorAssetTargetLayer}" />
-                                                        </StackPanel>
-                                                        <TextBlock Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding EditableBackgroundSummary}" />
-                                                    </StackPanel>
+                                                    </Border>
                                                 </Grid>
                                             </Border>
 
@@ -922,7 +1051,15 @@
                                                         </StackPanel>
                                                     </DockPanel>
                                                     <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding ConfigSummary}" />
-                                                    <ListBox Grid.Row="2" Margin="0,8,0,0" ItemsSource="{Binding DataContext.ConfigWorkspace.Items, RelativeSource={RelativeSource AncestorType=Window}}" BorderThickness="0" Background="Transparent">
+                                                    <ListBox Grid.Row="2"
+                                                             Margin="0,8,0,0"
+                                                             VerticalAlignment="Top"
+                                                             MaxHeight="260"
+                                                             ItemsSource="{Binding DataContext.ConfigWorkspace.Items, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                             BorderThickness="0"
+                                                             Background="Transparent"
+                                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                             ScrollViewer.VerticalScrollBarVisibility="Auto">
                                                         <ListBox.ItemTemplate>
                                                             <DataTemplate>
                                                                 <Border Padding="6" Margin="0,0,0,6" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
@@ -940,7 +1077,8 @@
                                     </Grid>
                                 </Border>
 
-                                <GridSplitter Grid.Column="1"
+                                <GridSplitter Grid.RowSpan="3"
+                                              Grid.Column="1"
                                               Width="5"
                                               Background="{StaticResource Brush.PanelBorder}"
                                               HorizontalAlignment="Stretch"
@@ -950,25 +1088,8 @@
                                               ShowsPreview="True"
                                               Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                                <Grid Grid.Column="2">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="*" />
-                                    </Grid.RowDefinitions>
-
-                                    <Border Grid.Row="0" Margin="0,0,0,4" Padding="6,4" Background="#FFFDF8EF" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8" Visibility="Collapsed">
-                                        <DockPanel>
-                                            <TextBlock FontWeight="SemiBold" Text="{Binding CurrentStateLabel}" />
-                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}" Text="Dir:" />
-                                                <TextBlock Margin="4,0,0,0" FontWeight="SemiBold" Text="{Binding ActiveDirectionLabel}" />
-                                                <TextBlock Margin="12,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="Zoom:" />
-                                                <TextBlock Margin="4,0,0,0" FontWeight="SemiBold" Text="{Binding ActiveEditorZoomLabel}" />
-                                            </StackPanel>
-                                        </DockPanel>
-                                    </Border>
-
-                                    <Grid Grid.Row="1">
+                                <Grid Grid.Row="1" Grid.Column="2">
+                                    <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="5" />
@@ -981,13 +1102,12 @@
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="*" />
                                                 </Grid.RowDefinitions>
-                                                <DockPanel>
-                                                    <TextBlock FontWeight="SemiBold" Foreground="#FF4D627A" Text="Source" />
-                                                    <TextBlock DockPanel.Dock="Right" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" Text="Reference / pick source" />
-                                                </DockPanel>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                                    <TextBlock FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}" Text="Source" />
+                                                </StackPanel>
                                                 <ScrollViewer x:Name="SourceViewportScrollViewer"
                                                               Grid.Row="1"
-                                                              Margin="0,4,0,0"
+                                                              Margin="0"
                                                               HorizontalScrollBarVisibility="Auto"
                                                               VerticalScrollBarVisibility="Auto"
                                                               CanContentScroll="False"
@@ -1029,13 +1149,12 @@
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="*" />
                                                 </Grid.RowDefinitions>
-                                                <DockPanel>
-                                                    <TextBlock FontWeight="SemiBold" Foreground="#FF8B5C28" Text="Editable" />
-                                                    <TextBlock DockPanel.Dock="Right" Foreground="{StaticResource Brush.TextSecondary}" FontSize="11" Text="Result / editable output" />
-                                                </DockPanel>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                                    <TextBlock FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}" Text="Editable" />
+                                                </StackPanel>
                                                 <ScrollViewer x:Name="EditableViewportScrollViewer"
                                                               Grid.Row="1"
-                                                              Margin="0,4,0,0"
+                                                              Margin="0"
                                                               HorizontalScrollBarVisibility="Auto"
                                                               VerticalScrollBarVisibility="Auto"
                                                               CanContentScroll="False"
@@ -1074,7 +1193,23 @@
                                     </Grid>
                                 </Grid>
 
-                                <Border Grid.Column="4" Width="92" Visibility="{Binding ShowRightDirectionStrip, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <GridSplitter Grid.RowSpan="3"
+                                              Grid.Column="3"
+                                              Width="5"
+                                              Background="{StaticResource Brush.PanelBorder}"
+                                              HorizontalAlignment="Stretch"
+                                              VerticalAlignment="Stretch"
+                                              ResizeDirection="Columns"
+                                              ResizeBehavior="PreviousAndNext"
+                                              ShowsPreview="True"
+                                              Visibility="{Binding ShowRightDirectionStrip, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                                <Grid Grid.RowSpan="3" Grid.Column="4" Visibility="{Binding ShowRightDirectionStrip, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
                                     <Border Style="{StaticResource SidebarSectionBorderStyle}">
                                         <Grid>
                                             <Grid.RowDefinitions>
@@ -1083,12 +1218,14 @@
                                             </Grid.RowDefinitions>
                                             <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="DIR" />
                                             <ListBox Grid.Row="1"
-                                                     Margin="0,6,0,0"
+                                                     Margin="0,4,0,0"
                                                      ItemsSource="{Binding DirectionNavigatorItems}"
                                                      SelectedValuePath="Direction"
                                                      SelectedValue="{Binding SelectedDirection, Mode=TwoWay}"
                                                      BorderThickness="0"
                                                      Background="Transparent"
+                                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                                                      ItemTemplate="{StaticResource SidebarDirectionItemTemplate}"
                                                      ItemContainerStyle="{StaticResource DirectionNavigatorListBoxItemStyle}">
                                                 <ListBox.ItemsPanel>
@@ -1099,96 +1236,25 @@
                                             </ListBox>
                                         </Grid>
                                     </Border>
-                                </Border>
-                            </Grid>
-                        </Border>
 
-                        <Border Grid.Row="2" Margin="0,4,0,0" Padding="6,4" Background="#FFFDF8EF" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8" Visibility="{Binding ShowBottomStatusBar, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock FontWeight="SemiBold" Text="{Binding ActiveDirectionLabel, StringFormat=Dir {0}}" />
-                                    <TextBlock Margin="10,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding CurrentAssetDisplayName}" />
-                                    <TextBlock Margin="10,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding HoverSummary}" />
-                                    <TextBlock Margin="10,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding HoverMappingSummary}" />
-                                    <TextBlock Margin="10,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding SelectionSummary}" />
-                                    <TextBlock Margin="10,0,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ConfigSummary}" />
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" Text="{Binding ActiveEditorZoomLabel}" />
-                                    <Button Margin="6,0,0,0" Style="{StaticResource CompactActionButtonStyle}" Command="{Binding ResetEditorZoomCommand}" Content="100%" />
-                                    <CheckBox Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding IsBottomWorkspaceExpanded}" Content="Dock" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-
-                        <GridSplitter Grid.Row="3"
-                                      Margin="4,4,0,0"
-                                      Height="5"
-                                      HorizontalAlignment="Stretch"
-                                      VerticalAlignment="Stretch"
-                                      ResizeDirection="Rows"
-                                      ResizeBehavior="PreviousAndNext"
-                                      ShowsPreview="True"
-                                      Visibility="{Binding IsBottomWorkspaceExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <GridSplitter.Style>
-                                <Style TargetType="GridSplitter">
-                                    <Setter Property="Background" Value="{StaticResource Brush.PanelBorder}" />
-                                </Style>
-                            </GridSplitter.Style>
-                        </GridSplitter>
-
-                        <Border Grid.Row="4"
-                                Height="168"
-                                MinHeight="128"
-                                MaxHeight="260"
-                                Margin="0,4,0,0"
-                                Padding="6"
-                                Background="#FFF9F2"
-                                CornerRadius="8"
-                                Visibility="{Binding IsBottomWorkspaceExpanded, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                DataContext="{Binding BottomWorkspace}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-
-                                <DockPanel Grid.Row="0" LastChildFill="False">
-                                    <StackPanel Orientation="Horizontal">
-                                        <RadioButton GroupName="EditorBottomDockTabs"
-                                                     Style="{StaticResource EditorPrimaryToolbarToggleStyle}"
-                                                     Command="{Binding SelectBottomWorkspaceTabCommand}"
-                                                     CommandParameter="{x:Static local:BottomWorkspaceTab.Mappings}"
-                                                     IsChecked="{Binding IsMappingsSelected, Mode=OneWay}"
-                                                     Content="Mappings" />
-                                        <RadioButton GroupName="EditorBottomDockTabs"
-                                                     Style="{StaticResource EditorPrimaryToolbarToggleStyle}"
-                                                     Command="{Binding SelectBottomWorkspaceTabCommand}"
-                                                     CommandParameter="{x:Static local:BottomWorkspaceTab.Advanced}"
-                                                     IsChecked="{Binding IsAdvancedSelected, Mode=OneWay}"
-                                                     Content="Advanced" />
-                                    </StackPanel>
-                                    <TextBlock DockPanel.Dock="Right"
-                                               Margin="12,0,0,0"
-                                               VerticalAlignment="Center"
-                                               Foreground="{StaticResource Brush.TextSecondary}"
-                                               Text="Secondary dock" />
-                                </DockPanel>
-
-                                <Grid Grid.Row="1" Margin="0,6,0,0">
-                                    <Border Padding="6" Background="White" CornerRadius="8">
+                                    <Border Grid.Row="1"
+                                            Margin="0,6,0,0"
+                                            Padding="6"
+                                            Background="#FFFDF8EF"
+                                            BorderBrush="{StaticResource Brush.PanelBorder}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            DataContext="{Binding DataContext.BottomWorkspace, RelativeSource={RelativeSource AncestorType=Window}}">
                                         <Border.Style>
                                             <Style TargetType="Border">
-                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Setter Property="Height" Value="132" />
+                                                <Setter Property="MinHeight" Value="120" />
+                                                <Setter Property="MaxHeight" Value="148" />
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsMappingsSelected}" Value="False">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                                        <Setter Property="Height" Value="212" />
+                                                        <Setter Property="MinHeight" Value="196" />
+                                                        <Setter Property="MaxHeight" Value="236" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -1196,54 +1262,244 @@
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="*" />
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
-                                            <TextBlock FontWeight="SemiBold" Text="Mappings" />
-                                            <DataGrid Grid.Row="1" Margin="0,4,0,0" ItemsSource="{Binding MappingRows}" SelectedItem="{Binding SelectedMapping}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
-                                                <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="Source" Binding="{Binding SourceText}" Width="*" />
-                                                    <DataGridTextColumn Header="Target" Binding="{Binding TargetText}" Width="*" />
-                                                </DataGrid.Columns>
-                                            </DataGrid>
-                                            <DockPanel Grid.Row="2" Margin="0,4,0,0" LastChildFill="False">
-                                                <TextBlock VerticalAlignment="Center" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" Text="{Binding MappingSummary}" />
-                                                <Button DockPanel.Dock="Right" Padding="8,3" MinWidth="108" MinHeight="28" Command="{Binding RemoveSelectedMappingCommand}" Content="Remove selected" />
+                                            <DockPanel Grid.Row="0" LastChildFill="False">
+                                                <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Mappings" />
+                                                <CheckBox DockPanel.Dock="Right"
+                                                          Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                          IsChecked="{Binding IsExpanded}"
+                                                          Content="More" />
                                             </DockPanel>
-                                        </Grid>
-                                    </Border>
-
-                                    <Border Padding="6" Background="White" CornerRadius="8">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsAdvancedSelected}" Value="True">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <Grid DataContext="{Binding DataContext.PreviewPanel, RelativeSource={RelativeSource AncestorType=Window}}">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="*" />
-                                            </Grid.RowDefinitions>
-                                            <StackPanel Orientation="Horizontal">
-                                                <ComboBox Width="118" ItemsSource="{Binding PreviewDisplayModes}" SelectedItem="{Binding SelectedPreviewDisplayMode}" />
-                                                <Button Margin="6,0,0,0" Style="{StaticResource CompactActionButtonStyle}" Command="{Binding BuildPreviewCommand}" Content="Refresh" />
-                                                <CheckBox Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding IsAutoPreviewEnabled}" Content="Auto" />
-                                                <CheckBox Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding DataContext.ShowGridToggle, RelativeSource={RelativeSource AncestorType=Window}}" Content="Grid" />
-                                                <CheckBox Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding DataContext.ShowOverlayToggle, RelativeSource={RelativeSource AncestorType=Window}}" Content="Overlay" />
+                                            <TextBlock Grid.Row="1"
+                                                       Margin="0,4,0,0"
+                                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                                       FontSize="10"
+                                                       Text="{Binding MappingSummary}" />
+                                            <TextBlock Grid.Row="2"
+                                                       Margin="0,2,0,0"
+                                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                                       FontSize="10"
+                                                       Text="{Binding HighlightedMappingSummary, StringFormat=Pair: {0}}" />
+                                            <StackPanel Grid.Row="3" Margin="0,6,0,0">
+                                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}"
+                                                           FontSize="10"
+                                                           Text="{Binding DataContext.EditorWorkspace.HoverToken, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=Hover: {0}}" />
+                                                <TextBlock Margin="0,2,0,0"
+                                                           Foreground="{StaticResource Brush.TextSecondary}"
+                                                           FontSize="10"
+                                                           Text="{Binding DataContext.EditorWorkspace.HoverMappingToken, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=Status: {0}}" />
+                                                <ListBox Margin="0,6,0,0"
+                                                         BorderThickness="0"
+                                                         Background="Transparent"
+                                                         SelectedItem="{Binding SelectedMapping, Mode=TwoWay}"
+                                                         ItemsSource="{Binding MappingRows}"
+                                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                                    <ListBox.Style>
+                                                        <Style TargetType="ListBox">
+                                                            <Setter Property="MaxHeight" Value="52" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                                                    <Setter Property="MaxHeight" Value="118" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ListBox.Style>
+                                                    <ListBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,0,0,2">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock FontSize="10"
+                                                                           Foreground="{StaticResource Brush.TextSecondary}"
+                                                                           Text="{Binding SourceText}"
+                                                                           TextTrimming="CharacterEllipsis" />
+                                                                <TextBlock Grid.Column="1"
+                                                                           Margin="6,0"
+                                                                           FontSize="10"
+                                                                           Foreground="{StaticResource Brush.TextSecondary}"
+                                                                           Text="->" />
+                                                                <TextBlock Grid.Column="2"
+                                                                           FontSize="10"
+                                                                           Foreground="{StaticResource Brush.TextSecondary}"
+                                                                           Text="{Binding TargetText}"
+                                                                           TextTrimming="CharacterEllipsis" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ListBox.ItemTemplate>
+                                                </ListBox>
                                             </StackPanel>
-                                            <TextBlock Grid.Row="1" Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding PreviewSelectionSummary}" />
-                                            <TextBlock Grid.Row="2" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{Binding PreviewSummary}" />
+                                            <Button Grid.Row="4"
+                                                    Margin="0,6,0,0"
+                                                    Padding="8,3"
+                                                    HorizontalAlignment="Right"
+                                                    MinWidth="104"
+                                                    MinHeight="28"
+                                                    Command="{Binding RemoveSelectedMappingCommand}"
+                                                    Content="Remove selected">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
                                         </Grid>
                                     </Border>
                                 </Grid>
+
+                                <Border Grid.Row="2"
+                                        Grid.Column="2"
+                                        Margin="0,4,0,0"
+                                        Padding="8,3"
+                                        MinHeight="30"
+                                        Background="#FFFDF8EF"
+                                        BorderBrush="{StaticResource Brush.PanelBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Visibility="{Binding ShowBottomStatusBar, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <WrapPanel VerticalAlignment="Center">
+                                        <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Dir:" />
+                                                <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ActiveDirectionLabel}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Asset:" />
+                                                <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding CurrentAssetDisplayName}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Hover:" />
+                                                <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding HoverToken}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Mapping:" />
+                                                <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding HoverMappingToken}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Config:" />
+                                                <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ConfigToken}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Mappings:" />
+                                                <TextBlock Margin="4,0,0,0"
+                                                           Style="{StaticResource StatusTokenValueStyle}"
+                                                           Text="{Binding MappingCountToken}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                            <TextBlock Style="{StaticResource StatusTokenValueStyle}" Text="{Binding DraftToken}" />
+                                        </Border>
+                                        <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Zoom:" />
+                                                <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ActiveEditorZoomLabel}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </WrapPanel>
+                                </Border>
                             </Grid>
                         </Border>
+
+                        <Grid Grid.Row="2" Grid.ColumnSpan="5" Margin="0,4,0,0" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="236" />
+                                <ColumnDefinition Width="5" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="5" />
+                                <ColumnDefinition Width="156" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0"
+                                    Background="#FFF9F2"
+                                    CornerRadius="8"
+                                    Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                            <Border Grid.Column="4"
+                                    Background="#FFF9F2"
+                                    CornerRadius="8"
+                                    Visibility="{Binding ShowRightDirectionStrip, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                            <Border Grid.Column="2"
+                                    Padding="8,3"
+                                    MinHeight="30"
+                                    Background="#FFFDF8EF"
+                                    BorderBrush="{StaticResource Brush.PanelBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Visibility="{Binding ShowBottomStatusBar, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <WrapPanel VerticalAlignment="Center">
+                                    <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Dir:" />
+                                            <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ActiveDirectionLabel}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Asset:" />
+                                            <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding CurrentAssetDisplayName}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Hover:" />
+                                            <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding HoverToken}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Mapping:" />
+                                            <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding HoverMappingToken}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Config:" />
+                                            <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ConfigToken}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Mappings:" />
+                                            <TextBlock Margin="4,0,0,0"
+                                                       Style="{StaticResource StatusTokenValueStyle}"
+                                                       Text="{Binding MappingCountToken}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                        <TextBlock Style="{StaticResource StatusTokenValueStyle}" Text="{Binding DraftToken}" />
+                                    </Border>
+                                    <Border Style="{StaticResource StatusTokenBorderStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Zoom:" />
+                                            <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ActiveEditorZoomLabel}" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+                            </Border>
+                        </Grid>
                     </Grid>
                 </TabItem>
 

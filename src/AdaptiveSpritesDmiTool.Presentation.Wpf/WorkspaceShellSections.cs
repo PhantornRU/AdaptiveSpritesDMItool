@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Windows.Media.Imaging;
 using ImageSource = System.Windows.Media.ImageSource;
@@ -472,6 +473,13 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public string HoverSummary => Shell.HoverSummary;
 
+    public string HoverToken => Shell.HoveredCanvasKind switch
+    {
+        EditorCanvasKind.Source when Shell.SourceHoveredCoordinate is { } coordinate => $"Source {coordinate}",
+        EditorCanvasKind.Editable when Shell.EditableHoveredCoordinate is { } coordinate => $"Editable {coordinate}",
+        _ => "None"
+    };
+
     public string SelectionSummary => $"{Shell.SelectedSourceSummary}  {Shell.SelectedAreaSummary}";
 
     public string ActiveDirectionLabel => Shell.SelectedDirection.ToString();
@@ -566,6 +574,14 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public string HoverMappingSummary => Shell.HoverMappingSummary;
 
+    public string HoverMappingToken => Shell.HoverMappingSummary switch
+    {
+        var text when string.IsNullOrWhiteSpace(text) => "none",
+        var text when text.Contains("no hover mapping", StringComparison.OrdinalIgnoreCase) => "none",
+        var text when text.Contains("has no", StringComparison.OrdinalIgnoreCase) => "none",
+        _ => "mapped"
+    };
+
     public ObservableCollection<EditorAssetItemViewModel> EditorAssetItems => Shell.EditorAssetItems;
 
     public IReadOnlyList<EditorLeftDockTab> EditorLeftDockTabs => Shell.EditorLeftDockTabs;
@@ -615,6 +631,16 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     };
 
     public string CurrentAssetDisplayName => Shell.CurrentAssetDisplayName;
+
+    public string ConfigToken => string.IsNullOrWhiteSpace(Shell.DraftConfigName)
+        ? (Shell.HasActiveConfig ? "Loaded" : "None")
+        : Shell.DraftConfigName;
+
+    public string DraftToken => Shell.ConfigSummary.Contains("unsaved", StringComparison.OrdinalIgnoreCase)
+        ? "Draft"
+        : "Saved";
+
+    public string MappingCountToken => Shell.MappingRows.Count.ToString(CultureInfo.InvariantCulture);
 
     public string EditableBackgroundSummary => Shell.EditableBackgroundSummary;
 
@@ -687,6 +713,12 @@ public sealed class BottomWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public string MappingSummary => Shell.MappingRows.Count == 0
         ? "No mappings yet."
         : $"{Shell.MappingRows.Count} mapping(s) in the active direction.";
+
+    public string HighlightedMappingSummary => SelectedMapping is not null
+        ? $"{SelectedMapping.SourceText} -> {SelectedMapping.TargetText}"
+        : Shell.MappingRows.Count > 0
+            ? $"{Shell.MappingRows[0].SourceText} -> {Shell.MappingRows[0].TargetText}"
+            : "No coordinate pairs.";
 
     public bool HasBatchResults => Shell.BatchResults.Count > 0;
 
