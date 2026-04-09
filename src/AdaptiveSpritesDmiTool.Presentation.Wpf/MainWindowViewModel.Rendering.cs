@@ -207,6 +207,7 @@ public partial class WorkspaceShellViewModel
         InvalidateNavigatorSnapshotCache();
         BatchResults.Clear();
         ConfigQueueItems.Clear();
+        SampleConfigItems.Clear();
         EditorAssetItems.Clear();
         BatchStateStripItems.Clear();
         BatchSourceTreeItems.Clear();
@@ -603,6 +604,7 @@ public partial class WorkspaceShellViewModel
         }
 
         RefreshConfigQueueItems();
+        RefreshSampleConfigItems();
         RefreshEditorAssetItems();
         RefreshBatchPipelineState();
 
@@ -651,6 +653,8 @@ public partial class WorkspaceShellViewModel
 
         DirectionTiles.Clear();
         FocusedDirectionTile = null;
+
+        OnPropertyChanged(nameof(DirectionNavigatorItems));
     }
 
     private BitmapSource? BuildNavigatorPreviewImage(SpriteDirection direction)

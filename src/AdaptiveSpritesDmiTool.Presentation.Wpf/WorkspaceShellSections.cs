@@ -590,6 +590,12 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public IReadOnlyList<EditorAssetTargetLayer> EditorAssetTargetLayers => Shell.EditorAssetTargetLayers;
 
+    public int SelectedEditorLeftDockTabIndex
+    {
+        get => Shell.SelectedEditorLeftDockTabIndex;
+        set => Shell.SelectedEditorLeftDockTabIndex = value;
+    }
+
     public EditorLeftDockTab SelectedEditorLeftDockTab
     {
         get => Shell.SelectedEditorLeftDockTab;
@@ -631,6 +637,10 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     };
 
     public string CurrentAssetDisplayName => Shell.CurrentAssetDisplayName;
+
+    public string CurrentDmiDisplayName => Shell.CurrentDmiDisplayName;
+
+    public string CurrentDmiPathSummary => Shell.CurrentDmiPathSummary;
 
     public string ConfigToken => string.IsNullOrWhiteSpace(Shell.DraftConfigName)
         ? (Shell.HasActiveConfig ? "Loaded" : "None")
@@ -675,6 +685,8 @@ public sealed class ConfigWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 {
     public ObservableCollection<ConfigQueueItemViewModel> Items => Shell.ConfigQueueItems;
 
+    public ObservableCollection<SampleConfigItemViewModel> SampleConfigItems => Shell.SampleConfigItems;
+
     public string ActiveConfigSummary => Shell.ConfigSummary;
 
     public IRelayCommand CreateConfigCommand => Shell.CreateConfigCommand;
@@ -682,6 +694,12 @@ public sealed class ConfigWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public IAsyncRelayCommand LoadConfigCommand => Shell.LoadConfigCommand;
 
     public IAsyncRelayCommand SaveConfigCommand => Shell.SaveConfigCommand;
+
+    public IRelayCommand BrowseSaveConfigPathCommand => Shell.BrowseSaveConfigPathCommand;
+
+    public IAsyncRelayCommand ImportLegacyConfigCommand => Shell.ImportLegacyConfigCommand;
+
+    public IAsyncRelayCommand<SampleConfigItemViewModel> ActivateSampleConfigCommand => Shell.ActivateSampleConfigCommand;
 }
 
 public sealed class BottomWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
@@ -815,6 +833,37 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
     public string BatchSummary => Shell.BatchSummary;
 
     public string BatchCurrentFile => Shell.BatchCurrentFile;
+
+    public BitmapSource? QuickPreviewImage
+    {
+        get
+        {
+            if (Shell.CurrentPreviewImage is not null)
+            {
+                return Shell.CurrentPreviewImage;
+            }
+
+            foreach (var item in Shell.DirectionNavigatorItems)
+            {
+                if (item.IsActive && item.PreviewImage is BitmapSource bitmap)
+                {
+                    return bitmap;
+                }
+            }
+
+            return null;
+        }
+    }
+
+    public bool HasQuickPreviewImage => QuickPreviewImage is not null;
+
+    public string QuickPreviewSummary => HasQuickPreviewImage
+        ? "Quick preview follows the staged sprite/config pair."
+        : "Preview will appear here after the staged sprite/config pair is ready.";
+
+    public string QuickPreviewSelectionSummary => string.IsNullOrWhiteSpace(Shell.PreviewSelectionSummary)
+        ? "No preview selection."
+        : Shell.PreviewSelectionSummary;
 
     public IRelayCommand BrowseBatchInputDirectoryCommand => Shell.BrowseBatchInputDirectoryCommand;
 

@@ -480,6 +480,21 @@ public partial class WorkspaceShellViewModel
             cancellationToken => ImportLegacyConfigFromPathAsync(LegacyCsvPath, navigateToEditor: true, persistSettings: true, cancellationToken));
     }
 
+    [RelayCommand]
+    private async Task ActivateSampleConfigAsync(SampleConfigItemViewModel? item)
+    {
+        if (item is null || string.IsNullOrWhiteSpace(item.Path) || !File.Exists(item.Path))
+        {
+            StatusMessage = "Sample config file is unavailable.";
+            return;
+        }
+
+        await RunBusyOperationAsync(
+            cancellationToken => item.IsLegacyCsv
+                ? ImportLegacyConfigFromPathAsync(item.Path, navigateToEditor: true, persistSettings: true, cancellationToken)
+                : LoadConfigFromPathAsync(item.Path, navigateToEditor: true, persistSettings: true, cancellationToken));
+    }
+
     private async Task OpenDmiFromPathAsync(string path, bool navigateToEditor, bool persistSettings, CancellationToken cancellationToken)
     {
         var result = await _loadDmiFileUseCase.ExecuteAsync(path, cancellationToken);

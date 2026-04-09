@@ -90,6 +90,7 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         BatchResults = [];
         DirectionTiles = [];
         ConfigQueueItems = [];
+        SampleConfigItems = [];
         BatchStateStripItems = [];
         BatchSourceTreeItems = [];
         PreviewDisplayModes = Enum.GetValues<PreviewDisplayMode>();
@@ -138,6 +139,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     public ObservableCollection<DirectionTileViewModel> DirectionTiles { get; }
 
     public ObservableCollection<ConfigQueueItemViewModel> ConfigQueueItems { get; }
+
+    public ObservableCollection<SampleConfigItemViewModel> SampleConfigItems { get; }
 
     public ObservableCollection<BatchStateStripItemViewModel> BatchStateStripItems { get; }
 

@@ -173,6 +173,14 @@ public sealed class EditorCommandBarOptions
 
 public sealed record ConfigQueueItemViewModel(string Name, string PathSummary, bool IsActive);
 
+public sealed record SampleConfigItemViewModel(
+    string Name,
+    string Path,
+    string KindLabel,
+    string PathSummary,
+    bool IsLegacyCsv,
+    bool IsActive);
+
 public sealed record BatchStateStripItemViewModel(string Name);
 
 public sealed partial class EditorAssetItemViewModel : ObservableObject

@@ -377,6 +377,16 @@ public partial class WorkspaceShellViewModel
         ? (HasLoadedAsset ? WorkspaceTitle : "No DMI loaded")
         : SelectedExplorerState;
 
+    public string CurrentDmiDisplayName => HasLoadedAsset
+        ? _editorSession.LoadedAsset?.DisplayName ?? WorkspaceTitle
+        : "No DMI loaded";
+
+    public string CurrentDmiPathSummary => !string.IsNullOrWhiteSpace(_editorSession.LoadedAsset?.SourcePath)
+        ? _editorSession.LoadedAsset!.SourcePath!
+        : !string.IsNullOrWhiteSpace(DmiPath)
+            ? DmiPath
+            : "Current in-memory DMI";
+
     public string EditableBackgroundSummary => SelectedEditorAssetTargetSurface == EditorAssetTargetSurface.EditableBackground
         ? "Background target reserved for staged v1. Multi-resource stacking arrives in a later pass."
         : "Choose `EditableBackground` to stage future non-editable reference placement.";
@@ -401,6 +411,18 @@ public partial class WorkspaceShellViewModel
             if (Enum.IsDefined(typeof(BottomWorkspaceTab), value))
             {
                 SelectedBottomWorkspaceTab = (BottomWorkspaceTab)value;
+            }
+        }
+    }
+
+    public int SelectedEditorLeftDockTabIndex
+    {
+        get => (int)SelectedEditorLeftDockTab;
+        set
+        {
+            if (Enum.IsDefined(typeof(EditorLeftDockTab), value))
+            {
+                SelectedEditorLeftDockTab = (EditorLeftDockTab)value;
             }
         }
     }

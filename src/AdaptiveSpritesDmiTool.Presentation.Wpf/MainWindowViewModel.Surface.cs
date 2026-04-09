@@ -240,6 +240,54 @@ public partial class WorkspaceShellViewModel
                 SelectedEditorAssetTargetLayer));
     }
 
+    private void RefreshSampleConfigItems()
+    {
+        SampleConfigItems.Clear();
+
+        var sampleConfigDirectory = ResolveSampleConfigDirectory();
+        if (sampleConfigDirectory is null || !Directory.Exists(sampleConfigDirectory))
+        {
+            return;
+        }
+
+        foreach (var path in Directory
+                     .EnumerateFiles(sampleConfigDirectory, "*.*", SearchOption.TopDirectoryOnly)
+                     .Where(static file => file.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                     .OrderBy(static file => Path.GetFileNameWithoutExtension(file), StringComparer.OrdinalIgnoreCase))
+        {
+            var isLegacyCsv = path.EndsWith(".csv", StringComparison.OrdinalIgnoreCase);
+            var isActive = isLegacyCsv
+                ? string.Equals(path, LegacyCsvPath, StringComparison.OrdinalIgnoreCase)
+                : string.Equals(path, ConfigPath, StringComparison.OrdinalIgnoreCase);
+
+            SampleConfigItems.Add(
+                new SampleConfigItemViewModel(
+                    Path.GetFileNameWithoutExtension(path),
+                    path,
+                    isLegacyCsv ? "Legacy CSV" : "JSON config",
+                    Path.GetFileName(path),
+                    isLegacyCsv,
+                    isActive));
+        }
+    }
+
+    private static string? ResolveSampleConfigDirectory()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current is not null)
+        {
+            var candidate = Path.Combine(current.FullName, "samples", "configs", "legacy");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
+    }
+
     private void RefreshBatchPipelineState()
     {
         BatchStateStripItems.Clear();
@@ -262,6 +310,9 @@ public partial class WorkspaceShellViewModel
         {
             SelectedBatchSourceItem = null;
         }
+
+        OnPropertyChanged(nameof(BatchStateStripItems));
+        OnPropertyChanged(nameof(BatchSourceTreeItems));
     }
 
     private void RefreshActivePreviewPresentation()
