@@ -5,11 +5,12 @@
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ui:ControlsDictionary />
-            </ResourceDictionary.MergedDictionaries>
-
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <FontFamily x:Key="FluentSystemIcons">pack://application:,,,/Wpf.Ui;component/Resources/Fonts/#FluentSystemIcons-Regular</FontFamily>
+            <FontFamily x:Key="FluentSystemIconsFilled">pack://application:,,,/Wpf.Ui;component/Resources/Fonts/#FluentSystemIcons-Filled</FontFamily>
+            <Style TargetType="{x:Type ui:SymbolIcon}">
+                <Setter Property="Filled" Value="False" />
+            </Style>
             <SolidColorBrush x:Key="Brush.WindowBackground" Color="#F4EFE7" />
             <SolidColorBrush x:Key="Brush.PanelBackground" Color="#FFFDF9" />
             <SolidColorBrush x:Key="Brush.PanelBorder" Color="#D9CFC0" />

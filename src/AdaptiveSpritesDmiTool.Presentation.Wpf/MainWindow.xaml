@@ -254,6 +254,19 @@
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0,0,4,0" />
         </Style>
+        <Style x:Key="ToolbarSymbolIconStyle" TargetType="{x:Type ui:SymbolIcon}">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="Filled" Value="True" />
+        </Style>
+        <Style x:Key="DockSymbolIconStyle" TargetType="{x:Type ui:SymbolIcon}" BasedOn="{StaticResource ToolbarSymbolIconStyle}" />
+        <Style x:Key="RailSymbolIconStyle" TargetType="{x:Type ui:SymbolIcon}">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="Filled" Value="False" />
+        </Style>
         <Style x:Key="SidebarSectionBorderStyle" TargetType="Border">
             <Setter Property="Padding" Value="6" />
             <Setter Property="Margin" Value="0,0,0,6" />
@@ -660,7 +673,7 @@
                         <DataTemplate>
                             <Grid ToolTip="{Binding Label}"
                                   AutomationProperties.Name="{Binding Label}">
-                                <ui:SymbolIcon HorizontalAlignment="Center" Width="22" Height="22" Symbol="{Binding IconSymbol}" />
+                                <ui:SymbolIcon Style="{StaticResource RailSymbolIconStyle}" HorizontalAlignment="Center" Symbol="{Binding IconSymbol}" />
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -930,40 +943,40 @@
                                         <DockPanel LastChildFill="False" DataContext="{Binding CommandBar}">
                                             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
                                                 <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" ToolTip="Paint" AutomationProperties.Name="Paint tool"><ui:SymbolIcon Width="18" Height="18" Symbol="AddSquare20" /></RadioButton>
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" ToolTip="Fill" AutomationProperties.Name="Fill tool"><ui:SymbolIcon Width="18" Height="18" Symbol="Grid20" /></RadioButton>
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" ToolTip="Move" AutomationProperties.Name="Move tool"><ui:SymbolIcon Width="18" Height="18" Symbol="ArrowMove20" /></RadioButton>
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" ToolTip="Select area" AutomationProperties.Name="Select tool"><ui:SymbolIcon Width="18" Height="18" Symbol="SquareHintApps20" /></RadioButton>
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" ToolTip="Erase" AutomationProperties.Name="Erase tool"><ui:SymbolIcon Width="18" Height="18" Symbol="Eraser20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" ToolTip="Paint" AutomationProperties.Name="Paint tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="PaintBrush20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" ToolTip="Fill" AutomationProperties.Name="Fill tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="PaintBucket20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" ToolTip="Move" AutomationProperties.Name="Move tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Cursor20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" ToolTip="Select area" AutomationProperties.Name="Select tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="SelectObject20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" ToolTip="Erase" AutomationProperties.Name="Erase tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Delete20" /></RadioButton>
 
                                                 <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Scope" />
-                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" ToolTip="Single direction" AutomationProperties.Name="Single direction scope"><ui:SymbolIcon Width="18" Height="18" Symbol="Square20" /></RadioButton>
-                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" ToolTip="Parallel directions" AutomationProperties.Name="Parallel direction scope"><ui:SymbolIcon Width="18" Height="18" Symbol="TableCellsMerge20" /></RadioButton>
-                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" ToolTip="All directions" AutomationProperties.Name="All directions scope"><ui:SymbolIcon Width="18" Height="18" Symbol="Grid20" /></RadioButton>
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" ToolTip="Single direction" AutomationProperties.Name="Single direction scope"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Square20" /></RadioButton>
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" ToolTip="Parallel directions" AutomationProperties.Name="Parallel direction scope"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="TableCellsMerge20" /></RadioButton>
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" ToolTip="All directions" AutomationProperties.Name="All directions scope"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Grid20" /></RadioButton>
 
                                                 <TextBlock Margin="10,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="View" />
-                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" ToolTip="Dual view" AutomationProperties.Name="Dual view"><ui:SymbolIcon Width="18" Height="18" Symbol="DualScreenMirror20" /></RadioButton>
-                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" ToolTip="Overlay view" AutomationProperties.Name="Overlay view"><ui:SymbolIcon Width="18" Height="18" Symbol="BorderTop20" /></RadioButton>
+                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" ToolTip="Dual view" AutomationProperties.Name="Dual view"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="DualScreenMirror20" /></RadioButton>
+                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" ToolTip="Overlay view" AutomationProperties.Name="Overlay view"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="BorderTop20" /></RadioButton>
                                                 <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding DataContext.EditorWorkspace.ShowGridToggle, RelativeSource={RelativeSource AncestorType=Window}}"
                                                           ToolTip="Show grid"
                                                           AutomationProperties.Name="Show grid">
-                                                    <ui:SymbolIcon Width="18" Height="18" Symbol="TableSimple20" />
+                                                    <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Grid20" />
                                                 </CheckBox>
                                                 <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding DataContext.EditorWorkspace.ShowOverlayToggle, RelativeSource={RelativeSource AncestorType=Window}}"
                                                           ToolTip="Show overlay layer"
                                                           AutomationProperties.Name="Show overlay layer">
-                                                    <ui:SymbolIcon Width="18" Height="18" Symbol="SubGrid20" />
+                                                    <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Layer20" />
                                                 </CheckBox>
                                             </StackPanel>
 
                                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding UndoCommand}" ToolTip="Undo" AutomationProperties.Name="Undo"><ui:SymbolIcon Width="18" Height="18" Symbol="ArrowHookDownLeft20" /></Button>
-                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding RedoCommand}" ToolTip="Redo" AutomationProperties.Name="Redo"><ui:SymbolIcon Width="18" Height="18" Symbol="ArrowHookDownRight20" /></Button>
-                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding ClearSelectionCommand}" ToolTip="Clear selection" AutomationProperties.Name="Clear selection"><ui:SymbolIcon Width="18" Height="18" Symbol="DismissSquare20" /></Button>
-                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding FitViewportCommand}" ToolTip="Fit viewport" AutomationProperties.Name="Fit viewport"><ui:SymbolIcon Width="18" Height="18" Symbol="ArrowAutofitWidthDotted20" /></Button>
-                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}" IsChecked="{Binding IsFocusMode}" ToolTip="Focus mode" AutomationProperties.Name="Focus mode"><ui:SymbolIcon Width="18" Height="18" Symbol="FullScreenMaximize20" /></CheckBox>
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding UndoCommand}" ToolTip="Undo" AutomationProperties.Name="Undo"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ArrowUndo20" /></Button>
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding RedoCommand}" ToolTip="Redo" AutomationProperties.Name="Redo"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ArrowRedo20" /></Button>
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding ClearSelectionCommand}" ToolTip="Clear selection" AutomationProperties.Name="Clear selection"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Dismiss20" /></Button>
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding FitViewportCommand}" ToolTip="Fit viewport" AutomationProperties.Name="Fit viewport"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ZoomFit20" /></Button>
+                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}" IsChecked="{Binding IsFocusMode}" ToolTip="Focus mode" AutomationProperties.Name="Focus mode"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="FullScreenMaximize20" /></CheckBox>
                                             </StackPanel>
                                         </DockPanel>
                                     </ScrollViewer>
@@ -1021,7 +1034,7 @@
                                                                 Command="{Binding DataContext.OpenDmiCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                 ToolTip="Open DMI"
                                                                 AutomationProperties.Name="Open DMI">
-                                                            <ui:SymbolIcon Width="18" Height="18" Symbol="AppFolder20" />
+                                                            <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" />
                                                         </Button>
                                                     </DockPanel>
                                                     <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding SpriteContractSummary}" />
@@ -1039,14 +1052,14 @@
                                                                 Command="{Binding BuildPreviewCommand}"
                                                                 ToolTip="Refresh preview"
                                                                 AutomationProperties.Name="Refresh preview">
-                                                            <ui:SymbolIcon Width="18" Height="18" Symbol="ArrowSync20" />
+                                                            <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="ArrowSync20" />
                                                         </Button>
                                                         <CheckBox Margin="4,0,0,0"
                                                                   Style="{StaticResource DockIconCheckBoxStyle}"
                                                                   IsChecked="{Binding IsAutoPreviewEnabled}"
                                                                   ToolTip="Auto preview"
                                                                   AutomationProperties.Name="Auto preview">
-                                                            <ui:SymbolIcon Width="18" Height="18" Symbol="FlashAuto20" />
+                                                            <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FlashAuto20" />
                                                         </CheckBox>
                                                     </WrapPanel>
                                                     <Border Grid.Row="3"
@@ -1127,10 +1140,10 @@
                                                     <DockPanel>
                                                         <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Configs" />
                                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.CreateConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="New config" AutomationProperties.Name="New config"><ui:SymbolIcon Width="18" Height="18" Symbol="ReceiptAdd20" /></Button>
-                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.LoadConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Load config" AutomationProperties.Name="Load config"><ui:SymbolIcon Width="18" Height="18" Symbol="FolderOpen20" /></Button>
-                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.SaveConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config" AutomationProperties.Name="Save config"><ui:SymbolIcon Width="18" Height="18" Symbol="Save20" /></Button>
-                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.BrowseSaveConfigPathCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config as" AutomationProperties.Name="Save config as"><ui:SymbolIcon Width="18" Height="18" Symbol="SaveEdit20" /></Button>
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.CreateConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="New config" AutomationProperties.Name="New config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Add20" /></Button>
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.LoadConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Load config" AutomationProperties.Name="Load config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" /></Button>
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.SaveConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config" AutomationProperties.Name="Save config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Save20" /></Button>
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.BrowseSaveConfigPathCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config as" AutomationProperties.Name="Save config as"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="SaveEdit20" /></Button>
                                                         </StackPanel>
                                                     </DockPanel>
                                                     <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding ConfigSummary}" />
@@ -1356,7 +1369,7 @@
                                                           IsChecked="{Binding IsExpanded}"
                                                           ToolTip="Expand mappings"
                                                           AutomationProperties.Name="Expand mappings">
-                                                    <ui:SymbolIcon Width="18" Height="18" Symbol="MoreHorizontal20" />
+<ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="MoreHorizontal20" />
                                                 </CheckBox>
                                             </DockPanel>
                                             <TextBlock Grid.Row="1"
