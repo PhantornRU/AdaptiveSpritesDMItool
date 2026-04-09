@@ -1,6 +1,7 @@
 <Window x:Class="AdaptiveSpritesDmiTool.Presentation.Wpf.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AdaptiveSpritesDmiTool.Presentation.Wpf"
@@ -17,6 +18,31 @@
         Background="{StaticResource Brush.WindowBackground}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <sys:String x:Key="Icon.Tool.Paint">AddSquare20</sys:String>
+        <sys:String x:Key="Icon.Tool.Fill">Grid20</sys:String>
+        <sys:String x:Key="Icon.Tool.Move">ArrowMove20</sys:String>
+        <sys:String x:Key="Icon.Tool.Select">SquareHintApps20</sys:String>
+        <sys:String x:Key="Icon.Tool.Delete">Eraser20</sys:String>
+        <sys:String x:Key="Icon.Scope.Single">Square20</sys:String>
+        <sys:String x:Key="Icon.Scope.Parallel">TableCellsMerge20</sys:String>
+        <sys:String x:Key="Icon.Scope.All">Grid20</sys:String>
+        <sys:String x:Key="Icon.View.Dual">DualScreenMirror20</sys:String>
+        <sys:String x:Key="Icon.View.Overlay">BorderTop20</sys:String>
+        <sys:String x:Key="Icon.View.Grid">TableSimple20</sys:String>
+        <sys:String x:Key="Icon.View.Layered">SubGrid20</sys:String>
+        <sys:String x:Key="Icon.Action.Undo">ArrowHookDownLeft20</sys:String>
+        <sys:String x:Key="Icon.Action.Redo">ArrowHookDownRight20</sys:String>
+        <sys:String x:Key="Icon.Action.Clear">DismissSquare20</sys:String>
+        <sys:String x:Key="Icon.Action.Fit">ArrowAutofitWidthDotted20</sys:String>
+        <sys:String x:Key="Icon.Action.Focus">FullScreenMaximize20</sys:String>
+        <sys:String x:Key="Icon.Dock.OpenDmi">AppFolder20</sys:String>
+        <sys:String x:Key="Icon.Dock.Refresh">ArrowSync20</sys:String>
+        <sys:String x:Key="Icon.Dock.Auto">FlashAuto20</sys:String>
+        <sys:String x:Key="Icon.Dock.ConfigNew">ReceiptAdd20</sys:String>
+        <sys:String x:Key="Icon.Dock.ConfigLoad">FolderOpen20</sys:String>
+        <sys:String x:Key="Icon.Dock.ConfigSave">Save24</sys:String>
+        <sys:String x:Key="Icon.Dock.ConfigSaveAs">SaveEdit24</sys:String>
+        <sys:String x:Key="Icon.Dock.Expand">MoreHorizontal20</sys:String>
         <Style x:Key="ShellModeRadioButtonStyle" TargetType="RadioButton">
             <Setter Property="Padding" Value="14,7" />
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
@@ -187,6 +213,46 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+        <Style x:Key="EditorIconToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource EditorPrimaryToolbarButtonStyle}">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+        </Style>
+        <Style x:Key="EditorIconToolbarToggleStyle" TargetType="RadioButton" BasedOn="{StaticResource EditorPrimaryToolbarToggleStyle}">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+        </Style>
+        <Style x:Key="EditorIconToolbarCheckBoxStyle" TargetType="CheckBox" BasedOn="{StaticResource EditorPrimaryToolbarCheckBoxStyle}">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+        </Style>
+        <Style x:Key="DockIconButtonStyle" TargetType="Button" BasedOn="{StaticResource CompactActionButtonStyle}">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+        </Style>
+        <Style x:Key="DockIconCheckBoxStyle" TargetType="CheckBox" BasedOn="{StaticResource EditorPrimaryToolbarCheckBoxStyle}">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,4,0" />
         </Style>
         <Style x:Key="SidebarSectionBorderStyle" TargetType="Border">
             <Setter Property="Padding" Value="6" />
@@ -592,10 +658,10 @@
                          ItemContainerStyle="{StaticResource RailListBoxItemStyle}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel>
+                            <Grid ToolTip="{Binding Label}"
+                                  AutomationProperties.Name="{Binding Label}">
                                 <ui:SymbolIcon HorizontalAlignment="Center" Width="22" Height="22" Symbol="{Binding IconSymbol}" />
-                                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="11" Text="{Binding Label}" />
-                            </StackPanel>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
@@ -801,7 +867,7 @@
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="2" Padding="4" Background="#FFF9F2" CornerRadius="8">
-                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
+                                <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
                                     <DockPanel LastChildFill="False" DataContext="{Binding CommandBar}">
                                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
                                             <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
@@ -860,38 +926,44 @@
                                         Padding="4"
                                         Background="#FFF9F2"
                                         CornerRadius="8">
-                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
+                                    <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
                                         <DockPanel LastChildFill="False" DataContext="{Binding CommandBar}">
                                             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
                                                 <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Tools" />
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" Content="Paint" />
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" Content="Fill" />
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" Content="Move" />
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" Content="Select" />
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" Content="Erase" />
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" ToolTip="Paint" AutomationProperties.Name="Paint tool"><ui:SymbolIcon Width="18" Height="18" Symbol="AddSquare20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" ToolTip="Fill" AutomationProperties.Name="Fill tool"><ui:SymbolIcon Width="18" Height="18" Symbol="Grid20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" ToolTip="Move" AutomationProperties.Name="Move tool"><ui:SymbolIcon Width="18" Height="18" Symbol="ArrowMove20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" ToolTip="Select area" AutomationProperties.Name="Select tool"><ui:SymbolIcon Width="18" Height="18" Symbol="SquareHintApps20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" ToolTip="Erase" AutomationProperties.Name="Erase tool"><ui:SymbolIcon Width="18" Height="18" Symbol="Eraser20" /></RadioButton>
 
                                                 <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="Scope" />
-                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" Content="Single" />
-                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" Content="Parallel" />
-                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" Content="All" />
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" ToolTip="Single direction" AutomationProperties.Name="Single direction scope"><ui:SymbolIcon Width="18" Height="18" Symbol="Square20" /></RadioButton>
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" ToolTip="Parallel directions" AutomationProperties.Name="Parallel direction scope"><ui:SymbolIcon Width="18" Height="18" Symbol="TableCellsMerge20" /></RadioButton>
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" ToolTip="All directions" AutomationProperties.Name="All directions scope"><ui:SymbolIcon Width="18" Height="18" Symbol="Grid20" /></RadioButton>
 
                                                 <TextBlock Margin="10,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="View" />
-                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" Content="Dual" />
-                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" Content="Overlay" />
-                                                <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" ToolTip="Dual view" AutomationProperties.Name="Dual view"><ui:SymbolIcon Width="18" Height="18" Symbol="DualScreenMirror20" /></RadioButton>
+                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" ToolTip="Overlay view" AutomationProperties.Name="Overlay view"><ui:SymbolIcon Width="18" Height="18" Symbol="BorderTop20" /></RadioButton>
+                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding DataContext.EditorWorkspace.ShowGridToggle, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                          Content="Grid" />
-                                                <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                          ToolTip="Show grid"
+                                                          AutomationProperties.Name="Show grid">
+                                                    <ui:SymbolIcon Width="18" Height="18" Symbol="TableSimple20" />
+                                                </CheckBox>
+                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding DataContext.EditorWorkspace.ShowOverlayToggle, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                          Content="Layered" />
+                                                          ToolTip="Show overlay layer"
+                                                          AutomationProperties.Name="Show overlay layer">
+                                                    <ui:SymbolIcon Width="18" Height="18" Symbol="SubGrid20" />
+                                                </CheckBox>
                                             </StackPanel>
 
                                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding UndoCommand}" Content="Undo" />
-                                                <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding RedoCommand}" Content="Redo" />
-                                                <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding ClearSelectionCommand}" Content="Clear" />
-                                                <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}" Command="{Binding FitViewportCommand}" Content="Fit" />
-                                                <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}" IsChecked="{Binding IsFocusMode}" Content="Focus" />
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding UndoCommand}" ToolTip="Undo" AutomationProperties.Name="Undo"><ui:SymbolIcon Width="18" Height="18" Symbol="ArrowHookDownLeft20" /></Button>
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding RedoCommand}" ToolTip="Redo" AutomationProperties.Name="Redo"><ui:SymbolIcon Width="18" Height="18" Symbol="ArrowHookDownRight20" /></Button>
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding ClearSelectionCommand}" ToolTip="Clear selection" AutomationProperties.Name="Clear selection"><ui:SymbolIcon Width="18" Height="18" Symbol="DismissSquare20" /></Button>
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding FitViewportCommand}" ToolTip="Fit viewport" AutomationProperties.Name="Fit viewport"><ui:SymbolIcon Width="18" Height="18" Symbol="ArrowAutofitWidthDotted20" /></Button>
+                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}" IsChecked="{Binding IsFocusMode}" ToolTip="Focus mode" AutomationProperties.Name="Focus mode"><ui:SymbolIcon Width="18" Height="18" Symbol="FullScreenMaximize20" /></CheckBox>
                                             </StackPanel>
                                         </DockPanel>
                                     </ScrollViewer>
@@ -945,9 +1017,12 @@
                                                     <DockPanel>
                                                         <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Assets / DMI" />
                                                         <Button DockPanel.Dock="Right"
-                                                                Style="{StaticResource CompactActionButtonStyle}"
+                                                                Style="{StaticResource DockIconButtonStyle}"
                                                                 Command="{Binding DataContext.OpenDmiCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                Content="Open DMI" />
+                                                                ToolTip="Open DMI"
+                                                                AutomationProperties.Name="Open DMI">
+                                                            <ui:SymbolIcon Width="18" Height="18" Symbol="AppFolder20" />
+                                                        </Button>
                                                     </DockPanel>
                                                     <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding SpriteContractSummary}" />
                                                     <WrapPanel Grid.Row="2"
@@ -957,15 +1032,22 @@
                                                         <ComboBox Width="118"
                                                                   Height="28"
                                                                   ItemsSource="{Binding PreviewDisplayModes}"
-                                                                  SelectedItem="{Binding SelectedPreviewDisplayMode}" />
+                                                                  SelectedItem="{Binding SelectedPreviewDisplayMode}"
+                                                                  ToolTip="Preview display mode" />
                                                         <Button Margin="4,0,0,0"
-                                                                Style="{StaticResource CompactActionButtonStyle}"
+                                                                Style="{StaticResource DockIconButtonStyle}"
                                                                 Command="{Binding BuildPreviewCommand}"
-                                                                Content="Refresh" />
+                                                                ToolTip="Refresh preview"
+                                                                AutomationProperties.Name="Refresh preview">
+                                                            <ui:SymbolIcon Width="18" Height="18" Symbol="ArrowSync20" />
+                                                        </Button>
                                                         <CheckBox Margin="4,0,0,0"
-                                                                  Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                                  Style="{StaticResource DockIconCheckBoxStyle}"
                                                                   IsChecked="{Binding IsAutoPreviewEnabled}"
-                                                                  Content="Auto" />
+                                                                  ToolTip="Auto preview"
+                                                                  AutomationProperties.Name="Auto preview">
+                                                            <ui:SymbolIcon Width="18" Height="18" Symbol="FlashAuto20" />
+                                                        </CheckBox>
                                                     </WrapPanel>
                                                     <Border Grid.Row="3"
                                                             Margin="0,8,0,0"
@@ -1045,9 +1127,10 @@
                                                     <DockPanel>
                                                         <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Configs" />
                                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                                            <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding DataContext.CreateConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" Content="New" />
-                                                            <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding DataContext.LoadConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" Content="Load" />
-                                                            <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding DataContext.SaveConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" Content="Save" />
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.CreateConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="New config" AutomationProperties.Name="New config"><ui:SymbolIcon Width="18" Height="18" Symbol="ReceiptAdd20" /></Button>
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.LoadConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Load config" AutomationProperties.Name="Load config"><ui:SymbolIcon Width="18" Height="18" Symbol="FolderOpen20" /></Button>
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.SaveConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config" AutomationProperties.Name="Save config"><ui:SymbolIcon Width="18" Height="18" Symbol="Save20" /></Button>
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.BrowseSaveConfigPathCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config as" AutomationProperties.Name="Save config as"><ui:SymbolIcon Width="18" Height="18" Symbol="SaveEdit20" /></Button>
                                                         </StackPanel>
                                                     </DockPanel>
                                                     <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding ConfigSummary}" />
@@ -1113,8 +1196,8 @@
                                                               CanContentScroll="False"
                                                               PreviewMouseWheel="EditorSurfaceHost_PreviewMouseWheel"
                                                               ScrollChanged="SourceViewportScrollViewer_ScrollChanged">
-                                                    <Grid MinWidth="{Binding ElementName=SourceViewportScrollViewer, Path=ViewportWidth}"
-                                                          MinHeight="{Binding ElementName=SourceViewportScrollViewer, Path=ViewportHeight}"
+                                                    <Grid MinWidth="{Binding ElementName=SourceViewportScrollViewer, Path=ActualWidth}"
+                                                          MinHeight="{Binding ElementName=SourceViewportScrollViewer, Path=ActualHeight}"
                                                           Background="#FFF5EFE2">
                                                         <local:EditorSurfaceControl HorizontalAlignment="Center"
                                                                                    VerticalAlignment="Center"
@@ -1160,8 +1243,8 @@
                                                               CanContentScroll="False"
                                                               PreviewMouseWheel="EditorSurfaceHost_PreviewMouseWheel"
                                                               ScrollChanged="EditableViewportScrollViewer_ScrollChanged">
-                                                    <Grid MinWidth="{Binding ElementName=EditableViewportScrollViewer, Path=ViewportWidth}"
-                                                          MinHeight="{Binding ElementName=EditableViewportScrollViewer, Path=ViewportHeight}"
+                                                    <Grid MinWidth="{Binding ElementName=EditableViewportScrollViewer, Path=ActualWidth}"
+                                                          MinHeight="{Binding ElementName=EditableViewportScrollViewer, Path=ActualHeight}"
                                                           Background="#FFF5EFE2">
                                                         <local:EditorSurfaceControl HorizontalAlignment="Center"
                                                                                    VerticalAlignment="Center"
@@ -1207,7 +1290,7 @@
                                 <Grid Grid.RowSpan="3" Grid.Column="4" Visibility="{Binding ShowRightDirectionStrip, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
 
                                     <Border Style="{StaticResource SidebarSectionBorderStyle}">
@@ -1240,6 +1323,7 @@
                                     <Border Grid.Row="1"
                                             Margin="0,6,0,0"
                                             Padding="6"
+                                            VerticalAlignment="Stretch"
                                             Background="#FFFDF8EF"
                                             BorderBrush="{StaticResource Brush.PanelBorder}"
                                             BorderThickness="1"
@@ -1247,14 +1331,12 @@
                                             DataContext="{Binding DataContext.BottomWorkspace, RelativeSource={RelativeSource AncestorType=Window}}">
                                         <Border.Style>
                                             <Style TargetType="Border">
-                                                <Setter Property="Height" Value="132" />
                                                 <Setter Property="MinHeight" Value="120" />
-                                                <Setter Property="MaxHeight" Value="148" />
+                                                <Setter Property="VerticalAlignment" Value="Stretch" />
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsExpanded}" Value="True">
-                                                        <Setter Property="Height" Value="212" />
                                                         <Setter Property="MinHeight" Value="196" />
-                                                        <Setter Property="MaxHeight" Value="236" />
+                                                        <Setter Property="VerticalAlignment" Value="Stretch" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -1270,9 +1352,12 @@
                                             <DockPanel Grid.Row="0" LastChildFill="False">
                                                 <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Mappings" />
                                                 <CheckBox DockPanel.Dock="Right"
-                                                          Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                          Style="{StaticResource DockIconCheckBoxStyle}"
                                                           IsChecked="{Binding IsExpanded}"
-                                                          Content="More" />
+                                                          ToolTip="Expand mappings"
+                                                          AutomationProperties.Name="Expand mappings">
+                                                    <ui:SymbolIcon Width="18" Height="18" Symbol="MoreHorizontal20" />
+                                                </CheckBox>
                                             </DockPanel>
                                             <TextBlock Grid.Row="1"
                                                        Margin="0,4,0,0"
@@ -1284,27 +1369,35 @@
                                                        Foreground="{StaticResource Brush.TextSecondary}"
                                                        FontSize="10"
                                                        Text="{Binding HighlightedMappingSummary, StringFormat=Pair: {0}}" />
-                                            <StackPanel Grid.Row="3" Margin="0,6,0,0">
-                                                <TextBlock Foreground="{StaticResource Brush.TextSecondary}"
+                                            <Grid Grid.Row="3" Margin="0,6,0,0" VerticalAlignment="Stretch">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="*" />
+                                                </Grid.RowDefinitions>
+                                                <TextBlock Grid.Row="0"
+                                                           Foreground="{StaticResource Brush.TextSecondary}"
                                                            FontSize="10"
                                                            Text="{Binding DataContext.EditorWorkspace.HoverToken, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=Hover: {0}}" />
-                                                <TextBlock Margin="0,2,0,0"
+                                                <TextBlock Grid.Row="1"
+                                                           Margin="0,2,0,0"
                                                            Foreground="{StaticResource Brush.TextSecondary}"
                                                            FontSize="10"
                                                            Text="{Binding DataContext.EditorWorkspace.HoverMappingToken, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=Status: {0}}" />
-                                                <ListBox Margin="0,6,0,0"
+                                                <ListBox Grid.Row="2"
+                                                         Margin="0,6,0,0"
                                                          BorderThickness="0"
                                                          Background="Transparent"
+                                                         VerticalAlignment="Stretch"
                                                          SelectedItem="{Binding SelectedMapping, Mode=TwoWay}"
                                                          ItemsSource="{Binding MappingRows}"
                                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                          ScrollViewer.VerticalScrollBarVisibility="Auto">
                                                     <ListBox.Style>
                                                         <Style TargetType="ListBox">
-                                                            <Setter Property="MaxHeight" Value="52" />
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsExpanded}" Value="True">
-                                                                    <Setter Property="MaxHeight" Value="118" />
+                                                                <DataTrigger Binding="{Binding IsExpanded}" Value="False">
+                                                                    <Setter Property="MaxHeight" Value="52" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -1335,7 +1428,7 @@
                                                         </DataTemplate>
                                                     </ListBox.ItemTemplate>
                                                 </ListBox>
-                                            </StackPanel>
+                                            </Grid>
                                             <Button Grid.Row="4"
                                                     Margin="0,6,0,0"
                                                     Padding="8,3"
