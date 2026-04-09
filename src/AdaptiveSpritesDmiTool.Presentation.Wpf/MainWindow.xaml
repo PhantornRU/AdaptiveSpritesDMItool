@@ -190,6 +190,12 @@
             <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
+        <Style x:Key="LeftDockTabToggleStyle" TargetType="RadioButton" BasedOn="{StaticResource EditorPrimaryToolbarToggleStyle}">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
         <Style x:Key="EditorPrimaryToolbarCheckBoxStyle" TargetType="CheckBox">
             <Setter Property="Margin" Value="0,0,3,0" />
             <Setter Property="MinHeight" Value="28" />
@@ -990,26 +996,31 @@
                                         </Grid.RowDefinitions>
 
                                         <Border Style="{StaticResource SidebarSectionBorderStyle}">
-                                            <StackPanel>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <RadioButton GroupName="EditorLeftDockTabs"
-                                                                 Style="{StaticResource EditorPrimaryToolbarToggleStyle}"
-                                                                 Command="{Binding SelectEditorLeftDockTabCommand}"
-                                                                 CommandParameter="{x:Static local:EditorLeftDockTab.AssetsDmi}"
-                                                                 IsChecked="{Binding IsAssetsDmiLeftDockSelected, Mode=OneWay}"
-                                                                 Content="Assets / DMI" />
-                                                    <RadioButton GroupName="EditorLeftDockTabs"
-                                                                 Style="{StaticResource EditorPrimaryToolbarToggleStyle}"
-                                                                 Command="{Binding SelectEditorLeftDockTabCommand}"
-                                                                 CommandParameter="{x:Static local:EditorLeftDockTab.Configs}"
-                                                                 IsChecked="{Binding IsConfigsLeftDockSelected, Mode=OneWay}"
-                                                                 Content="Configs" />
-                                                </StackPanel>
-                                            </StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <RadioButton Grid.Column="0"
+                                                             GroupName="EditorLeftDockTabs"
+                                                             Style="{StaticResource LeftDockTabToggleStyle}"
+                                                             Command="{Binding SelectEditorLeftDockTabCommand}"
+                                                             CommandParameter="{x:Static local:EditorLeftDockTab.AssetsDmi}"
+                                                             IsChecked="{Binding IsAssetsDmiLeftDockSelected, Mode=OneWay}"
+                                                             Content="Assets / DMI" />
+                                                <RadioButton Grid.Column="1"
+                                                             Margin="4,0,0,0"
+                                                             GroupName="EditorLeftDockTabs"
+                                                             Style="{StaticResource LeftDockTabToggleStyle}"
+                                                             Command="{Binding SelectEditorLeftDockTabCommand}"
+                                                             CommandParameter="{x:Static local:EditorLeftDockTab.Configs}"
+                                                             IsChecked="{Binding IsConfigsLeftDockSelected, Mode=OneWay}"
+                                                             Content="Configs" />
+                                            </Grid>
                                         </Border>
 
                                         <Grid Grid.Row="1">
-                                            <Border Style="{StaticResource SidebarSectionBorderStyle}">
+                                            <Border VerticalAlignment="Top" Style="{StaticResource SidebarSectionBorderStyle}">
                                                 <Grid>
                                                     <Grid.Style>
                                                         <Style TargetType="Grid">
@@ -1026,6 +1037,7 @@
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
                                                     </Grid.RowDefinitions>
                                                     <DockPanel>
                                                         <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Assets / DMI" />
@@ -1038,33 +1050,38 @@
                                                         </Button>
                                                     </DockPanel>
                                                     <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding SpriteContractSummary}" />
-                                                    <WrapPanel Grid.Row="2"
-                                                               Margin="0,8,0,0"
-                                                               VerticalAlignment="Center"
-                                                               DataContext="{Binding DataContext.PreviewPanel, RelativeSource={RelativeSource AncestorType=Window}}">
-                                                        <ComboBox Width="118"
+                                                    <Grid Grid.Row="2"
+                                                          Margin="0,8,0,0"
+                                                          DataContext="{Binding DataContext.PreviewPanel, RelativeSource={RelativeSource AncestorType=Window}}">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <ComboBox Grid.Column="0"
                                                                   Height="28"
+                                                                  Margin="0,0,4,0"
                                                                   ItemsSource="{Binding PreviewDisplayModes}"
                                                                   SelectedItem="{Binding SelectedPreviewDisplayMode}"
                                                                   ToolTip="Preview display mode" />
-                                                        <Button Margin="4,0,0,0"
+                                                        <Button Grid.Column="1"
                                                                 Style="{StaticResource DockIconButtonStyle}"
                                                                 Command="{Binding BuildPreviewCommand}"
                                                                 ToolTip="Refresh preview"
                                                                 AutomationProperties.Name="Refresh preview">
                                                             <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="ArrowSync20" />
                                                         </Button>
-                                                        <CheckBox Margin="4,0,0,0"
+                                                        <CheckBox Grid.Column="2"
                                                                   Style="{StaticResource DockIconCheckBoxStyle}"
                                                                   IsChecked="{Binding IsAutoPreviewEnabled}"
                                                                   ToolTip="Auto preview"
                                                                   AutomationProperties.Name="Auto preview">
                                                             <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FlashAuto20" />
                                                         </CheckBox>
-                                                    </WrapPanel>
+                                                    </Grid>
                                                     <Border Grid.Row="3"
                                                             Margin="0,8,0,0"
-                                                            Padding="6"
+                                                            Padding="5"
                                                             Background="White"
                                                             BorderBrush="{StaticResource Brush.PanelBorder}"
                                                             BorderThickness="1"
@@ -1079,7 +1096,9 @@
                                                                 <TextBlock Grid.Column="1"
                                                                            Foreground="{StaticResource Brush.TextSecondary}"
                                                                            FontSize="10"
-                                                                           Text="{Binding CurrentAssetDisplayName}" />
+                                                                           Text="{Binding CurrentAssetDisplayName}"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           MaxWidth="92" />
                                                             </Grid>
                                                             <Grid Margin="0,6,0,0">
                                                                 <Grid.ColumnDefinitions>
@@ -1120,7 +1139,7 @@
                                                 </Grid>
                                             </Border>
 
-                                            <Border>
+                                            <Border VerticalAlignment="Top">
                                                 <Border.Style>
                                                     <Style TargetType="Border" BasedOn="{StaticResource SidebarSectionBorderStyle}">
                                                         <Setter Property="Visibility" Value="Collapsed" />
@@ -1133,6 +1152,7 @@
                                                 </Border.Style>
                                                 <Grid>
                                                     <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="*" />
@@ -1149,8 +1169,6 @@
                                                     <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding ConfigSummary}" />
                                                     <ListBox Grid.Row="2"
                                                              Margin="0,8,0,0"
-                                                             VerticalAlignment="Top"
-                                                             MaxHeight="260"
                                                              ItemsSource="{Binding DataContext.ConfigWorkspace.Items, RelativeSource={RelativeSource AncestorType=Window}}"
                                                              BorderThickness="0"
                                                              Background="Transparent"
