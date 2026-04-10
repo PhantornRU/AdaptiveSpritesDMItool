@@ -333,6 +333,36 @@ public partial class WorkspaceShellViewModel
     }
 
     [RelayCommand]
+    private Task ToggleImportedStateBackgroundAsync(ImportedDmiStateItemViewModel? item)
+    {
+        if (item is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        item.PlacementMode = item.PlacementMode == ImportedStatePlacementMode.Background
+            ? ImportedStatePlacementMode.None
+            : ImportedStatePlacementMode.Background;
+        RequestImportedStateCompositionRefresh(item.PlacementMode != ImportedStatePlacementMode.None);
+        return Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private Task ToggleImportedStateOverlayAsync(ImportedDmiStateItemViewModel? item)
+    {
+        if (item is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        item.PlacementMode = item.PlacementMode == ImportedStatePlacementMode.Overlay
+            ? ImportedStatePlacementMode.None
+            : ImportedStatePlacementMode.Overlay;
+        RequestImportedStateCompositionRefresh(item.PlacementMode != ImportedStatePlacementMode.None);
+        return Task.CompletedTask;
+    }
+
+    [RelayCommand]
     private void SelectShellSection(ShellSectionKind section) => NavigateToSection(section);
 
     [RelayCommand]
@@ -535,6 +565,20 @@ public partial class WorkspaceShellViewModel
     partial void OnSelectedEditorAssetTargetLayerChanged(EditorAssetTargetLayer value)
     {
         RefreshEditorAssetItems();
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    partial void OnSelectedExplorerStateChanged(string value)
+    {
+        if (_editorSession.LoadedAsset is null || string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        BaseStateName = value;
+        CurrentStateSummary = $"Base {BaseStateName} | Landmark {NormalizeOptionalText(LandmarkStateName)} | Overlay {NormalizeOptionalText(OverlayStateName)}";
+        RefreshPreviewSelectionSummary();
+        RequestAutoPreviewRefresh();
         PersistWorkspaceSettingsInBackground();
     }
 

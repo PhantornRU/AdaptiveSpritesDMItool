@@ -79,6 +79,7 @@ public partial class App : System.Windows.Application
                 services.AddSingleton<IConfigRepository, JsonSpriteConfigRepository>();
                 services.AddSingleton<ILegacyCsvConfigImporter, LegacyCsvConfigImporter>();
                 services.AddSingleton<IDmiReader, DmiSharpReader>();
+                services.AddSingleton<IStateFrameReader, DmiSharpStateFrameReader>();
                 services.AddSingleton<IDmiWriter, DmiSharpConfigWriter>();
                 services.AddSingleton<IPreviewBuilder, DmiSharpPreviewBuilder>();
                 services.AddSingleton<IBatchProcessingService, DeterministicBatchProcessingService>();
@@ -90,6 +91,8 @@ public partial class App : System.Windows.Application
                 services.AddSingleton<LoadConfigUseCase>();
                 services.AddSingleton<ImportLegacyCsvConfigUseCase>();
                 services.AddSingleton<LoadDmiFileUseCase>();
+                services.AddSingleton<InspectDmiFileUseCase>();
+                services.AddSingleton<ReadStateFrameUseCase>();
                 services.AddSingleton<BuildPreviewUseCase>();
                 services.AddSingleton<ApplyConfigToDmiBatchUseCase>();
                 services.AddSingleton<UndoChangeUseCase>();

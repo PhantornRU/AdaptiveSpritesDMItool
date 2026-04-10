@@ -382,6 +382,41 @@ public partial class WorkspaceShellViewModel
             cancellationToken => OpenDmiFromPathAsync(DmiPath, navigateToEditor: true, persistSettings: true, cancellationToken));
     }
 
+    [RelayCommand]
+    private async Task AddDmiStatesAsync()
+    {
+        var path = _fileDialogService.OpenDmiFile(DmiPath);
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            StatusMessage = "Choose a DMI file to add states from.";
+            return;
+        }
+
+        if (_editorSession.LoadedAsset is null)
+        {
+            DmiPath = path;
+            await RunBusyOperationAsync(
+                cancellationToken => OpenDmiFromPathAsync(DmiPath, navigateToEditor: true, persistSettings: true, cancellationToken));
+            return;
+        }
+
+        await RunBusyOperationAsync(
+            async cancellationToken =>
+            {
+                var result = await _inspectDmiFileUseCase.ExecuteAsync(path, cancellationToken);
+                if (result.IsFailure)
+                {
+                    StatusMessage = result.Error.Message;
+                    return;
+                }
+
+                await MergeImportedStatesFromAssetAsync(result.Value, cancellationToken);
+                StatusMessage = $"Merged {result.Value.States.Count} state(s) from '{result.Value.DisplayName}'.";
+                RefreshEditorSurface();
+                PersistWorkspaceSettingsInBackground();
+            });
+    }
+
     [RelayCommand(CanExecute = nameof(CanCreateConfig))]
     private void CreateConfig()
     {
@@ -518,6 +553,7 @@ public partial class WorkspaceShellViewModel
             ? Path.Combine(BatchInputDirectory, "processed")
             : BatchOutputDirectory;
         CreateImplicitDraftConfig();
+        await MergeImportedStatesFromAssetAsync(result.Value, cancellationToken);
         NormalizeSelectedDirection();
         StatusMessage = $"Loaded DMI '{result.Value.DisplayName}' with {result.Value.States.Count} states.";
         RefreshWorkspaceState();
@@ -543,6 +579,45 @@ public partial class WorkspaceShellViewModel
         {
             await PersistWorkspaceSettingsAsync();
         }
+    }
+
+    private async Task MergeImportedStatesFromAssetAsync(DmiAssetInfo asset, CancellationToken cancellationToken)
+    {
+        foreach (var state in asset.States.OrderBy(static item => item.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            var previewResult = await _readStateFrameUseCase.ExecuteAsync(
+                asset.SourcePath ?? string.Empty,
+                state.Name,
+                SpriteDirection.South,
+                cancellationToken);
+            _importedStateFrameCache[(asset.SourcePath ?? string.Empty, state.Name, SpriteDirection.South)] =
+                previewResult.IsSuccess ? previewResult.Value : null;
+            var previewBitmap = previewResult.IsSuccess ? _bitmapSourceFactory.Create(previewResult.Value) : null;
+
+            var existing = ImportedDmiStateItems.FirstOrDefault(item =>
+                string.Equals(item.StateName, state.Name, StringComparison.OrdinalIgnoreCase));
+            if (existing is null)
+            {
+                var order = ImportedDmiStateItems.Count == 0 ? 0 : ImportedDmiStateItems.Max(static item => item.Order) + 1;
+                var imported = new ImportedDmiStateItemViewModel(
+                    state.Name,
+                    asset.SourcePath ?? string.Empty,
+                    Path.GetFileName(asset.SourcePath ?? asset.DisplayName),
+                    previewBitmap,
+                    ImportedStatePlacementMode.None,
+                    order);
+                AttachImportedStateItem(imported);
+                ImportedDmiStateItems.Add(imported);
+                continue;
+            }
+
+            existing.SourceFileLabel = Path.GetFileName(asset.SourcePath ?? asset.DisplayName);
+            existing.PreviewImage = previewBitmap;
+            existing.SourcePath = asset.SourcePath ?? string.Empty;
+        }
+
+        OnPropertyChanged(nameof(ImportedDmiStateItems));
+        InvalidateImportedStateFrameCache();
     }
 
     private void CreateImplicitDraftConfig()

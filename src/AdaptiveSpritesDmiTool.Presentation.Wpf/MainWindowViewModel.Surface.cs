@@ -1,7 +1,9 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
+using Microsoft.Extensions.Logging;
 using Brush = System.Windows.Media.Brush;
 using Color = System.Windows.Media.Color;
 using Brushes = System.Windows.Media.Brushes;
@@ -74,15 +76,257 @@ public partial class WorkspaceShellViewModel
         ActiveTargetSurface = BuildEditorSurfaceRenderState(direction, useCompositeImage: ShowOverlay);
     }
 
+    private void RefreshImportedStateComposition()
+    {
+        InvalidateNavigatorSnapshotCache();
+        RefreshEditorSurface();
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    private void RequestImportedStateCompositionRefresh(bool warmFrames)
+    {
+        _importedStateRefreshCts?.Cancel();
+        _importedStateRefreshCts?.Dispose();
+        _importedStateRefreshCts = null;
+
+        if (!warmFrames)
+        {
+            RefreshImportedStateComposition();
+            return;
+        }
+
+        var cancellationSource = new CancellationTokenSource();
+        _importedStateRefreshCts = cancellationSource;
+        var version = ++_importedStateRefreshVersion;
+        _ = RefreshImportedStateCompositionAsync(version, cancellationSource.Token);
+    }
+
+    private async Task RefreshImportedStateCompositionAsync(int requestVersion, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await PreloadImportedStateFramesAsync(cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested || requestVersion != _importedStateRefreshVersion)
+            {
+                return;
+            }
+
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(
+                () =>
+                {
+                    if (cancellationToken.IsCancellationRequested || requestVersion != _importedStateRefreshVersion)
+                    {
+                        return;
+                    }
+
+                    RefreshImportedStateComposition();
+                },
+                System.Windows.Threading.DispatcherPriority.Background,
+                cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Failed to refresh imported state composition.");
+            StatusMessage = $"Unexpected error: {exception.Message}";
+        }
+    }
+
+    private async Task PreloadImportedStateFramesAsync(CancellationToken cancellationToken)
+    {
+        var activeLayers = ImportedDmiStateItems
+            .Where(static item => item.PlacementMode != ImportedStatePlacementMode.None)
+            .ToArray();
+        if (activeLayers.Length == 0)
+        {
+            return;
+        }
+
+        var directions = (AvailableDirections.Count == 0 ? [GetSafeSelectedDirection()] : AvailableDirections.ToArray())
+            .Distinct()
+            .ToArray();
+
+        foreach (var layer in activeLayers)
+        {
+            if (string.IsNullOrWhiteSpace(layer.SourcePath))
+            {
+                continue;
+            }
+
+            foreach (var direction in directions)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var cacheKey = (layer.SourcePath, layer.StateName, direction);
+                if (_importedStateFrameCache.ContainsKey(cacheKey))
+                {
+                    continue;
+                }
+
+                var result = await _readStateFrameUseCase
+                    .ExecuteAsync(layer.SourcePath, layer.StateName, direction, cancellationToken);
+                _importedStateFrameCache[cacheKey] = result.IsSuccess ? result.Value : null;
+            }
+        }
+    }
+
+    private void AttachImportedStateItem(ImportedDmiStateItemViewModel item)
+    {
+        item.PropertyChanged -= OnImportedStateItemPropertyChanged;
+        item.PropertyChanged += OnImportedStateItemPropertyChanged;
+    }
+
+    private void ClearImportedStateItems()
+    {
+        _importedStateRefreshCts?.Cancel();
+        _importedStateRefreshCts?.Dispose();
+        _importedStateRefreshCts = null;
+
+        foreach (var item in ImportedDmiStateItems)
+        {
+            item.PropertyChanged -= OnImportedStateItemPropertyChanged;
+        }
+
+        ImportedDmiStateItems.Clear();
+        InvalidateImportedStateFrameCache();
+    }
+
+    private void InvalidateImportedStateFrameCache() => _importedStateFrameCache.Clear();
+
+    private void OnImportedStateItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ImportedDmiStateItemViewModel.Order))
+        {
+            RefreshImportedStateComposition();
+        }
+    }
+
+    private SpriteImage? ComposeImportedLayers(SpriteImage? baseImage, SpriteDirection direction)
+    {
+        var resolution = ResolveEditorResolution();
+        if (resolution is null)
+        {
+            return baseImage;
+        }
+
+        var backgroundLayers = ImportedDmiStateItems
+            .Where(static item => item.PlacementMode == ImportedStatePlacementMode.Background)
+            .OrderBy(static item => item.Order)
+            .ToArray();
+        var overlayLayers = ImportedDmiStateItems
+            .Where(static item => item.PlacementMode == ImportedStatePlacementMode.Overlay)
+            .OrderBy(static item => item.Order)
+            .ToArray();
+
+        if (backgroundLayers.Length == 0 && overlayLayers.Length == 0)
+        {
+            return baseImage;
+        }
+
+        var composed = new SpriteImage(
+            resolution.Value.Width,
+            resolution.Value.Height,
+            new byte[resolution.Value.Width * resolution.Value.Height * 4]);
+
+        foreach (var layer in backgroundLayers)
+        {
+            var image = GetImportedStateFrame(layer, direction);
+            if (image is not null)
+            {
+                BlendOver(composed, image);
+            }
+        }
+
+        if (baseImage is not null)
+        {
+            BlendOver(composed, baseImage);
+        }
+
+        foreach (var layer in overlayLayers)
+        {
+            var image = GetImportedStateFrame(layer, direction);
+            if (image is not null)
+            {
+                BlendOver(composed, image);
+            }
+        }
+
+        return composed;
+    }
+
+    private SpriteImage? GetImportedStateFrame(ImportedDmiStateItemViewModel item, SpriteDirection direction)
+    {
+        if (string.IsNullOrWhiteSpace(item.SourcePath))
+        {
+            return null;
+        }
+
+        var cacheKey = (item.SourcePath, item.StateName, direction);
+        if (_importedStateFrameCache.TryGetValue(cacheKey, out var cached))
+        {
+            return cached;
+        }
+
+        return null;
+    }
+
+    private static void BlendOver(SpriteImage canvas, SpriteImage layer)
+    {
+        if (canvas.Width != layer.Width || canvas.Height != layer.Height)
+        {
+            return;
+        }
+
+        for (var index = 0; index < canvas.RgbaBytes.Length; index += 4)
+        {
+            var bgR = canvas.RgbaBytes[index];
+            var bgG = canvas.RgbaBytes[index + 1];
+            var bgB = canvas.RgbaBytes[index + 2];
+            var bgA = canvas.RgbaBytes[index + 3];
+
+            var fgR = layer.RgbaBytes[index];
+            var fgG = layer.RgbaBytes[index + 1];
+            var fgB = layer.RgbaBytes[index + 2];
+            var fgA = layer.RgbaBytes[index + 3];
+
+            var fgAlpha = fgA / 255f;
+            if (fgAlpha <= 0f)
+            {
+                continue;
+            }
+
+            var bgAlpha = bgA / 255f;
+            var outAlpha = fgAlpha + (bgAlpha * (1f - fgAlpha));
+            if (outAlpha <= 0f)
+            {
+                continue;
+            }
+
+            static byte Channel(byte bg, byte fg, float bgAlpha, float fgAlpha, float outAlpha)
+            {
+                var value = ((fg * fgAlpha) + (bg * bgAlpha * (1f - fgAlpha))) / outAlpha;
+                return (byte)Math.Clamp((int)Math.Round(value), 0, 255);
+            }
+
+            canvas.RgbaBytes[index] = Channel(bgR, fgR, bgAlpha, fgAlpha, outAlpha);
+            canvas.RgbaBytes[index + 1] = Channel(bgG, fgG, bgAlpha, fgAlpha, outAlpha);
+            canvas.RgbaBytes[index + 2] = Channel(bgB, fgB, bgAlpha, fgAlpha, outAlpha);
+            canvas.RgbaBytes[index + 3] = (byte)Math.Clamp((int)Math.Round(outAlpha * 255f), 0, 255);
+        }
+    }
+
     private EditorSurfaceRenderState? BuildEditorSurfaceRenderState(SpriteDirection direction, bool useCompositeImage)
     {
-        var resolution = _editorSession.CurrentConfig?.Resolution ?? _editorSession.LoadedAsset?.Resolution;
+        var resolution = ResolveEditorResolution();
         if (resolution is null)
         {
             return null;
         }
 
-        var referenceImage = useCompositeImage ? _compositeImage ?? _baseImage : _baseImage;
+        var referenceImage = ComposeImportedLayers(useCompositeImage ? _compositeImage ?? _baseImage : _baseImage, direction);
         var mappings = _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
         var colors = new Color[resolution.Value.Width * resolution.Value.Height];
         var captions = new string[colors.Length];
@@ -105,13 +349,13 @@ public partial class WorkspaceShellViewModel
     private void RebuildPixelRows(ObservableCollection<PixelRowViewModel> targetRows, SpriteDirection direction, bool useCompositeImage)
     {
         targetRows.Clear();
-        var resolution = _editorSession.CurrentConfig?.Resolution ?? _editorSession.LoadedAsset?.Resolution;
+        var resolution = ResolveEditorResolution();
         if (resolution is null)
         {
             return;
         }
 
-        var referenceImage = useCompositeImage ? _compositeImage ?? _baseImage : _baseImage;
+        var referenceImage = ComposeImportedLayers(useCompositeImage ? _compositeImage ?? _baseImage : _baseImage, direction);
         var mappings = _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
         var selectedTarget = _selectedSourceCoordinate is { } source && mappings.TryGetValue(source, out var mapping)
             ? mapping.Target

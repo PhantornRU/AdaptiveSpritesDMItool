@@ -165,6 +165,7 @@ public partial class WorkspaceShellViewModel
         _landmarkImage = null;
         _overlayImage = null;
         _compositeImage = null;
+        ClearImportedStateItems();
         DmiPath = string.Empty;
         ConfigPath = string.Empty;
         SaveConfigPath = string.Empty;

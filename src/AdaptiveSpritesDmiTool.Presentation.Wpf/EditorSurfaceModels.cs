@@ -2,6 +2,7 @@ using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Windows.Media.Imaging;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 
@@ -45,6 +46,13 @@ public enum BottomWorkspaceTab
 {
     Mappings = 0,
     Advanced = 1
+}
+
+public enum ImportedStatePlacementMode
+{
+    None = 0,
+    Background = 1,
+    Overlay = 2
 }
 
 public sealed partial class PixelCellViewModel : ObservableObject
@@ -215,6 +223,55 @@ public sealed partial class EditorAssetItemViewModel : ObservableObject
 
     [ObservableProperty]
     private EditorAssetTargetLayer targetLayer;
+}
+
+public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
+{
+    public ImportedDmiStateItemViewModel(
+        string stateName,
+        string sourcePath,
+        string sourceFileLabel,
+        BitmapSource? previewImage,
+        ImportedStatePlacementMode placementMode,
+        int order)
+    {
+        StateName = stateName;
+        this.sourcePath = sourcePath;
+        this.sourceFileLabel = sourceFileLabel;
+        this.previewImage = previewImage;
+        this.placementMode = placementMode;
+        this.order = order;
+    }
+
+    public string StateName { get; }
+
+    [ObservableProperty]
+    private string sourcePath;
+
+    [ObservableProperty]
+    private string sourceFileLabel;
+
+    [ObservableProperty]
+    private BitmapSource? previewImage;
+
+    [ObservableProperty]
+    private ImportedStatePlacementMode placementMode;
+
+    [NotifyPropertyChangedFor(nameof(OrderText))]
+    [ObservableProperty]
+    private int order;
+
+    public string OrderText => Order.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    public bool IsBackgroundAssigned => PlacementMode == ImportedStatePlacementMode.Background;
+
+    public bool IsOverlayAssigned => PlacementMode == ImportedStatePlacementMode.Overlay;
+
+    partial void OnPlacementModeChanged(ImportedStatePlacementMode value)
+    {
+        OnPropertyChanged(nameof(IsBackgroundAssigned));
+        OnPropertyChanged(nameof(IsOverlayAssigned));
+    }
 }
 
 public sealed class BatchSourceTreeItemViewModel(

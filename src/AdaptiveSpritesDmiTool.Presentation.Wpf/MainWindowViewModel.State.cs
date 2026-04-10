@@ -309,6 +309,8 @@ public partial class WorkspaceShellViewModel
 
     public ObservableCollection<EditorAssetItemViewModel> EditorAssetItems { get; } = [];
 
+    public ObservableCollection<ImportedDmiStateItemViewModel> ImportedDmiStateItems { get; } = [];
+
     public IReadOnlyList<EditorLeftDockTab> EditorLeftDockTabs { get; } = Enum.GetValues<EditorLeftDockTab>();
 
     public IReadOnlyList<EditorAssetTargetSurface> EditorAssetTargetSurfaces { get; } = Enum.GetValues<EditorAssetTargetSurface>();

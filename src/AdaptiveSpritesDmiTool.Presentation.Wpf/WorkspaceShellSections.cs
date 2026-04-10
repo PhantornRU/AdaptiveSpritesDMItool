@@ -627,6 +627,8 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
 
+    public ObservableCollection<ImportedDmiStateItemViewModel> ImportedDmiStateItems => Shell.ImportedDmiStateItems;
+
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems => Shell.DirectionNavigatorItems;
 
     public int DirectionNavigatorColumns => Shell.DirectionNavigatorColumns;
@@ -680,6 +682,12 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public IRelayCommand UseSelectedStateAsOverlayCommand => Shell.UseSelectedStateAsOverlayCommand;
 
     public IRelayCommand ClearOptionalPreviewLayersCommand => Shell.ClearOptionalPreviewLayersCommand;
+
+    public IAsyncRelayCommand AddDmiStatesCommand => Shell.AddDmiStatesCommand;
+
+    public IRelayCommand<ImportedDmiStateItemViewModel> ToggleImportedStateBackgroundCommand => Shell.ToggleImportedStateBackgroundCommand;
+
+    public IRelayCommand<ImportedDmiStateItemViewModel> ToggleImportedStateOverlayCommand => Shell.ToggleImportedStateOverlayCommand;
 
     public IRelayCommand<EditorLeftDockTab> SelectEditorLeftDockTabCommand => Shell.SelectEditorLeftDockTabCommand;
 

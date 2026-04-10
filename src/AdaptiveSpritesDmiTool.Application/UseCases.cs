@@ -96,6 +96,18 @@ public sealed class LoadDmiFileUseCase(IDmiReader reader, EditorSession session,
     }
 }
 
+public sealed class InspectDmiFileUseCase(IDmiReader reader)
+{
+    public Task<Result<DmiAssetInfo>> ExecuteAsync(string path, CancellationToken cancellationToken) =>
+        reader.LoadAsync(path, cancellationToken);
+}
+
+public sealed class ReadStateFrameUseCase(IStateFrameReader reader)
+{
+    public Task<Result<SpriteImage>> ExecuteAsync(string dmiPath, string stateName, SpriteDirection direction, CancellationToken cancellationToken) =>
+        reader.ReadFrameAsync(dmiPath, stateName, direction, cancellationToken);
+}
+
 public sealed class BuildPreviewUseCase(IPreviewBuilder previewBuilder, EditorSession session)
 {
     public async Task<Result<PreviewBuildResult>> ExecuteAsync(CancellationToken cancellationToken)

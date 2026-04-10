@@ -120,6 +120,11 @@ public interface IDmiReader
     Task<Result<DmiAssetInfo>> LoadAsync(string path, CancellationToken cancellationToken);
 }
 
+public interface IStateFrameReader
+{
+    Task<Result<SpriteImage>> ReadFrameAsync(string dmiPath, string stateName, SpriteDirection direction, CancellationToken cancellationToken);
+}
+
 public interface IDmiWriter
 {
     Task<Result<BatchFileResult>> ApplyAsync(ApplyConfigToFileRequest request, CancellationToken cancellationToken);

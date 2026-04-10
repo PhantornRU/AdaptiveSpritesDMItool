@@ -3,6 +3,7 @@ using AdaptiveSpritesDmiTool.Domain.Configurations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
@@ -14,6 +15,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private readonly LoadConfigUseCase _loadConfigUseCase;
     private readonly ImportLegacyCsvConfigUseCase _importLegacyCsvConfigUseCase;
     private readonly LoadDmiFileUseCase _loadDmiFileUseCase;
+    private readonly InspectDmiFileUseCase _inspectDmiFileUseCase;
+    private readonly ReadStateFrameUseCase _readStateFrameUseCase;
     private readonly BuildPreviewUseCase _buildPreviewUseCase;
     private readonly ApplyConfigToDmiBatchUseCase _applyConfigToDmiBatchUseCase;
     private readonly UndoChangeUseCase _undoChangeUseCase;
@@ -39,6 +42,9 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private SpriteImage? _landmarkImage;
     private SpriteImage? _overlayImage;
     private SpriteImage? _compositeImage;
+    private readonly Dictionary<(string Path, string StateName, SpriteDirection Direction), SpriteImage?> _importedStateFrameCache = new();
+    private CancellationTokenSource? _importedStateRefreshCts;
+    private int _importedStateRefreshVersion;
 
     public WorkspaceShellViewModel(
         StartEmptyWorkspaceUseCase startEmptyWorkspaceUseCase,
@@ -47,6 +53,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         LoadConfigUseCase loadConfigUseCase,
         ImportLegacyCsvConfigUseCase importLegacyCsvConfigUseCase,
         LoadDmiFileUseCase loadDmiFileUseCase,
+        InspectDmiFileUseCase inspectDmiFileUseCase,
+        ReadStateFrameUseCase readStateFrameUseCase,
         BuildPreviewUseCase buildPreviewUseCase,
         ApplyConfigToDmiBatchUseCase applyConfigToDmiBatchUseCase,
         UndoChangeUseCase undoChangeUseCase,
@@ -67,6 +75,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         _loadConfigUseCase = loadConfigUseCase;
         _importLegacyCsvConfigUseCase = importLegacyCsvConfigUseCase;
         _loadDmiFileUseCase = loadDmiFileUseCase;
+        _inspectDmiFileUseCase = inspectDmiFileUseCase;
+        _readStateFrameUseCase = readStateFrameUseCase;
         _buildPreviewUseCase = buildPreviewUseCase;
         _applyConfigToDmiBatchUseCase = applyConfigToDmiBatchUseCase;
         _undoChangeUseCase = undoChangeUseCase;
@@ -181,6 +191,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         BatchWorkspace.Detach();
         SettingsTab.Detach();
         OperationalStatusBar.Detach();
+        _importedStateRefreshCts?.Cancel();
+        _importedStateRefreshCts?.Dispose();
         _previewRefreshCoordinator.Dispose();
         _workspaceSettingsPersistenceGate.Dispose();
         GC.SuppressFinalize(this);

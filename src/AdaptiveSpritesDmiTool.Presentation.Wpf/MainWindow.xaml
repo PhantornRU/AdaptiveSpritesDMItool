@@ -360,6 +360,50 @@
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0,0,4,0" />
         </Style>
+        <Style x:Key="StateLayerToggleStyle" TargetType="CheckBox" BasedOn="{StaticResource DockIconCheckBoxStyle}">
+            <Setter Property="Width" Value="38" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="MinWidth" Value="38" />
+            <Setter Property="MinHeight" Value="24" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style x:Key="StateOrderTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="ImportedStateListItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Root"
+                                Padding="6"
+                                Background="White"
+                                BorderBrush="{StaticResource Brush.PanelBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
+                                <Setter TargetName="Root" Property="Background" Value="#FFF9FFF9" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="ToolbarSymbolIconStyle" TargetType="{x:Type ui:SymbolIcon}">
             <Setter Property="Width" Value="18" />
             <Setter Property="Height" Value="18" />
@@ -650,7 +694,7 @@
                     <Image Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" SnapsToDevicePixels="True" />
                 </Border>
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="{Binding ShortLabel}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -1109,166 +1153,141 @@
                                                               HorizontalScrollBarVisibility="Disabled"
                                                               CanContentScroll="True">
                                                     <Grid>
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="*" />
-                                                    </Grid.RowDefinitions>
-                                                    <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Loaded DMI" />
-                                                    <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding SpriteContractSummary}" />
-                                                    <Grid Grid.Row="2"
-                                                          Margin="0,8,0,0"
-                                                          DataContext="{Binding DataContext.PreviewPanel, RelativeSource={RelativeSource AncestorType=Window}}">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <Button Grid.Column="0"
-                                                                MinWidth="92"
-                                                                Margin="0,0,8,0"
-                                                                Padding="10,5"
-                                                                Command="{Binding DataContext.OpenDmiCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                ToolTip="Open DMI"
-                                                                AutomationProperties.Name="Open DMI">
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" />
-                                                                <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Open DMI" />
-                                                            </StackPanel>
-                                                        </Button>
-                                                        <ComboBox Grid.Column="1"
-                                                                  Height="28"
-                                                                  Margin="0,0,4,0"
-                                                                  ItemsSource="{Binding PreviewDisplayModes}"
-                                                                  SelectedItem="{Binding SelectedPreviewDisplayMode}"
-                                                                  ToolTip="Preview display mode" />
-                                                        <Button Grid.Column="2"
-                                                                Style="{StaticResource DockIconButtonStyle}"
-                                                                Command="{Binding BuildPreviewCommand}"
-                                                                ToolTip="Refresh preview"
-                                                                AutomationProperties.Name="Refresh preview">
-                                                            <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="ArrowSync20" />
-                                                        </Button>
-                                                        <CheckBox Grid.Column="3"
-                                                                  Style="{StaticResource DockIconCheckBoxStyle}"
-                                                                  IsChecked="{Binding IsAutoPreviewEnabled}"
-                                                                  ToolTip="Auto preview"
-                                                                  AutomationProperties.Name="Auto preview">
-                                                            <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FlashAuto20" />
-                                                        </CheckBox>
-                                                    </Grid>
-                                                    <Border Grid.Row="3"
-                                                            Margin="0,8,0,0"
-                                                            Padding="5"
-                                                            Background="White"
-                                                            BorderBrush="{StaticResource Brush.PanelBorder}"
-                                                            BorderThickness="1"
-                                                            CornerRadius="8">
-                                                        <StackPanel>
-                                                            <Grid>
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="*" />
-                                                                    <ColumnDefinition Width="Auto" />
-                                                                </Grid.ColumnDefinitions>
-                                                                <TextBlock FontWeight="SemiBold" Text="Current file" />
-                                                                <TextBlock Grid.Column="1"
-                                                                           Foreground="{StaticResource Brush.TextSecondary}"
-                                                                           FontSize="10"
-                                                                           Text="{Binding CurrentDmiDisplayName}"
-                                                                           TextTrimming="CharacterEllipsis"
-                                                                           MaxWidth="110" />
-                                                            </Grid>
-                                                            <TextBlock Margin="0,4,0,0"
-                                                                       Foreground="{StaticResource Brush.TextSecondary}"
-                                                                       FontSize="10"
-                                                                       Text="{Binding CurrentDmiPathSummary}"
-                                                                       TextTrimming="CharacterEllipsis" />
-                                                            <TextBlock Margin="0,4,0,0"
-                                                                       Foreground="{StaticResource Brush.TextSecondary}"
-                                                                       FontSize="10"
-                                                                       TextWrapping="Wrap"
-                                                                       Text="{Binding CurrentStateSummary}" />
-                                                        </StackPanel>
-                                                    </Border>
-                                                    <Grid Grid.Row="4" Margin="0,8,0,0">
                                                         <Grid.RowDefinitions>
                                                             <RowDefinition Height="Auto" />
                                                             <RowDefinition Height="Auto" />
                                                             <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="*" />
                                                         </Grid.RowDefinitions>
                                                         <DockPanel LastChildFill="False">
-                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="States" />
-                                                            <TextBlock DockPanel.Dock="Right"
-                                                                       Foreground="{StaticResource Brush.TextSecondary}"
-                                                                       FontSize="10"
-                                                                       Text="{Binding StateCountLabel}" />
+                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Primary DMI" />
+                                                            <Button DockPanel.Dock="Right"
+                                                                    Padding="10,5"
+                                                                    Command="{Binding AddDmiStatesCommand}"
+                                                                    ToolTip="Add or replace DMI states in the shared list"
+                                                                    AutomationProperties.Name="Add DMI states">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" />
+                                                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Add states" />
+                                                                </StackPanel>
+                                                            </Button>
                                                         </DockPanel>
-                                                        <ListBox Grid.Row="1"
-                                                                 Margin="0,6,0,0"
-                                                                 MaxHeight="180"
-                                                                 BorderThickness="0"
-                                                                 Background="Transparent"
-                                                                 ItemsSource="{Binding AvailableStates}"
-                                                                 SelectedItem="{Binding SelectedExplorerState, Mode=TwoWay}"
-                                                                 ItemContainerStyle="{StaticResource StateListItemStyle}"
-                                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                                            <ListBox.ItemTemplate>
-                                                                <DataTemplate>
-                                                                    <TextBlock FontWeight="SemiBold"
-                                                                               Text="{Binding}"
-                                                                               TextTrimming="CharacterEllipsis" />
-                                                                </DataTemplate>
-                                                            </ListBox.ItemTemplate>
-                                                        </ListBox>
+                                                        <TextBlock Grid.Row="1"
+                                                                   Margin="0,6,0,0"
+                                                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                                                   FontSize="10"
+                                                                   TextWrapping="Wrap"
+                                                                   Text="{Binding SpriteContractSummary}" />
                                                         <Border Grid.Row="2"
                                                                 Margin="0,8,0,0"
-                                                                Padding="5"
+                                                                Padding="6"
                                                                 Background="White"
                                                                 BorderBrush="{StaticResource Brush.PanelBorder}"
                                                                 BorderThickness="1"
                                                                 CornerRadius="8">
                                                             <StackPanel>
-                                                                <TextBlock FontWeight="SemiBold" Text="Selected state assignment" />
-                                                                <Grid Margin="0,6,0,0">
+                                                                <Grid>
                                                                     <Grid.ColumnDefinitions>
-                                                                        <ColumnDefinition Width="Auto" />
                                                                         <ColumnDefinition Width="*" />
-                                                                    </Grid.ColumnDefinitions>
-                                                                    <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="Target surface" />
-                                                                    <ComboBox Grid.Column="1"
-                                                                              Margin="10,0,0,0"
-                                                                              ItemsSource="{Binding EditorAssetTargetSurfaces}"
-                                                                              SelectedItem="{Binding SelectedEditorAssetTargetSurface, Mode=TwoWay}" />
-                                                                </Grid>
-                                                                <Grid Margin="0,6,0,0">
-                                                                    <Grid.ColumnDefinitions>
                                                                         <ColumnDefinition Width="Auto" />
-                                                                        <ColumnDefinition Width="*" />
                                                                     </Grid.ColumnDefinitions>
-                                                                    <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="Target layer" />
-                                                                    <ComboBox Grid.Column="1"
-                                                                              Margin="22,0,0,0"
-                                                                              ItemsSource="{Binding EditorAssetTargetLayers}"
-                                                                              SelectedItem="{Binding SelectedEditorAssetTargetLayer, Mode=TwoWay}" />
+                                                                    <TextBlock FontWeight="SemiBold" Text="{Binding CurrentDmiDisplayName}" />
+                                                                    <TextBlock Grid.Column="1"
+                                                                               Foreground="{StaticResource Brush.TextSecondary}"
+                                                                               FontSize="10"
+                                                                               Text="{Binding StateCountLabel}" />
                                                                 </Grid>
-                                                                <TextBlock Margin="0,6,0,0"
-                                                                           Foreground="{StaticResource Brush.TextSecondary}"
-                                                                           FontSize="10"
-                                                                           TextWrapping="Wrap"
-                                                                           Text="Assignment applies to the currently loaded DMI." />
                                                                 <TextBlock Margin="0,4,0,0"
                                                                            Foreground="{StaticResource Brush.TextSecondary}"
                                                                            FontSize="10"
-                                                                           TextWrapping="Wrap"
-                                                                           Text="{Binding EditableBackgroundSummary}" />
+                                                                           Text="{Binding CurrentDmiPathSummary}"
+                                                                           TextTrimming="CharacterEllipsis" />
+                                                                <Grid Margin="0,6,0,0">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                        <ColumnDefinition Width="*" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="Primary state" />
+                                                                    <ComboBox Grid.Column="1"
+                                                                              Margin="10,0,0,0"
+                                                                              ItemsSource="{Binding AvailableStates}"
+                                                                              SelectedItem="{Binding SelectedExplorerState, Mode=TwoWay}" />
+                                                                </Grid>
                                                             </StackPanel>
                                                         </Border>
+                                                        <DockPanel Grid.Row="3" Margin="0,10,0,0" LastChildFill="False">
+                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Loaded DMI states" />
+                                                            <TextBlock DockPanel.Dock="Right"
+                                                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                                                       FontSize="10"
+                                                                       Text="South preview | file | Bg/Ov | order" />
+                                                        </DockPanel>
+                                                        <ListBox Grid.Row="4"
+                                                                 Margin="0,6,0,0"
+                                                                 BorderThickness="0"
+                                                                 Background="Transparent"
+                                                                 ItemsSource="{Binding ImportedDmiStateItems}"
+                                                                 ItemContainerStyle="{StaticResource ImportedStateListItemStyle}"
+                                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                                            <ListBox.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="48" />
+                                                                            <ColumnDefinition Width="*" />
+                                                                            <ColumnDefinition Width="Auto" />
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <Border Width="40"
+                                                                                Height="40"
+                                                                                Background="#FFF9F4EA"
+                                                                                BorderBrush="{StaticResource Brush.PanelBorder}"
+                                                                                BorderThickness="1"
+                                                                                CornerRadius="6">
+                                                                            <Image Stretch="Uniform" Source="{Binding PreviewImage}" />
+                                                                        </Border>
+                                                                        <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                                                            <TextBlock FontWeight="SemiBold" Text="{Binding StateName}" TextTrimming="CharacterEllipsis" />
+                                                                            <TextBlock Margin="0,2,0,0"
+                                                                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                                                                       FontSize="10"
+                                                                                       Text="{Binding SourceFileLabel}"
+                                                                                       TextTrimming="CharacterEllipsis" />
+                                                                        </StackPanel>
+                                                                        <Grid Grid.Column="2" VerticalAlignment="Center">
+                                                                            <Grid.RowDefinitions>
+                                                                                <RowDefinition Height="Auto" />
+                                                                                <RowDefinition Height="Auto" />
+                                                                            </Grid.RowDefinitions>
+                                                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                                                <CheckBox Style="{StaticResource StateLayerToggleStyle}"
+                                                                                          IsChecked="{Binding IsBackgroundAssigned, Mode=OneWay}"
+                                                                                          Command="{Binding DataContext.ToggleImportedStateBackgroundCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                          CommandParameter="{Binding}"
+                                                                                          ToolTip="Place under the editable sprite as immutable background"
+                                                                                          AutomationProperties.Name="Toggle background layer"
+                                                                                          Content="Bg" />
+                                                                                <CheckBox Style="{StaticResource StateLayerToggleStyle}"
+                                                                                          Margin="0,0,0,0"
+                                                                                          IsChecked="{Binding IsOverlayAssigned, Mode=OneWay}"
+                                                                                          Command="{Binding DataContext.ToggleImportedStateOverlayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                          CommandParameter="{Binding}"
+                                                                                          ToolTip="Place over the editable sprite as overlay"
+                                                                                          AutomationProperties.Name="Toggle overlay layer"
+                                                                                          Content="Ov" />
+                                                                            </StackPanel>
+                                                                            <TextBox Grid.Row="1"
+                                                                                     Style="{StaticResource StateOrderTextBoxStyle}"
+                                                                                     HorizontalAlignment="Right"
+                                                                                     ToolTip="Higher order overlays lower ones inside the same layer group"
+                                                                                     Text="{Binding Order, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                                                        </Grid>
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </ListBox.ItemTemplate>
+                                                        </ListBox>
                                                     </Grid>
-                                                </Grid>
                                                 </ScrollViewer>
                                             </Border>
                                         </TabItem>
