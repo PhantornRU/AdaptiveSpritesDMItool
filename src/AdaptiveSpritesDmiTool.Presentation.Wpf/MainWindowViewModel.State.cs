@@ -317,13 +317,20 @@ public partial class WorkspaceShellViewModel
 
     internal Dictionary<(SpriteDirection Direction, bool ShowOverlay, int Version), BitmapSource> NavigatorSnapshotCache { get; } = [];
 
-    public double MinEditorZoom => _minEditorZoom;
+    public double MinEditorZoom => Math.Max(_minEditorZoom, DetermineEditorZoomBaseline());
 
     public double MaxEditorZoom => _maxEditorZoom;
 
     public double ZoomStep => _zoomStep;
 
-    public string ActiveEditorZoomLabel => $"{Math.Round(ActiveEditorZoom * 100):0}%";
+    public string ActiveEditorZoomLabel
+    {
+        get
+        {
+            var baseline = Math.Max(DetermineEditorZoomBaseline(), 0.001d);
+            return $"{Math.Round((ActiveEditorZoom / baseline) * 100):0}%";
+        }
+    }
 
     public bool IsEditableOnlyMode => EditorViewMode == EditorViewMode.EditableOnly;
 

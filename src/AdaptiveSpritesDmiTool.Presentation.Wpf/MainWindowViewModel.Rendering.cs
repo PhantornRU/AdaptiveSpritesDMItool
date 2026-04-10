@@ -43,7 +43,7 @@ public partial class WorkspaceShellViewModel
 
     private SpriteResolution? ResolveEditorResolution() => _editorSession.CurrentConfig?.Resolution ?? _editorSession.LoadedAsset?.Resolution;
 
-    private double DetermineAdaptiveEditorZoom(SpriteResolution? resolution = null)
+    private double DetermineEditorZoomBaseline(SpriteResolution? resolution = null)
     {
         var resolved = resolution ?? ResolveEditorResolution();
         if (resolved is null)
@@ -54,14 +54,17 @@ public partial class WorkspaceShellViewModel
         var maxDimension = Math.Max(resolved.Value.Width, resolved.Value.Height);
         var zoom = maxDimension switch
         {
-            <= 32 => 4.0,
+            <= 32 => 3.0,
             <= 64 => 2.0,
             <= 128 => 1.5,
             _ => 1.0
         };
 
-        return Math.Clamp(zoom, MinEditorZoom, MaxEditorZoom);
+        return Math.Clamp(zoom, _minEditorZoom, MaxEditorZoom);
     }
+
+    private double DetermineAdaptiveEditorZoom(SpriteResolution? resolution = null)
+        => DetermineEditorZoomBaseline(resolution);
 
     private void ApplyAdaptiveEditorZoom(bool force)
     {

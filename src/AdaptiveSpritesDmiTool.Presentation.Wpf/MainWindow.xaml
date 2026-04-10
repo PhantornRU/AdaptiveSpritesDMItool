@@ -381,8 +381,8 @@
             <Setter Property="CornerRadius" Value="8" />
         </Style>
         <Style x:Key="StateListItemStyle" TargetType="ListBoxItem">
-            <Setter Property="Margin" Value="0,0,0,4" />
-            <Setter Property="Padding" Value="6" />
+            <Setter Property="Margin" Value="0,0,0,3" />
+            <Setter Property="Padding" Value="5,4" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -1146,8 +1146,7 @@
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="*" />
                                                     </Grid.RowDefinitions>
-                                                    <DockPanel>
-                                                        <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Assets / DMI" />
+                                                    <DockPanel LastChildFill="False">
                                                         <Button DockPanel.Dock="Right"
                                                                 Style="{StaticResource DockIconButtonStyle}"
                                                                 Command="{Binding DataContext.OpenDmiCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -1225,7 +1224,7 @@
                                                             <RowDefinition Height="*" />
                                                             <RowDefinition Height="Auto" />
                                                         </Grid.RowDefinitions>
-                                                        <DockPanel>
+                                                        <DockPanel LastChildFill="False">
                                                             <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="States in loaded DMI" />
                                                             <TextBlock DockPanel.Dock="Right"
                                                                        Foreground="{StaticResource Brush.TextSecondary}"
@@ -1243,17 +1242,9 @@
                                                                  ScrollViewer.VerticalScrollBarVisibility="Auto">
                                                             <ListBox.ItemTemplate>
                                                                 <DataTemplate>
-                                                                    <Grid>
-                                                                        <Grid.ColumnDefinitions>
-                                                                            <ColumnDefinition Width="*" />
-                                                                            <ColumnDefinition Width="Auto" />
-                                                                        </Grid.ColumnDefinitions>
-                                                                        <TextBlock FontWeight="SemiBold" Text="{Binding}" />
-                                                                        <TextBlock Grid.Column="1"
-                                                                                   Foreground="{StaticResource Brush.TextSecondary}"
-                                                                                   FontSize="10"
-                                                                                   Text="state" />
-                                                                    </Grid>
+                                                                    <TextBlock FontWeight="SemiBold"
+                                                                               Text="{Binding}"
+                                                                               TextTrimming="CharacterEllipsis" />
                                                                 </DataTemplate>
                                                             </ListBox.ItemTemplate>
                                                         </ListBox>
@@ -1324,7 +1315,6 @@
                                                     </Grid.RowDefinitions>
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="*" />
                                                             <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="Auto" />
@@ -1332,12 +1322,11 @@
                                                             <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="Auto" />
                                                         </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Configs" />
-                                                        <Button Grid.Column="2" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.CreateConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="New config" AutomationProperties.Name="New config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Add20" /></Button>
-                                                        <Button Grid.Column="3" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.LoadConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Load config" AutomationProperties.Name="Load config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" /></Button>
-                                                        <Button Grid.Column="4" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.ImportLegacyConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Import legacy CSV" AutomationProperties.Name="Import legacy CSV"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="ArrowUpload20" /></Button>
-                                                        <Button Grid.Column="5" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.SaveConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config" AutomationProperties.Name="Save config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Save20" /></Button>
-                                                        <Button Grid.Column="6" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.BrowseSaveConfigPathCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config as" AutomationProperties.Name="Save config as"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="SaveEdit20" /></Button>
+                                                        <Button Grid.Column="1" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.CreateConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="New config" AutomationProperties.Name="New config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Add20" /></Button>
+                                                        <Button Grid.Column="2" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.LoadConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Load config" AutomationProperties.Name="Load config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" /></Button>
+                                                        <Button Grid.Column="3" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.ImportLegacyConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Import legacy CSV" AutomationProperties.Name="Import legacy CSV"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="ArrowUpload20" /></Button>
+                                                        <Button Grid.Column="4" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.SaveConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config" AutomationProperties.Name="Save config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Save20" /></Button>
+                                                        <Button Grid.Column="5" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.BrowseSaveConfigPathCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config as" AutomationProperties.Name="Save config as"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="SaveEdit20" /></Button>
                                                     </Grid>
                                                     <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding ConfigSummary}" />
                                                     <ListBox Grid.Row="2"
@@ -1362,13 +1351,16 @@
                                                             </DataTemplate>
                                                         </ListBox.ItemTemplate>
                                                     </ListBox>
-                                                    <Grid Grid.Row="3" Margin="0,8,0,0">
+                                                    <Grid Grid.Row="3" Margin="0,8,0,0" MaxHeight="168">
                                                         <Grid.RowDefinitions>
                                                             <RowDefinition Height="Auto" />
                                                             <RowDefinition Height="*" />
                                                         </Grid.RowDefinitions>
                                                         <DockPanel>
-                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Legacy sample configs" />
+                                                            <TextBlock FontSize="11"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                                                       Text="Legacy sample configs" />
                                                         </DockPanel>
                                                         <ScrollViewer Grid.Row="1"
                                                                       Margin="0,6,0,0"
@@ -1384,7 +1376,7 @@
                                                                                 HorizontalContentAlignment="Stretch"
                                                                                 Command="{Binding DataContext.ConfigWorkspace.ActivateSampleConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                                 CommandParameter="{Binding}">
-                                                                            <Border Padding="6"
+                                                                            <Border Padding="5"
                                                                                     Background="White"
                                                                                     BorderBrush="{StaticResource Brush.PanelBorder}"
                                                                                     BorderThickness="1"
@@ -1408,7 +1400,7 @@
                                                                                                    TextTrimming="CharacterEllipsis" />
                                                                                     </StackPanel>
                                                                                     <Border Grid.Column="1"
-                                                                                            Padding="6,2"
+                                                                                            Padding="5,2"
                                                                                             Margin="8,0,0,0"
                                                                                             VerticalAlignment="Top"
                                                                                             Background="#FFF6F1E8"
@@ -1472,9 +1464,13 @@
                                                 <ScrollViewer x:Name="SourceViewportScrollViewer"
                                                               Grid.Row="1"
                                                               Margin="0"
-                                                              HorizontalScrollBarVisibility="Auto"
-                                                              VerticalScrollBarVisibility="Auto"
+                                                              HorizontalScrollBarVisibility="Hidden"
+                                                              VerticalScrollBarVisibility="Hidden"
                                                               CanContentScroll="False"
+                                                              PreviewMouseDown="EditorViewportScrollViewer_PreviewMouseDown"
+                                                              PreviewMouseMove="EditorViewportScrollViewer_PreviewMouseMove"
+                                                              PreviewMouseUp="EditorViewportScrollViewer_PreviewMouseUp"
+                                                              LostMouseCapture="EditorViewportScrollViewer_LostMouseCapture"
                                                               PreviewMouseWheel="EditorSurfaceHost_PreviewMouseWheel"
                                                               ScrollChanged="SourceViewportScrollViewer_ScrollChanged">
                                                     <Grid MinWidth="{Binding ElementName=SourceViewportScrollViewer, Path=ActualWidth}"
@@ -1519,9 +1515,13 @@
                                                 <ScrollViewer x:Name="EditableViewportScrollViewer"
                                                               Grid.Row="1"
                                                               Margin="0"
-                                                              HorizontalScrollBarVisibility="Auto"
-                                                              VerticalScrollBarVisibility="Auto"
+                                                              HorizontalScrollBarVisibility="Hidden"
+                                                              VerticalScrollBarVisibility="Hidden"
                                                               CanContentScroll="False"
+                                                              PreviewMouseDown="EditorViewportScrollViewer_PreviewMouseDown"
+                                                              PreviewMouseMove="EditorViewportScrollViewer_PreviewMouseMove"
+                                                              PreviewMouseUp="EditorViewportScrollViewer_PreviewMouseUp"
+                                                              LostMouseCapture="EditorViewportScrollViewer_LostMouseCapture"
                                                               PreviewMouseWheel="EditorSurfaceHost_PreviewMouseWheel"
                                                               ScrollChanged="EditableViewportScrollViewer_ScrollChanged">
                                                     <Grid MinWidth="{Binding ElementName=EditableViewportScrollViewer, Path=ActualWidth}"

@@ -447,7 +447,7 @@ public partial class WorkspaceShellViewModel
     }
 
     [RelayCommand]
-    private void ResetEditorZoom() => ActiveEditorZoom = 2.0;
+    private void ResetEditorZoom() => ActiveEditorZoom = MinEditorZoom;
 
     [RelayCommand]
     private async Task ResetWorkspaceAsync()
