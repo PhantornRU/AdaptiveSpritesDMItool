@@ -333,6 +333,7 @@ public partial class WorkspaceShellViewModel
         if (!string.IsNullOrWhiteSpace(path))
         {
             SaveConfigPath = path;
+            DraftConfigName = Path.GetFileNameWithoutExtension(path);
         }
     }
 
@@ -369,17 +370,14 @@ public partial class WorkspaceShellViewModel
     [RelayCommand]
     private async Task OpenDmiAsync()
     {
-        if (string.IsNullOrWhiteSpace(DmiPath))
-        {
-            BrowseDmiPath();
-        }
-
-        if (string.IsNullOrWhiteSpace(DmiPath))
+        var path = _fileDialogService.OpenDmiFile(DmiPath);
+        if (string.IsNullOrWhiteSpace(path))
         {
             StatusMessage = "Choose a DMI file to load.";
             return;
         }
 
+        DmiPath = path;
         await RunBusyOperationAsync(
             cancellationToken => OpenDmiFromPathAsync(DmiPath, navigateToEditor: true, persistSettings: true, cancellationToken));
     }
@@ -389,18 +387,13 @@ public partial class WorkspaceShellViewModel
     {
         var metadata = ConfigMetadata.CreateNew(ConfigSource.UserCreated, sourceIdentifier: "presentation-shell");
         var result = _createConfigUseCase.Execute(
-            string.IsNullOrWhiteSpace(DraftConfigName) ? "New Config" : DraftConfigName.Trim(),
+            string.IsNullOrWhiteSpace(DraftConfigName) ? "Unsaved Draft" : DraftConfigName.Trim(),
             metadata);
 
         if (result.IsFailure)
         {
             StatusMessage = result.Error.Message;
             return;
-        }
-
-        if (string.IsNullOrWhiteSpace(SaveConfigPath) && !string.IsNullOrWhiteSpace(DmiPath))
-        {
-            SaveConfigPath = Path.ChangeExtension(DmiPath, ".json") ?? string.Empty;
         }
 
         StatusMessage = $"Created config '{result.Value.Name}'.";
@@ -427,6 +420,21 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        var desiredConfigName = Path.GetFileNameWithoutExtension(SaveConfigPath);
+        if (!string.IsNullOrWhiteSpace(desiredConfigName) &&
+            _editorSession.CurrentConfig is not null &&
+            !string.Equals(_editorSession.CurrentConfig.Name, desiredConfigName, StringComparison.Ordinal))
+        {
+            var renameResult = _editorSession.RenameCurrentConfig(desiredConfigName);
+            if (renameResult.IsFailure)
+            {
+                StatusMessage = renameResult.Error.Message;
+                return;
+            }
+
+            DraftConfigName = desiredConfigName;
+        }
+
         await RunBusyOperationAsync(
             async cancellationToken =>
             {
@@ -447,17 +455,14 @@ public partial class WorkspaceShellViewModel
     [RelayCommand]
     private async Task LoadConfigAsync()
     {
-        if (string.IsNullOrWhiteSpace(ConfigPath))
-        {
-            BrowseLoadConfigPath();
-        }
-
-        if (string.IsNullOrWhiteSpace(ConfigPath))
+        var path = _fileDialogService.OpenConfigFile(ConfigPath);
+        if (string.IsNullOrWhiteSpace(path))
         {
             StatusMessage = "Choose a JSON config file to load.";
             return;
         }
 
+        ConfigPath = path;
         await RunBusyOperationAsync(
             cancellationToken => LoadConfigFromPathAsync(ConfigPath, navigateToEditor: true, persistSettings: true, cancellationToken));
     }
@@ -465,17 +470,14 @@ public partial class WorkspaceShellViewModel
     [RelayCommand]
     private async Task ImportLegacyConfigAsync()
     {
-        if (string.IsNullOrWhiteSpace(LegacyCsvPath))
-        {
-            BrowseLegacyCsvPath();
-        }
-
-        if (string.IsNullOrWhiteSpace(LegacyCsvPath))
+        var path = _fileDialogService.OpenLegacyCsvFile(LegacyCsvPath);
+        if (string.IsNullOrWhiteSpace(path))
         {
             StatusMessage = "Choose a legacy CSV config to import.";
             return;
         }
 
+        LegacyCsvPath = path;
         await RunBusyOperationAsync(
             cancellationToken => ImportLegacyConfigFromPathAsync(LegacyCsvPath, navigateToEditor: true, persistSettings: true, cancellationToken));
     }
@@ -509,10 +511,13 @@ public partial class WorkspaceShellViewModel
         LandmarkStateName = string.Empty;
         OverlayStateName = string.Empty;
         DraftConfigName = Path.GetFileNameWithoutExtension(result.Value.DisplayName);
+        ConfigPath = string.Empty;
+        SaveConfigPath = string.Empty;
         BatchInputDirectory = Path.GetDirectoryName(result.Value.SourcePath ?? path) ?? string.Empty;
         BatchOutputDirectory = string.IsNullOrWhiteSpace(BatchOutputDirectory)
             ? Path.Combine(BatchInputDirectory, "processed")
             : BatchOutputDirectory;
+        CreateImplicitDraftConfig();
         NormalizeSelectedDirection();
         StatusMessage = $"Loaded DMI '{result.Value.DisplayName}' with {result.Value.States.Count} states.";
         RefreshWorkspaceState();
@@ -538,6 +543,25 @@ public partial class WorkspaceShellViewModel
         {
             await PersistWorkspaceSettingsAsync();
         }
+    }
+
+    private void CreateImplicitDraftConfig()
+    {
+        if (_editorSession.LoadedAsset is null)
+        {
+            return;
+        }
+
+        var metadata = ConfigMetadata.CreateNew(ConfigSource.UserCreated, sourceIdentifier: "presentation-shell:implicit-draft");
+        var result = _createConfigUseCase.Execute("Unsaved Draft", metadata);
+        if (result.IsFailure)
+        {
+            StatusMessage = result.Error.Message;
+            return;
+        }
+
+        ConfigPath = string.Empty;
+        SaveConfigPath = string.Empty;
     }
 
     private async Task LoadConfigFromPathAsync(string path, bool navigateToEditor, bool persistSettings, CancellationToken cancellationToken)

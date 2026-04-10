@@ -99,6 +99,17 @@ public sealed class EditorSession
         return Result.Success();
     }
 
+    public Result<SpriteConfig> RenameCurrentConfig(string name)
+    {
+        if (CurrentConfig is null)
+        {
+            return Result.Failure<SpriteConfig>(Errors.Conflict("There is no active config to rename."));
+        }
+
+        CurrentConfig = CurrentConfig.WithName(name);
+        return Result.Success(CurrentConfig);
+    }
+
     public Result SetPreviewSelection(PreviewSelection selection)
     {
         PreviewSelection = selection ?? throw new ArgumentNullException(nameof(selection));

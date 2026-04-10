@@ -239,7 +239,13 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <Border Grid.Row="0" Style="{StaticResource SidebarSectionBorderStyle}">
+                            <Border Grid.Row="0"
+                                    Padding="6"
+                                    Margin="0,0,0,6"
+                                    Background="#FFFDF8EF"
+                                    BorderBrush="{StaticResource Brush.PanelBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
                                 <UniformGrid Rows="1" IsItemsHost="True" />
                             </Border>
                             <ContentPresenter Grid.Row="1"
@@ -255,8 +261,8 @@
             <Setter Property="Background" Value="#FFFDF8" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="10,6" />
-            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Margin" Value="0" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
@@ -266,7 +272,7 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="999">
+                                CornerRadius="10">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" ContentSource="Header" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -1088,57 +1094,21 @@
                                 </Border>
 
                                 <Border Grid.RowSpan="3" Grid.Column="0" Width="236" Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="*" />
-                                        </Grid.RowDefinitions>
-
-                                        <Border Style="{StaticResource SidebarSectionBorderStyle}">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <RadioButton Grid.Column="0"
-                                                             GroupName="EditorLeftDockTabs"
-                                                             Style="{StaticResource LeftDockTabToggleStyle}"
-                                                             Command="{Binding SelectEditorLeftDockTabCommand}"
-                                                             CommandParameter="{x:Static local:EditorLeftDockTab.AssetsDmi}"
-                                                             IsChecked="{Binding IsAssetsDmiLeftDockSelected, Mode=OneWay}">
-                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                        <ui:SymbolIcon Style="{StaticResource LeftDockTabHeaderIconStyle}" Symbol="FolderOpen20" />
-                                                        <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Assets / DMI" />
-                                                    </StackPanel>
-                                                </RadioButton>
-                                                <RadioButton Grid.Column="1"
-                                                             Margin="4,0,0,0"
-                                                             GroupName="EditorLeftDockTabs"
-                                                             Style="{StaticResource LeftDockTabToggleStyle}"
-                                                             Command="{Binding SelectEditorLeftDockTabCommand}"
-                                                             CommandParameter="{x:Static local:EditorLeftDockTab.Configs}"
-                                                             IsChecked="{Binding IsConfigsLeftDockSelected, Mode=OneWay}">
-                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                        <ui:SymbolIcon Style="{StaticResource LeftDockTabHeaderIconStyle}" Symbol="Save20" />
-                                                        <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Configs" />
-                                                    </StackPanel>
-                                                </RadioButton>
-                                            </Grid>
-                                        </Border>
-
-                                        <Grid Grid.Row="1">
-                                            <Border VerticalAlignment="Top" Style="{StaticResource SidebarSectionBorderStyle}">
-                                                <Grid>
-                                                    <Grid.Style>
-                                                        <Style TargetType="Grid">
-                                                            <Setter Property="Visibility" Value="Visible" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding SelectedEditorLeftDockTab}" Value="Configs">
-                                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Grid.Style>
+                                    <TabControl Style="{StaticResource LeftDockTabControlStyle}"
+                                                ItemContainerStyle="{StaticResource LeftDockTabItemStyle}"
+                                                SelectedIndex="{Binding SelectedEditorLeftDockTabIndex, Mode=TwoWay}">
+                                        <TabItem>
+                                            <TabItem.Header>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <ui:SymbolIcon Style="{StaticResource LeftDockTabHeaderIconStyle}" Symbol="FolderOpen20" />
+                                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Assets / DMI" />
+                                                </StackPanel>
+                                            </TabItem.Header>
+                                            <Border Style="{StaticResource SidebarSectionBorderStyle}">
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                                              HorizontalScrollBarVisibility="Disabled"
+                                                              CanContentScroll="True">
+                                                    <Grid>
                                                     <Grid.RowDefinitions>
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
@@ -1146,38 +1116,43 @@
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="*" />
                                                     </Grid.RowDefinitions>
-                                                    <DockPanel LastChildFill="False">
-                                                        <Button DockPanel.Dock="Right"
-                                                                Style="{StaticResource DockIconButtonStyle}"
-                                                                Command="{Binding DataContext.OpenDmiCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                ToolTip="Open DMI"
-                                                                AutomationProperties.Name="Open DMI">
-                                                            <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" />
-                                                        </Button>
-                                                    </DockPanel>
+                                                    <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Loaded DMI" />
                                                     <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding SpriteContractSummary}" />
                                                     <Grid Grid.Row="2"
                                                           Margin="0,8,0,0"
                                                           DataContext="{Binding DataContext.PreviewPanel, RelativeSource={RelativeSource AncestorType=Window}}">
                                                         <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="*" />
                                                             <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="Auto" />
                                                         </Grid.ColumnDefinitions>
-                                                        <ComboBox Grid.Column="0"
+                                                        <Button Grid.Column="0"
+                                                                MinWidth="92"
+                                                                Margin="0,0,8,0"
+                                                                Padding="10,5"
+                                                                Command="{Binding DataContext.OpenDmiCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                ToolTip="Open DMI"
+                                                                AutomationProperties.Name="Open DMI">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" />
+                                                                <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Open DMI" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <ComboBox Grid.Column="1"
                                                                   Height="28"
                                                                   Margin="0,0,4,0"
                                                                   ItemsSource="{Binding PreviewDisplayModes}"
                                                                   SelectedItem="{Binding SelectedPreviewDisplayMode}"
                                                                   ToolTip="Preview display mode" />
-                                                        <Button Grid.Column="1"
+                                                        <Button Grid.Column="2"
                                                                 Style="{StaticResource DockIconButtonStyle}"
                                                                 Command="{Binding BuildPreviewCommand}"
                                                                 ToolTip="Refresh preview"
                                                                 AutomationProperties.Name="Refresh preview">
                                                             <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="ArrowSync20" />
                                                         </Button>
-                                                        <CheckBox Grid.Column="2"
+                                                        <CheckBox Grid.Column="3"
                                                                   Style="{StaticResource DockIconCheckBoxStyle}"
                                                                   IsChecked="{Binding IsAutoPreviewEnabled}"
                                                                   ToolTip="Auto preview"
@@ -1198,7 +1173,7 @@
                                                                     <ColumnDefinition Width="*" />
                                                                     <ColumnDefinition Width="Auto" />
                                                                 </Grid.ColumnDefinitions>
-                                                                <TextBlock FontWeight="SemiBold" Text="Loaded DMI" />
+                                                                <TextBlock FontWeight="SemiBold" Text="Current file" />
                                                                 <TextBlock Grid.Column="1"
                                                                            Foreground="{StaticResource Brush.TextSecondary}"
                                                                            FontSize="10"
@@ -1221,11 +1196,11 @@
                                                     <Grid Grid.Row="4" Margin="0,8,0,0">
                                                         <Grid.RowDefinitions>
                                                             <RowDefinition Height="Auto" />
-                                                            <RowDefinition Height="*" />
+                                                            <RowDefinition Height="Auto" />
                                                             <RowDefinition Height="Auto" />
                                                         </Grid.RowDefinitions>
                                                         <DockPanel LastChildFill="False">
-                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="States in loaded DMI" />
+                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="States" />
                                                             <TextBlock DockPanel.Dock="Right"
                                                                        Foreground="{StaticResource Brush.TextSecondary}"
                                                                        FontSize="10"
@@ -1233,6 +1208,7 @@
                                                         </DockPanel>
                                                         <ListBox Grid.Row="1"
                                                                  Margin="0,6,0,0"
+                                                                 MaxHeight="180"
                                                                  BorderThickness="0"
                                                                  Background="Transparent"
                                                                  ItemsSource="{Binding AvailableStates}"
@@ -1283,7 +1259,7 @@
                                                                            Foreground="{StaticResource Brush.TextSecondary}"
                                                                            FontSize="10"
                                                                            TextWrapping="Wrap"
-                                                                           Text="Applies to the loaded DMI in staged v1." />
+                                                                           Text="Assignment applies to the currently loaded DMI." />
                                                                 <TextBlock Margin="0,4,0,0"
                                                                            Foreground="{StaticResource Brush.TextSecondary}"
                                                                            FontSize="10"
@@ -1293,50 +1269,43 @@
                                                         </Border>
                                                     </Grid>
                                                 </Grid>
+                                                </ScrollViewer>
                                             </Border>
-
-                                            <Border VerticalAlignment="Top">
-                                                <Border.Style>
-                                                    <Style TargetType="Border" BasedOn="{StaticResource SidebarSectionBorderStyle}">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding SelectedEditorLeftDockTab}" Value="Configs">
-                                                                <Setter Property="Visibility" Value="Visible" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
+                                        </TabItem>
+                                        <TabItem>
+                                            <TabItem.Header>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <ui:SymbolIcon Style="{StaticResource LeftDockTabHeaderIconStyle}" Symbol="Save20" />
+                                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Configs" />
+                                                </StackPanel>
+                                            </TabItem.Header>
+                                            <Border Style="{StaticResource SidebarSectionBorderStyle}">
                                                 <Grid>
                                                     <Grid.RowDefinitions>
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="*" />
+                                                        <RowDefinition Height="Auto" />
                                                     </Grid.RowDefinitions>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <Button Grid.Column="1" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.CreateConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="New config" AutomationProperties.Name="New config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Add20" /></Button>
-                                                        <Button Grid.Column="2" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.LoadConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Load config" AutomationProperties.Name="Load config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" /></Button>
-                                                        <Button Grid.Column="3" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.ImportLegacyConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Import legacy CSV" AutomationProperties.Name="Import legacy CSV"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="ArrowUpload20" /></Button>
-                                                        <Button Grid.Column="4" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.SaveConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config" AutomationProperties.Name="Save config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Save20" /></Button>
-                                                        <Button Grid.Column="5" Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.BrowseSaveConfigPathCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config as" AutomationProperties.Name="Save config as"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="SaveEdit20" /></Button>
-                                                    </Grid>
-                                                    <TextBlock Grid.Row="1" Margin="0,6,0,0" Foreground="{StaticResource Brush.TextSecondary}" FontSize="10" TextWrapping="Wrap" Text="{Binding ConfigSummary}" />
-                                                    <ListBox Grid.Row="2"
-                                                             Margin="0,8,0,0"
-                                                             ItemsSource="{Binding DataContext.ConfigWorkspace.Items, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                             BorderThickness="0"
-                                                             Background="Transparent"
-                                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                                             ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                                        <ListBox.ItemTemplate>
+                                                    <DockPanel LastChildFill="False">
+                                                        <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Current config" />
+                                                        <UniformGrid DockPanel.Dock="Right" Rows="1" Columns="4">
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.CreateConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="New config" AutomationProperties.Name="New config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Add20" /></Button>
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.LoadConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Load config" AutomationProperties.Name="Load config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" /></Button>
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.SaveConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config" AutomationProperties.Name="Save config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Save20" /></Button>
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.BrowseSaveConfigPathCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config as" AutomationProperties.Name="Save config as"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="SaveEdit20" /></Button>
+                                                        </UniformGrid>
+                                                    </DockPanel>
+                                                    <TextBlock Grid.Row="1"
+                                                               Margin="0,6,0,0"
+                                                               Foreground="{StaticResource Brush.TextSecondary}"
+                                                               FontSize="10"
+                                                               TextWrapping="Wrap"
+                                                               Text="{Binding ConfigSummary}" />
+                                                    <ItemsControl Grid.Row="2"
+                                                                  Margin="0,8,0,0"
+                                                                  ItemsSource="{Binding DataContext.ConfigWorkspace.Items, RelativeSource={RelativeSource AncestorType=Window}}">
+                                                        <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
                                                                 <Border Padding="6" Margin="0,0,0,6" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
                                                                     <StackPanel>
@@ -1349,18 +1318,19 @@
                                                                     </StackPanel>
                                                                 </Border>
                                                             </DataTemplate>
-                                                        </ListBox.ItemTemplate>
-                                                    </ListBox>
-                                                    <Grid Grid.Row="3" Margin="0,8,0,0" MaxHeight="168">
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <Grid Grid.Row="3" Margin="0,10,0,0" MaxHeight="220">
                                                         <Grid.RowDefinitions>
                                                             <RowDefinition Height="Auto" />
                                                             <RowDefinition Height="*" />
                                                         </Grid.RowDefinitions>
-                                                        <DockPanel>
-                                                            <TextBlock FontSize="11"
-                                                                       FontWeight="SemiBold"
+                                                        <DockPanel LastChildFill="False">
+                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Sample configs" />
+                                                            <TextBlock DockPanel.Dock="Right"
                                                                        Foreground="{StaticResource Brush.TextSecondary}"
-                                                                       Text="Legacy sample configs" />
+                                                                       FontSize="10"
+                                                                       Text="Click to load" />
                                                         </DockPanel>
                                                         <ScrollViewer Grid.Row="1"
                                                                       Margin="0,6,0,0"
@@ -1376,7 +1346,7 @@
                                                                                 HorizontalContentAlignment="Stretch"
                                                                                 Command="{Binding DataContext.ConfigWorkspace.ActivateSampleConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                                 CommandParameter="{Binding}">
-                                                                            <Border Padding="5"
+                                                                            <Border Padding="6"
                                                                                     Background="White"
                                                                                     BorderBrush="{StaticResource Brush.PanelBorder}"
                                                                                     BorderThickness="1"
@@ -1429,8 +1399,8 @@
                                                     </Grid>
                                                 </Grid>
                                             </Border>
-                                        </Grid>
-                                    </Grid>
+                                        </TabItem>
+                                    </TabControl>
                                 </Border>
 
                                 <GridSplitter Grid.RowSpan="3"

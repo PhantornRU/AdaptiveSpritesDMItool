@@ -416,7 +416,18 @@ public sealed partial class DirectionNavigatorItemViewModel : ObservableObject
     public DirectionNavigatorItemViewModel(SpriteDirection direction)
     {
         Direction = direction;
-        Label = direction.ToString();
+        Label = direction switch
+        {
+            SpriteDirection.South => "SOUTH",
+            SpriteDirection.North => "NORTH",
+            SpriteDirection.East => "EAST",
+            SpriteDirection.West => "WEST",
+            SpriteDirection.SouthEast => "SOUTH EAST",
+            SpriteDirection.SouthWest => "SOUTH WEST",
+            SpriteDirection.NorthEast => "NORTH EAST",
+            SpriteDirection.NorthWest => "NORTH WEST",
+            _ => direction.ToString().ToUpperInvariant()
+        };
     }
 
     public SpriteDirection Direction { get; }
@@ -642,9 +653,13 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public string CurrentDmiPathSummary => Shell.CurrentDmiPathSummary;
 
-    public string ConfigToken => string.IsNullOrWhiteSpace(Shell.DraftConfigName)
-        ? (Shell.HasActiveConfig ? "Loaded" : "None")
-        : Shell.DraftConfigName;
+    public string ConfigToken => !Shell.HasActiveConfig
+        ? "None"
+        : Shell.ConfigSummary.Contains("unsaved", StringComparison.OrdinalIgnoreCase)
+            ? "Unsaved Draft"
+            : string.IsNullOrWhiteSpace(Shell.DraftConfigName)
+                ? "Loaded"
+                : Shell.DraftConfigName;
 
     public string DraftToken => Shell.ConfigSummary.Contains("unsaved", StringComparison.OrdinalIgnoreCase)
         ? "Draft"
