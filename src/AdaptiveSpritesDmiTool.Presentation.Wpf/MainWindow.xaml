@@ -361,21 +361,61 @@
             <Setter Property="Margin" Value="0,0,4,0" />
         </Style>
         <Style x:Key="StateLayerToggleStyle" TargetType="CheckBox" BasedOn="{StaticResource DockIconCheckBoxStyle}">
-            <Setter Property="Width" Value="38" />
-            <Setter Property="Height" Value="24" />
-            <Setter Property="MinWidth" Value="38" />
-            <Setter Property="MinHeight" Value="24" />
+            <Setter Property="Width" Value="42" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinWidth" Value="42" />
+            <Setter Property="MinHeight" Value="28" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="Margin" Value="0,0,6,0" />
             <Setter Property="FontSize" Value="10" />
             <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="Root"
+                                Padding="{TemplateBinding Padding}"
+                                Background="#FFFDF8"
+                                BorderBrush="{StaticResource Brush.PanelBorder}"
+                                BorderThickness="1"
+                                CornerRadius="3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.Accent}" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.AccentMuted}" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsChecked" Value="True" />
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.Accent}" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
         <Style x:Key="StateOrderTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Width" Value="44" />
-            <Setter Property="Height" Value="24" />
+            <Setter Property="Width" Value="90" />
+            <Setter Property="Height" Value="28" />
             <Setter Property="Margin" Value="0,4,0,0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="ItemRemoveButtonStyle" TargetType="Button" BasedOn="{StaticResource DockIconButtonStyle}">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+            <Setter Property="MinWidth" Value="18" />
+            <Setter Property="MinHeight" Value="18" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="0" />
         </Style>
         <Style x:Key="ImportedStateListItemStyle" TargetType="ListBoxItem">
             <Setter Property="Padding" Value="0" />
@@ -387,7 +427,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="Root"
-                                Padding="6"
+                                Padding="8,6"
                                 Background="White"
                                 BorderBrush="{StaticResource Brush.PanelBorder}"
                                 BorderThickness="1"
@@ -1137,7 +1177,11 @@
                                     </ScrollViewer>
                                 </Border>
 
-                                <Border Grid.RowSpan="3" Grid.Column="0" Width="236" Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Border Grid.RowSpan="3"
+                                        Grid.Column="0"
+                                        MinWidth="236"
+                                        HorizontalAlignment="Stretch"
+                                        Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <TabControl Style="{StaticResource LeftDockTabControlStyle}"
                                                 ItemContainerStyle="{StaticResource LeftDockTabItemStyle}"
                                                 SelectedIndex="{Binding SelectedEditorLeftDockTabIndex, Mode=TwoWay}">
@@ -1155,99 +1199,64 @@
                                                     <Grid>
                                                         <Grid.RowDefinitions>
                                                             <RowDefinition Height="Auto" />
-                                                            <RowDefinition Height="Auto" />
-                                                            <RowDefinition Height="Auto" />
-                                                            <RowDefinition Height="Auto" />
                                                             <RowDefinition Height="*" />
                                                         </Grid.RowDefinitions>
                                                         <DockPanel LastChildFill="False">
-                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Primary DMI" />
-                                                            <Button DockPanel.Dock="Right"
-                                                                    Padding="10,5"
-                                                                    Command="{Binding AddDmiStatesCommand}"
-                                                                    ToolTip="Add or replace DMI states in the shared list"
-                                                                    AutomationProperties.Name="Add DMI states">
-                                                                <StackPanel Orientation="Horizontal">
-                                                                    <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" />
-                                                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Add states" />
-                                                                </StackPanel>
-                                                            </Button>
-                                                        </DockPanel>
-                                                        <TextBlock Grid.Row="1"
-                                                                   Margin="0,6,0,0"
-                                                                   Foreground="{StaticResource Brush.TextSecondary}"
-                                                                   FontSize="10"
-                                                                   TextWrapping="Wrap"
-                                                                   Text="{Binding SpriteContractSummary}" />
-                                                        <Border Grid.Row="2"
-                                                                Margin="0,8,0,0"
-                                                                Padding="6"
-                                                                Background="White"
-                                                                BorderBrush="{StaticResource Brush.PanelBorder}"
-                                                                BorderThickness="1"
-                                                                CornerRadius="8">
-                                                            <StackPanel>
-                                                                <Grid>
-                                                                    <Grid.ColumnDefinitions>
-                                                                        <ColumnDefinition Width="*" />
-                                                                        <ColumnDefinition Width="Auto" />
-                                                                    </Grid.ColumnDefinitions>
-                                                                    <TextBlock FontWeight="SemiBold" Text="{Binding CurrentDmiDisplayName}" />
-                                                                    <TextBlock Grid.Column="1"
-                                                                               Foreground="{StaticResource Brush.TextSecondary}"
-                                                                               FontSize="10"
-                                                                               Text="{Binding StateCountLabel}" />
-                                                                </Grid>
-                                                                <TextBlock Margin="0,4,0,0"
-                                                                           Foreground="{StaticResource Brush.TextSecondary}"
-                                                                           FontSize="10"
-                                                                           Text="{Binding CurrentDmiPathSummary}"
-                                                                           TextTrimming="CharacterEllipsis" />
-                                                                <Grid Margin="0,6,0,0">
-                                                                    <Grid.ColumnDefinitions>
-                                                                        <ColumnDefinition Width="Auto" />
-                                                                        <ColumnDefinition Width="*" />
-                                                                    </Grid.ColumnDefinitions>
-                                                                    <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="Primary state" />
-                                                                    <ComboBox Grid.Column="1"
-                                                                              Margin="10,0,0,0"
-                                                                              ItemsSource="{Binding AvailableStates}"
-                                                                              SelectedItem="{Binding SelectedExplorerState, Mode=TwoWay}" />
-                                                                </Grid>
+                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="State pool" />
+                                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                                <Button Padding="8,5"
+                                                                        Margin="0,0,4,0"
+                                                                        Command="{Binding ClearImportedStatesCommand}"
+                                                                        ToolTip="Clear added states and restore the primary DMI state pool"
+                                                                        AutomationProperties.Name="Clear imported states">
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Dismiss20" />
+                                                                        <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Clear" />
+                                                                    </StackPanel>
+                                                                </Button>
+                                                                <Button Padding="8,5"
+                                                                        Command="{Binding AddDmiStatesCommand}"
+                                                                        ToolTip="Add or replace DMI states in the shared list"
+                                                                        AutomationProperties.Name="Add DMI states">
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Add20" />
+                                                                        <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Add states" />
+                                                                    </StackPanel>
+                                                                </Button>
                                                             </StackPanel>
-                                                        </Border>
-                                                        <DockPanel Grid.Row="3" Margin="0,10,0,0" LastChildFill="False">
-                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Loaded DMI states" />
-                                                            <TextBlock DockPanel.Dock="Right"
-                                                                       Foreground="{StaticResource Brush.TextSecondary}"
-                                                                       FontSize="10"
-                                                                       Text="South preview | file | Bg/Ov | order" />
                                                         </DockPanel>
-                                                        <ListBox Grid.Row="4"
+                                                        <ListBox Grid.Row="1"
                                                                  Margin="0,6,0,0"
                                                                  BorderThickness="0"
                                                                  Background="Transparent"
                                                                  ItemsSource="{Binding ImportedDmiStateItems}"
+                                                                 SelectedItem="{Binding SelectedImportedDmiStateItem, Mode=TwoWay}"
                                                                  ItemContainerStyle="{StaticResource ImportedStateListItemStyle}"
                                                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                                  ScrollViewer.VerticalScrollBarVisibility="Auto">
                                                             <ListBox.ItemTemplate>
                                                                 <DataTemplate>
-                                                                    <Grid>
+                                                                    <Grid HorizontalAlignment="Stretch">
+                                                                        <Grid.RowDefinitions>
+                                                                            <RowDefinition Height="Auto" />
+                                                                            <RowDefinition Height="Auto" />
+                                                                        </Grid.RowDefinitions>
                                                                         <Grid.ColumnDefinitions>
-                                                                            <ColumnDefinition Width="48" />
+                                                                            <ColumnDefinition Width="52" />
                                                                             <ColumnDefinition Width="*" />
                                                                             <ColumnDefinition Width="Auto" />
                                                                         </Grid.ColumnDefinitions>
                                                                         <Border Width="40"
                                                                                 Height="40"
+                                                                                Grid.Row="0"
+                                                                                Grid.RowSpan="2"
                                                                                 Background="#FFF9F4EA"
                                                                                 BorderBrush="{StaticResource Brush.PanelBorder}"
                                                                                 BorderThickness="1"
                                                                                 CornerRadius="6">
                                                                             <Image Stretch="Uniform" Source="{Binding PreviewImage}" />
                                                                         </Border>
-                                                                        <StackPanel Grid.Column="1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                                                        <StackPanel Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="8,0,10,0" VerticalAlignment="Center">
                                                                             <TextBlock FontWeight="SemiBold" Text="{Binding StateName}" TextTrimming="CharacterEllipsis" />
                                                                             <TextBlock Margin="0,2,0,0"
                                                                                        Foreground="{StaticResource Brush.TextSecondary}"
@@ -1255,7 +1264,17 @@
                                                                                        Text="{Binding SourceFileLabel}"
                                                                                        TextTrimming="CharacterEllipsis" />
                                                                         </StackPanel>
-                                                                        <Grid Grid.Column="2" VerticalAlignment="Center">
+                                                                        <Button Grid.Column="2"
+                                                                                Grid.Row="0"
+                                                                                Style="{StaticResource ItemRemoveButtonStyle}"
+                                                                                HorizontalAlignment="Right"
+                                                                                VerticalAlignment="Top"
+                                                                                Command="{Binding DataContext.RemoveImportedStateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                CommandParameter="{Binding}"
+                                                                                ToolTip="Remove imported state"
+                                                                                AutomationProperties.Name="Remove imported state"
+                                                                                Content="X" />
+                                                                        <Grid Grid.Column="2" Grid.Row="1" HorizontalAlignment="Right">
                                                                             <Grid.RowDefinitions>
                                                                                 <RowDefinition Height="Auto" />
                                                                                 <RowDefinition Height="Auto" />
@@ -1281,7 +1300,7 @@
                                                                                      Style="{StaticResource StateOrderTextBoxStyle}"
                                                                                      HorizontalAlignment="Right"
                                                                                      ToolTip="Higher order overlays lower ones inside the same layer group"
-                                                                                     Text="{Binding Order, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                                                                     Text="{Binding OrderText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                                                         </Grid>
                                                                     </Grid>
                                                                 </DataTemplate>
@@ -1312,7 +1331,7 @@
                                                             <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.CreateConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="New config" AutomationProperties.Name="New config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Add20" /></Button>
                                                             <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.LoadConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Load config" AutomationProperties.Name="Load config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" /></Button>
                                                             <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.SaveConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config" AutomationProperties.Name="Save config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Save20" /></Button>
-                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.BrowseSaveConfigPathCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config as" AutomationProperties.Name="Save config as"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="SaveEdit20" /></Button>
+                                                            <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.ConfigWorkspace.SaveConfigAsCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Save config as" AutomationProperties.Name="Save config as"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="SaveEdit20" /></Button>
                                                         </UniformGrid>
                                                     </DockPanel>
                                                     <TextBlock Grid.Row="1"
@@ -1326,16 +1345,92 @@
                                                                   ItemsSource="{Binding DataContext.ConfigWorkspace.Items, RelativeSource={RelativeSource AncestorType=Window}}">
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
-                                                                <Border Padding="6" Margin="0,0,0,6" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
-                                                                    <StackPanel>
-                                                                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
-                                                                        <TextBlock Margin="0,2,0,0"
-                                                                                   Foreground="{StaticResource Brush.TextSecondary}"
-                                                                                   FontSize="10"
-                                                                                   Text="{Binding PathSummary}"
-                                                                                   TextTrimming="CharacterEllipsis" />
-                                                                    </StackPanel>
-                                                                </Border>
+                                                                <Grid Margin="0,0,0,6">
+                                                                    <Button Padding="0"
+                                                                            Background="Transparent"
+                                                                            BorderThickness="0"
+                                                                            HorizontalContentAlignment="Stretch"
+                                                                            Command="{Binding DataContext.ConfigWorkspace.ActivateConfigQueueItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}">
+                                                                        <Border Padding="6"
+                                                                                Background="White"
+                                                                                BorderBrush="{StaticResource Brush.PanelBorder}"
+                                                                                BorderThickness="1"
+                                                                                CornerRadius="8">
+                                                                            <Border.Style>
+                                                                                <Style TargetType="Border">
+                                                                                    <Setter Property="Background" Value="White" />
+                                                                                    <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
+                                                                                    <Setter Property="BorderThickness" Value="1" />
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                                            <Setter Property="Background" Value="#FFF5FCF8" />
+                                                                                            <Setter Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
+                                                                                            <Setter Property="BorderThickness" Value="2" />
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </Border.Style>
+                                                                            <Grid>
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="4" />
+                                                                                    <ColumnDefinition Width="*" />
+                                                                                    <ColumnDefinition Width="Auto" />
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <Border Grid.RowSpan="2"
+                                                                                        Width="4"
+                                                                                        CornerRadius="2"
+                                                                                        Background="{StaticResource Brush.Accent}">
+                                                                                    <Border.Style>
+                                                                                        <Style TargetType="Border">
+                                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                                            <Style.Triggers>
+                                                                                                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                                                </DataTrigger>
+                                                                                            </Style.Triggers>
+                                                                                        </Style>
+                                                                                    </Border.Style>
+                                                                                </Border>
+                                                                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                                                                    <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                                                                    <TextBlock Margin="0,2,0,0"
+                                                                                               Foreground="{StaticResource Brush.TextSecondary}"
+                                                                                               FontSize="10"
+                                                                                               Text="{Binding PathSummary}"
+                                                                                               TextTrimming="CharacterEllipsis" />
+                                                                                </StackPanel>
+                                                                                <TextBlock Grid.Column="2"
+                                                                                           Margin="8,0,22,0"
+                                                                                           VerticalAlignment="Top"
+                                                                                           Foreground="{StaticResource Brush.Accent}"
+                                                                                           FontSize="10"
+                                                                                           FontWeight="SemiBold"
+                                                                                           Text="Current">
+                                                                                    <TextBlock.Style>
+                                                                                        <Style TargetType="TextBlock">
+                                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                                            <Style.Triggers>
+                                                                                                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                                                </DataTrigger>
+                                                                                            </Style.Triggers>
+                                                                                        </Style>
+                                                                                    </TextBlock.Style>
+                                                                                </TextBlock>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </Button>
+                                                                    <Button Style="{StaticResource ItemRemoveButtonStyle}"
+                                                                            HorizontalAlignment="Right"
+                                                                            VerticalAlignment="Top"
+                                                                            Margin="0,6,6,0"
+                                                                            Command="{Binding DataContext.ConfigWorkspace.RemoveConfigQueueItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            ToolTip="Remove config"
+                                                                            AutomationProperties.Name="Remove config"
+                                                                            Content="X" />
+                                                                </Grid>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
@@ -1349,7 +1444,7 @@
                                                             <TextBlock DockPanel.Dock="Right"
                                                                        Foreground="{StaticResource Brush.TextSecondary}"
                                                                        FontSize="10"
-                                                                       Text="Click to load" />
+                                                                       Text="Load sample" />
                                                         </DockPanel>
                                                         <ScrollViewer Grid.Row="1"
                                                                       Margin="0,6,0,0"
@@ -1373,7 +1468,6 @@
                                                                                 <Grid>
                                                                                     <Grid.ColumnDefinitions>
                                                                                         <ColumnDefinition Width="*" />
-                                                                                        <ColumnDefinition Width="Auto" />
                                                                                     </Grid.ColumnDefinitions>
                                                                                     <StackPanel>
                                                                                         <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
@@ -1388,26 +1482,6 @@
                                                                                                    Text="{Binding PathSummary}"
                                                                                                    TextTrimming="CharacterEllipsis" />
                                                                                     </StackPanel>
-                                                                                    <Border Grid.Column="1"
-                                                                                            Padding="5,2"
-                                                                                            Margin="8,0,0,0"
-                                                                                            VerticalAlignment="Top"
-                                                                                            Background="#FFF6F1E8"
-                                                                                            BorderBrush="{StaticResource Brush.PanelBorder}"
-                                                                                            BorderThickness="1"
-                                                                                            CornerRadius="999">
-                                                                                        <Border.Style>
-                                                                                            <Style TargetType="Border">
-                                                                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                                                                <Style.Triggers>
-                                                                                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                                                                        <Setter Property="Visibility" Value="Visible" />
-                                                                                                    </DataTrigger>
-                                                                                                </Style.Triggers>
-                                                                                            </Style>
-                                                                                        </Border.Style>
-                                                                                        <TextBlock FontSize="10" FontWeight="SemiBold" Text="Active" />
-                                                                                    </Border>
                                                                                 </Grid>
                                                                             </Border>
                                                                         </Button>

@@ -179,6 +179,26 @@ public partial class WorkspaceShellViewModel
         item.PropertyChanged += OnImportedStateItemPropertyChanged;
     }
 
+    private void RemoveImportedStateItem(ImportedDmiStateItemViewModel item)
+    {
+        if (ReferenceEquals(SelectedImportedDmiStateItem, item))
+        {
+            SelectedImportedDmiStateItem = null;
+            if (string.Equals(SelectedExplorerState, item.StateName, StringComparison.OrdinalIgnoreCase))
+            {
+                SelectedExplorerState = ImportedDmiStateItems
+                    .Where(existing => !ReferenceEquals(existing, item))
+                    .Select(existing => existing.StateName)
+                    .FirstOrDefault() ?? string.Empty;
+            }
+        }
+
+        item.PropertyChanged -= OnImportedStateItemPropertyChanged;
+        ImportedDmiStateItems.Remove(item);
+        InvalidateImportedStateFrameCache();
+        RefreshImportedStateComposition();
+    }
+
     private void ClearImportedStateItems()
     {
         _importedStateRefreshCts?.Cancel();
@@ -191,7 +211,63 @@ public partial class WorkspaceShellViewModel
         }
 
         ImportedDmiStateItems.Clear();
+        SelectedImportedDmiStateItem = null;
         InvalidateImportedStateFrameCache();
+    }
+
+    private void DeactivateConfigQueueSelection()
+    {
+        foreach (var item in ConfigQueueItems)
+        {
+            item.IsActive = false;
+        }
+
+        _activeConfigQueueItemId = null;
+    }
+
+    private string GenerateNextDraftConfigName()
+    {
+        var usedNames = ConfigQueueItems
+            .Select(item => item.Name)
+            .Where(static name => !string.IsNullOrWhiteSpace(name))
+            .ToArray();
+
+        const string rootName = "Unsaved Draft";
+        if (!usedNames.Any(name => string.Equals(name, rootName, StringComparison.OrdinalIgnoreCase)))
+        {
+            return rootName;
+        }
+
+        var nextIndex = 2;
+        while (usedNames.Any(name => string.Equals(name, $"{rootName} {nextIndex}", StringComparison.OrdinalIgnoreCase)))
+        {
+            nextIndex++;
+        }
+
+        return $"{rootName} {nextIndex}";
+    }
+
+    private void AdoptCurrentConfigDisplayName(string? preferredName)
+    {
+        if (_editorSession.CurrentConfig is null || string.IsNullOrWhiteSpace(preferredName))
+        {
+            return;
+        }
+
+        if (string.Equals(_editorSession.CurrentConfig.Name, preferredName, StringComparison.Ordinal))
+        {
+            DraftConfigName = preferredName;
+            return;
+        }
+
+        var renameResult = _editorSession.RenameCurrentConfig(preferredName);
+        if (renameResult.IsFailure)
+        {
+            StatusMessage = renameResult.Error.Message;
+            return;
+        }
+
+        DraftConfigName = preferredName;
     }
 
     private void InvalidateImportedStateFrameCache() => _importedStateFrameCache.Clear();
@@ -202,6 +278,178 @@ public partial class WorkspaceShellViewModel
         {
             RefreshImportedStateComposition();
         }
+    }
+
+    private ConfigQueueItemViewModel? FindActiveConfigQueueItem()
+        => _activeConfigQueueItemId is not { } activeId
+            ? null
+            : ConfigQueueItems.FirstOrDefault(item => item.Id == activeId);
+
+    private static string BuildConfigPathSummary(string? path)
+        => string.IsNullOrWhiteSpace(path)
+            ? "Unsaved draft"
+            : Path.GetFileName(path);
+
+    private void SyncCurrentConfigIntoActiveQueueItem()
+    {
+        var activeItem = FindActiveConfigQueueItem();
+        if (activeItem is null || _editorSession.CurrentConfig is null)
+        {
+            return;
+        }
+
+        activeItem.Name = _editorSession.CurrentConfig.Name;
+        activeItem.ConfigPath = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath) ? null : _editorSession.CurrentConfigPath;
+        activeItem.PathSummary = BuildConfigPathSummary(activeItem.ConfigPath);
+        activeItem.ConfigSnapshot = _editorSession.CurrentConfig.Clone();
+        activeItem.IsActive = true;
+    }
+
+    private ConfigQueueItemViewModel AddCurrentConfigQueueItemAsNewActive()
+    {
+        if (_editorSession.CurrentConfig is null)
+        {
+            throw new InvalidOperationException("Cannot create a config queue item without an active config.");
+        }
+
+        foreach (var existingItem in ConfigQueueItems)
+        {
+            existingItem.IsActive = false;
+        }
+
+        var configPath = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath) ? null : _editorSession.CurrentConfigPath;
+        var item = new ConfigQueueItemViewModel(
+            Guid.NewGuid(),
+            _editorSession.CurrentConfig.Name,
+            BuildConfigPathSummary(configPath),
+            configPath,
+            _editorSession.CurrentConfig.Clone(),
+            isActive: true);
+        ConfigQueueItems.Add(item);
+        _activeConfigQueueItemId = item.Id;
+        return item;
+    }
+
+    private void UpsertCurrentSessionIntoConfigQueue(bool forceAddNewItem = false)
+    {
+        if (_editorSession.CurrentConfig is null)
+        {
+            ConfigQueueItems.Clear();
+            _activeConfigQueueItemId = null;
+            return;
+        }
+
+        if (forceAddNewItem)
+        {
+            AddCurrentConfigQueueItemAsNewActive();
+            return;
+        }
+
+        var activeItem = FindActiveConfigQueueItem();
+        if (activeItem is not null)
+        {
+            SyncCurrentConfigIntoActiveQueueItem();
+            return;
+        }
+
+        var configPath = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath) ? null : _editorSession.CurrentConfigPath;
+        ConfigQueueItemViewModel? matchedItem = null;
+        if (!string.IsNullOrWhiteSpace(configPath))
+        {
+            matchedItem = ConfigQueueItems.FirstOrDefault(item =>
+                string.Equals(item.ConfigPath, configPath, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (matchedItem is null)
+        {
+            AddCurrentConfigQueueItemAsNewActive();
+            return;
+        }
+
+        foreach (var existingItem in ConfigQueueItems)
+        {
+            existingItem.IsActive = existingItem.Id == matchedItem.Id;
+        }
+
+        _activeConfigQueueItemId = matchedItem.Id;
+        matchedItem.Name = _editorSession.CurrentConfig.Name;
+        matchedItem.ConfigPath = configPath;
+        matchedItem.PathSummary = BuildConfigPathSummary(configPath);
+        matchedItem.ConfigSnapshot = _editorSession.CurrentConfig.Clone();
+        matchedItem.IsActive = true;
+    }
+
+    private void ActivateConfigQueueItemCore(ConfigQueueItemViewModel item)
+    {
+        if (item.IsActive && _activeConfigQueueItemId == item.Id)
+        {
+            return;
+        }
+
+        SyncCurrentConfigIntoActiveQueueItem();
+
+        var result = _editorSession.SetCurrentConfig(item.ConfigSnapshot.Clone(), item.ConfigPath);
+        if (result.IsFailure)
+        {
+            StatusMessage = result.Error.Message;
+            return;
+        }
+
+        foreach (var existingItem in ConfigQueueItems)
+        {
+            existingItem.IsActive = existingItem.Id == item.Id;
+        }
+
+        _activeConfigQueueItemId = item.Id;
+        ConfigPath = item.ConfigPath ?? string.Empty;
+        SaveConfigPath = item.ConfigPath ?? string.Empty;
+        DraftConfigName = item.Name;
+        StatusMessage = $"Activated config '{item.Name}'.";
+        RefreshWorkspaceState();
+        ApplyAdaptiveEditorZoom(force: true);
+        RefreshPreviewSelectionSummary();
+        RefreshEditorSurface();
+        RequestAutoPreviewRefresh();
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    private void RemoveConfigQueueItemCore(ConfigQueueItemViewModel item)
+    {
+        var wasActive = item.IsActive || _activeConfigQueueItemId == item.Id;
+        ConfigQueueItems.Remove(item);
+
+        if (!wasActive)
+        {
+            PersistWorkspaceSettingsInBackground();
+            return;
+        }
+
+        _activeConfigQueueItemId = null;
+
+        if (ConfigQueueItems.Count > 0)
+        {
+            ActivateConfigQueueItemCore(ConfigQueueItems[0]);
+            return;
+        }
+
+        if (_editorSession.LoadedAsset is not null)
+        {
+            CreateImplicitDraftConfig(forceNewQueueItem: true);
+            RefreshWorkspaceState();
+            ApplyAdaptiveEditorZoom(force: true);
+            RefreshPreviewSelectionSummary();
+            RefreshEditorSurface();
+            RequestAutoPreviewRefresh();
+            PersistWorkspaceSettingsInBackground();
+            return;
+        }
+
+        ConfigPath = string.Empty;
+        SaveConfigPath = string.Empty;
+        DraftConfigName = "Unsaved Draft";
+        StatusMessage = "Removed the active config.";
+        RefreshWorkspaceState();
+        PersistWorkspaceSettingsInBackground();
     }
 
     private SpriteImage? ComposeImportedLayers(SpriteImage? baseImage, SpriteDirection direction)
@@ -326,7 +574,7 @@ public partial class WorkspaceShellViewModel
             return null;
         }
 
-        var referenceImage = ComposeImportedLayers(useCompositeImage ? _compositeImage ?? _baseImage : _baseImage, direction);
+        var referenceImage = ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage), direction);
         var mappings = _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
         var colors = new Color[resolution.Value.Width * resolution.Value.Height];
         var captions = new string[colors.Length];
@@ -355,7 +603,7 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
-        var referenceImage = ComposeImportedLayers(useCompositeImage ? _compositeImage ?? _baseImage : _baseImage, direction);
+        var referenceImage = ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage), direction);
         var mappings = _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
         var selectedTarget = _selectedSourceCoordinate is { } source && mappings.TryGetValue(source, out var mapping)
             ? mapping.Target
@@ -447,16 +695,28 @@ public partial class WorkspaceShellViewModel
 
     private void RefreshConfigQueueItems()
     {
-        ConfigQueueItems.Clear();
-        if (_editorSession.CurrentConfig is null)
+        UpsertCurrentSessionIntoConfigQueue();
+    }
+
+    private SpriteImage? ResolvePreviewImage(SpriteDirection direction, bool useCompositeImage)
+    {
+        var activeDirection = GetSafeSelectedDirection();
+        if (direction == activeDirection)
         {
-            return;
+            return useCompositeImage ? _compositeImage ?? _baseImage : _baseImage;
         }
 
-        var pathSummary = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath)
-            ? "Unsaved draft"
-            : _editorSession.CurrentConfigPath!;
-        ConfigQueueItems.Add(new ConfigQueueItemViewModel(_editorSession.CurrentConfig.Name, pathSummary, IsActive: true));
+        if (useCompositeImage && _navigatorCompositeImages.TryGetValue(direction, out var composite))
+        {
+            return composite ?? (_navigatorBaseImages.TryGetValue(direction, out var compositeBase) ? compositeBase : null);
+        }
+
+        if (_navigatorBaseImages.TryGetValue(direction, out var baseImage))
+        {
+            return baseImage;
+        }
+
+        return useCompositeImage ? _compositeImage ?? _baseImage : _baseImage;
     }
 
     private void RefreshEditorAssetItems()
@@ -500,9 +760,6 @@ public partial class WorkspaceShellViewModel
                      .OrderBy(static file => Path.GetFileNameWithoutExtension(file), StringComparer.OrdinalIgnoreCase))
         {
             var isLegacyCsv = path.EndsWith(".csv", StringComparison.OrdinalIgnoreCase);
-            var isActive = isLegacyCsv
-                ? string.Equals(path, LegacyCsvPath, StringComparison.OrdinalIgnoreCase)
-                : string.Equals(path, ConfigPath, StringComparison.OrdinalIgnoreCase);
 
             SampleConfigItems.Add(
                 new SampleConfigItemViewModel(
@@ -511,7 +768,7 @@ public partial class WorkspaceShellViewModel
                     isLegacyCsv ? "Legacy CSV" : "JSON config",
                     Path.GetFileName(path),
                     isLegacyCsv,
-                    isActive));
+                    false));
         }
     }
 
@@ -585,6 +842,8 @@ public partial class WorkspaceShellViewModel
         _landmarkImage = null;
         _overlayImage = null;
         _compositeImage = null;
+        _navigatorBaseImages.Clear();
+        _navigatorCompositeImages.Clear();
         CurrentPreviewImage = null;
         PreviewSummary = "Build a preview to render the selected base, landmark, and overlay states.";
         PreviewTextGrid = "No config grid is available yet.";

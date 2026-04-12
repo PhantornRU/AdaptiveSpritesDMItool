@@ -170,7 +170,7 @@ public partial class WorkspaceShellViewModel
         ConfigPath = string.Empty;
         SaveConfigPath = string.Empty;
         LegacyCsvPath = string.Empty;
-        DraftConfigName = "New Config";
+        DraftConfigName = "Unsaved Draft";
         BaseStateName = string.Empty;
         LandmarkStateName = string.Empty;
         OverlayStateName = string.Empty;
@@ -304,8 +304,12 @@ public partial class WorkspaceShellViewModel
         }
 
         var direction = GetSafeSelectedDirection();
+        var selection = new PreviewSelection(
+            BaseStateName,
+            string.IsNullOrWhiteSpace(LandmarkStateName) ? null : LandmarkStateName.Trim(),
+            string.IsNullOrWhiteSpace(OverlayStateName) ? null : OverlayStateName.Trim());
 
-        var result = await _buildPreviewUseCase.ExecuteAsync(cancellationToken);
+        var result = await _buildPreviewUseCase.ExecuteAsync(selection, direction, cancellationToken);
         if (result.IsFailure)
         {
             ClearPreviewArtifacts();
@@ -322,6 +326,24 @@ public partial class WorkspaceShellViewModel
         _landmarkImage = result.Value.LandmarkImage;
         _overlayImage = result.Value.OverlayImage;
         _compositeImage = result.Value.CompositeImage;
+        _navigatorBaseImages.Clear();
+        _navigatorCompositeImages.Clear();
+        _navigatorBaseImages[direction] = result.Value.BaseImage;
+        _navigatorCompositeImages[direction] = result.Value.CompositeImage;
+
+        foreach (var previewDirection in AvailableDirections.Where(candidate => candidate != direction))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var previewResult = await _buildPreviewUseCase.ExecuteAsync(selection, previewDirection, cancellationToken);
+            if (previewResult.IsFailure)
+            {
+                continue;
+            }
+
+            _navigatorBaseImages[previewDirection] = previewResult.Value.BaseImage;
+            _navigatorCompositeImages[previewDirection] = previewResult.Value.CompositeImage;
+        }
+
         InvalidateNavigatorSnapshotCache();
         PreviewSummary =
             $"Preview built for direction {direction}. " +
@@ -576,7 +598,10 @@ public partial class WorkspaceShellViewModel
 
         if (string.IsNullOrWhiteSpace(SelectedExplorerState))
         {
-            SelectedExplorerState = AvailableStates.FirstOrDefault() ?? string.Empty;
+            SelectedExplorerState = AvailableStates.FirstOrDefault(static state =>
+                                        string.Equals(state, "human32x", StringComparison.OrdinalIgnoreCase))
+                                    ?? AvailableStates.FirstOrDefault()
+                                    ?? string.Empty;
         }
 
         if (_editorSession.LoadedAsset is { } asset)

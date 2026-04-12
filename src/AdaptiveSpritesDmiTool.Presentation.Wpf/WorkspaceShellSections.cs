@@ -685,9 +685,13 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public IAsyncRelayCommand AddDmiStatesCommand => Shell.AddDmiStatesCommand;
 
+    public IAsyncRelayCommand ClearImportedStatesCommand => Shell.ClearImportedStatesCommand;
+
     public IRelayCommand<ImportedDmiStateItemViewModel> ToggleImportedStateBackgroundCommand => Shell.ToggleImportedStateBackgroundCommand;
 
     public IRelayCommand<ImportedDmiStateItemViewModel> ToggleImportedStateOverlayCommand => Shell.ToggleImportedStateOverlayCommand;
+
+    public IRelayCommand<ImportedDmiStateItemViewModel> RemoveImportedStateCommand => Shell.RemoveImportedStateCommand;
 
     public IRelayCommand<EditorLeftDockTab> SelectEditorLeftDockTabCommand => Shell.SelectEditorLeftDockTabCommand;
 
@@ -718,11 +722,17 @@ public sealed class ConfigWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public IAsyncRelayCommand SaveConfigCommand => Shell.SaveConfigCommand;
 
+    public IAsyncRelayCommand SaveConfigAsCommand => Shell.SaveConfigAsCommand;
+
     public IRelayCommand BrowseSaveConfigPathCommand => Shell.BrowseSaveConfigPathCommand;
 
     public IAsyncRelayCommand ImportLegacyConfigCommand => Shell.ImportLegacyConfigCommand;
 
     public IAsyncRelayCommand<SampleConfigItemViewModel> ActivateSampleConfigCommand => Shell.ActivateSampleConfigCommand;
+
+    public IRelayCommand<ConfigQueueItemViewModel> ActivateConfigQueueItemCommand => Shell.ActivateConfigQueueItemCommand;
+
+    public IRelayCommand<ConfigQueueItemViewModel> RemoveConfigQueueItemCommand => Shell.RemoveConfigQueueItemCommand;
 }
 
 public sealed class BottomWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)

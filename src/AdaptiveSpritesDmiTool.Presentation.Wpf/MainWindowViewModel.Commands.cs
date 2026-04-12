@@ -420,9 +420,14 @@ public partial class WorkspaceShellViewModel
     [RelayCommand(CanExecute = nameof(CanCreateConfig))]
     private void CreateConfig()
     {
+        SyncCurrentConfigIntoActiveQueueItem();
+
+        var requestedName = _editorSession.CurrentConfig is null
+            ? (string.IsNullOrWhiteSpace(DraftConfigName) ? "Unsaved Draft" : DraftConfigName.Trim())
+            : GenerateNextDraftConfigName();
         var metadata = ConfigMetadata.CreateNew(ConfigSource.UserCreated, sourceIdentifier: "presentation-shell");
         var result = _createConfigUseCase.Execute(
-            string.IsNullOrWhiteSpace(DraftConfigName) ? "Unsaved Draft" : DraftConfigName.Trim(),
+            requestedName,
             metadata);
 
         if (result.IsFailure)
@@ -431,6 +436,11 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        ConfigPath = string.Empty;
+        SaveConfigPath = string.Empty;
+        LegacyCsvPath = string.Empty;
+        DraftConfigName = result.Value.Name;
+        UpsertCurrentSessionIntoConfigQueue(forceAddNewItem: true);
         StatusMessage = $"Created config '{result.Value.Name}'.";
         RefreshWorkspaceState();
         ApplyAdaptiveEditorZoom(force: true);
@@ -481,15 +491,34 @@ public partial class WorkspaceShellViewModel
                 }
 
                 ConfigPath = SaveConfigPath;
+                UpsertCurrentSessionIntoConfigQueue();
                 StatusMessage = $"Saved config to '{SaveConfigPath}'.";
                 RefreshWorkspaceState();
                 await PersistWorkspaceSettingsAsync();
             });
     }
 
+    [RelayCommand(CanExecute = nameof(CanSaveConfig))]
+    private async Task SaveConfigAsAsync()
+    {
+        var path = _fileDialogService.SaveConfigFile(SaveConfigPath, DraftConfigName);
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            StatusMessage = "Choose a JSON config path to save.";
+            return;
+        }
+
+        SaveConfigPath = path;
+        DraftConfigName = Path.GetFileNameWithoutExtension(path);
+        await SaveConfigAsync();
+    }
+
     [RelayCommand]
     private async Task LoadConfigAsync()
     {
+        SyncCurrentConfigIntoActiveQueueItem();
+        DeactivateConfigQueueSelection();
+
         var path = _fileDialogService.OpenConfigFile(ConfigPath);
         if (string.IsNullOrWhiteSpace(path))
         {
@@ -505,6 +534,9 @@ public partial class WorkspaceShellViewModel
     [RelayCommand]
     private async Task ImportLegacyConfigAsync()
     {
+        SyncCurrentConfigIntoActiveQueueItem();
+        DeactivateConfigQueueSelection();
+
         var path = _fileDialogService.OpenLegacyCsvFile(LegacyCsvPath);
         if (string.IsNullOrWhiteSpace(path))
         {
@@ -526,10 +558,13 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        SyncCurrentConfigIntoActiveQueueItem();
+        DeactivateConfigQueueSelection();
+
         await RunBusyOperationAsync(
             cancellationToken => item.IsLegacyCsv
-                ? ImportLegacyConfigFromPathAsync(item.Path, navigateToEditor: true, persistSettings: true, cancellationToken)
-                : LoadConfigFromPathAsync(item.Path, navigateToEditor: true, persistSettings: true, cancellationToken));
+                ? ImportLegacyConfigFromPathAsync(item.Path, navigateToEditor: true, persistSettings: true, cancellationToken, item.Name)
+                : LoadConfigFromPathAsync(item.Path, navigateToEditor: true, persistSettings: true, cancellationToken, item.Name));
     }
 
     private async Task OpenDmiFromPathAsync(string path, bool navigateToEditor, bool persistSettings, CancellationToken cancellationToken)
@@ -542,17 +577,23 @@ public partial class WorkspaceShellViewModel
         }
 
         DmiPath = path;
-        BaseStateName = result.Value.States.FirstOrDefault()?.Name ?? string.Empty;
+        BaseStateName =
+            result.Value.States.FirstOrDefault(static state => string.Equals(state.Name, "human32x", StringComparison.OrdinalIgnoreCase))?.Name
+            ?? result.Value.States.FirstOrDefault()?.Name
+            ?? string.Empty;
         LandmarkStateName = string.Empty;
         OverlayStateName = string.Empty;
         DraftConfigName = Path.GetFileNameWithoutExtension(result.Value.DisplayName);
         ConfigPath = string.Empty;
         SaveConfigPath = string.Empty;
+        LegacyCsvPath = string.Empty;
         BatchInputDirectory = Path.GetDirectoryName(result.Value.SourcePath ?? path) ?? string.Empty;
         BatchOutputDirectory = string.IsNullOrWhiteSpace(BatchOutputDirectory)
             ? Path.Combine(BatchInputDirectory, "processed")
             : BatchOutputDirectory;
-        CreateImplicitDraftConfig();
+        ConfigQueueItems.Clear();
+        _activeConfigQueueItemId = null;
+        CreateImplicitDraftConfig(forceNewQueueItem: true);
         await MergeImportedStatesFromAssetAsync(result.Value, cancellationToken);
         NormalizeSelectedDirection();
         StatusMessage = $"Loaded DMI '{result.Value.DisplayName}' with {result.Value.States.Count} states.";
@@ -620,7 +661,7 @@ public partial class WorkspaceShellViewModel
         InvalidateImportedStateFrameCache();
     }
 
-    private void CreateImplicitDraftConfig()
+    private void CreateImplicitDraftConfig(bool forceNewQueueItem = false)
     {
         if (_editorSession.LoadedAsset is null)
         {
@@ -628,18 +669,21 @@ public partial class WorkspaceShellViewModel
         }
 
         var metadata = ConfigMetadata.CreateNew(ConfigSource.UserCreated, sourceIdentifier: "presentation-shell:implicit-draft");
-        var result = _createConfigUseCase.Execute("Unsaved Draft", metadata);
+        var result = _createConfigUseCase.Execute(forceNewQueueItem ? GenerateNextDraftConfigName() : "Unsaved Draft", metadata);
         if (result.IsFailure)
         {
             StatusMessage = result.Error.Message;
             return;
         }
 
+        DraftConfigName = result.Value.Name;
         ConfigPath = string.Empty;
         SaveConfigPath = string.Empty;
+        LegacyCsvPath = string.Empty;
+        UpsertCurrentSessionIntoConfigQueue(forceAddNewItem: forceNewQueueItem);
     }
 
-    private async Task LoadConfigFromPathAsync(string path, bool navigateToEditor, bool persistSettings, CancellationToken cancellationToken)
+    private async Task LoadConfigFromPathAsync(string path, bool navigateToEditor, bool persistSettings, CancellationToken cancellationToken, string? preferredDisplayName = null)
     {
         var result = await _loadConfigUseCase.ExecuteAsync(path, cancellationToken);
         if (result.IsFailure)
@@ -650,8 +694,11 @@ public partial class WorkspaceShellViewModel
 
         ConfigPath = path;
         SaveConfigPath = path;
+        LegacyCsvPath = string.Empty;
         DraftConfigName = result.Value.Name;
-        StatusMessage = $"Loaded config '{result.Value.Name}'.";
+        AdoptCurrentConfigDisplayName(preferredDisplayName);
+        UpsertCurrentSessionIntoConfigQueue();
+        StatusMessage = $"Loaded config '{DraftConfigName}'.";
         RefreshWorkspaceState();
         ApplyAdaptiveEditorZoom(force: true);
         RefreshPreviewSelectionSummary();
@@ -670,7 +717,7 @@ public partial class WorkspaceShellViewModel
         }
     }
 
-    private async Task ImportLegacyConfigFromPathAsync(string path, bool navigateToEditor, bool persistSettings, CancellationToken cancellationToken)
+    private async Task ImportLegacyConfigFromPathAsync(string path, bool navigateToEditor, bool persistSettings, CancellationToken cancellationToken, string? preferredDisplayName = null)
     {
         var result = await _importLegacyCsvConfigUseCase.ExecuteAsync(path, cancellationToken);
         if (result.IsFailure)
@@ -680,8 +727,12 @@ public partial class WorkspaceShellViewModel
         }
 
         LegacyCsvPath = path;
+        ConfigPath = string.Empty;
         DraftConfigName = result.Value.Name;
-        StatusMessage = $"Imported legacy CSV '{Path.GetFileName(path)}' as config '{result.Value.Name}'.";
+        SaveConfigPath = string.Empty;
+        AdoptCurrentConfigDisplayName(preferredDisplayName);
+        UpsertCurrentSessionIntoConfigQueue();
+        StatusMessage = $"Imported legacy CSV '{Path.GetFileName(path)}' as config '{DraftConfigName}'.";
         RefreshWorkspaceState();
         ApplyAdaptiveEditorZoom(force: true);
         RefreshPreviewSelectionSummary();

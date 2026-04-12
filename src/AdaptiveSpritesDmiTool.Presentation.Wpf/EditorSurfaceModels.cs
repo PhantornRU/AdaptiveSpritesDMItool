@@ -179,7 +179,41 @@ public sealed class EditorCommandBarOptions
     public static IReadOnlyList<EditorViewportMode> ViewportModes { get; } = Enum.GetValues<EditorViewportMode>();
 }
 
-public sealed record ConfigQueueItemViewModel(string Name, string PathSummary, bool IsActive);
+public sealed partial class ConfigQueueItemViewModel : ObservableObject
+{
+    public ConfigQueueItemViewModel(
+        Guid id,
+        string name,
+        string pathSummary,
+        string? configPath,
+        SpriteConfig configSnapshot,
+        bool isActive)
+    {
+        Id = id;
+        this.name = name;
+        this.pathSummary = pathSummary;
+        this.configPath = configPath;
+        this.configSnapshot = configSnapshot;
+        this.isActive = isActive;
+    }
+
+    public Guid Id { get; }
+
+    [ObservableProperty]
+    private string name;
+
+    [ObservableProperty]
+    private string pathSummary;
+
+    [ObservableProperty]
+    private string? configPath;
+
+    [ObservableProperty]
+    private SpriteConfig configSnapshot;
+
+    [ObservableProperty]
+    private bool isActive;
+}
 
 public sealed record SampleConfigItemViewModel(
     string Name,
@@ -227,6 +261,8 @@ public sealed partial class EditorAssetItemViewModel : ObservableObject
 
 public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
 {
+    private string orderText = string.Empty;
+
     public ImportedDmiStateItemViewModel(
         string stateName,
         string sourcePath,
@@ -241,6 +277,7 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
         this.previewImage = previewImage;
         this.placementMode = placementMode;
         this.order = order;
+        orderText = order.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public string StateName { get; }
@@ -261,11 +298,40 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
     [ObservableProperty]
     private int order;
 
-    public string OrderText => Order.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    public string OrderText
+    {
+        get => orderText;
+        set
+        {
+            if (!SetProperty(ref orderText, value))
+            {
+                return;
+            }
+
+            if (int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+            {
+                parsed = Math.Max(0, parsed);
+                if (parsed != Order)
+                {
+                    Order = parsed;
+                }
+            }
+        }
+    }
 
     public bool IsBackgroundAssigned => PlacementMode == ImportedStatePlacementMode.Background;
 
     public bool IsOverlayAssigned => PlacementMode == ImportedStatePlacementMode.Overlay;
+
+    partial void OnOrderChanged(int value)
+    {
+        var normalized = value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (!string.Equals(orderText, normalized, StringComparison.Ordinal))
+        {
+            orderText = normalized;
+            OnPropertyChanged(nameof(OrderText));
+        }
+    }
 
     partial void OnPlacementModeChanged(ImportedStatePlacementMode value)
     {

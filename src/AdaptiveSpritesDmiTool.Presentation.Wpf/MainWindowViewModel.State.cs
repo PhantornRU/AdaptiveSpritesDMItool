@@ -137,6 +137,9 @@ public partial class WorkspaceShellViewModel
     private string selectedExplorerState = string.Empty;
 
     [ObservableProperty]
+    private ImportedDmiStateItemViewModel? selectedImportedDmiStateItem;
+
+    [ObservableProperty]
     private MappingRowViewModel? selectedMapping;
 
     [ObservableProperty]

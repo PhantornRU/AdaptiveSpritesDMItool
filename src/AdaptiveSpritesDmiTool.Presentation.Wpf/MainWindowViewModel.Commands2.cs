@@ -77,6 +77,9 @@ public partial class WorkspaceShellViewModel
     [RelayCommand(CanExecute = nameof(CanOpenRecentConfig))]
     private async Task OpenRecentConfigAsync()
     {
+        SyncCurrentConfigIntoActiveQueueItem();
+        DeactivateConfigQueueSelection();
+
         await RunBusyOperationAsync(
             async cancellationToken =>
             {
@@ -92,6 +95,9 @@ public partial class WorkspaceShellViewModel
     [RelayCommand(CanExecute = nameof(CanImportRecentLegacyCsv))]
     private async Task ImportRecentLegacyCsvAsync()
     {
+        SyncCurrentConfigIntoActiveQueueItem();
+        DeactivateConfigQueueSelection();
+
         await RunBusyOperationAsync(
             async cancellationToken =>
             {
@@ -333,6 +339,31 @@ public partial class WorkspaceShellViewModel
     }
 
     [RelayCommand]
+    private async Task ClearImportedStatesAsync()
+    {
+        await RunBusyOperationAsync(
+            async cancellationToken =>
+            {
+                var loadedAsset = _editorSession.LoadedAsset;
+                ClearImportedStateItems();
+
+                if (loadedAsset is not null)
+                {
+                    await MergeImportedStatesFromAssetAsync(loadedAsset, cancellationToken);
+                    SelectedImportedDmiStateItem = ImportedDmiStateItems
+                        .FirstOrDefault(item => string.Equals(item.StateName, SelectedExplorerState, StringComparison.OrdinalIgnoreCase))
+                        ?? ImportedDmiStateItems.FirstOrDefault(item => string.Equals(item.StateName, "human32x", StringComparison.OrdinalIgnoreCase))
+                        ?? ImportedDmiStateItems.FirstOrDefault();
+                }
+
+                RefreshImportedStateComposition();
+                StatusMessage = loadedAsset is null
+                    ? "Cleared imported states."
+                    : "Cleared added states and restored the primary DMI state pool.";
+            });
+    }
+
+    [RelayCommand]
     private Task ToggleImportedStateBackgroundAsync(ImportedDmiStateItemViewModel? item)
     {
         if (item is null)
@@ -360,6 +391,40 @@ public partial class WorkspaceShellViewModel
             : ImportedStatePlacementMode.Overlay;
         RequestImportedStateCompositionRefresh(item.PlacementMode != ImportedStatePlacementMode.None);
         return Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private void RemoveImportedState(ImportedDmiStateItemViewModel? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        RemoveImportedStateItem(item);
+        StatusMessage = $"Removed imported state '{item.StateName}'.";
+    }
+
+    [RelayCommand]
+    private void ActivateConfigQueueItem(ConfigQueueItemViewModel? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        ActivateConfigQueueItemCore(item);
+    }
+
+    [RelayCommand]
+    private void RemoveConfigQueueItem(ConfigQueueItemViewModel? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        RemoveConfigQueueItemCore(item);
     }
 
     [RelayCommand]
@@ -570,6 +635,14 @@ public partial class WorkspaceShellViewModel
 
     partial void OnSelectedExplorerStateChanged(string value)
     {
+        if (!_isSynchronizingSelectedImportedState)
+        {
+            _isSynchronizingSelectedImportedState = true;
+            SelectedImportedDmiStateItem = ImportedDmiStateItems.FirstOrDefault(item =>
+                string.Equals(item.StateName, value, StringComparison.OrdinalIgnoreCase));
+            _isSynchronizingSelectedImportedState = false;
+        }
+
         if (_editorSession.LoadedAsset is null || string.IsNullOrWhiteSpace(value))
         {
             return;
@@ -580,6 +653,18 @@ public partial class WorkspaceShellViewModel
         RefreshPreviewSelectionSummary();
         RequestAutoPreviewRefresh();
         PersistWorkspaceSettingsInBackground();
+    }
+
+    partial void OnSelectedImportedDmiStateItemChanged(ImportedDmiStateItemViewModel? value)
+    {
+        if (_isSynchronizingSelectedImportedState || value is null)
+        {
+            return;
+        }
+
+        _isSynchronizingSelectedImportedState = true;
+        SelectedExplorerState = value.StateName;
+        _isSynchronizingSelectedImportedState = false;
     }
 
     partial void OnIsPreviewInspectorExpandedChanged(bool value) => PersistWorkspaceSettingsInBackground();

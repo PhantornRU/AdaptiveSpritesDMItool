@@ -42,9 +42,13 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private SpriteImage? _landmarkImage;
     private SpriteImage? _overlayImage;
     private SpriteImage? _compositeImage;
+    private readonly Dictionary<SpriteDirection, SpriteImage?> _navigatorBaseImages = new();
+    private readonly Dictionary<SpriteDirection, SpriteImage?> _navigatorCompositeImages = new();
     private readonly Dictionary<(string Path, string StateName, SpriteDirection Direction), SpriteImage?> _importedStateFrameCache = new();
     private CancellationTokenSource? _importedStateRefreshCts;
     private int _importedStateRefreshVersion;
+    private Guid? _activeConfigQueueItemId;
+    private bool _isSynchronizingSelectedImportedState;
 
     public WorkspaceShellViewModel(
         StartEmptyWorkspaceUseCase startEmptyWorkspaceUseCase,

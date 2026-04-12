@@ -125,6 +125,25 @@ public sealed class BuildPreviewUseCase(IPreviewBuilder previewBuilder, EditorSe
 
         return await previewBuilder.BuildAsync(request, cancellationToken);
     }
+
+    public async Task<Result<PreviewBuildResult>> ExecuteAsync(
+        PreviewSelection selection,
+        SpriteDirection direction,
+        CancellationToken cancellationToken)
+    {
+        if (session.LoadedAsset is null || session.CurrentConfig is null)
+        {
+            return Result.Failure<PreviewBuildResult>(Errors.Conflict("A sprite asset and config are required to build preview."));
+        }
+
+        var request = new PreviewBuildRequest(
+            session.LoadedAsset,
+            session.CurrentConfig,
+            selection,
+            direction);
+
+        return await previewBuilder.BuildAsync(request, cancellationToken);
+    }
 }
 
 public sealed class SetPreviewSelectionUseCase(EditorSession session)
