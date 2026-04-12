@@ -195,12 +195,16 @@ public partial class WorkspaceShellViewModel
         IsBottomWorkspaceExpanded = false;
         IsPreviewInspectorExpanded = false;
         IsFocusMode = false;
+        MirrorAcrossDirections = true;
+        UseCentralizedPropagation = true;
         SelectedBatchSourceItem = null;
         FocusedDirectionTile = null;
         DirectionMatrixColumns = 2;
         ActiveEditorZoom = 2.0;
         SourceHoveredCoordinate = null;
         EditableHoveredCoordinate = null;
+        SourceLinkedHoverCoordinates = Array.Empty<PixelCoordinate>();
+        EditableLinkedHoverCoordinates = Array.Empty<PixelCoordinate>();
         HoveredCanvasKind = null;
         HoverMappingSummary = "No hover mapping.";
         SelectedSourceCoordinateView = null;
@@ -402,7 +406,7 @@ public partial class WorkspaceShellViewModel
     }
 
     private void ApplyMovedEditableArea(
-        IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?> payload,
+        IReadOnlyDictionary<SpriteDirection, Dictionary<PixelCoordinate, PixelCoordinate?>> payload,
         PixelAreaSelection originArea,
         PixelAreaSelection destinationArea,
         string successMessage)
@@ -413,12 +417,26 @@ public partial class WorkspaceShellViewModel
         var result = _applyConfigTransformUseCase.Execute(config =>
         {
             var next = config;
-            foreach (var (editableCoordinate, sourceCoordinate) in payload)
+            var selectedDirection = GetSafeSelectedDirection();
+            foreach (var direction in ResolveDirections(config.SupportedDirections))
             {
-                var destinationCoordinate = ClampCoordinate(
-                    new PixelCoordinate(editableCoordinate.X + deltaX, editableCoordinate.Y + deltaY),
-                    config.Resolution);
-                next = ApplyScopedMapping(next, destinationCoordinate, sourceCoordinate);
+                if (!payload.TryGetValue(direction, out var directionPayload))
+                {
+                    continue;
+                }
+
+                foreach (var (editableCoordinate, sourceCoordinate) in directionPayload)
+                {
+                    var destinationEditableCoordinate = ClampCoordinate(
+                        new PixelCoordinate(editableCoordinate.X + deltaX, editableCoordinate.Y + deltaY),
+                        config.Resolution);
+                    var transformedEditable = TransformEditableCoordinate(
+                        destinationEditableCoordinate,
+                        selectedDirection,
+                        direction,
+                        config.Resolution);
+                    next = next.SetMapping(direction, transformedEditable, sourceCoordinate);
+                }
             }
 
             return next;
@@ -465,11 +483,8 @@ public partial class WorkspaceShellViewModel
         var selectedDirection = GetSafeSelectedDirection();
         foreach (var direction in ResolveDirections(config.SupportedDirections))
         {
-            var transformedEditable = TransformCoordinate(editableCoordinate, selectedDirection, direction, config.Resolution);
-            PixelCoordinate? transformedSource = sourceCoordinate is null
-                ? null
-                : TransformTarget(editableCoordinate, sourceCoordinate.Value, transformedEditable, selectedDirection, direction, config.Resolution);
-            next = next.SetMapping(direction, transformedEditable, transformedSource);
+            var transformedEditable = TransformEditableCoordinate(editableCoordinate, selectedDirection, direction, config.Resolution);
+            next = next.SetMapping(direction, transformedEditable, sourceCoordinate);
         }
 
         return next;
@@ -481,7 +496,7 @@ public partial class WorkspaceShellViewModel
         var selectedDirection = GetSafeSelectedDirection();
         foreach (var direction in ResolveDirections(config.SupportedDirections))
         {
-            next = next.RemoveMapping(direction, TransformCoordinate(editableCoordinate, selectedDirection, direction, config.Resolution));
+            next = next.RemoveMapping(direction, TransformEditableCoordinate(editableCoordinate, selectedDirection, direction, config.Resolution));
         }
 
         return next;
@@ -494,82 +509,91 @@ public partial class WorkspaceShellViewModel
         return SelectedDirectionScope switch
         {
             DirectionScope.Single => [selectedDirection],
-            DirectionScope.Parallel => available.Where(direction => GetParallelGroup(direction) == GetParallelGroup(selectedDirection)).ToArray(),
+            DirectionScope.Parallel => ResolveParallelDirections(available, selectedDirection),
             DirectionScope.All => available,
             _ => [selectedDirection]
         };
     }
 
-    private PixelCoordinate TransformCoordinate(
+    private PixelCoordinate TransformEditableCoordinate(
         PixelCoordinate coordinate,
         SpriteDirection selectedDirection,
         SpriteDirection targetDirection,
         SpriteResolution resolution)
     {
-        if (!MirrorAcrossDirections || !ShouldMirror(selectedDirection, targetDirection))
+        if (!ShouldMirrorAcrossDirections(selectedDirection, targetDirection))
         {
             return coordinate;
         }
 
-        return ClampCoordinate(new PixelCoordinate((resolution.Width - 1) - coordinate.X, coordinate.Y), resolution);
+        var mirroredX = (resolution.Width - coordinate.X - 1) + (UseCentralizedPropagation ? -1 : 0);
+        return ClampCoordinate(new PixelCoordinate(mirroredX, coordinate.Y), resolution);
     }
 
-    private PixelCoordinate TransformTarget(
-        PixelCoordinate source,
-        PixelCoordinate target,
-        PixelCoordinate transformedSource,
-        SpriteDirection selectedDirection,
-        SpriteDirection targetDirection,
-        SpriteResolution resolution)
+    private static IReadOnlyList<SpriteDirection> ResolveParallelDirections(
+        IReadOnlyCollection<SpriteDirection> available,
+        SpriteDirection selectedDirection)
     {
-        if (!UseCentralizedPropagation || selectedDirection == targetDirection)
+        var resolved = new List<SpriteDirection> { selectedDirection };
+        var opposite = GetHorizontalOppositeDirection(selectedDirection);
+        if (opposite is { } horizontalOpposite && available.Contains(horizontalOpposite))
         {
-            return TransformCoordinate(target, selectedDirection, targetDirection, resolution);
+            resolved.Add(horizontalOpposite);
         }
 
-        var deltaX = target.X - source.X;
-        var deltaY = target.Y - source.Y;
-        if (MirrorAcrossDirections && ShouldMirror(selectedDirection, targetDirection))
-        {
-            deltaX *= -1;
-        }
-
-        return ClampCoordinate(
-            new PixelCoordinate(
-                Math.Clamp(transformedSource.X + deltaX, 0, resolution.Width - 1),
-                Math.Clamp(transformedSource.Y + deltaY, 0, resolution.Height - 1)),
-            resolution);
+        return resolved;
     }
 
-    private static bool ShouldMirror(SpriteDirection selectedDirection, SpriteDirection targetDirection)
+    private bool ShouldMirrorAcrossDirections(SpriteDirection selectedDirection, SpriteDirection targetDirection)
     {
-        if (selectedDirection == targetDirection)
+        if (!MirrorAcrossDirections || selectedDirection == targetDirection)
         {
             return false;
         }
 
-        return (IsLeftFacing(selectedDirection), IsLeftFacing(targetDirection), IsRightFacing(selectedDirection), IsRightFacing(targetDirection)) switch
+        if (!BelongsToSameDirectionFamily(selectedDirection, targetDirection))
         {
-            (true, false, false, true) => true,
-            (false, true, true, false) => true,
-            _ => false
-        };
+            return false;
+        }
+
+        return !IsVerticalOppositeDirection(selectedDirection, targetDirection);
     }
 
-    private static bool IsLeftFacing(SpriteDirection direction) =>
-        direction is SpriteDirection.West or SpriteDirection.SouthWest or SpriteDirection.NorthWest;
+    private static bool BelongsToSameDirectionFamily(SpriteDirection left, SpriteDirection right) =>
+        IsCardinalDirection(left) == IsCardinalDirection(right);
 
-    private static bool IsRightFacing(SpriteDirection direction) =>
-        direction is SpriteDirection.East or SpriteDirection.SouthEast or SpriteDirection.NorthEast;
+    private static bool IsCardinalDirection(SpriteDirection direction) =>
+        direction is SpriteDirection.South or SpriteDirection.North or SpriteDirection.East or SpriteDirection.West;
 
-    private static int GetParallelGroup(SpriteDirection direction) =>
+    private static bool IsVerticalOppositeDirection(SpriteDirection selectedDirection, SpriteDirection targetDirection) =>
+        GetVerticalOppositeDirection(selectedDirection) is { } opposite && opposite == targetDirection;
+
+    private static SpriteDirection? GetHorizontalOppositeDirection(SpriteDirection direction) =>
         direction switch
         {
-            SpriteDirection.South or SpriteDirection.North => 0,
-            SpriteDirection.East or SpriteDirection.West => 1,
-            SpriteDirection.SouthEast or SpriteDirection.NorthWest => 2,
-            SpriteDirection.SouthWest or SpriteDirection.NorthEast => 3,
-            _ => 4
+            SpriteDirection.South => SpriteDirection.North,
+            SpriteDirection.North => SpriteDirection.South,
+            SpriteDirection.East => SpriteDirection.West,
+            SpriteDirection.West => SpriteDirection.East,
+            SpriteDirection.SouthEast => SpriteDirection.NorthWest,
+            SpriteDirection.NorthWest => SpriteDirection.SouthEast,
+            SpriteDirection.SouthWest => SpriteDirection.NorthEast,
+            SpriteDirection.NorthEast => SpriteDirection.SouthWest,
+            _ => null
+        };
+
+    private static SpriteDirection? GetVerticalOppositeDirection(SpriteDirection direction) =>
+        direction switch
+        {
+            SpriteDirection.South => SpriteDirection.East,
+            SpriteDirection.North => SpriteDirection.West,
+            SpriteDirection.East => SpriteDirection.South,
+            SpriteDirection.West => SpriteDirection.North,
+            SpriteDirection.SouthEast => SpriteDirection.SouthWest,
+            SpriteDirection.NorthWest => SpriteDirection.NorthEast,
+            SpriteDirection.SouthWest => SpriteDirection.SouthEast,
+            SpriteDirection.NorthEast => SpriteDirection.NorthWest,
+            _ => null
         };
 
     private static PixelCoordinate ClampCoordinate(PixelCoordinate coordinate, SpriteResolution resolution) =>

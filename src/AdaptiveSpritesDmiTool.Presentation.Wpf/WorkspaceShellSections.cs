@@ -519,6 +519,10 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public PixelCoordinate? EditableHoveredCoordinate => Shell.EditableHoveredCoordinate;
 
+    public IReadOnlyList<PixelCoordinate> SourceLinkedHoverCoordinates => Shell.SourceLinkedHoverCoordinates;
+
+    public IReadOnlyList<PixelCoordinate> EditableLinkedHoverCoordinates => Shell.EditableLinkedHoverCoordinates;
+
     public PixelCoordinate? SelectedSourceCoordinate => Shell.SelectedSourceCoordinateView;
 
     public PixelCoordinate? SelectedTargetCoordinate => Shell.SelectedTargetCoordinate;

@@ -83,7 +83,6 @@ public partial class WorkspaceShellViewModel
             case EditorTool.Single:
             case EditorTool.Fill:
                 _selectedSourceCoordinate = cell.Coordinate;
-                _selectedEditableCoordinate = ResolvePreferredEditableCoordinate(cell.Coordinate);
                 SelectedSourceSummary = $"Source pixel {cell.Coordinate} selected.";
                 EditorStatus = SelectedEditorTool == EditorTool.Single
                     ? "Pick an editable pixel to draw the selected source."
@@ -417,12 +416,29 @@ public partial class WorkspaceShellViewModel
         _isDraggingEditableArea = false;
     }
 
-    private Dictionary<PixelCoordinate, PixelCoordinate?> CaptureEditablePayload(PixelAreaSelection area)
+    private Dictionary<SpriteDirection, Dictionary<PixelCoordinate, PixelCoordinate?>> CaptureEditablePayload(PixelAreaSelection area)
     {
-        var payload = new Dictionary<PixelCoordinate, PixelCoordinate?>();
-        foreach (var editableCoordinate in area.Enumerate())
+        if (_editorSession.CurrentConfig is not { } config)
         {
-            payload[editableCoordinate] = ResolveSourceCoordinateForEditable(editableCoordinate);
+            return [];
+        }
+
+        var payload = new Dictionary<SpriteDirection, Dictionary<PixelCoordinate, PixelCoordinate?>>();
+        var selectedDirection = GetSafeSelectedDirection();
+        foreach (var direction in ResolveDirections(config.SupportedDirections))
+        {
+            var directionPayload = new Dictionary<PixelCoordinate, PixelCoordinate?>();
+            foreach (var editableCoordinate in area.Enumerate())
+            {
+                var scopedEditableCoordinate = TransformEditableCoordinate(
+                    editableCoordinate,
+                    selectedDirection,
+                    direction,
+                    config.Resolution);
+                directionPayload[editableCoordinate] = ResolveSourceCoordinateForEditable(direction, scopedEditableCoordinate);
+            }
+
+            payload[direction] = directionPayload;
         }
 
         return payload;
@@ -433,6 +449,8 @@ public partial class WorkspaceShellViewModel
         HoveredCanvasKind = null;
         SourceHoveredCoordinate = null;
         EditableHoveredCoordinate = null;
+        SourceLinkedHoverCoordinates = Array.Empty<PixelCoordinate>();
+        EditableLinkedHoverCoordinates = Array.Empty<PixelCoordinate>();
         HoverSummary = "Hover to inspect coordinates.";
         HoverMappingSummary = "No hover mapping.";
     }
@@ -441,16 +459,20 @@ public partial class WorkspaceShellViewModel
     {
         HoveredCanvasKind = EditorCanvasKind.Source;
         SourceHoveredCoordinate = coordinate;
+        EditableHoveredCoordinate = null;
+        SourceLinkedHoverCoordinates = Array.Empty<PixelCoordinate>();
         HoverSummary = $"Source {coordinate}.";
 
-        if (TryResolveTargetFromSource(coordinate, out var editableCoordinate, out _))
+        var linkedEditableCoordinates = ResolveEditableCoordinatesForSource(coordinate);
+        EditableLinkedHoverCoordinates = linkedEditableCoordinates;
+        if (linkedEditableCoordinates.Count > 0)
         {
-            EditableHoveredCoordinate = editableCoordinate;
-            HoverMappingSummary = $"Source {coordinate} -> Editable {editableCoordinate}.";
+            HoverMappingSummary = linkedEditableCoordinates.Count == 1
+                ? $"Source {coordinate} -> Editable {linkedEditableCoordinates[0]}."
+                : $"Source {coordinate} -> {linkedEditableCoordinates.Count} editable pixel(s).";
             return;
         }
 
-        EditableHoveredCoordinate = null;
         HoverMappingSummary = $"Source {coordinate} is not used in Editable.";
     }
 
@@ -458,57 +480,50 @@ public partial class WorkspaceShellViewModel
     {
         HoveredCanvasKind = EditorCanvasKind.Editable;
         EditableHoveredCoordinate = coordinate;
+        SourceHoveredCoordinate = null;
+        EditableLinkedHoverCoordinates = Array.Empty<PixelCoordinate>();
         HoverSummary = $"Editable {coordinate}.";
 
-        if (TryResolveSourceFromTarget(coordinate, out var sourceCoordinate))
+        if (TryResolveSourceFromEditable(coordinate, out var sourceCoordinate))
         {
-            SourceHoveredCoordinate = sourceCoordinate;
+            SourceLinkedHoverCoordinates = [sourceCoordinate];
             HoverMappingSummary = $"Editable {coordinate} <- Source {sourceCoordinate}.";
             return;
         }
 
-        SourceHoveredCoordinate = null;
+        SourceLinkedHoverCoordinates = Array.Empty<PixelCoordinate>();
         HoverMappingSummary = $"Editable {coordinate} -> transparent.";
     }
 
-    private bool TryResolveTargetFromSource(PixelCoordinate source, out PixelCoordinate? target, out bool isTransparent)
+    private IReadOnlyList<PixelCoordinate> ResolveEditableCoordinatesForSource(PixelCoordinate sourceCoordinate)
     {
-        target = null;
-        isTransparent = false;
-
         var resolution = ResolveEditorResolution();
-        if (resolution is not { } bounds || !bounds.Contains(source))
+        if (resolution is not { } bounds || !bounds.Contains(sourceCoordinate))
         {
-            return false;
+            return Array.Empty<PixelCoordinate>();
         }
 
-        var mappings = _editorSession.CurrentConfig?.GetMappings(GetSafeSelectedDirection()).ToArray() ?? [];
-        var explicitMappings = mappings.ToDictionary(static mapping => mapping.Source);
-        var candidates = mappings
-            .Where(mapping => mapping.Target == source)
-            .Select(mapping => mapping.Source)
-            .Distinct()
-            .ToList();
-
-        if (!explicitMappings.ContainsKey(source))
+        var linked = new List<PixelCoordinate>();
+        for (var y = 0; y < bounds.Height; y++)
         {
-            candidates.Insert(0, source);
+            for (var x = 0; x < bounds.Width; x++)
+            {
+                var editableCoordinate = new PixelCoordinate(x, y);
+                if (ResolveSourceCoordinateForEditable(editableCoordinate) == sourceCoordinate)
+                {
+                    linked.Add(editableCoordinate);
+                }
+            }
         }
 
-        if (candidates.Count == 0)
-        {
-            return false;
-        }
-
-        target = candidates[0];
-        return true;
+        return linked;
     }
 
-    private bool TryResolveSourceFromTarget(PixelCoordinate target, out PixelCoordinate source)
+    private bool TryResolveSourceFromEditable(PixelCoordinate editableCoordinate, out PixelCoordinate source)
     {
         source = default;
 
-        if (ResolveSourceCoordinateForEditable(target) is not { } resolvedSource)
+        if (ResolveSourceCoordinateForEditable(editableCoordinate) is not { } resolvedSource)
         {
             return false;
         }
@@ -517,19 +532,17 @@ public partial class WorkspaceShellViewModel
         return true;
     }
 
-    private PixelCoordinate? ResolvePreferredEditableCoordinate(PixelCoordinate sourceCoordinate) =>
-        TryResolveTargetFromSource(sourceCoordinate, out var editableCoordinate, out _)
-            ? editableCoordinate
-            : null;
-
     private PixelCoordinate? ResolveSourceCoordinateForEditable(PixelCoordinate editableCoordinate)
+        => ResolveSourceCoordinateForEditable(GetSafeSelectedDirection(), editableCoordinate);
+
+    private PixelCoordinate? ResolveSourceCoordinateForEditable(SpriteDirection direction, PixelCoordinate editableCoordinate)
     {
         if (_editorSession.CurrentConfig is null)
         {
             return editableCoordinate;
         }
 
-        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(GetSafeSelectedDirection()))
+        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction))
         {
             if (mapping.Source == editableCoordinate)
             {

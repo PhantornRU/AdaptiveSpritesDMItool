@@ -22,8 +22,10 @@ public sealed class EditorSurfaceControl : FrameworkElement
     private static readonly Dictionary<uint, SolidColorBrush> BrushCache = [];
     private static readonly Brush SelectionAreaBrush = CreateBrush(Color.FromArgb(72, 55, 122, 246));
     private static readonly Brush SelectedSourceBrush = CreateBrush(Color.FromArgb(112, 30, 92, 84));
+    private static readonly Brush LinkedHighlightBrush = CreateBrush(Color.FromArgb(64, 64, 128, 196));
     private static readonly Brush HoverBrush = CreateBrush(Color.FromArgb(72, 255, 193, 7));
     private static readonly Pen SelectionPen = CreatePen(Color.FromRgb(30, 92, 84), 1.4d);
+    private static readonly Pen LinkedHighlightPen = CreatePen(Color.FromRgb(64, 128, 196), 1.1d);
     private static readonly Pen HoverPen = CreatePen(Color.FromRgb(196, 137, 16), 1d);
     private static readonly Pen GridPen = CreatePen(Color.FromRgb(217, 207, 192), 0.5d);
     private static readonly Typeface CaptionTypeface = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
@@ -77,6 +79,12 @@ public sealed class EditorSurfaceControl : FrameworkElement
         typeof(EditorSurfaceControl),
         new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
+    public static readonly DependencyProperty HighlightedCoordinatesProperty = DependencyProperty.Register(
+        nameof(HighlightedCoordinates),
+        typeof(IReadOnlyList<PixelCoordinate>),
+        typeof(EditorSurfaceControl),
+        new FrameworkPropertyMetadata(Array.Empty<PixelCoordinate>(), FrameworkPropertyMetadataOptions.AffectsRender));
+
     public static readonly DependencyProperty SelectedAreaBoundsProperty = DependencyProperty.Register(
         nameof(SelectedAreaBounds),
         typeof(PixelAreaBounds?),
@@ -123,6 +131,12 @@ public sealed class EditorSurfaceControl : FrameworkElement
     {
         get => (PixelCoordinate?)GetValue(HoveredCoordinateProperty);
         set => SetValue(HoveredCoordinateProperty, value);
+    }
+
+    public IReadOnlyList<PixelCoordinate> HighlightedCoordinates
+    {
+        get => GetValue(HighlightedCoordinatesProperty) as IReadOnlyList<PixelCoordinate> ?? Array.Empty<PixelCoordinate>();
+        set => SetValue(HighlightedCoordinatesProperty, value);
     }
 
     public PixelAreaBounds? SelectedAreaBounds
@@ -204,6 +218,21 @@ public sealed class EditorSurfaceControl : FrameworkElement
             if (ShowCaptions)
             {
                 DrawCaption(drawingContext, "T", rect);
+            }
+        }
+
+        var highlightedCoordinates = HighlightedCoordinates;
+        if (highlightedCoordinates.Count > 0)
+        {
+            foreach (var highlighted in highlightedCoordinates)
+            {
+                if (highlighted == SelectedSourceCoordinate || highlighted == SelectedTargetCoordinate || highlighted == HoveredCoordinate)
+                {
+                    continue;
+                }
+
+                var rect = new Rect(highlighted.X * cellSize, highlighted.Y * cellSize, cellSize, cellSize);
+                drawingContext.DrawRectangle(LinkedHighlightBrush, LinkedHighlightPen, rect);
             }
         }
 

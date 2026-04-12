@@ -51,19 +51,7 @@ public partial class WorkspaceShellViewModel
     }
 
     private PixelCoordinate? ResolveSelectedEditableCoordinate()
-    {
-        if (_selectedEditableCoordinate is { } editableCoordinate)
-        {
-            return editableCoordinate;
-        }
-
-        if (_selectedSourceCoordinate is not { } sourceCoordinate)
-        {
-            return null;
-        }
-
-        return ResolvePreferredEditableCoordinate(sourceCoordinate);
-    }
+        => _selectedEditableCoordinate;
 
     private void RebuildActiveSurfaceRenderStates()
     {

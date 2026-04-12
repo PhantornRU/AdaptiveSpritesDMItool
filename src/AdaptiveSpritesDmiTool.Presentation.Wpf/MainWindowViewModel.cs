@@ -38,7 +38,7 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private PixelAreaSelection? _selectedArea;
     private PixelCoordinate? _editableDragAnchor;
     private PixelAreaSelection? _editableDragOriginArea;
-    private Dictionary<PixelCoordinate, PixelCoordinate?>? _editableDragPayload;
+    private Dictionary<SpriteDirection, Dictionary<PixelCoordinate, PixelCoordinate?>>? _editableDragPayload;
     private EditableDragAction _editableDragAction;
     private bool _isDraggingEditableArea;
     private bool _isSynchronizingSelectedDirection;

@@ -190,6 +190,12 @@ public partial class WorkspaceShellViewModel
     private PixelCoordinate? editableHoveredCoordinate;
 
     [ObservableProperty]
+    private IReadOnlyList<PixelCoordinate> sourceLinkedHoverCoordinates = Array.Empty<PixelCoordinate>();
+
+    [ObservableProperty]
+    private IReadOnlyList<PixelCoordinate> editableLinkedHoverCoordinates = Array.Empty<PixelCoordinate>();
+
+    [ObservableProperty]
     private PixelCoordinate? selectedSourceCoordinateView;
 
     [ObservableProperty]
@@ -267,7 +273,7 @@ public partial class WorkspaceShellViewModel
     private bool isFocusMode;
 
     [ObservableProperty]
-    private bool mirrorAcrossDirections;
+    private bool mirrorAcrossDirections = true;
 
     [ObservableProperty]
     private bool useCentralizedPropagation = true;
