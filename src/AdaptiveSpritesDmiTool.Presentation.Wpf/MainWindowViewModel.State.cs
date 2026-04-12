@@ -39,6 +39,13 @@ public enum EditorAssetTargetLayer
     Overlay = 2
 }
 
+public enum WorkspaceThemeMode
+{
+    Dark = 0,
+    Light = 1,
+    Warm = 2
+}
+
 public partial class WorkspaceShellViewModel
 {
     private readonly double _minEditorZoom = 1.0;
@@ -147,6 +154,9 @@ public partial class WorkspaceShellViewModel
 
     [ObservableProperty]
     private BatchStateStripItemViewModel? selectedBatchStateStripItem;
+
+    [ObservableProperty]
+    private WorkspaceThemeMode selectedThemeMode = WorkspaceThemeMode.Dark;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]

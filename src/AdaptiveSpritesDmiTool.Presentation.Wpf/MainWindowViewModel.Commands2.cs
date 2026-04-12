@@ -654,6 +654,12 @@ public partial class WorkspaceShellViewModel
 
     partial void OnSelectedEditorLeftDockTabChanged(EditorLeftDockTab value) => PersistWorkspaceSettingsInBackground();
 
+    partial void OnSelectedThemeModeChanged(WorkspaceThemeMode value)
+    {
+        App.ApplyThemeMode(value);
+        PersistWorkspaceSettingsInBackground();
+    }
+
     partial void OnSelectedEditorAssetTargetSurfaceChanged(EditorAssetTargetSurface value)
     {
         RefreshEditorAssetItems();

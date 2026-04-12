@@ -91,6 +91,8 @@ public partial class WorkspaceShellViewModel
         OverlayStateName = settings.LastOverlayState ?? string.Empty;
         SelectedDirection = settings.LastSelectedDirection ?? SelectedDirection;
         SelectedOverwritePolicy = settings.LastOverwritePolicy;
+        SelectedThemeMode = ParseThemeMode(settings.LastThemeMode);
+        App.ApplyThemeMode(SelectedThemeMode);
         SelectedEditorViewportMode = EditorViewportMode.Matrix;
         EditorViewMode = EditorViewMode.CompareSplit;
         SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
@@ -158,6 +160,7 @@ public partial class WorkspaceShellViewModel
             string.IsNullOrWhiteSpace(OverlayStateName) ? null : OverlayStateName.Trim(),
             GetSafeSelectedDirection(),
             SelectedOverwritePolicy,
+            SelectedThemeMode.ToString(),
             SelectedEditorViewportMode.ToString(),
             SelectedBottomWorkspaceTab.ToString(),
             IsPreviewInspectorExpanded);
@@ -911,6 +914,11 @@ public partial class WorkspaceShellViewModel
         Enum.TryParse<BottomWorkspaceTab>(value, true, out var tab)
             ? tab
             : BottomWorkspaceTab.Mappings;
+
+    private static WorkspaceThemeMode ParseThemeMode(string? value) =>
+        Enum.TryParse<WorkspaceThemeMode>(value, true, out var mode)
+            ? mode
+            : WorkspaceThemeMode.Dark;
 
     private static IReadOnlyList<SpriteDirection> GetPresentationDirectionOrder(SupportedDirectionSet supportedDirections)
     {

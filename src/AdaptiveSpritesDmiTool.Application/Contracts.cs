@@ -82,6 +82,7 @@ public sealed record WorkspaceSettings(
     string? LastOverlayState,
     SpriteDirection? LastSelectedDirection,
     OverwritePolicy LastOverwritePolicy,
+    string? LastThemeMode,
     string? LastEditorViewportMode,
     string? LastBottomWorkspaceTab,
     bool IsPreviewInspectorExpanded)
@@ -98,6 +99,7 @@ public sealed record WorkspaceSettings(
         LastOverlayState: null,
         LastSelectedDirection: null,
         LastOverwritePolicy: OverwritePolicy.OverwriteExisting,
+        LastThemeMode: null,
         LastEditorViewportMode: null,
         LastBottomWorkspaceTab: null,
         IsPreviewInspectorExpanded: true);

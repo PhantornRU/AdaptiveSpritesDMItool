@@ -916,7 +916,16 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
 
 public sealed class SettingsTabViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
 {
+    public IReadOnlyList<WorkspaceThemeMode> ThemeModes { get; } =
+        [WorkspaceThemeMode.Dark, WorkspaceThemeMode.Light, WorkspaceThemeMode.Warm];
+
     public IReadOnlyList<EditorViewportMode> ViewportModes { get; } = [EditorViewportMode.Matrix, EditorViewportMode.Focused];
+
+    public WorkspaceThemeMode SelectedThemeMode
+    {
+        get => Shell.SelectedThemeMode;
+        set => Shell.SelectedThemeMode = value;
+    }
 
     public AutoPreviewMode AutoPreviewMode
     {

@@ -7,7 +7,7 @@ namespace AdaptiveSpritesDmiTool.Infrastructure.Settings;
 
 public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettingsRepository
 {
-    private const int CurrentVersion = 2;
+    private const int CurrentVersion = 3;
 
     public async Task<Result<WorkspaceSettings>> LoadAsync(CancellationToken cancellationToken)
     {
@@ -87,6 +87,7 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             Normalize(document.LastOverlayState),
             ParseDirection(document.LastSelectedDirection),
             ParseOverwritePolicy(document.LastOverwritePolicy),
+            Normalize(document.LastThemeMode),
             Normalize(document.LastEditorViewportMode),
             Normalize(document.LastBottomWorkspaceTab),
             document.IsPreviewInspectorExpanded);
@@ -106,6 +107,7 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             LastOverlayState = settings.LastOverlayState,
             LastSelectedDirection = settings.LastSelectedDirection?.ToString(),
             LastOverwritePolicy = settings.LastOverwritePolicy.ToString(),
+            LastThemeMode = settings.LastThemeMode,
             LastEditorViewportMode = settings.LastEditorViewportMode,
             LastBottomWorkspaceTab = settings.LastBottomWorkspaceTab,
             IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded
@@ -164,6 +166,8 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         public string? LastSelectedDirection { get; set; }
 
         public string LastOverwritePolicy { get; set; } = OverwritePolicy.SkipExisting.ToString();
+
+        public string? LastThemeMode { get; set; }
 
         public string? LastEditorViewportMode { get; set; }
 

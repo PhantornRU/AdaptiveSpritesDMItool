@@ -139,7 +139,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="#FFFDF8" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="10">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="{StaticResource Brush.ControlBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="10">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -200,7 +200,7 @@
             <Setter Property="Padding" Value="9,4" />
             <Setter Property="MinHeight" Value="28" />
             <Setter Property="Margin" Value="0,0,3,0" />
-            <Setter Property="Background" Value="#FFFDF8" />
+            <Setter Property="Background" Value="{StaticResource Brush.ControlBackground}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
@@ -214,7 +214,7 @@
                     <ControlTemplate TargetType="RadioButton">
                         <Border x:Name="Root"
                                 Padding="{TemplateBinding Padding}"
-                                Background="#FFFDF8"
+                                Background="{StaticResource Brush.ControlBackground}"
                                 BorderBrush="{StaticResource Brush.PanelBorder}"
                                 BorderThickness="1"
                                 CornerRadius="10">
@@ -256,7 +256,7 @@
                             <Border Grid.Row="0"
                                     Padding="6"
                                     Margin="0,0,0,6"
-                                    Background="#FFFDF8EF"
+                                    Background="{StaticResource Brush.SurfaceSubtle}"
                                     BorderBrush="{StaticResource Brush.PanelBorder}"
                                     BorderThickness="1"
                                     CornerRadius="8">
@@ -272,7 +272,7 @@
         </Style>
         <Style x:Key="LeftDockTabItemStyle" TargetType="TabItem">
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
-            <Setter Property="Background" Value="#FFFDF8" />
+            <Setter Property="Background" Value="{StaticResource Brush.ControlBackground}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="12,8" />
@@ -491,7 +491,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="{StaticResource Brush.CardBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -515,7 +515,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="{StaticResource Brush.CardBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -566,7 +566,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="#FFFEFBF5" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="4">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="{StaticResource Brush.SurfaceSubtle}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="4">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -590,7 +590,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="#FFFCF7EF" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="{StaticResource Brush.SurfaceSubtle}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -610,13 +610,13 @@
         <Style x:Key="ViewModeToggleRadioButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource ShellModeRadioButtonStyle}">
             <Setter Property="Padding" Value="8,4" />
             <Setter Property="MinWidth" Value="52" />
-            <Setter Property="Background" Value="#FFFDF8" />
+            <Setter Property="Background" Value="{StaticResource Brush.ControlBackground}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style x:Key="ViewportShellBorderStyle" TargetType="Border">
             <Setter Property="Padding" Value="2" />
-            <Setter Property="Background" Value="#FFF8F1E3" />
+            <Setter Property="Background" Value="{StaticResource Brush.SurfaceSubtle}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
@@ -624,7 +624,7 @@
         <Style x:Key="StatusTokenBorderStyle" TargetType="Border">
             <Setter Property="Margin" Value="0,0,6,3" />
             <Setter Property="Padding" Value="6,2" />
-            <Setter Property="Background" Value="White" />
+            <Setter Property="Background" Value="{StaticResource Brush.CardBackground}" />
             <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="999" />
@@ -656,7 +656,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
-                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="#FFFDF8" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
+                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="{StaticResource Brush.ControlBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -759,7 +759,7 @@
                     <ColumnDefinition Width="8" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Border Width="34" Height="34" Background="#FFF7EFE1" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="17">
+                <Border Width="34" Height="34" Background="{StaticResource Brush.SurfaceSubtle}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="17">
                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Text="S" />
                 </Border>
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
@@ -770,7 +770,7 @@
         </DataTemplate>
 
         <DataTemplate x:Key="DirectionTileTemplate">
-            <Border Margin="0,0,4,4" Padding="4" Background="#FFFFFCF7" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="10">
+            <Border Margin="0,0,4,4" Padding="4" Background="{StaticResource Brush.CardBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="10">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Style.Triggers>
@@ -2232,12 +2232,26 @@
 
                 <TabItem Header="Settings">
                     <Grid DataContext="{Binding SettingsTab}" Margin="10">
-                        <Border MaxWidth="560" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Top" Background="#FFF9F2" CornerRadius="18">
+                        <Border MaxWidth="560" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Top" Background="{StaticResource Brush.PanelBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="18">
                             <StackPanel>
                                 <TextBlock FontSize="22" FontWeight="SemiBold" Text="Shell Settings" />
                                 <TextBlock Margin="0,8,0,0" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap" Text="Presentation-only workspace preferences are stored separately from domain and batch logic." />
 
-                                <Border Margin="0,14,0,0" Padding="12" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
+                                <Border Margin="0,14,0,0" Padding="12" Background="{StaticResource Brush.CardBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Text="Appearance" />
+                                        <TextBlock Margin="0,4,0,0"
+                                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                                   TextWrapping="Wrap"
+                                                   Text="Choose a saved shell color mode. Dark is the default workspace theme." />
+                                        <ComboBox Margin="0,10,0,0"
+                                                  Width="180"
+                                                  ItemsSource="{Binding ThemeModes}"
+                                                  SelectedItem="{Binding SelectedThemeMode}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Margin="0,12,0,0" Padding="12" Background="{StaticResource Brush.CardBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
                                     <StackPanel>
                                         <TextBlock FontWeight="SemiBold" Text="Editor viewport" />
                                         <TextBlock Margin="0,4,0,0"
@@ -2248,7 +2262,7 @@
                                     </StackPanel>
                                 </Border>
 
-                                <Border Margin="0,12,0,0" Padding="12" Background="White" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
+                                <Border Margin="0,12,0,0" Padding="12" Background="{StaticResource Brush.CardBackground}" BorderBrush="{StaticResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
                                     <StackPanel>
                                         <TextBlock FontWeight="SemiBold" Text="Workspace panels" />
                                         <CheckBox Margin="0,10,0,0" IsChecked="{Binding IsPreviewInspectorExpanded}" Content="Preview inspector starts expanded" />

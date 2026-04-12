@@ -11,14 +11,17 @@
             <Style TargetType="{x:Type ui:SymbolIcon}">
                 <Setter Property="Filled" Value="False" />
             </Style>
-            <SolidColorBrush x:Key="Brush.WindowBackground" Color="#F4EFE7" />
-            <SolidColorBrush x:Key="Brush.PanelBackground" Color="#FFFDF9" />
-            <SolidColorBrush x:Key="Brush.PanelBorder" Color="#D9CFC0" />
-            <SolidColorBrush x:Key="Brush.Accent" Color="#1E5C54" />
-            <SolidColorBrush x:Key="Brush.AccentMuted" Color="#CDE0DB" />
-            <SolidColorBrush x:Key="Brush.Warning" Color="#C66A2B" />
-            <SolidColorBrush x:Key="Brush.TextPrimary" Color="#1F1C18" />
-            <SolidColorBrush x:Key="Brush.TextSecondary" Color="#6A6258" />
+            <SolidColorBrush x:Key="Brush.WindowBackground" Color="#171A1F" />
+            <SolidColorBrush x:Key="Brush.PanelBackground" Color="#1F252D" />
+            <SolidColorBrush x:Key="Brush.PanelBorder" Color="#39424D" />
+            <SolidColorBrush x:Key="Brush.Accent" Color="#2D8C7F" />
+            <SolidColorBrush x:Key="Brush.AccentMuted" Color="#2A4D49" />
+            <SolidColorBrush x:Key="Brush.Warning" Color="#D88B3D" />
+            <SolidColorBrush x:Key="Brush.TextPrimary" Color="#F4F1EA" />
+            <SolidColorBrush x:Key="Brush.TextSecondary" Color="#B6C0CA" />
+            <SolidColorBrush x:Key="Brush.ControlBackground" Color="#252C35" />
+            <SolidColorBrush x:Key="Brush.CardBackground" Color="#232A33" />
+            <SolidColorBrush x:Key="Brush.SurfaceSubtle" Color="#202730" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
