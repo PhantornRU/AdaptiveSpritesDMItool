@@ -766,9 +766,9 @@ public sealed class BottomWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
         : $"{Shell.MappingRows.Count} mapping(s) in the active direction.";
 
     public string HighlightedMappingSummary => SelectedMapping is not null
-        ? $"{SelectedMapping.SourceText} -> {SelectedMapping.TargetText}"
+        ? $"{SelectedMapping.EditableText} <- {SelectedMapping.SourceText}"
         : Shell.MappingRows.Count > 0
-            ? $"{Shell.MappingRows[0].SourceText} -> {Shell.MappingRows[0].TargetText}"
+            ? $"{Shell.MappingRows[0].EditableText} <- {Shell.MappingRows[0].SourceText}"
             : "No coordinate pairs.";
 
     public bool HasBatchResults => Shell.BatchResults.Count > 0;

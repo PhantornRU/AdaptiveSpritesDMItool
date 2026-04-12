@@ -20,7 +20,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.SelectedShellSection.Should().Be(ShellSectionKind.Start);
         viewModel.NavigationRail.SelectedSection.Should().Be(ShellSectionKind.Start);
         viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
-        viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Assets);
+        viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Mappings);
         viewModel.StatusMessage.Should().Be("Ready.");
         viewModel.NavigationRail.Items.Should().HaveCount(4);
         viewModel.EditorWorkspace.IsAvailable.Should().BeFalse();
@@ -28,7 +28,6 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.StartTab.ShowCreateConfigAction.Should().BeFalse();
         viewModel.StartTab.WelcomeTitle.Should().Contain("Open or import");
         viewModel.PreviewPanel.IsAutoPreviewEnabled.Should().BeTrue();
-        viewModel.IsBottomWorkspaceExpanded.Should().BeTrue();
     }
 
     [Fact]
@@ -86,8 +85,8 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.SelectedShellSection.Should().Be(ShellSectionKind.Editor);
         viewModel.BatchWorkspace.IsAvailable.Should().BeTrue();
-        viewModel.ConfigSummary.Should().Contain("sprite");
-        viewModel.ConfigSummary.Should().Contain("unsaved draft");
+        viewModel.ConfigSummary.Should().Contain("mappings");
+        viewModel.ConfigSummary.Should().Contain("draft");
         viewModel.EditorWorkspace.RolesSummary.Should().Contain("Base:");
         viewModel.EditorWorkspace.RolesSummary.Should().Contain("Landmark:");
         viewModel.EditorWorkspace.RolesSummary.Should().Contain("Overlay:");
@@ -115,7 +114,7 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
-    public async Task HoverAndDragShouldNotRebuildActiveEditorSurfacesOrNavigatorItems()
+    public async Task EditableSelectionDragShouldNotRebuildActiveEditorSurfacesOrNavigatorItems()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -133,15 +132,15 @@ public sealed class MainWindowViewModelSmokeTests
         var targetSurface = viewModel.ActiveTargetSurface;
         var navigatorPreview = viewModel.DirectionNavigatorItems[0].PreviewImage;
 
-        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
-        viewModel.HandleSourceCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 4, 4));
-        viewModel.HandleSourceCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 4, 4));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 3, 3));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 3, 3));
 
         viewModel.ActiveSourceSurface.Should().BeSameAs(sourceSurface);
         viewModel.ActiveTargetSurface.Should().BeSameAs(targetSurface);
         viewModel.DirectionNavigatorItems[0].PreviewImage.Should().BeSameAs(navigatorPreview);
         viewModel.SelectedAreaBounds.Should().NotBeNull();
-        viewModel.HoverSummary.Should().Contain("Hovering");
+        viewModel.HoverSummary.Should().Contain("Editable");
     }
 
     [Fact]
@@ -161,7 +160,7 @@ public sealed class MainWindowViewModelSmokeTests
                 SpriteDirection.East,
                 OverwritePolicy.FailIfExists,
                 nameof(EditorViewportMode.Focused),
-                nameof(BottomWorkspaceTab.Configs),
+                nameof(BottomWorkspaceTab.Mappings),
                 false));
 
         var viewModel = CreateViewModel(
@@ -193,6 +192,122 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task SingleToolShouldMapEditableCellFromSelectedSourcePixel()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 3, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 3, 2));
+
+        viewModel.MappingRows.Should().ContainSingle();
+        viewModel.MappingRows[0].Editable.Should().Be(new PixelCoordinate(3, 2));
+        viewModel.MappingRows[0].Source.Should().Be(new PixelCoordinate(1, 1));
+    }
+
+    [Fact]
+    public async Task FillToolShouldApplySelectedSourcePixelAcrossEditableArea()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.SelectedEditorTool = EditorTool.Fill;
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+
+        viewModel.MappingRows.Should().HaveCount(4);
+        viewModel.MappingRows.Should().OnlyContain(row => row.Source == new PixelCoordinate(0, 1));
+    }
+
+    [Fact]
+    public async Task SelectToolShouldCopyEditableSelectionToNewLocation()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 1, 2));
+
+        viewModel.SelectedEditorTool = EditorTool.Select;
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 1, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 1, 2));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+
+        viewModel.MappingRows.Should().Contain(row => row.Editable == new PixelCoordinate(2, 1) && row.Source == new PixelCoordinate(0, 0));
+        viewModel.MappingRows.Should().Contain(row => row.Editable == new PixelCoordinate(2, 2) && row.Source == new PixelCoordinate(0, 1));
+        viewModel.SelectedAreaBounds.Should().Be(new PixelAreaBounds(2, 1, 2, 2));
+    }
+
+    [Fact]
+    public async Task EditableSurfaceShouldRenderAppliedResultColors()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var previewBuilder = new FixedPreviewBuilder();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            previewBuilder: previewBuilder,
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.SelectedExplorerState = "idle";
+        viewModel.UseSelectedStateAsBaseCommand.Execute(null);
+        await viewModel.BuildPreviewCommand.ExecuteAsync(null);
+
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+
+        viewModel.ActiveSourceSurface.Should().NotBeNull();
+        viewModel.ActiveTargetSurface.Should().NotBeNull();
+        var sourceSurface = viewModel.ActiveSourceSurface!;
+        var editableSurface = viewModel.ActiveTargetSurface!;
+        var sourceColor = sourceSurface.FillColors[sourceSurface.GetIndex(0, 0)];
+        var originalEditableColor = sourceSurface.FillColors[sourceSurface.GetIndex(2, 2)];
+        var remappedEditableColor = editableSurface.FillColors[editableSurface.GetIndex(2, 2)];
+
+        remappedEditableColor.Should().Be(sourceColor);
+        remappedEditableColor.Should().NotBe(originalEditableColor);
+    }
+
+    [Fact]
     public async Task ResumeLastWorkspaceShouldRestoreRecentPathsAndReturnToEditor()
     {
         var settingsRepository = new InMemorySettingsRepository(
@@ -209,7 +324,7 @@ public sealed class MainWindowViewModelSmokeTests
                 SpriteDirection.East,
                 OverwritePolicy.FailIfExists,
                 nameof(EditorViewportMode.Focused),
-                nameof(BottomWorkspaceTab.Configs),
+                nameof(BottomWorkspaceTab.Mappings),
                 false));
 
         var viewModel = CreateViewModel(
@@ -224,7 +339,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.SelectedShellSection.Should().Be(ShellSectionKind.Editor);
         viewModel.ConfigSummary.Should().Contain("Restored Config");
         viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
-        viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Configs);
+        viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Mappings);
         viewModel.StartTab.HasRecentWorkspace.Should().BeTrue();
     }
 
@@ -313,6 +428,8 @@ public sealed class MainWindowViewModelSmokeTests
             new LoadConfigUseCase(configRepository ?? new NullConfigRepository(), session),
             new ImportLegacyCsvConfigUseCase(legacyImporter ?? new NullLegacyCsvImporter(), session),
             new LoadDmiFileUseCase(dmiReader ?? new NullDmiReader(), session, workspace),
+            new InspectDmiFileUseCase(dmiReader ?? new NullDmiReader()),
+            new ReadStateFrameUseCase(new NullStateFrameReader()),
             new BuildPreviewUseCase(previewBuilder ?? new NullPreviewBuilder(), session),
             new ApplyConfigToDmiBatchUseCase(batchProcessingService ?? new NullBatchProcessingService(), session),
             new UndoChangeUseCase(session),
@@ -325,7 +442,7 @@ public sealed class MainWindowViewModelSmokeTests
             new SpriteImageBitmapSourceFactory(),
             fileDialogService ?? new StubFileDialogService(),
             session,
-            NullLogger<MainWindowViewModel>.Instance);
+            NullLogger<WorkspaceShellViewModel>.Instance);
     }
 
     private static string CreateTempDirectory()
@@ -358,8 +475,8 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.EditorWorkspace.IsAvailable.Should().BeTrue();
         viewModel.DirectionMatrixColumns.Should().Be(expectedColumns);
         viewModel.EditorWorkspace.DirectionMatrix.MatrixColumns.Should().Be(expectedColumns);
-        viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Assets);
-        viewModel.EditorWorkspace.LeftRailSummary.Should().Contain("config");
+        viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Mappings);
+        viewModel.EditorWorkspace.LeftRailSummary.Should().Contain("Config:");
     }
 
     private sealed class InMemorySettingsRepository(WorkspaceSettings settings) : ISettingsRepository
@@ -434,6 +551,21 @@ public sealed class MainWindowViewModelSmokeTests
             Task.FromResult(Result.Failure<PreviewBuildResult>(Errors.Conflict("preview unavailable")));
     }
 
+    private sealed class FixedPreviewBuilder : IPreviewBuilder
+    {
+        public Task<Result<PreviewBuildResult>> BuildAsync(PreviewBuildRequest request, CancellationToken cancellationToken)
+        {
+            var image = CreateCoordinateImage(4, 4);
+            return Task.FromResult(
+                Result.Success(
+                    new PreviewBuildResult(
+                        BaseImage: image,
+                        LandmarkImage: null,
+                        OverlayImage: null,
+                        CompositeImage: image)));
+        }
+    }
+
     private sealed class RecordingPreviewBuilder : IPreviewBuilder
     {
         public int CallCount { get; private set; }
@@ -451,6 +583,12 @@ public sealed class MainWindowViewModelSmokeTests
         }
 
         private static SpriteImage CreateImage() => new(4, 4, new byte[4 * 4 * 4]);
+    }
+
+    private sealed class NullStateFrameReader : IStateFrameReader
+    {
+        public Task<Result<SpriteImage>> ReadFrameAsync(string dmiPath, string stateName, SpriteDirection direction, CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Failure<SpriteImage>(Errors.NotFound(stateName)));
     }
 
     private sealed class NullBatchProcessingService : IBatchProcessingService
@@ -499,5 +637,23 @@ public sealed class MainWindowViewModelSmokeTests
         public string? OpenLegacyCsvFile(string? initialPath) => LegacyCsvPath ?? initialPath;
 
         public string? SelectDirectory(string description, string? initialPath) => BatchDirectory ?? initialPath;
+    }
+
+    private static SpriteImage CreateCoordinateImage(int width, int height)
+    {
+        var pixels = new byte[width * height * 4];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var index = ((y * width) + x) * 4;
+                pixels[index] = (byte)(x * 40 + 10);
+                pixels[index + 1] = (byte)(y * 50 + 20);
+                pixels[index + 2] = (byte)(x * 15 + y * 10 + 30);
+                pixels[index + 3] = 255;
+            }
+        }
+
+        return new SpriteImage(width, height, pixels);
     }
 }

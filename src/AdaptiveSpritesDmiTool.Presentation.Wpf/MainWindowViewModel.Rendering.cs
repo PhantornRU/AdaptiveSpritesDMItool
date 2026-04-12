@@ -158,9 +158,9 @@ public partial class WorkspaceShellViewModel
             : result.Error.Message;
 
         _selectedSourceCoordinate = null;
-        _dragAnchor = null;
+        _selectedEditableCoordinate = null;
         _selectedArea = null;
-        _isDraggingSourceArea = false;
+        ResetEditableDragState();
         _baseImage = null;
         _landmarkImage = null;
         _overlayImage = null;
@@ -379,23 +379,46 @@ public partial class WorkspaceShellViewModel
         }
     }
 
-    private void ApplyMappedArea(PixelAreaSelection area, PixelCoordinate targetAnchor, string successMessage)
+    private void ApplySourcePixelToEditable(PixelCoordinate editableCoordinate, PixelCoordinate sourceCoordinate, string successMessage)
+    {
+        var result = _applyConfigTransformUseCase.Execute(config => ApplyScopedMapping(config, editableCoordinate, sourceCoordinate));
+        ApplyMutationResult(result, successMessage);
+    }
+
+    private void ApplySourcePixelToEditableArea(PixelAreaSelection editableArea, PixelCoordinate sourceCoordinate, string successMessage)
     {
         var result = _applyConfigTransformUseCase.Execute(config =>
         {
             var next = config;
-            var offsetX = targetAnchor.X - area.Left;
-            var offsetY = targetAnchor.Y - area.Top;
-
-            foreach (var source in area.Enumerate())
+            foreach (var editableCoordinate in editableArea.Enumerate())
             {
-                var target = ClampCoordinate(
-                    new PixelCoordinate(
-                        Math.Clamp(source.X + offsetX, 0, config.Resolution.Width - 1),
-                        Math.Clamp(source.Y + offsetY, 0, config.Resolution.Height - 1)),
-                    config.Resolution);
+                next = ApplyScopedMapping(next, editableCoordinate, sourceCoordinate);
+            }
 
-                next = ApplyScopedMapping(next, source, target);
+            return next;
+        });
+
+        ApplyMutationResult(result, successMessage);
+    }
+
+    private void ApplyMovedEditableArea(
+        IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?> payload,
+        PixelAreaSelection originArea,
+        PixelAreaSelection destinationArea,
+        string successMessage)
+    {
+        var deltaX = destinationArea.Left - originArea.Left;
+        var deltaY = destinationArea.Top - originArea.Top;
+
+        var result = _applyConfigTransformUseCase.Execute(config =>
+        {
+            var next = config;
+            foreach (var (editableCoordinate, sourceCoordinate) in payload)
+            {
+                var destinationCoordinate = ClampCoordinate(
+                    new PixelCoordinate(editableCoordinate.X + deltaX, editableCoordinate.Y + deltaY),
+                    config.Resolution);
+                next = ApplyScopedMapping(next, destinationCoordinate, sourceCoordinate);
             }
 
             return next;
@@ -409,9 +432,9 @@ public partial class WorkspaceShellViewModel
         var result = _applyConfigTransformUseCase.Execute(config =>
         {
             var next = config;
-            foreach (var source in area.Enumerate())
+            foreach (var editableCoordinate in area.Enumerate())
             {
-                next = ApplyScopedMapping(next, source, null);
+                next = ApplyScopedMapping(next, editableCoordinate, null);
             }
 
             return next;
@@ -425,9 +448,9 @@ public partial class WorkspaceShellViewModel
         var result = _applyConfigTransformUseCase.Execute(config =>
         {
             var next = config;
-            foreach (var source in area.Enumerate())
+            foreach (var editableCoordinate in area.Enumerate())
             {
-                next = ApplyScopedRestore(next, source);
+                next = ApplyScopedRestore(next, editableCoordinate);
             }
 
             return next;
@@ -436,29 +459,29 @@ public partial class WorkspaceShellViewModel
         ApplyMutationResult(result, successMessage);
     }
 
-    private SpriteConfig ApplyScopedMapping(SpriteConfig config, PixelCoordinate source, PixelCoordinate? target)
+    private SpriteConfig ApplyScopedMapping(SpriteConfig config, PixelCoordinate editableCoordinate, PixelCoordinate? sourceCoordinate)
     {
         var next = config;
         var selectedDirection = GetSafeSelectedDirection();
         foreach (var direction in ResolveDirections(config.SupportedDirections))
         {
-            var transformedSource = TransformCoordinate(source, selectedDirection, direction, config.Resolution);
-            PixelCoordinate? transformedTarget = target is null
+            var transformedEditable = TransformCoordinate(editableCoordinate, selectedDirection, direction, config.Resolution);
+            PixelCoordinate? transformedSource = sourceCoordinate is null
                 ? null
-                : TransformTarget(source, target.Value, transformedSource, selectedDirection, direction, config.Resolution);
-            next = next.SetMapping(direction, transformedSource, transformedTarget);
+                : TransformTarget(editableCoordinate, sourceCoordinate.Value, transformedEditable, selectedDirection, direction, config.Resolution);
+            next = next.SetMapping(direction, transformedEditable, transformedSource);
         }
 
         return next;
     }
 
-    private SpriteConfig ApplyScopedRestore(SpriteConfig config, PixelCoordinate source)
+    private SpriteConfig ApplyScopedRestore(SpriteConfig config, PixelCoordinate editableCoordinate)
     {
         var next = config;
         var selectedDirection = GetSafeSelectedDirection();
         foreach (var direction in ResolveDirections(config.SupportedDirections))
         {
-            next = next.RemoveMapping(direction, TransformCoordinate(source, selectedDirection, direction, config.Resolution));
+            next = next.RemoveMapping(direction, TransformCoordinate(editableCoordinate, selectedDirection, direction, config.Resolution));
         }
 
         return next;
@@ -701,7 +724,7 @@ public partial class WorkspaceShellViewModel
         Debug.WriteLine($"[NavigatorSnapshotCache] MISS direction={direction} overlay={ShowOverlay} version={NavigatorSnapshotVersion}");
 #endif
 
-        var surface = BuildEditorSurfaceRenderState(direction, useCompositeImage: ShowOverlay);
+        var surface = BuildEditableSurfaceRenderState(direction, useCompositeImage: ShowOverlay);
         if (surface is null)
         {
             return null;

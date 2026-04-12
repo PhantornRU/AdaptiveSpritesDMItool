@@ -68,6 +68,28 @@ public partial class MainWindow : Window
         }
     }
 
+    private void TargetCellButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: PixelCellViewModel cell })
+        {
+            ViewModel.HandleTargetCellPointerDown(cell);
+            e.Handled = true;
+        }
+    }
+
+    private void TargetCellButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        if (sender is FrameworkElement { DataContext: PixelCellViewModel cell })
+        {
+            ViewModel.HandleTargetCellPointerEnter(cell);
+        }
+    }
+
     private void BatchSourceTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
         ViewModel.HandleBatchSourceSelection(e.NewValue as BatchSourceTreeItemViewModel);
@@ -187,10 +209,19 @@ public partial class MainWindow : Window
 
     private void TargetSurface_MouseMove(object sender, MouseEventArgs e)
     {
-        if (TryCreateSurfaceCell(sender, e.GetPosition((IInputElement)sender), out var cell))
+        if (!TryCreateSurfaceCell(sender, e.GetPosition((IInputElement)sender), out var cell))
         {
-            ViewModel.HandleTargetSurfaceHover(cell);
+            return;
         }
+
+        if (e.LeftButton == MouseButtonState.Pressed)
+        {
+            ViewModel.HandleTargetCellPointerEnter(cell);
+            e.Handled = true;
+            return;
+        }
+
+        ViewModel.HandleTargetSurfaceHover(cell);
     }
 
     private void SourceSurface_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -217,6 +248,15 @@ public partial class MainWindow : Window
         if (TryCreateSurfaceCell(sender, e.GetPosition((IInputElement)sender), out var cell))
         {
             ViewModel.HandleTargetCellPointerUp(cell);
+            e.Handled = true;
+        }
+    }
+
+    private void TargetSurface_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (TryCreateSurfaceCell(sender, e.GetPosition((IInputElement)sender), out var cell))
+        {
+            ViewModel.HandleTargetCellPointerDown(cell);
             e.Handled = true;
         }
     }

@@ -114,15 +114,15 @@ public sealed partial class DirectionTileViewModel : ObservableObject
 
 public sealed class MappingRowViewModel(PixelMapping mapping)
 {
-    public PixelCoordinate Source { get; } = mapping.Source;
+    public PixelCoordinate Editable { get; } = mapping.Source;
 
-    public PixelCoordinate? Target { get; } = mapping.Target;
+    public PixelCoordinate? Source { get; } = mapping.Target;
 
-    public bool IsTransparent => mapping.IsTransparent;
+    public bool IsTransparent => mapping.Target is null;
 
-    public string SourceText => mapping.Source.ToString();
+    public string EditableText => mapping.Source.ToString();
 
-    public string TargetText => mapping.Target?.ToString() ?? "transparent";
+    public string SourceText => mapping.Target?.ToString() ?? "transparent";
 }
 
 public sealed class BatchResultRowViewModel(BatchFileResult result)

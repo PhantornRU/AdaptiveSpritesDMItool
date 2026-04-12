@@ -34,9 +34,13 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private readonly PreviewRefreshCoordinator _previewRefreshCoordinator = new(TimeSpan.FromMilliseconds(250));
     private CancellationTokenSource? _activeOperationCts;
     private PixelCoordinate? _selectedSourceCoordinate;
-    private PixelCoordinate? _dragAnchor;
+    private PixelCoordinate? _selectedEditableCoordinate;
     private PixelAreaSelection? _selectedArea;
-    private bool _isDraggingSourceArea;
+    private PixelCoordinate? _editableDragAnchor;
+    private PixelAreaSelection? _editableDragOriginArea;
+    private Dictionary<PixelCoordinate, PixelCoordinate?>? _editableDragPayload;
+    private EditableDragAction _editableDragAction;
+    private bool _isDraggingEditableArea;
     private bool _isSynchronizingSelectedDirection;
     private SpriteImage? _baseImage;
     private SpriteImage? _landmarkImage;
@@ -49,6 +53,17 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private int _importedStateRefreshVersion;
     private Guid? _activeConfigQueueItemId;
     private bool _isSynchronizingSelectedImportedState;
+
+    private enum EditableDragAction
+    {
+        None = 0,
+        FillArea = 1,
+        DeleteArea = 2,
+        RestoreArea = 3,
+        SelectArea = 4,
+        MoveSingle = 5,
+        MoveSelection = 6
+    }
 
     public WorkspaceShellViewModel(
         StartEmptyWorkspaceUseCase startEmptyWorkspaceUseCase,

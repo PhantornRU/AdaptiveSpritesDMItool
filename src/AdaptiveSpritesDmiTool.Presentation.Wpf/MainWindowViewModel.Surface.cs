@@ -37,8 +37,8 @@ public partial class WorkspaceShellViewModel
             : "No area selected.";
     }
 
-    private void RebuildPixelRows(ObservableCollection<PixelRowViewModel> targetRows, bool useCompositeImage)
-        => RebuildPixelRows(targetRows, GetSafeSelectedDirection(), useCompositeImage);
+    private void RebuildPixelRows(ObservableCollection<PixelRowViewModel> targetRows, bool useCompositeImage, bool isEditable)
+        => RebuildPixelRows(targetRows, GetSafeSelectedDirection(), useCompositeImage, isEditable);
 
     private void RefreshInteractionState()
     {
@@ -46,34 +46,30 @@ public partial class WorkspaceShellViewModel
         SelectedAreaBounds = _selectedArea is { } area
             ? new PixelAreaBounds(area.Left, area.Top, area.Right, area.Bottom)
             : null;
-        SelectedTargetCoordinate = ResolveSelectedTargetCoordinate();
+        SelectedTargetCoordinate = ResolveSelectedEditableCoordinate();
         OppositeHighlightedCoordinate = SelectedTargetCoordinate;
     }
 
-    private PixelCoordinate? ResolveSelectedTargetCoordinate()
+    private PixelCoordinate? ResolveSelectedEditableCoordinate()
     {
-        if (_selectedSourceCoordinate is not { } source || _editorSession.CurrentConfig is null)
+        if (_selectedEditableCoordinate is { } editableCoordinate)
+        {
+            return editableCoordinate;
+        }
+
+        if (_selectedSourceCoordinate is not { } sourceCoordinate)
         {
             return null;
         }
 
-        var direction = GetSafeSelectedDirection();
-        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction))
-        {
-            if (mapping.Source == source)
-            {
-                return mapping.Target;
-            }
-        }
-
-        return null;
+        return ResolvePreferredEditableCoordinate(sourceCoordinate);
     }
 
     private void RebuildActiveSurfaceRenderStates()
     {
         var direction = GetSafeSelectedDirection();
-        ActiveSourceSurface = BuildEditorSurfaceRenderState(direction, useCompositeImage: false);
-        ActiveTargetSurface = BuildEditorSurfaceRenderState(direction, useCompositeImage: ShowOverlay);
+        ActiveSourceSurface = BuildSourceSurfaceRenderState(direction);
+        ActiveTargetSurface = BuildEditableSurfaceRenderState(direction, useCompositeImage: ShowOverlay);
     }
 
     private void RefreshImportedStateComposition()
@@ -566,7 +562,33 @@ public partial class WorkspaceShellViewModel
         }
     }
 
-    private EditorSurfaceRenderState? BuildEditorSurfaceRenderState(SpriteDirection direction, bool useCompositeImage)
+    private EditorSurfaceRenderState? BuildSourceSurfaceRenderState(SpriteDirection direction)
+    {
+        var resolution = ResolveEditorResolution();
+        if (resolution is null)
+        {
+            return null;
+        }
+
+        var referenceImage = ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage: false), direction);
+        var colors = new Color[resolution.Value.Width * resolution.Value.Height];
+        var captions = new string[colors.Length];
+
+        for (var y = 0; y < resolution.Value.Height; y++)
+        {
+            for (var x = 0; x < resolution.Value.Width; x++)
+            {
+                var coordinate = new PixelCoordinate(x, y);
+                var index = (y * resolution.Value.Width) + x;
+                colors[index] = ResolveSurfaceCellColor(referenceImage, coordinate);
+                captions[index] = string.Empty;
+            }
+        }
+
+        return new EditorSurfaceRenderState(direction, resolution.Value.Width, resolution.Value.Height, colors, captions);
+    }
+
+    private EditorSurfaceRenderState? BuildEditableSurfaceRenderState(SpriteDirection direction, bool useCompositeImage)
     {
         var resolution = ResolveEditorResolution();
         if (resolution is null)
@@ -575,7 +597,8 @@ public partial class WorkspaceShellViewModel
         }
 
         var referenceImage = ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage), direction);
-        var mappings = _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
+        var renderedEditableImage = RenderEditableSurfaceImage(referenceImage, direction);
+        var mappings = GetEditableMappings(direction);
         var colors = new Color[resolution.Value.Width * resolution.Value.Height];
         var captions = new string[colors.Length];
 
@@ -586,7 +609,7 @@ public partial class WorkspaceShellViewModel
                 var coordinate = new PixelCoordinate(x, y);
                 var index = (y * resolution.Value.Width) + x;
                 var hasMapping = mappings.TryGetValue(coordinate, out var mapping);
-                colors[index] = ResolveSurfaceCellColor(referenceImage, coordinate, hasMapping, mapping);
+                colors[index] = ResolveSurfaceCellColor(renderedEditableImage, coordinate, hasMapping, mapping);
                 captions[index] = BuildStaticCaption(hasMapping, mapping);
             }
         }
@@ -594,7 +617,11 @@ public partial class WorkspaceShellViewModel
         return new EditorSurfaceRenderState(direction, resolution.Value.Width, resolution.Value.Height, colors, captions);
     }
 
-    private void RebuildPixelRows(ObservableCollection<PixelRowViewModel> targetRows, SpriteDirection direction, bool useCompositeImage)
+    private void RebuildPixelRows(
+        ObservableCollection<PixelRowViewModel> targetRows,
+        SpriteDirection direction,
+        bool useCompositeImage,
+        bool isEditable)
     {
         targetRows.Clear();
         var resolution = ResolveEditorResolution();
@@ -604,10 +631,10 @@ public partial class WorkspaceShellViewModel
         }
 
         var referenceImage = ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage), direction);
-        var mappings = _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
-        var selectedTarget = _selectedSourceCoordinate is { } source && mappings.TryGetValue(source, out var mapping)
-            ? mapping.Target
+        var renderedEditableImage = isEditable
+            ? RenderEditableSurfaceImage(referenceImage, direction)
             : null;
+        var mappings = GetEditableMappings(direction);
 
         for (var y = 0; y < resolution.Value.Height; y++)
         {
@@ -618,11 +645,19 @@ public partial class WorkspaceShellViewModel
                 var hasMapping = mappings.TryGetValue(coordinate, out var pixelMapping);
                 var cell = new PixelCellViewModel(direction, x, y)
                 {
-                    Fill = CreateCellFill(referenceImage, coordinate, hasMapping, pixelMapping),
-                    Border = CreateCellBorder(coordinate, hasMapping, selectedTarget),
+                    Fill = isEditable
+                        ? CreateEditableCellFill(renderedEditableImage, coordinate, hasMapping, pixelMapping)
+                        : CreateSourceCellFill(referenceImage, coordinate),
+                    Border = isEditable
+                        ? CreateEditableCellBorder(coordinate)
+                        : CreateSourceCellBorder(coordinate),
                     Foreground = hasMapping && pixelMapping.IsTransparent ? Brushes.Black : Brushes.Transparent,
-                    Caption = BuildCellCaption(coordinate, hasMapping, pixelMapping, selectedTarget),
-                    ToolTip = BuildCellToolTip(coordinate, hasMapping, pixelMapping)
+                    Caption = isEditable
+                        ? BuildEditableCellCaption(coordinate, hasMapping, pixelMapping)
+                        : BuildSourceCellCaption(coordinate),
+                    ToolTip = isEditable
+                        ? BuildEditableCellToolTip(coordinate, hasMapping, pixelMapping)
+                        : BuildSourceCellToolTip(coordinate)
                 };
 
                 cells.Add(cell);
@@ -662,7 +697,9 @@ public partial class WorkspaceShellViewModel
                     Border = ShowGrid ? GridBrush : Brushes.Transparent,
                     Foreground = Brushes.Transparent,
                     Caption = GridAboveImage ? rowText[x].ToString() : string.Empty,
-                    ToolTip = $"{coordinate} -> {(isTransparent ? "transparent" : effectiveTarget.ToString())}"
+                    ToolTip = isTransparent
+                        ? $"Editable {coordinate} -> transparent"
+                        : $"Editable {coordinate} <- Source {effectiveTarget}"
                 });
             }
 
@@ -685,8 +722,8 @@ public partial class WorkspaceShellViewModel
                 IsActive = direction == activeDirection
             };
 
-            RebuildPixelRows(tile.SourceRows, direction, useCompositeImage: false);
-            RebuildPixelRows(tile.TargetRows, direction, useCompositeImage: ShowOverlay);
+            RebuildPixelRows(tile.SourceRows, direction, useCompositeImage: false, isEditable: false);
+            RebuildPixelRows(tile.TargetRows, direction, useCompositeImage: ShowOverlay, isEditable: true);
             DirectionTiles.Add(tile);
         }
 
@@ -866,21 +903,77 @@ public partial class WorkspaceShellViewModel
         ImportRecentLegacyCsvCommand.NotifyCanExecuteChanged();
     }
 
-    private Brush CreateCellFill(SpriteImage? image, PixelCoordinate coordinate, bool hasMapping, PixelMapping mapping)
+    // The persisted config keeps legacy semantics: mapping.Source is the editable cell,
+    // mapping.Target is the source/palette coordinate used to draw that editable cell.
+    private Dictionary<PixelCoordinate, PixelMapping> GetEditableMappings(SpriteDirection direction) =>
+        _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
+
+    private SpriteImage? RenderEditableSurfaceImage(SpriteImage? referenceImage, SpriteDirection direction)
     {
-        if (hasMapping && mapping.IsTransparent)
+        if (referenceImage is null)
         {
-            return TransparentBrush;
+            return null;
         }
 
+        var rendered = new SpriteImage(referenceImage.Width, referenceImage.Height, (byte[])referenceImage.RgbaBytes.Clone());
+        if (_editorSession.CurrentConfig is null)
+        {
+            return rendered;
+        }
+
+        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction))
+        {
+            var destinationOffset = ((mapping.Source.Y * rendered.Width) + mapping.Source.X) * 4;
+            if (mapping.Target is not { } sourceCoordinate || !TryReadPixelColor(referenceImage, sourceCoordinate, out var sourceColor))
+            {
+                rendered.RgbaBytes[destinationOffset] = 0;
+                rendered.RgbaBytes[destinationOffset + 1] = 0;
+                rendered.RgbaBytes[destinationOffset + 2] = 0;
+                rendered.RgbaBytes[destinationOffset + 3] = 0;
+                continue;
+            }
+
+            rendered.RgbaBytes[destinationOffset] = sourceColor.R;
+            rendered.RgbaBytes[destinationOffset + 1] = sourceColor.G;
+            rendered.RgbaBytes[destinationOffset + 2] = sourceColor.B;
+            rendered.RgbaBytes[destinationOffset + 3] = sourceColor.A;
+        }
+
+        return rendered;
+    }
+
+    private Brush CreateSourceCellFill(SpriteImage? image, PixelCoordinate coordinate)
+    {
         if (_selectedSourceCoordinate == coordinate)
         {
             return SelectedBrush;
         }
 
+        return TryReadPixelColor(image, coordinate, out var color)
+            ? CreateBrush(color)
+            : NeutralBrush;
+    }
+
+    private Brush CreateEditableCellFill(SpriteImage? image, PixelCoordinate coordinate, bool hasMapping, PixelMapping mapping)
+    {
         if (_selectedArea?.Contains(coordinate) == true)
         {
             return AreaBrush;
+        }
+
+        if (_selectedEditableCoordinate == coordinate)
+        {
+            return SelectedBrush;
+        }
+
+        if (hasMapping && mapping.IsTransparent)
+        {
+            return TransparentBrush;
+        }
+
+        if (TryReadPixelColor(image, coordinate, out var color))
+        {
+            return CreateBrush(color);
         }
 
         if (hasMapping && mapping.Target is not null)
@@ -888,9 +981,14 @@ public partial class WorkspaceShellViewModel
             return MappedBrush;
         }
 
+        return NeutralBrush;
+    }
+
+    private static Color ResolveSurfaceCellColor(SpriteImage? image, PixelCoordinate coordinate)
+    {
         return TryReadPixelColor(image, coordinate, out var color)
-            ? CreateBrush(color)
-            : NeutralBrush;
+            ? color
+            : NeutralColor;
     }
 
     private static Color ResolveSurfaceCellColor(SpriteImage? image, PixelCoordinate coordinate, bool hasMapping, PixelMapping mapping)
@@ -900,24 +998,29 @@ public partial class WorkspaceShellViewModel
             return TransparentColor;
         }
 
-        if (hasMapping && mapping.Target is not null)
-        {
-            return MappedColor;
-        }
-
-        return TryReadPixelColor(image, coordinate, out var color)
-            ? color
-            : NeutralColor;
+        return ResolveSurfaceCellColor(image, coordinate);
     }
 
-    private Brush CreateCellBorder(PixelCoordinate coordinate, bool hasMapping, PixelCoordinate? selectedTarget)
+    private Brush CreateSourceCellBorder(PixelCoordinate coordinate)
     {
         if (!ShowGrid)
         {
             return Brushes.Transparent;
         }
 
-        if (selectedTarget == coordinate || _selectedArea?.Contains(coordinate) == true)
+        return _selectedSourceCoordinate == coordinate
+            ? SelectedBrush
+            : GridBrush;
+    }
+
+    private Brush CreateEditableCellBorder(PixelCoordinate coordinate)
+    {
+        if (!ShowGrid)
+        {
+            return Brushes.Transparent;
+        }
+
+        if (_selectedEditableCoordinate == coordinate || _selectedArea?.Contains(coordinate) == true)
         {
             return SelectedBrush;
         }
@@ -925,14 +1028,19 @@ public partial class WorkspaceShellViewModel
         return GridBrush;
     }
 
-    private string BuildCellCaption(PixelCoordinate coordinate, bool hasMapping, PixelMapping mapping, PixelCoordinate? selectedTarget)
+    private string BuildSourceCellCaption(PixelCoordinate coordinate)
     {
         if (_selectedSourceCoordinate == coordinate)
         {
             return "S";
         }
 
-        if (selectedTarget == coordinate)
+        return string.Empty;
+    }
+
+    private string BuildEditableCellCaption(PixelCoordinate coordinate, bool hasMapping, PixelMapping mapping)
+    {
+        if (_selectedEditableCoordinate == coordinate)
         {
             return "T";
         }
@@ -950,14 +1058,15 @@ public partial class WorkspaceShellViewModel
         return !hasMapping ? string.Empty : mapping.IsTransparent ? "X" : mapping.Target is not null ? "M" : string.Empty;
     }
 
-    private static string BuildCellToolTip(PixelCoordinate coordinate, bool hasMapping, PixelMapping mapping) =>
+    private static string BuildSourceCellToolTip(PixelCoordinate coordinate) =>
+        $"Source {coordinate}";
+
+    private static string BuildEditableCellToolTip(PixelCoordinate coordinate, bool hasMapping, PixelMapping mapping) =>
         !hasMapping
-            ? $"{coordinate} -> unchanged"
+            ? $"Editable {coordinate} <- Source {coordinate}"
             : mapping.Target is null
-            ? $"{coordinate} -> transparent"
-            : mapping.Target == coordinate
-                ? $"{coordinate} -> unchanged"
-                : $"{coordinate} -> {mapping.Target}";
+                ? $"Editable {coordinate} -> transparent"
+                : $"Editable {coordinate} <- Source {mapping.Target}";
 
     private string BuildStaticCaption(bool hasMapping, PixelMapping mapping)
     {
@@ -995,6 +1104,26 @@ public partial class WorkspaceShellViewModel
 
     private static string DescribeArea(PixelAreaSelection area) =>
         $"Area {area.Left},{area.Top} to {area.Right},{area.Bottom} ({area.Width}x{area.Height}).";
+
+    private static (int DeltaX, int DeltaY) ComputeClampedAreaDelta(
+        PixelAreaSelection area,
+        PixelCoordinate dragAnchor,
+        PixelCoordinate currentCoordinate,
+        SpriteResolution resolution)
+    {
+        var deltaX = currentCoordinate.X - dragAnchor.X;
+        var deltaY = currentCoordinate.Y - dragAnchor.Y;
+
+        deltaX = Math.Clamp(deltaX, -area.Left, (resolution.Width - 1) - area.Right);
+        deltaY = Math.Clamp(deltaY, -area.Top, (resolution.Height - 1) - area.Bottom);
+
+        return (deltaX, deltaY);
+    }
+
+    private static PixelAreaSelection TranslateArea(PixelAreaSelection area, int deltaX, int deltaY) =>
+        new(
+            new PixelCoordinate(area.Start.X + deltaX, area.Start.Y + deltaY),
+            new PixelCoordinate(area.End.X + deltaX, area.End.Y + deltaY));
 
     private static string NormalizeOptionalText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "none" : value.Trim();

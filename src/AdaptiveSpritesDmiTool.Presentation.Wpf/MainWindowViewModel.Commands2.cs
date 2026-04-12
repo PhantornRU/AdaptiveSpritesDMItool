@@ -227,9 +227,9 @@ public partial class WorkspaceShellViewModel
     private void ClearSelection()
     {
         _selectedSourceCoordinate = null;
+        _selectedEditableCoordinate = null;
         _selectedArea = null;
-        _dragAnchor = null;
-        _isDraggingSourceArea = false;
+        ResetEditableDragState();
         SelectedSourceSummary = "No source pixel selected.";
         SelectedAreaSummary = "No area selected.";
         EditorStatus = "Selection cleared.";
@@ -298,8 +298,8 @@ public partial class WorkspaceShellViewModel
     {
         ArgumentNullException.ThrowIfNull(row);
 
-        var result = _applyConfigTransformUseCase.Execute(config => config.RemoveMapping(GetSafeSelectedDirection(), row.Source));
-        ApplyMutationResult(result, $"Removed mapping for {row.Source}.");
+        var result = _applyConfigTransformUseCase.Execute(config => config.RemoveMapping(GetSafeSelectedDirection(), row.Editable));
+        ApplyMutationResult(result, $"Removed mapping for editable {row.Editable}.");
     }
 
     [RelayCommand]
@@ -584,6 +584,25 @@ public partial class WorkspaceShellViewModel
             RequestAutoPreviewRefresh();
             PersistWorkspaceSettingsInBackground();
         }
+    }
+
+    partial void OnSelectedEditorToolChanged(EditorTool value)
+    {
+        ResetEditableDragState();
+
+        EditorStatus = value switch
+        {
+            EditorTool.Single => "Pick a source pixel, then click Editable to draw it.",
+            EditorTool.Fill => "Pick a source pixel, then drag across Editable to fill an area.",
+            EditorTool.Delete => "Drag across Editable to make pixels transparent.",
+            EditorTool.Undo => "Click an Editable pixel to restore its original source.",
+            EditorTool.UndoArea => "Drag across Editable to restore an area.",
+            EditorTool.Select => "Drag across Editable to select an area, then drag inside it to move the mapped pixels.",
+            EditorTool.Move => "Drag an Editable pixel to move its current mapping.",
+            _ => EditorStatus
+        };
+
+        RefreshInteractionState();
     }
 
     partial void OnSelectedPreviewDisplayModeChanged(PreviewDisplayMode value) => RefreshActivePreviewPresentation();

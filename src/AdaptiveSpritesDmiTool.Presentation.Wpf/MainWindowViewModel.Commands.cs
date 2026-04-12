@@ -76,28 +76,19 @@ public partial class WorkspaceShellViewModel
         }
 
         EnsureActiveDirection(cell.Direction);
+        UpdateSourceHoverState(cell.Coordinate);
 
         switch (SelectedEditorTool)
         {
-            case EditorTool.Select:
-            case EditorTool.Fill:
-            case EditorTool.Delete:
-            case EditorTool.UndoArea:
-            case EditorTool.Move:
-                _dragAnchor = cell.Coordinate;
-                _selectedArea = new PixelAreaSelection(cell.Coordinate, cell.Coordinate);
-                _isDraggingSourceArea = true;
-                EditorStatus = $"{SelectedEditorTool} drag started at {cell.Coordinate}.";
-                RefreshInteractionState();
-                break;
             case EditorTool.Single:
+            case EditorTool.Fill:
                 _selectedSourceCoordinate = cell.Coordinate;
+                _selectedEditableCoordinate = ResolvePreferredEditableCoordinate(cell.Coordinate);
                 SelectedSourceSummary = $"Source pixel {cell.Coordinate} selected.";
-                EditorStatus = "Pick a target pixel in the editable pane to apply the mapping.";
+                EditorStatus = SelectedEditorTool == EditorTool.Single
+                    ? "Pick an editable pixel to draw the selected source."
+                    : "Drag across Editable to fill an area from the selected source pixel.";
                 RefreshInteractionState();
-                break;
-            case EditorTool.Undo:
-                ApplyRestoreOperation(new PixelAreaSelection(cell.Coordinate, cell.Coordinate), "Restored source pixel.");
                 break;
         }
     }
@@ -107,15 +98,6 @@ public partial class WorkspaceShellViewModel
         ArgumentNullException.ThrowIfNull(cell);
         EnsureActiveDirection(cell.Direction);
         UpdateSourceHoverState(cell.Coordinate);
-
-        if (!_isDraggingSourceArea || _dragAnchor is null)
-        {
-            return;
-        }
-
-        _selectedArea = new PixelAreaSelection(_dragAnchor.Value, cell.Coordinate);
-        SelectedAreaSummary = DescribeArea(_selectedArea.Value);
-        RefreshInteractionState();
     }
 
     public void HandleSourceSurfacePointerLeave()
@@ -141,34 +123,110 @@ public partial class WorkspaceShellViewModel
     {
         ArgumentNullException.ThrowIfNull(cell);
         EnsureActiveDirection(cell.Direction);
+        UpdateSourceHoverState(cell.Coordinate);
+    }
 
-        if (!_isDraggingSourceArea || _dragAnchor is null)
+    public void HandleTargetCellPointerDown(PixelCellViewModel cell)
+    {
+        ArgumentNullException.ThrowIfNull(cell);
+
+        if (!CanEditConfig())
         {
             return;
         }
 
-        _selectedArea = new PixelAreaSelection(_dragAnchor.Value, cell.Coordinate);
-        _dragAnchor = null;
-        _isDraggingSourceArea = false;
-        SelectedAreaSummary = DescribeArea(_selectedArea.Value);
+        EnsureActiveDirection(cell.Direction);
+        UpdateEditableHoverState(cell.Coordinate);
+        _selectedEditableCoordinate = cell.Coordinate;
 
         switch (SelectedEditorTool)
         {
-            case EditorTool.Select:
-                EditorStatus = "Area selected. Switch to Fill, Move, Delete, or UndoArea to act on it.";
-                break;
-            case EditorTool.Delete:
-                ApplyTransparentOperation(_selectedArea.Value, "Applied transparent delete to the selected area.");
-                break;
-            case EditorTool.UndoArea:
-                ApplyRestoreOperation(_selectedArea.Value, "Restored the selected area to source pixels.");
+            case EditorTool.Single:
+                EditorStatus = _selectedSourceCoordinate is null
+                    ? "Pick a source pixel first."
+                    : "Release to draw the selected source into Editable.";
+                RefreshInteractionState();
                 break;
             case EditorTool.Fill:
+                if (_selectedSourceCoordinate is null)
+                {
+                    EditorStatus = "Pick a source pixel first.";
+                    RefreshInteractionState();
+                    break;
+                }
+
+                StartEditableAreaDrag(cell.Coordinate, EditableDragAction.FillArea, "Fill drag started in Editable.");
+                break;
+            case EditorTool.Delete:
+                StartEditableAreaDrag(cell.Coordinate, EditableDragAction.DeleteArea, "Delete drag started in Editable.");
+                break;
+            case EditorTool.Undo:
+                EditorStatus = "Release to restore the editable pixel to its original source.";
+                RefreshInteractionState();
+                break;
+            case EditorTool.UndoArea:
+                StartEditableAreaDrag(cell.Coordinate, EditableDragAction.RestoreArea, "Restore drag started in Editable.");
+                break;
             case EditorTool.Move:
-                EditorStatus = "Area selected. Pick a target pixel in the editable pane to apply the offset.";
+                StartEditableMoveDrag(
+                    cell.Coordinate,
+                    new PixelAreaSelection(cell.Coordinate, cell.Coordinate),
+                    EditableDragAction.MoveSingle,
+                    "Move drag started in Editable.");
+                break;
+            case EditorTool.Select:
+                if (_selectedArea is { } existingArea && existingArea.Contains(cell.Coordinate))
+                {
+                    StartEditableMoveDrag(cell.Coordinate, existingArea, EditableDragAction.MoveSelection, "Moving selected editable area.");
+                }
+                else
+                {
+                    StartEditableAreaDrag(cell.Coordinate, EditableDragAction.SelectArea, "Selection drag started in Editable.");
+                }
                 break;
         }
+    }
 
+    public void HandleTargetCellPointerEnter(PixelCellViewModel cell)
+    {
+        ArgumentNullException.ThrowIfNull(cell);
+        EnsureActiveDirection(cell.Direction);
+        UpdateEditableHoverState(cell.Coordinate);
+
+        if (!_isDraggingEditableArea || _editableDragAnchor is null)
+        {
+            return;
+        }
+
+        _selectedEditableCoordinate = cell.Coordinate;
+
+        switch (_editableDragAction)
+        {
+            case EditableDragAction.FillArea:
+            case EditableDragAction.DeleteArea:
+            case EditableDragAction.RestoreArea:
+            case EditableDragAction.SelectArea:
+                _selectedArea = new PixelAreaSelection(_editableDragAnchor.Value, cell.Coordinate);
+                break;
+            case EditableDragAction.MoveSingle:
+            case EditableDragAction.MoveSelection:
+                if (_editableDragOriginArea is not { } originArea || ResolveEditorResolution() is not { } resolution)
+                {
+                    return;
+                }
+
+                var (deltaX, deltaY) = ComputeClampedAreaDelta(originArea, _editableDragAnchor.Value, cell.Coordinate, resolution);
+                _selectedArea = TranslateArea(originArea, deltaX, deltaY);
+                _selectedEditableCoordinate = _selectedArea.Value.Start;
+                break;
+            case EditableDragAction.None:
+            default:
+                return;
+        }
+
+        SelectedAreaSummary = _selectedArea is { } area
+            ? DescribeArea(area)
+            : "No area selected.";
         RefreshInteractionState();
     }
 
@@ -182,25 +240,192 @@ public partial class WorkspaceShellViewModel
         }
 
         EnsureActiveDirection(cell.Direction);
+        UpdateEditableHoverState(cell.Coordinate);
+        _selectedEditableCoordinate = cell.Coordinate;
+
+        if (_isDraggingEditableArea)
+        {
+            CompleteEditableDrag(cell.Coordinate);
+            return;
+        }
 
         switch (SelectedEditorTool)
         {
-            case EditorTool.Single when _selectedSourceCoordinate is { } source:
-                ApplyMappedArea(new PixelAreaSelection(source, source), cell.Coordinate, "Applied single-pixel mapping.");
-                break;
-            case EditorTool.Fill:
-            case EditorTool.Move:
-                if (_selectedArea is { } area)
+            case EditorTool.Single:
+                if (_selectedSourceCoordinate is not { } source)
                 {
-                    ApplyMappedArea(
-                        area,
-                        cell.Coordinate,
-                        SelectedEditorTool == EditorTool.Move
-                            ? "Moved the selected area by applying an offset mapping."
-                            : "Filled the selected area with an offset mapping.");
+                    StatusMessage = "Pick a source pixel first.";
+                    RefreshInteractionState();
+                    return;
+                }
+
+                ApplySourcePixelToEditable(cell.Coordinate, source, "Applied source pixel to Editable.");
+                break;
+            case EditorTool.Undo:
+                ApplyRestoreOperation(new PixelAreaSelection(cell.Coordinate, cell.Coordinate), "Restored editable pixel.");
+                break;
+        }
+    }
+
+    private void StartEditableAreaDrag(PixelCoordinate anchor, EditableDragAction action, string statusMessage)
+    {
+        _editableDragAction = action;
+        _editableDragAnchor = anchor;
+        _editableDragOriginArea = new PixelAreaSelection(anchor, anchor);
+        _editableDragPayload = null;
+        _isDraggingEditableArea = true;
+        _selectedArea = new PixelAreaSelection(anchor, anchor);
+        SelectedAreaSummary = DescribeArea(_selectedArea.Value);
+        EditorStatus = statusMessage;
+        RefreshInteractionState();
+    }
+
+    private void StartEditableMoveDrag(
+        PixelCoordinate anchor,
+        PixelAreaSelection area,
+        EditableDragAction action,
+        string statusMessage)
+    {
+        _editableDragAction = action;
+        _editableDragAnchor = anchor;
+        _editableDragOriginArea = area;
+        _editableDragPayload = CaptureEditablePayload(area);
+        _isDraggingEditableArea = true;
+        _selectedArea = area;
+        _selectedEditableCoordinate = area.Start;
+        SelectedAreaSummary = DescribeArea(area);
+        EditorStatus = statusMessage;
+        RefreshInteractionState();
+    }
+
+    private void CompleteEditableDrag(PixelCoordinate releasedCoordinate)
+    {
+        if (!_isDraggingEditableArea || _editableDragAnchor is null)
+        {
+            return;
+        }
+
+        switch (_editableDragAction)
+        {
+            case EditableDragAction.FillArea:
+            case EditableDragAction.DeleteArea:
+            case EditableDragAction.RestoreArea:
+            case EditableDragAction.SelectArea:
+                _selectedArea = new PixelAreaSelection(_editableDragAnchor.Value, releasedCoordinate);
+                break;
+            case EditableDragAction.MoveSingle:
+            case EditableDragAction.MoveSelection:
+                if (_editableDragOriginArea is { } originArea && ResolveEditorResolution() is { } resolution)
+                {
+                    var (deltaX, deltaY) = ComputeClampedAreaDelta(originArea, _editableDragAnchor.Value, releasedCoordinate, resolution);
+                    _selectedArea = TranslateArea(originArea, deltaX, deltaY);
                 }
                 break;
         }
+
+        var dragAction = _editableDragAction;
+        var completedArea = _selectedArea;
+        var payload = _editableDragPayload;
+        var originAreaSnapshot = _editableDragOriginArea;
+
+        ResetEditableDragState();
+
+        switch (dragAction)
+        {
+            case EditableDragAction.FillArea:
+                if (completedArea is not { } fillArea)
+                {
+                    RefreshInteractionState();
+                    return;
+                }
+
+                if (_selectedSourceCoordinate is not { } selectedSource)
+                {
+                    StatusMessage = "Pick a source pixel first.";
+                    RefreshInteractionState();
+                    return;
+                }
+
+                SelectedAreaSummary = DescribeArea(fillArea);
+                ApplySourcePixelToEditableArea(fillArea, selectedSource, "Filled the editable area from the selected source pixel.");
+                break;
+            case EditableDragAction.DeleteArea:
+                if (completedArea is not { } deleteArea)
+                {
+                    RefreshInteractionState();
+                    return;
+                }
+
+                SelectedAreaSummary = DescribeArea(deleteArea);
+                ApplyTransparentOperation(deleteArea, "Applied transparent delete to the editable area.");
+                break;
+            case EditableDragAction.RestoreArea:
+                if (completedArea is not { } restoreArea)
+                {
+                    RefreshInteractionState();
+                    return;
+                }
+
+                SelectedAreaSummary = DescribeArea(restoreArea);
+                ApplyRestoreOperation(restoreArea, "Restored the editable area to original source pixels.");
+                break;
+            case EditableDragAction.SelectArea:
+                if (completedArea is not { } selectedArea)
+                {
+                    RefreshInteractionState();
+                    return;
+                }
+
+                _selectedArea = selectedArea;
+                _selectedEditableCoordinate = selectedArea.Start;
+                SelectedAreaSummary = DescribeArea(selectedArea);
+                EditorStatus = "Editable area selected. Drag inside it to move the mapped pixels.";
+                RefreshInteractionState();
+                break;
+            case EditableDragAction.MoveSingle:
+            case EditableDragAction.MoveSelection:
+                if (payload is null || originAreaSnapshot is not { } originArea || completedArea is not { } movedArea)
+                {
+                    RefreshInteractionState();
+                    return;
+                }
+
+                _selectedArea = movedArea;
+                _selectedEditableCoordinate = movedArea.Start;
+                SelectedAreaSummary = DescribeArea(movedArea);
+                ApplyMovedEditableArea(
+                    payload,
+                    originArea,
+                    movedArea,
+                    dragAction == EditableDragAction.MoveSingle
+                        ? "Moved the editable pixel mapping."
+                        : "Moved the selected editable area.");
+                break;
+            case EditableDragAction.None:
+            default:
+                RefreshInteractionState();
+                break;
+        }
+    }
+
+    private void ResetEditableDragState()
+    {
+        _editableDragAnchor = null;
+        _editableDragOriginArea = null;
+        _editableDragPayload = null;
+        _editableDragAction = EditableDragAction.None;
+        _isDraggingEditableArea = false;
+    }
+
+    private Dictionary<PixelCoordinate, PixelCoordinate?> CaptureEditablePayload(PixelAreaSelection area)
+    {
+        var payload = new Dictionary<PixelCoordinate, PixelCoordinate?>();
+        foreach (var editableCoordinate in area.Enumerate())
+        {
+            payload[editableCoordinate] = ResolveSourceCoordinateForEditable(editableCoordinate);
+        }
+
+        return payload;
     }
 
     private void ClearHoverState()
@@ -218,17 +443,15 @@ public partial class WorkspaceShellViewModel
         SourceHoveredCoordinate = coordinate;
         HoverSummary = $"Source {coordinate}.";
 
-        if (TryResolveTargetFromSource(coordinate, out var targetCoordinate, out var isTransparent))
+        if (TryResolveTargetFromSource(coordinate, out var editableCoordinate, out _))
         {
-            EditableHoveredCoordinate = targetCoordinate;
-            HoverMappingSummary = isTransparent
-                ? $"Source {coordinate} -> transparent."
-                : $"Source {coordinate} -> Editable {targetCoordinate}.";
+            EditableHoveredCoordinate = editableCoordinate;
+            HoverMappingSummary = $"Source {coordinate} -> Editable {editableCoordinate}.";
             return;
         }
 
         EditableHoveredCoordinate = null;
-        HoverMappingSummary = $"Source {coordinate} has no editable mapping.";
+        HoverMappingSummary = $"Source {coordinate} is not used in Editable.";
     }
 
     private void UpdateEditableHoverState(PixelCoordinate coordinate)
@@ -240,12 +463,12 @@ public partial class WorkspaceShellViewModel
         if (TryResolveSourceFromTarget(coordinate, out var sourceCoordinate))
         {
             SourceHoveredCoordinate = sourceCoordinate;
-            HoverMappingSummary = $"Source {sourceCoordinate} -> Editable {coordinate}.";
+            HoverMappingSummary = $"Editable {coordinate} <- Source {sourceCoordinate}.";
             return;
         }
 
         SourceHoveredCoordinate = null;
-        HoverMappingSummary = $"Editable {coordinate} has no source mapping.";
+        HoverMappingSummary = $"Editable {coordinate} -> transparent.";
     }
 
     private bool TryResolveTargetFromSource(PixelCoordinate source, out PixelCoordinate? target, out bool isTransparent)
@@ -253,47 +476,68 @@ public partial class WorkspaceShellViewModel
         target = null;
         isTransparent = false;
 
-        if (_editorSession.CurrentConfig is null)
+        var resolution = ResolveEditorResolution();
+        if (resolution is not { } bounds || !bounds.Contains(source))
         {
             return false;
         }
 
-        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(GetSafeSelectedDirection()))
-        {
-            if (mapping.Source != source)
-            {
-                continue;
-            }
+        var mappings = _editorSession.CurrentConfig?.GetMappings(GetSafeSelectedDirection()).ToArray() ?? [];
+        var explicitMappings = mappings.ToDictionary(static mapping => mapping.Source);
+        var candidates = mappings
+            .Where(mapping => mapping.Target == source)
+            .Select(mapping => mapping.Source)
+            .Distinct()
+            .ToList();
 
-            target = mapping.Target;
-            isTransparent = mapping.IsTransparent || mapping.Target is null;
-            return true;
+        if (!explicitMappings.ContainsKey(source))
+        {
+            candidates.Insert(0, source);
         }
 
-        return false;
+        if (candidates.Count == 0)
+        {
+            return false;
+        }
+
+        target = candidates[0];
+        return true;
     }
 
     private bool TryResolveSourceFromTarget(PixelCoordinate target, out PixelCoordinate source)
     {
         source = default;
 
-        if (_editorSession.CurrentConfig is null)
+        if (ResolveSourceCoordinateForEditable(target) is not { } resolvedSource)
         {
             return false;
         }
 
-        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(GetSafeSelectedDirection()))
-        {
-            if (mapping.Target != target)
-            {
-                continue;
-            }
+        source = resolvedSource;
+        return true;
+    }
 
-            source = mapping.Source;
-            return true;
+    private PixelCoordinate? ResolvePreferredEditableCoordinate(PixelCoordinate sourceCoordinate) =>
+        TryResolveTargetFromSource(sourceCoordinate, out var editableCoordinate, out _)
+            ? editableCoordinate
+            : null;
+
+    private PixelCoordinate? ResolveSourceCoordinateForEditable(PixelCoordinate editableCoordinate)
+    {
+        if (_editorSession.CurrentConfig is null)
+        {
+            return editableCoordinate;
         }
 
-        return false;
+        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(GetSafeSelectedDirection()))
+        {
+            if (mapping.Source == editableCoordinate)
+            {
+                return mapping.Target;
+            }
+        }
+
+        return editableCoordinate;
     }
 
     public void HandleBatchSourceSelection(BatchSourceTreeItemViewModel? item)
