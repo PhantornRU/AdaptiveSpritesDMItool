@@ -700,6 +700,18 @@ public partial class WorkspaceShellViewModel
         _isSynchronizingSelectedImportedState = false;
     }
 
+    partial void OnSelectedBatchStateStripItemChanged(BatchStateStripItemViewModel? value)
+    {
+        if (value is null)
+        {
+            BatchQuickPreviewOriginalImage = null;
+            BatchQuickPreviewEditedImage = null;
+            return;
+        }
+
+        RequestBatchQuickPreviewRefresh();
+    }
+
     partial void OnIsPreviewInspectorExpandedChanged(bool value) => PersistWorkspaceSettingsInBackground();
 
     partial void OnIsFocusModeChanged(bool value)

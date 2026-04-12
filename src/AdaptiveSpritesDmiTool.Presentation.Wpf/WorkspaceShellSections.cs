@@ -851,6 +851,12 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
 
     public ObservableCollection<BatchStateStripItemViewModel> StateStripItems => Shell.BatchStateStripItems;
 
+    public BatchStateStripItemViewModel? SelectedStateStripItem
+    {
+        get => Shell.SelectedBatchStateStripItem;
+        set => Shell.SelectedBatchStateStripItem = value;
+    }
+
     public ObservableCollection<ConfigQueueItemViewModel> ConfigQueueItems => Shell.ConfigQueueItems;
 
     public string BatchInputDirectory
@@ -879,32 +885,19 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
 
     public string BatchCurrentFile => Shell.BatchCurrentFile;
 
-    public BitmapSource? QuickPreviewImage
-    {
-        get
-        {
-            if (Shell.CurrentPreviewImage is not null)
-            {
-                return Shell.CurrentPreviewImage;
-            }
+    public BitmapSource? QuickPreviewOriginalImage => Shell.BatchQuickPreviewOriginalImage;
 
-            foreach (var item in Shell.DirectionNavigatorItems)
-            {
-                if (item.IsActive && item.PreviewImage is BitmapSource bitmap)
-                {
-                    return bitmap;
-                }
-            }
+    public BitmapSource? QuickPreviewEditedImage => Shell.BatchQuickPreviewEditedImage;
 
-            return null;
-        }
-    }
+    public bool HasQuickPreviewOriginalImage => QuickPreviewOriginalImage is not null;
 
-    public bool HasQuickPreviewImage => QuickPreviewImage is not null;
+    public bool HasQuickPreviewEditedImage => QuickPreviewEditedImage is not null;
 
-    public string QuickPreviewSummary => HasQuickPreviewImage
-        ? "Quick preview follows the staged sprite/config pair."
-        : "Preview will appear here after the staged sprite/config pair is ready.";
+    public bool HasQuickPreview => HasQuickPreviewOriginalImage || HasQuickPreviewEditedImage;
+
+    public string QuickPreviewSummary => string.IsNullOrWhiteSpace(SelectedStateStripItem?.Name)
+        ? "Select a state to compare original and edited output."
+        : $"Selected state: {SelectedStateStripItem.Name}";
 
     public string QuickPreviewSelectionSummary => string.IsNullOrWhiteSpace(Shell.PreviewSelectionSummary)
         ? "No preview selection."

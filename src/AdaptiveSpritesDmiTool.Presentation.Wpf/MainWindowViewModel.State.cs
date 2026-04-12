@@ -146,6 +146,9 @@ public partial class WorkspaceShellViewModel
     private BatchSourceTreeItemViewModel? selectedBatchSourceItem;
 
     [ObservableProperty]
+    private BatchStateStripItemViewModel? selectedBatchStateStripItem;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     private bool isBusy;
 
@@ -298,6 +301,12 @@ public partial class WorkspaceShellViewModel
 
     [ObservableProperty]
     private BitmapSource? currentPreviewImage;
+
+    [ObservableProperty]
+    private BitmapSource? batchQuickPreviewOriginalImage;
+
+    [ObservableProperty]
+    private BitmapSource? batchQuickPreviewEditedImage;
 
     [ObservableProperty]
     private bool isPreviewImageVisible = true;

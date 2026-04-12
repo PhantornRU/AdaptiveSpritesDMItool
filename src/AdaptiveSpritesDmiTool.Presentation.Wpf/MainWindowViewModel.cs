@@ -51,6 +51,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private readonly Dictionary<(string Path, string StateName, SpriteDirection Direction), SpriteImage?> _importedStateFrameCache = new();
     private CancellationTokenSource? _importedStateRefreshCts;
     private int _importedStateRefreshVersion;
+    private CancellationTokenSource? _batchQuickPreviewRefreshCts;
+    private int _batchQuickPreviewRefreshVersion;
     private Guid? _activeConfigQueueItemId;
     private bool _isSynchronizingSelectedImportedState;
 
@@ -212,6 +214,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         OperationalStatusBar.Detach();
         _importedStateRefreshCts?.Cancel();
         _importedStateRefreshCts?.Dispose();
+        _batchQuickPreviewRefreshCts?.Cancel();
+        _batchQuickPreviewRefreshCts?.Dispose();
         _previewRefreshCoordinator.Dispose();
         _workspaceSettingsPersistenceGate.Dispose();
         GC.SuppressFinalize(this);

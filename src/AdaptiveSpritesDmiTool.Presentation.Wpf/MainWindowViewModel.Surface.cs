@@ -85,6 +85,98 @@ public partial class WorkspaceShellViewModel
         _ = RefreshImportedStateCompositionAsync(version, cancellationSource.Token);
     }
 
+    private void RequestBatchQuickPreviewRefresh()
+    {
+        _batchQuickPreviewRefreshCts?.Cancel();
+        _batchQuickPreviewRefreshCts?.Dispose();
+        _batchQuickPreviewRefreshCts = null;
+
+        if (_editorSession.LoadedAsset is null ||
+            _editorSession.CurrentConfig is null ||
+            string.IsNullOrWhiteSpace(SelectedBatchStateStripItem?.Name))
+        {
+            BatchQuickPreviewOriginalImage = null;
+            BatchQuickPreviewEditedImage = null;
+            return;
+        }
+
+        var cancellationSource = new CancellationTokenSource();
+        _batchQuickPreviewRefreshCts = cancellationSource;
+        var version = ++_batchQuickPreviewRefreshVersion;
+        _ = RefreshBatchQuickPreviewAsync(version, cancellationSource.Token);
+    }
+
+    private async Task RefreshBatchQuickPreviewAsync(int requestVersion, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var stateName = SelectedBatchStateStripItem?.Name;
+            if (_editorSession.LoadedAsset is null ||
+                _editorSession.CurrentConfig is null ||
+                string.IsNullOrWhiteSpace(stateName))
+            {
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    BatchQuickPreviewOriginalImage = null;
+                    BatchQuickPreviewEditedImage = null;
+                });
+                return;
+            }
+
+            var selection = new PreviewSelection(
+                stateName,
+                string.IsNullOrWhiteSpace(LandmarkStateName) ? null : LandmarkStateName.Trim(),
+                string.IsNullOrWhiteSpace(OverlayStateName) ? null : OverlayStateName.Trim());
+            var direction = GetSafeSelectedDirection();
+            var result = await _buildPreviewUseCase.ExecuteAsync(selection, direction, cancellationToken);
+            if (result.IsFailure)
+            {
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    if (requestVersion != _batchQuickPreviewRefreshVersion)
+                    {
+                        return;
+                    }
+
+                    BatchQuickPreviewOriginalImage = null;
+                    BatchQuickPreviewEditedImage = null;
+                });
+                return;
+            }
+
+            var original = _bitmapSourceFactory.Create(result.Value.BaseImage);
+            var edited = _bitmapSourceFactory.Create(result.Value.CompositeImage ?? result.Value.BaseImage);
+
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                if (requestVersion != _batchQuickPreviewRefreshVersion)
+                {
+                    return;
+                }
+
+                BatchQuickPreviewOriginalImage = original;
+                BatchQuickPreviewEditedImage = edited;
+            });
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Failed to refresh batch quick preview.");
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                if (requestVersion != _batchQuickPreviewRefreshVersion)
+                {
+                    return;
+                }
+
+                BatchQuickPreviewOriginalImage = null;
+                BatchQuickPreviewEditedImage = null;
+            });
+        }
+    }
+
     private async Task RefreshImportedStateCompositionAsync(int requestVersion, CancellationToken cancellationToken)
     {
         try
@@ -816,11 +908,20 @@ public partial class WorkspaceShellViewModel
 
     private void RefreshBatchPipelineState()
     {
+        var previousSelectedStateName = SelectedBatchStateStripItem?.Name;
         BatchStateStripItems.Clear();
         foreach (var state in _editorSession.LoadedAsset?.States ?? Array.Empty<DmiStateInfo>())
         {
             BatchStateStripItems.Add(new BatchStateStripItemViewModel(state.Name));
         }
+
+        SelectedBatchStateStripItem = BatchStateStripItems.FirstOrDefault(item =>
+            string.Equals(item.Name, previousSelectedStateName, StringComparison.OrdinalIgnoreCase))
+            ?? BatchStateStripItems.FirstOrDefault(item =>
+                string.Equals(item.Name, SelectedExplorerState, StringComparison.OrdinalIgnoreCase))
+            ?? BatchStateStripItems.FirstOrDefault(item =>
+                string.Equals(item.Name, "human32x", StringComparison.OrdinalIgnoreCase))
+            ?? BatchStateStripItems.FirstOrDefault();
 
         BatchSourceTreeItems.Clear();
         if (!string.IsNullOrWhiteSpace(BatchInputDirectory) && Directory.Exists(BatchInputDirectory))
@@ -839,6 +940,7 @@ public partial class WorkspaceShellViewModel
 
         OnPropertyChanged(nameof(BatchStateStripItems));
         OnPropertyChanged(nameof(BatchSourceTreeItems));
+        RequestBatchQuickPreviewRefresh();
     }
 
     private void RefreshActivePreviewPresentation()
@@ -859,6 +961,7 @@ public partial class WorkspaceShellViewModel
             or PreviewDisplayMode.Composite;
         IsPreviewGridVisible = SelectedPreviewDisplayMode == PreviewDisplayMode.Grid;
         IsPreviewTextVisible = SelectedPreviewDisplayMode == PreviewDisplayMode.TextGrid;
+        RequestBatchQuickPreviewRefresh();
     }
 
     private void ClearPreviewArtifacts()
@@ -870,6 +973,8 @@ public partial class WorkspaceShellViewModel
         _navigatorBaseImages.Clear();
         _navigatorCompositeImages.Clear();
         CurrentPreviewImage = null;
+        BatchQuickPreviewOriginalImage = null;
+        BatchQuickPreviewEditedImage = null;
         PreviewSummary = "Build a preview to render the selected base, landmark, and overlay states.";
         PreviewTextGrid = "No config grid is available yet.";
     }

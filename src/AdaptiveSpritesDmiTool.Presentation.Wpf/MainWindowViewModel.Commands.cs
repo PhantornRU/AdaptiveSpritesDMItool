@@ -22,6 +22,11 @@ public partial class WorkspaceShellViewModel
 
         ApplyWorkspaceSettings(settingsResult.Value);
         await RestoreWorkspaceAsync();
+        if (HasLoadedAsset && !HasActiveConfig)
+        {
+            CreateImplicitDraftConfig(forceNewQueueItem: true);
+        }
+
         RefreshWorkspaceState();
         if (HasEditorWorkflow)
         {
@@ -667,11 +672,31 @@ public partial class WorkspaceShellViewModel
                     return;
                 }
 
+                if (!CanMergeImportedStates(result.Value, out var resolutionError))
+                {
+                    StatusMessage = resolutionError;
+                    return;
+                }
+
                 await MergeImportedStatesFromAssetAsync(result.Value, cancellationToken);
                 StatusMessage = $"Merged {result.Value.States.Count} state(s) from '{result.Value.DisplayName}'.";
                 RefreshEditorSurface();
                 PersistWorkspaceSettingsInBackground();
             });
+    }
+
+    private bool CanMergeImportedStates(DmiAssetInfo asset, out string message)
+    {
+        var baseline = ResolveEditorResolution();
+        if (baseline is null || asset.Resolution == baseline.Value)
+        {
+            message = string.Empty;
+            return true;
+        }
+
+        message =
+            $"Cannot add states from '{asset.DisplayName}': resolution {asset.Resolution} does not match current {baseline.Value}.";
+        return false;
     }
 
     [RelayCommand(CanExecute = nameof(CanCreateConfig))]

@@ -125,6 +125,19 @@ public partial class WorkspaceShellViewModel
                 _logger.LogWarning("Startup config restore failed: {Message}", configResult.Error.Message);
             }
         }
+        else if (!string.IsNullOrWhiteSpace(LegacyCsvPath) && File.Exists(LegacyCsvPath))
+        {
+            var legacyResult = await _importLegacyCsvConfigUseCase.ExecuteAsync(LegacyCsvPath, CancellationToken.None);
+            if (legacyResult.IsFailure)
+            {
+                _logger.LogWarning("Startup legacy config restore failed: {Message}", legacyResult.Error.Message);
+            }
+        }
+
+        if (_editorSession.LoadedAsset is not null && _editorSession.CurrentConfig is null)
+        {
+            CreateImplicitDraftConfig(forceNewQueueItem: true);
+        }
 
         if (_editorSession.LoadedAsset is not null && _editorSession.CurrentConfig is not null && !string.IsNullOrWhiteSpace(BaseStateName))
         {
@@ -219,6 +232,7 @@ public partial class WorkspaceShellViewModel
         EditorAssetItems.Clear();
         BatchStateStripItems.Clear();
         BatchSourceTreeItems.Clear();
+        SelectedBatchStateStripItem = null;
         DirectionNavigatorItems.Clear();
         DirectionTiles.Clear();
         ClearPreviewArtifacts();
@@ -270,10 +284,12 @@ public partial class WorkspaceShellViewModel
     {
         if (AutoPreviewMode != AutoPreviewMode.Enabled || !CanAttemptPreviewRefresh())
         {
+            RequestBatchQuickPreviewRefresh();
             return;
         }
 
         _previewRefreshCoordinator.Request(token => TryBuildPreviewAsync(userInitiated: false, token));
+        RequestBatchQuickPreviewRefresh();
     }
 
     private bool CanAttemptPreviewRefresh() =>
