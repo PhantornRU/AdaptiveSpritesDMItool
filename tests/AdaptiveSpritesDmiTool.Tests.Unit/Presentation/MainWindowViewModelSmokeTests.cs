@@ -386,6 +386,78 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task EightDirectionParallelScopeShouldMirrorDiagonalPairOnly()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Eight),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.UseCentralizedPropagation = true;
+        viewModel.SelectedDirection = SpriteDirection.SouthEast;
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.SouthEast, 3, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 2));
+
+        AssertDirectionMappings(
+            viewModel,
+            SpriteDirection.SouthEast,
+            (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(
+            viewModel,
+            SpriteDirection.NorthWest,
+            (new PixelCoordinate(2, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.SouthWest);
+        AssertDirectionMappings(viewModel, SpriteDirection.NorthEast);
+        AssertDirectionMappings(viewModel, SpriteDirection.South);
+        AssertDirectionMappings(viewModel, SpriteDirection.North);
+        AssertDirectionMappings(viewModel, SpriteDirection.East);
+        AssertDirectionMappings(viewModel, SpriteDirection.West);
+    }
+
+    [Fact]
+    public async Task EightDirectionAllScopeShouldPreserveCardinalCoordinatesAndMirrorDiagonalFamily()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Eight),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.UseCentralizedPropagation = true;
+        viewModel.SelectedDirection = SpriteDirection.SouthEast;
+        viewModel.SelectedDirectionScope = DirectionScope.All;
+
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.SouthEast, 3, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 2));
+
+        AssertDirectionMappings(viewModel, SpriteDirection.SouthEast, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.NorthWest, (new PixelCoordinate(2, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.SouthWest, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.NorthEast, (new PixelCoordinate(2, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.South, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.North, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.East, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.West, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
+    }
+
+    [Fact]
     public async Task SelectToolShouldCopyEditableSelectionToNewLocation()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -449,6 +521,77 @@ public sealed class MainWindowViewModelSmokeTests
 
         AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 0), new PixelCoordinate(0, 1));
         AssertDirectionHasMapping(viewModel, SpriteDirection.North, new PixelCoordinate(1, 0), new PixelCoordinate(3, 2));
+    }
+
+    [Fact]
+    public async Task EightDirectionScopedMoveShouldUseDirectionSpecificPayloadForDiagonalPair()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Eight),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.UseCentralizedPropagation = true;
+
+        ApplySingleMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(0, 1), new PixelCoordinate(0, 0));
+        ApplySingleMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(3, 2), new PixelCoordinate(2, 0));
+
+        viewModel.SelectedDirection = SpriteDirection.SouthEast;
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+        viewModel.SelectedEditorTool = EditorTool.Move;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.SouthEast, 1, 0));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.SouthEast, 1, 0));
+
+        AssertDirectionHasMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(1, 0), new PixelCoordinate(0, 1));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(1, 0), new PixelCoordinate(3, 2));
+    }
+
+    [Fact]
+    public async Task EightDirectionScopedSelectShouldUseDirectionSpecificPayloadForDiagonalPair()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Eight),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.UseCentralizedPropagation = true;
+
+        ApplySingleMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(0, 0), new PixelCoordinate(0, 1));
+        ApplySingleMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(1, 0), new PixelCoordinate(0, 2));
+        ApplySingleMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(3, 0), new PixelCoordinate(2, 1));
+        ApplySingleMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(2, 0), new PixelCoordinate(2, 2));
+
+        viewModel.SelectedDirection = SpriteDirection.SouthEast;
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 2));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.SouthEast, 1, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.SouthEast, 1, 1));
+
+        AssertDirectionHasMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(1, 1), new PixelCoordinate(0, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(1, 2), new PixelCoordinate(1, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(1, 1), new PixelCoordinate(3, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(1, 2), new PixelCoordinate(2, 0));
     }
 
     [Fact]

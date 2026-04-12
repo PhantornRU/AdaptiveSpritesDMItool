@@ -828,6 +828,14 @@ public sealed class PreviewPanelViewModel(WorkspaceShellViewModel shell) : Shell
 
     public bool IsPreviewTextVisible => Shell.IsPreviewTextVisible;
 
+    public bool HasImagePreview => IsPreviewImageVisible && CurrentPreviewImage is not null;
+
+    public bool HasGridPreview => IsPreviewGridVisible && PreviewGridRows.Count > 0;
+
+    public bool HasTextPreview => IsPreviewTextVisible && !string.IsNullOrWhiteSpace(PreviewTextGrid);
+
+    public bool HasRenderablePreview => HasImagePreview || HasGridPreview || HasTextPreview;
+
     public ObservableCollection<PixelRowViewModel> PreviewGridRows => Shell.PreviewGridRows;
 
     public string PreviewTextGrid => Shell.PreviewTextGrid;

@@ -16,6 +16,20 @@
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         Background="{StaticResource Brush.WindowBackground}">
+    <Window.InputBindings>
+        <KeyBinding Key="D1" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" />
+        <KeyBinding Key="D2" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" />
+        <KeyBinding Key="D3" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" />
+        <KeyBinding Key="D4" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" />
+        <KeyBinding Key="F1" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" />
+        <KeyBinding Key="F2" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Undo}" />
+        <KeyBinding Key="F3" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.UndoArea}" />
+        <KeyBinding Key="D1" Modifiers="Alt" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" />
+        <KeyBinding Key="D2" Modifiers="Alt" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" />
+        <KeyBinding Key="D3" Modifiers="Alt" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" />
+        <KeyBinding Key="Z" Modifiers="Control" Command="{Binding UndoCommand}" />
+        <KeyBinding Key="Z" Modifiers="Control+Shift" Command="{Binding RedoCommand}" />
+    </Window.InputBindings>
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <sys:String x:Key="Icon.Tool.Paint">AddSquare20</sys:String>
@@ -1099,6 +1113,18 @@
                                             <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
                                                       IsChecked="{Binding DataContext.EditorWorkspace.ShowOverlayToggle, RelativeSource={RelativeSource AncestorType=Window}}"
                                                       Content="Layered" />
+                                            <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                      IsChecked="{Binding MirrorAcrossDirections, Mode=TwoWay}"
+                                                      ToolTip="Mirror editable coordinates across opposite directions"
+                                                      Content="Mirror" />
+                                            <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                      IsChecked="{Binding UseCentralizedPropagation, Mode=TwoWay}"
+                                                      ToolTip="Use centralized offset when mirroring propagated edits"
+                                                      Content="Center" />
+                                            <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                      IsChecked="{Binding GridAboveImage, Mode=TwoWay}"
+                                                      ToolTip="Show grid captions over pixels"
+                                                      Content="Captions" />
                                         </StackPanel>
 
                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
@@ -1163,6 +1189,24 @@
                                                           ToolTip="Show overlay layer"
                                                           AutomationProperties.Name="Show overlay layer">
                                                     <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Layer20" />
+                                                </CheckBox>
+                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
+                                                          IsChecked="{Binding MirrorAcrossDirections, Mode=TwoWay}"
+                                                          ToolTip="Mirror edits across opposite directions"
+                                                          AutomationProperties.Name="Mirror directions">
+                                                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="M" />
+                                                </CheckBox>
+                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
+                                                          IsChecked="{Binding UseCentralizedPropagation, Mode=TwoWay}"
+                                                          ToolTip="Use centralized mirrored propagation"
+                                                          AutomationProperties.Name="Centralized propagation">
+                                                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="C" />
+                                                </CheckBox>
+                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
+                                                          IsChecked="{Binding GridAboveImage, Mode=TwoWay}"
+                                                          ToolTip="Show captions on grid cells"
+                                                          AutomationProperties.Name="Show captions">
+                                                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="T" />
                                                 </CheckBox>
                                             </StackPanel>
 
@@ -1635,6 +1679,7 @@
                                 <Grid Grid.RowSpan="3" Grid.Column="4" Visibility="{Binding ShowRightDirectionStrip, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                         <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
 
@@ -1666,6 +1711,146 @@
                                     </Border>
 
                                     <Border Grid.Row="1"
+                                            Margin="0,6,0,0"
+                                            Padding="6"
+                                            Background="#FFFDF8EF"
+                                            BorderBrush="{StaticResource Brush.PanelBorder}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            DataContext="{Binding DataContext.PreviewPanel, RelativeSource={RelativeSource AncestorType=Window}}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+                                            <DockPanel LastChildFill="False">
+                                                <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Preview" />
+                                                <CheckBox DockPanel.Dock="Right"
+                                                          Style="{StaticResource DockIconCheckBoxStyle}"
+                                                          IsChecked="{Binding IsAutoPreviewEnabled, Mode=TwoWay}"
+                                                          ToolTip="Auto preview"
+                                                          AutomationProperties.Name="Auto preview">
+                                                    <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FlashAuto20" />
+                                                </CheckBox>
+                                            </DockPanel>
+                                            <ComboBox Grid.Row="1"
+                                                      Margin="0,6,0,0"
+                                                      ItemsSource="{Binding PreviewDisplayModes}"
+                                                      SelectedItem="{Binding SelectedPreviewDisplayMode, Mode=TwoWay}" />
+                                            <Button Grid.Row="2"
+                                                    Margin="0,6,0,0"
+                                                    Padding="8,3"
+                                                    Command="{Binding BuildPreviewCommand}"
+                                                    Content="Refresh preview" />
+                                            <TextBlock Grid.Row="3"
+                                                       Margin="0,6,0,0"
+                                                       FontSize="10"
+                                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                                       TextWrapping="Wrap"
+                                                       Text="{Binding PreviewSelectionSummary}" />
+                                            <Border Grid.Row="4"
+                                                    Margin="0,6,0,0"
+                                                    Padding="4"
+                                                    Background="White"
+                                                    BorderBrush="{StaticResource Brush.PanelBorder}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="10"
+                                                    MinHeight="132">
+                                                <Grid>
+                                                    <Image Source="{Binding CurrentPreviewImage}"
+                                                           Stretch="Uniform"
+                                                           RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                                           SnapsToDevicePixels="True">
+                                                        <Image.Style>
+                                                            <Style TargetType="Image">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding HasImagePreview}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Image.Style>
+                                                    </Image>
+                                                    <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                                        <Viewbox.Style>
+                                                            <Style TargetType="Viewbox">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding HasGridPreview}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Viewbox.Style>
+                                                        <ItemsControl ItemsSource="{Binding PreviewGridRows}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <ItemsControl ItemsSource="{Binding Cells}" ItemTemplate="{StaticResource PreviewCellTemplate}">
+                                                                        <ItemsControl.ItemsPanel>
+                                                                            <ItemsPanelTemplate>
+                                                                                <StackPanel Orientation="Horizontal" />
+                                                                            </ItemsPanelTemplate>
+                                                                        </ItemsControl.ItemsPanel>
+                                                                    </ItemsControl>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </Viewbox>
+                                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                                                  HorizontalScrollBarVisibility="Auto"
+                                                                  Padding="2">
+                                                        <ScrollViewer.Style>
+                                                            <Style TargetType="ScrollViewer">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding HasTextPreview}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </ScrollViewer.Style>
+                                                        <TextBox IsReadOnly="True"
+                                                                 BorderThickness="0"
+                                                                 Background="Transparent"
+                                                                 FontFamily="Consolas"
+                                                                 FontSize="11"
+                                                                 Text="{Binding PreviewTextGrid}" />
+                                                    </ScrollViewer>
+                                                    <StackPanel HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                MaxWidth="132">
+                                                        <StackPanel.Style>
+                                                            <Style TargetType="StackPanel">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding HasRenderablePreview}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </StackPanel.Style>
+                                                        <TextBlock HorizontalAlignment="Center"
+                                                                   FontSize="12"
+                                                                   FontWeight="SemiBold"
+                                                                   Text="Preview" />
+                                                        <TextBlock Margin="0,6,0,0"
+                                                                   HorizontalAlignment="Center"
+                                                                   FontSize="10"
+                                                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                                                   TextAlignment="Center"
+                                                                   TextWrapping="Wrap"
+                                                                   Text="{Binding PreviewSummary}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Grid.Row="2"
                                             Margin="0,6,0,0"
                                             Padding="6"
                                             VerticalAlignment="Stretch"

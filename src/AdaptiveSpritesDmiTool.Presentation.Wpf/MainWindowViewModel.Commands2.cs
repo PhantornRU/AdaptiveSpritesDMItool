@@ -607,6 +607,20 @@ public partial class WorkspaceShellViewModel
 
     partial void OnSelectedPreviewDisplayModeChanged(PreviewDisplayMode value) => RefreshActivePreviewPresentation();
 
+    partial void OnMirrorAcrossDirectionsChanged(bool value)
+    {
+        EditorStatus = value
+            ? "Direction mirroring enabled for propagated edits."
+            : "Direction mirroring disabled for propagated edits.";
+    }
+
+    partial void OnUseCentralizedPropagationChanged(bool value)
+    {
+        EditorStatus = value
+            ? "Centralized propagation enabled for mirrored directions."
+            : "Centralized propagation disabled for mirrored directions.";
+    }
+
     partial void OnAutoPreviewModeChanged(AutoPreviewMode value)
     {
         if (value == AutoPreviewMode.Enabled)
