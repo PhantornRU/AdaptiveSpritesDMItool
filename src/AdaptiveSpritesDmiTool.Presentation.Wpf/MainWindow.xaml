@@ -817,6 +817,9 @@
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsValid}" Value="False">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Warning}" />
+                            </DataTrigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
                                 <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SurfaceSubtle}" />
@@ -841,9 +844,9 @@
             <Setter Property="FontSize" Value="14" />
         </Style>
         <Style x:Key="RailSymbolIconStyle" TargetType="{x:Type ui:SymbolIcon}">
-            <Setter Property="Width" Value="20" />
-            <Setter Property="Height" Value="20" />
-            <Setter Property="FontSize" Value="20" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="FontSize" Value="24" />
             <Setter Property="Filled" Value="True" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
         </Style>
@@ -905,7 +908,7 @@
         </Style>
         <Style x:Key="RailListBoxItemStyle" TargetType="ListBoxItem">
             <Setter Property="Margin" Value="0,0,0,2" />
-            <Setter Property="Padding" Value="0,2" />
+            <Setter Property="Padding" Value="0,8" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
             <Setter Property="IsEnabled" Value="{Binding IsAvailable}" />
@@ -1201,7 +1204,21 @@
             </Border>
         </DataTemplate>
         <HierarchicalDataTemplate x:Key="BatchSourceTreeItemTemplate" ItemsSource="{Binding Children}">
-            <TextBlock Foreground="{DynamicResource Brush.TextPrimary}" Text="{Binding Name}" />
+            <Border x:Name="BatchSourceTreeRoot"
+                    Padding="2,1"
+                    CornerRadius="4"
+                    ToolTip="{Binding ValidationMessage}">
+                <TextBlock x:Name="BatchSourceTreeLabel"
+                           Foreground="{DynamicResource Brush.TextPrimary}"
+                           Text="{Binding Name}" />
+            </Border>
+            <HierarchicalDataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsValid}" Value="False">
+                    <Setter TargetName="BatchSourceTreeRoot" Property="BorderBrush" Value="{DynamicResource Brush.Warning}" />
+                    <Setter TargetName="BatchSourceTreeRoot" Property="BorderThickness" Value="1" />
+                    <Setter TargetName="BatchSourceTreeLabel" Property="Foreground" Value="{DynamicResource Brush.Warning}" />
+                </DataTrigger>
+            </HierarchicalDataTemplate.Triggers>
         </HierarchicalDataTemplate>
     </Window.Resources>
 
@@ -1241,7 +1258,7 @@
 
             <Grid Margin="0,0,0,6">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="32" />
+                    <ColumnDefinition Width="96" />
                     <ColumnDefinition Width="4" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
@@ -1597,19 +1614,19 @@
                                                           IsChecked="{Binding MirrorAcrossDirections, Mode=TwoWay}"
                                                           ToolTip="Mirror edits across opposite directions"
                                                           AutomationProperties.Name="Mirror directions">
-                                                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="M" />
+                                                    <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="DualScreenMirror20" />
                                                 </CheckBox>
                                                 <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding UseCentralizedPropagation, Mode=TwoWay}"
                                                           ToolTip="Use centralized mirrored propagation"
                                                           AutomationProperties.Name="Centralized propagation">
-                                                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="C" />
+                                                    <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="TableCellsMerge20" />
                                                 </CheckBox>
                                                 <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding GridAboveImage, Mode=TwoWay}"
                                                           ToolTip="Show captions on grid cells"
                                                           AutomationProperties.Name="Show captions">
-                                                    <TextBlock FontSize="10" FontWeight="SemiBold" Text="T" />
+                                                    <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Grid20" />
                                                 </CheckBox>
                                             </StackPanel>
 
@@ -1685,7 +1702,8 @@
                                                                  ScrollViewer.VerticalScrollBarVisibility="Auto">
                                                             <ListBox.ItemTemplate>
                                                                 <DataTemplate>
-                                                                        <Grid HorizontalAlignment="Stretch">
+                                                                        <Grid HorizontalAlignment="Stretch"
+                                                                              ToolTip="{Binding ValidationMessage}">
                                                                             <Grid.ColumnDefinitions>
                                                                                 <ColumnDefinition Width="52" />
                                                                                 <ColumnDefinition Width="*" />
@@ -1693,6 +1711,7 @@
                                                                             </Grid.ColumnDefinitions>
                                                                         <Border Width="40"
                                                                                 Height="40"
+                                                                                x:Name="ImportedStatePreview"
                                                                                 Background="{DynamicResource Brush.ControlBackground}"
                                                                                 BorderBrush="{DynamicResource Brush.PanelBorder}"
                                                                                 BorderThickness="1"
@@ -1700,11 +1719,13 @@
                                                                             <Image Stretch="Uniform" Source="{Binding PreviewImage}" />
                                                                         </Border>
                                                                         <StackPanel Grid.Column="1" Margin="8,0,10,0" VerticalAlignment="Center">
-                                                                            <TextBlock FontWeight="SemiBold"
+                                                                            <TextBlock x:Name="ImportedStateName"
+                                                                                       FontWeight="SemiBold"
                                                                                        Foreground="{DynamicResource Brush.TextPrimary}"
                                                                                        Text="{Binding StateName}"
                                                                                        TextTrimming="CharacterEllipsis" />
-                                                                            <TextBlock Margin="0,2,0,0"
+                                                                            <TextBlock x:Name="ImportedStateSource"
+                                                                                       Margin="0,2,0,0"
                                                                                        Foreground="{DynamicResource Brush.TextPrimary}"
                                                                                        FontSize="11"
                                                                                        Text="{Binding SourceFileLabel}"
@@ -1719,8 +1740,8 @@
                                                                                     <ColumnDefinition Width="Auto" />
                                                                                     <ColumnDefinition Width="Auto" />
                                                                                 </Grid.ColumnDefinitions>
-                                                                            <Button Grid.Row="0"
-                                                                                    Grid.ColumnSpan="2"
+                                                                            <Button Grid.ColumnSpan="2"
+                                                                                    Grid.RowSpan="2"
                                                                                     Style="{StaticResource ItemRemoveButtonStyle}"
                                                                                     Padding="0"
                                                                                     Width="18"
@@ -1760,6 +1781,13 @@
                                                                                      Text="{Binding OrderText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                                                         </Grid>
                                                                     </Grid>
+                                                                    <DataTemplate.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsValid}" Value="False">
+                                                                            <Setter TargetName="ImportedStatePreview" Property="BorderBrush" Value="{DynamicResource Brush.Warning}" />
+                                                                            <Setter TargetName="ImportedStateName" Property="Foreground" Value="{DynamicResource Brush.Warning}" />
+                                                                            <Setter TargetName="ImportedStateSource" Property="Foreground" Value="{DynamicResource Brush.Warning}" />
+                                                                        </DataTrigger>
+                                                                    </DataTemplate.Triggers>
                                                                 </DataTemplate>
                                                             </ListBox.ItemTemplate>
                                                         </ListBox>

@@ -53,6 +53,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private int _importedStateRefreshVersion;
     private CancellationTokenSource? _batchQuickPreviewRefreshCts;
     private int _batchQuickPreviewRefreshVersion;
+    private CancellationTokenSource? _batchSourceValidationCts;
+    private int _batchSourceValidationVersion;
     private DmiAssetInfo? _selectedBatchPreviewAsset;
     private Guid? _activeConfigQueueItemId;
     private bool _isSynchronizingSelectedImportedState;

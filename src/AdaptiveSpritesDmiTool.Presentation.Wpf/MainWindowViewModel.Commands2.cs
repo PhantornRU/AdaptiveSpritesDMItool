@@ -594,7 +594,7 @@ public partial class WorkspaceShellViewModel
         {
             EditorTool.Single => "Pick a source pixel, then click Editable to draw it.",
             EditorTool.Fill => "Pick a source pixel, then drag across Editable to fill an area.",
-            EditorTool.Delete => "Drag across Editable to make pixels transparent.",
+            EditorTool.Delete => "Click or drag across Editable to erase pixels.",
             EditorTool.Undo => "Click an Editable pixel to restore its original source.",
             EditorTool.UndoArea => "Drag across Editable to restore an area.",
             EditorTool.Select => "Drag across Editable to select an area, then drag inside it to move the mapped pixels.",

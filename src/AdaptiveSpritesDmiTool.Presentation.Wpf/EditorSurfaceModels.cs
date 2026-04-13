@@ -292,6 +292,12 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
     private BitmapSource? previewImage;
 
     [ObservableProperty]
+    private bool isValid = true;
+
+    [ObservableProperty]
+    private string validationMessage = string.Empty;
+
+    [ObservableProperty]
     private ImportedStatePlacementMode placementMode;
 
     [NotifyPropertyChangedFor(nameof(OrderText))]
@@ -340,19 +346,33 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
     }
 }
 
-public sealed class BatchSourceTreeItemViewModel(
-    string name,
-    string fullPath,
-    bool isDirectory,
-    IEnumerable<BatchSourceTreeItemViewModel>? children = null)
+public sealed partial class BatchSourceTreeItemViewModel : ObservableObject
 {
-    public string Name { get; } = name;
+    public BatchSourceTreeItemViewModel(
+        string name,
+        string fullPath,
+        bool isDirectory,
+        IEnumerable<BatchSourceTreeItemViewModel>? children = null)
+    {
+        Name = name;
+        FullPath = fullPath;
+        IsDirectory = isDirectory;
+        Children = children is null
+            ? []
+            : new ObservableCollection<BatchSourceTreeItemViewModel>(children);
+    }
 
-    public string FullPath { get; } = fullPath;
+    public string Name { get; }
 
-    public bool IsDirectory { get; } = isDirectory;
+    public string FullPath { get; }
 
-    public ObservableCollection<BatchSourceTreeItemViewModel> Children { get; } = children is null
-        ? []
-        : new ObservableCollection<BatchSourceTreeItemViewModel>(children);
+    public bool IsDirectory { get; }
+
+    public ObservableCollection<BatchSourceTreeItemViewModel> Children { get; }
+
+    [ObservableProperty]
+    private bool isValid = true;
+
+    [ObservableProperty]
+    private string validationMessage = string.Empty;
 }

@@ -943,6 +943,8 @@ public partial class WorkspaceShellViewModel
             {
                 SelectedBatchSourceItem = FindBatchSourceTreeItem(BatchSourceTreeItems, previousSelectedBatchSourcePath!);
             }
+
+            BeginBatchSourceTreeValidation();
         }
 
         if (SelectedBatchSourceItem is null && !string.IsNullOrWhiteSpace(previousSelectedBatchSourcePath))

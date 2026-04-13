@@ -162,7 +162,10 @@ public partial class WorkspaceShellViewModel
                 StartEditableAreaDrag(cell.Coordinate, EditableDragAction.FillArea, "Fill drag started in Editable.");
                 break;
             case EditorTool.Delete:
-                StartEditableAreaDrag(cell.Coordinate, EditableDragAction.DeleteArea, "Delete drag started in Editable.");
+                ResetEditableDragState();
+                _selectedArea = new PixelAreaSelection(cell.Coordinate, cell.Coordinate);
+                SelectedAreaSummary = DescribeArea(_selectedArea.Value);
+                ApplyTransparentOperation(_selectedArea.Value, "Erased editable pixel.");
                 break;
             case EditorTool.Undo:
                 EditorStatus = "Release to restore the editable pixel to its original source.";
@@ -196,6 +199,15 @@ public partial class WorkspaceShellViewModel
         ArgumentNullException.ThrowIfNull(cell);
         EnsureActiveDirection(cell.Direction);
         UpdateEditableHoverState(cell.Coordinate);
+
+        if (SelectedEditorTool == EditorTool.Delete)
+        {
+            _selectedEditableCoordinate = cell.Coordinate;
+            _selectedArea = new PixelAreaSelection(cell.Coordinate, cell.Coordinate);
+            SelectedAreaSummary = DescribeArea(_selectedArea.Value);
+            ApplyTransparentOperation(_selectedArea.Value, "Erased editable pixel.");
+            return;
+        }
 
         if (!_isDraggingEditableArea || _editableDragAnchor is null)
         {
@@ -578,8 +590,23 @@ public partial class WorkspaceShellViewModel
             var inspectResult = await _inspectDmiFileUseCase.ExecuteAsync(item.FullPath, CancellationToken.None);
             if (inspectResult.IsSuccess)
             {
+                var currentResolution = ResolveEditorResolution();
+                item.IsValid = currentResolution is null || inspectResult.Value.Resolution == currentResolution.Value;
+                item.ValidationMessage = item.IsValid
+                    ? string.Empty
+                    : $"Resolution {inspectResult.Value.Resolution} does not match current {currentResolution!.Value}.";
                 _selectedBatchPreviewAsset = inspectResult.Value;
             }
+            else
+            {
+                item.IsValid = false;
+                item.ValidationMessage = inspectResult.Error.Message;
+            }
+        }
+        else if (item is not null)
+        {
+            item.IsValid = true;
+            item.ValidationMessage = string.Empty;
         }
 
         RefreshBatchPipelineState(rebuildSourceTree: false);
@@ -933,6 +960,8 @@ public partial class WorkspaceShellViewModel
             _importedStateFrameCache[(asset.SourcePath ?? string.Empty, state.Name, SpriteDirection.South)] =
                 previewResult.IsSuccess ? previewResult.Value : null;
             var previewBitmap = previewResult.IsSuccess ? _bitmapSourceFactory.Create(previewResult.Value) : null;
+            var isValid = previewResult.IsSuccess;
+            var validationMessage = previewResult.IsSuccess ? string.Empty : previewResult.Error.Message;
 
             var existing = ImportedDmiStateItems.FirstOrDefault(item =>
                 string.Equals(item.StateName, state.Name, StringComparison.OrdinalIgnoreCase));
@@ -946,6 +975,8 @@ public partial class WorkspaceShellViewModel
                     previewBitmap,
                     ImportedStatePlacementMode.None,
                     order);
+                imported.IsValid = isValid;
+                imported.ValidationMessage = validationMessage;
                 AttachImportedStateItem(imported);
                 ImportedDmiStateItems.Add(imported);
                 continue;
@@ -954,10 +985,77 @@ public partial class WorkspaceShellViewModel
             existing.SourceFileLabel = Path.GetFileName(asset.SourcePath ?? asset.DisplayName);
             existing.PreviewImage = previewBitmap;
             existing.SourcePath = asset.SourcePath ?? string.Empty;
+            existing.IsValid = isValid;
+            existing.ValidationMessage = validationMessage;
         }
 
         OnPropertyChanged(nameof(ImportedDmiStateItems));
         InvalidateImportedStateFrameCache();
+    }
+
+    private void BeginBatchSourceTreeValidation()
+    {
+        _batchSourceValidationCts?.Cancel();
+        _batchSourceValidationCts?.Dispose();
+        _batchSourceValidationCts = new CancellationTokenSource();
+        var validationVersion = ++_batchSourceValidationVersion;
+        _ = ValidateBatchSourceTreeItemsAsync(validationVersion, _batchSourceValidationCts.Token);
+    }
+
+    private async Task ValidateBatchSourceTreeItemsAsync(int validationVersion, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var resolution = ResolveEditorResolution();
+            foreach (var item in EnumerateBatchSourceTreeItems(BatchSourceTreeItems))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (validationVersion != _batchSourceValidationVersion)
+                {
+                    return;
+                }
+
+                if (item.IsDirectory)
+                {
+                    item.IsValid = true;
+                    item.ValidationMessage = string.Empty;
+                    continue;
+                }
+
+                var inspectResult = await _inspectDmiFileUseCase.ExecuteAsync(item.FullPath, cancellationToken);
+                if (validationVersion != _batchSourceValidationVersion)
+                {
+                    return;
+                }
+
+                if (inspectResult.IsFailure)
+                {
+                    item.IsValid = false;
+                    item.ValidationMessage = inspectResult.Error.Message;
+                    continue;
+                }
+
+                item.IsValid = resolution is null || inspectResult.Value.Resolution == resolution.Value;
+                item.ValidationMessage = item.IsValid
+                    ? string.Empty
+                    : $"Resolution {inspectResult.Value.Resolution} does not match current {resolution!.Value}.";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private static IEnumerable<BatchSourceTreeItemViewModel> EnumerateBatchSourceTreeItems(IEnumerable<BatchSourceTreeItemViewModel> items)
+    {
+        foreach (var item in items)
+        {
+            yield return item;
+            foreach (var child in EnumerateBatchSourceTreeItems(item.Children))
+            {
+                yield return child;
+            }
+        }
     }
 
     private void CreateImplicitDraftConfig(bool forceNewQueueItem = false)
