@@ -722,10 +722,7 @@ public partial class WorkspaceShellViewModel
 
     partial void OnIsFocusModeChanged(bool value)
     {
-        if (value)
-        {
-            IsBottomWorkspaceExpanded = false;
-        }
+        PersistWorkspaceSettingsInBackground();
     }
 
     partial void OnBatchInputDirectoryChanged(string value)

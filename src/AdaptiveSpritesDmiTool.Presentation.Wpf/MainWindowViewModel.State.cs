@@ -264,7 +264,7 @@ public partial class WorkspaceShellViewModel
     private string hoverMappingSummary = "No hover mapping.";
 
     [ObservableProperty]
-    private bool isBottomWorkspaceExpanded;
+    private bool isBottomWorkspaceExpanded = true;
 
     [ObservableProperty]
     private bool isPreviewInspectorExpanded;

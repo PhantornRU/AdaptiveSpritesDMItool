@@ -558,14 +558,31 @@ public partial class WorkspaceShellViewModel
         return editableCoordinate;
     }
 
-    public void HandleBatchSourceSelection(BatchSourceTreeItemViewModel? item)
+    public async Task HandleBatchSourceSelectionAsync(BatchSourceTreeItemViewModel? item)
     {
         SelectedBatchSourceItem = item;
+        SelectedBatchStateStripItem = null;
+        BatchQuickPreviewOriginalImage = null;
+        BatchQuickPreviewEditedImage = null;
         BatchCurrentFile = item is null
             ? string.Empty
             : item.IsDirectory
                 ? item.FullPath
                 : Path.GetFileName(item.FullPath);
+
+        _selectedBatchPreviewAsset = null;
+        if (item is { IsDirectory: false } &&
+            item.FullPath.EndsWith(".dmi", StringComparison.OrdinalIgnoreCase) &&
+            File.Exists(item.FullPath))
+        {
+            var inspectResult = await _inspectDmiFileUseCase.ExecuteAsync(item.FullPath, CancellationToken.None);
+            if (inspectResult.IsSuccess)
+            {
+                _selectedBatchPreviewAsset = inspectResult.Value;
+            }
+        }
+
+        RefreshBatchPipelineState();
     }
 
     [RelayCommand]

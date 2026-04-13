@@ -145,29 +145,37 @@ public partial class App : System.Windows.Application
         var palette = mode switch
         {
             WorkspaceThemeMode.Light => new ThemePalette(
-                WindowBackground: MediaColor.FromRgb(0xF4, 0xEF, 0xE7),
-                PanelBackground: MediaColor.FromRgb(0xFF, 0xFD, 0xF9),
-                PanelBorder: MediaColor.FromRgb(0xD9, 0xCF, 0xC0),
-                Accent: MediaColor.FromRgb(0x1E, 0x5C, 0x54),
-                AccentMuted: MediaColor.FromRgb(0xCD, 0xE0, 0xDB),
-                Warning: MediaColor.FromRgb(0xC6, 0x6A, 0x2B),
-                TextPrimary: MediaColor.FromRgb(0x1F, 0x1C, 0x18),
-                TextSecondary: MediaColor.FromRgb(0x6A, 0x62, 0x58),
-                ControlBackground: MediaColor.FromRgb(0xFD, 0xFD, 0xF8),
-                CardBackground: MediaColors.White,
-                SurfaceSubtle: MediaColor.FromRgb(0xFD, 0xF8, 0xEF)),
+                WindowBackground: MediaColor.FromRgb(0xF4, 0xF7, 0xFB),
+                PanelBackground: MediaColor.FromRgb(0xFF, 0xFF, 0xFF),
+                PanelBorder: MediaColor.FromRgb(0xD5, 0xDE, 0xE8),
+                Accent: MediaColor.FromRgb(0x2A, 0x8F, 0x84),
+                AccentMuted: MediaColor.FromRgb(0xDB, 0xEF, 0xEA),
+                Warning: MediaColor.FromRgb(0xC7, 0x79, 0x24),
+                TextPrimary: MediaColor.FromRgb(0x12, 0x18, 0x20),
+                TextSecondary: MediaColor.FromRgb(0x56, 0x63, 0x72),
+                ControlBackground: MediaColor.FromRgb(0xF5, 0xF8, 0xFB),
+                CardBackground: MediaColor.FromRgb(0xFC, 0xFD, 0xFF),
+                SurfaceSubtle: MediaColor.FromRgb(0xEB, 0xF1, 0xF7),
+                ScrollTrack: MediaColor.FromRgb(0xDF, 0xE7, 0xF0),
+                ScrollThumb: MediaColor.FromRgb(0x94, 0xA9, 0xBC),
+                ScrollThumbHover: MediaColor.FromRgb(0x7A, 0x93, 0xA7),
+                ScrollThumbPressed: MediaColor.FromRgb(0x66, 0x80, 0x95)),
             WorkspaceThemeMode.Warm => new ThemePalette(
-                WindowBackground: MediaColor.FromRgb(0x28, 0x22, 0x1E),
-                PanelBackground: MediaColor.FromRgb(0x34, 0x2D, 0x28),
-                PanelBorder: MediaColor.FromRgb(0x60, 0x51, 0x46),
-                Accent: MediaColor.FromRgb(0xB1, 0x67, 0x3A),
-                AccentMuted: MediaColor.FromRgb(0x63, 0x45, 0x34),
-                Warning: MediaColor.FromRgb(0xD8, 0x9A, 0x4A),
-                TextPrimary: MediaColor.FromRgb(0xF7, 0xED, 0xE2),
-                TextSecondary: MediaColor.FromRgb(0xC9, 0xB7, 0xA7),
-                ControlBackground: MediaColor.FromRgb(0x40, 0x36, 0x2F),
-                CardBackground: MediaColor.FromRgb(0x3B, 0x31, 0x2B),
-                SurfaceSubtle: MediaColor.FromRgb(0x30, 0x29, 0x24)),
+                WindowBackground: MediaColor.FromRgb(0xF6, 0xEC, 0xDF),
+                PanelBackground: MediaColor.FromRgb(0xFE, 0xF7, 0xEC),
+                PanelBorder: MediaColor.FromRgb(0xDB, 0xC8, 0xB1),
+                Accent: MediaColor.FromRgb(0x9B, 0x60, 0x34),
+                AccentMuted: MediaColor.FromRgb(0xEF, 0xDE, 0xCA),
+                Warning: MediaColor.FromRgb(0xC3, 0x7C, 0x37),
+                TextPrimary: MediaColor.FromRgb(0x2E, 0x22, 0x18),
+                TextSecondary: MediaColor.FromRgb(0x70, 0x59, 0x49),
+                ControlBackground: MediaColor.FromRgb(0xFA, 0xF1, 0xE6),
+                CardBackground: MediaColor.FromRgb(0xFF, 0xFA, 0xF3),
+                SurfaceSubtle: MediaColor.FromRgb(0xF0, 0xE3, 0xD2),
+                ScrollTrack: MediaColor.FromRgb(0xE8, 0xD8, 0xC4),
+                ScrollThumb: MediaColor.FromRgb(0xB4, 0x87, 0x61),
+                ScrollThumbHover: MediaColor.FromRgb(0xA1, 0x73, 0x4B),
+                ScrollThumbPressed: MediaColor.FromRgb(0x8E, 0x63, 0x3F)),
             _ => new ThemePalette(
                 WindowBackground: MediaColor.FromRgb(0x17, 0x1A, 0x1F),
                 PanelBackground: MediaColor.FromRgb(0x1F, 0x25, 0x2D),
@@ -175,11 +183,15 @@ public partial class App : System.Windows.Application
                 Accent: MediaColor.FromRgb(0x2D, 0x8C, 0x7F),
                 AccentMuted: MediaColor.FromRgb(0x2A, 0x4D, 0x49),
                 Warning: MediaColor.FromRgb(0xD8, 0x8B, 0x3D),
-                TextPrimary: MediaColor.FromRgb(0xF4, 0xF1, 0xEA),
-                TextSecondary: MediaColor.FromRgb(0xB6, 0xC0, 0xCA),
-                ControlBackground: MediaColor.FromRgb(0x25, 0x2C, 0x35),
-                CardBackground: MediaColor.FromRgb(0x23, 0x2A, 0x33),
-                SurfaceSubtle: MediaColor.FromRgb(0x20, 0x27, 0x30))
+                TextPrimary: MediaColor.FromRgb(0xF7, 0xF5, 0xF0),
+                TextSecondary: MediaColor.FromRgb(0xC2, 0xCC, 0xD6),
+                ControlBackground: MediaColor.FromRgb(0x29, 0x31, 0x3B),
+                CardBackground: MediaColor.FromRgb(0x26, 0x2E, 0x38),
+                SurfaceSubtle: MediaColor.FromRgb(0x22, 0x2A, 0x34),
+                ScrollTrack: MediaColor.FromRgb(0x1B, 0x21, 0x29),
+                ScrollThumb: MediaColor.FromRgb(0x4A, 0x59, 0x68),
+                ScrollThumbHover: MediaColor.FromRgb(0x5D, 0x6F, 0x82),
+                ScrollThumbPressed: MediaColor.FromRgb(0x76, 0x91, 0xAC))
         };
 
         SetBrush(resources, "Brush.WindowBackground", palette.WindowBackground);
@@ -193,19 +205,14 @@ public partial class App : System.Windows.Application
         SetBrush(resources, "Brush.ControlBackground", palette.ControlBackground);
         SetBrush(resources, "Brush.CardBackground", palette.CardBackground);
         SetBrush(resources, "Brush.SurfaceSubtle", palette.SurfaceSubtle);
+        SetBrush(resources, "Brush.ScrollTrack", palette.ScrollTrack);
+        SetBrush(resources, "Brush.ScrollThumb", palette.ScrollThumb);
+        SetBrush(resources, "Brush.ScrollThumbHover", palette.ScrollThumbHover);
+        SetBrush(resources, "Brush.ScrollThumbPressed", palette.ScrollThumbPressed);
     }
 
     private static void SetBrush(ResourceDictionary resources, string key, MediaColor color)
-    {
-        if (resources[key] is SolidColorBrush brush)
-        {
-            brush.Color = color;
-        }
-        else
-        {
-            resources[key] = new SolidColorBrush(color);
-        }
-    }
+        => resources[key] = new SolidColorBrush(color);
 
     private readonly record struct ThemePalette(
         MediaColor WindowBackground,
@@ -218,7 +225,11 @@ public partial class App : System.Windows.Application
         MediaColor TextSecondary,
         MediaColor ControlBackground,
         MediaColor CardBackground,
-        MediaColor SurfaceSubtle);
+        MediaColor SurfaceSubtle,
+        MediaColor ScrollTrack,
+        MediaColor ScrollThumb,
+        MediaColor ScrollThumbHover,
+        MediaColor ScrollThumbPressed);
 
     private void RegisterGlobalExceptionHandlers()
     {

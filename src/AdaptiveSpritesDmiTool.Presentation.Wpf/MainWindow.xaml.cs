@@ -90,9 +90,27 @@ public partial class MainWindow : Window
         }
     }
 
-    private void BatchSourceTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    private async void BatchSourceTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
-        ViewModel.HandleBatchSourceSelection(e.NewValue as BatchSourceTreeItemViewModel);
+        await ViewModel.HandleBatchSourceSelectionAsync(e.NewValue as BatchSourceTreeItemViewModel);
+    }
+
+    private void ThemeModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.ComboBox { SelectedItem: WorkspaceThemeMode mode })
+        {
+            ViewModel.SettingsTab.SelectedThemeMode = mode;
+            App.ApplyThemeMode(mode);
+        }
+    }
+
+    private void ViewportModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.ComboBox { SelectedItem: EditorViewportMode mode } &&
+            ViewModel.SettingsTab.SelectedViewportMode != mode)
+        {
+            ViewModel.SettingsTab.SelectedViewportMode = mode;
+        }
     }
 
     private void EditorSurfaceHost_PreviewMouseWheel(object sender, MouseWheelEventArgs e)

@@ -56,6 +56,7 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
                     return Result.Failure<PreviewBuildResult>(Errors.Validation($"Base state '{baseState.Name}' does not have a readable frame."));
                 }
 
+                using var originalBase = baseFrame.Clone();
                 using var transformedBase = baseFrame.Clone();
                 ApplyConfigToFrame(transformedBase, baseFrame, request.Config, ResolveDirection(baseState, request.Direction));
 
@@ -64,7 +65,7 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
                 using var composite = ComposeLayers(landmarkFrame, transformedBase, overlayFrame);
 
                 var result = new PreviewBuildResult(
-                    ToSpriteImage(transformedBase),
+                    ToSpriteImage(originalBase),
                     landmarkFrame is null ? null : ToSpriteImage(landmarkFrame),
                     overlayFrame is null ? null : ToSpriteImage(overlayFrame),
                     ToSpriteImage(composite));

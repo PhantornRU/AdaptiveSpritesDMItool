@@ -91,8 +91,7 @@ public partial class WorkspaceShellViewModel
         _batchQuickPreviewRefreshCts?.Dispose();
         _batchQuickPreviewRefreshCts = null;
 
-        if (_editorSession.LoadedAsset is null ||
-            _editorSession.CurrentConfig is null ||
+        if (ResolveBatchPreviewAsset() is null ||
             string.IsNullOrWhiteSpace(SelectedBatchStateStripItem?.Name))
         {
             BatchQuickPreviewOriginalImage = null;
@@ -111,8 +110,10 @@ public partial class WorkspaceShellViewModel
         try
         {
             var stateName = SelectedBatchStateStripItem?.Name;
-            if (_editorSession.LoadedAsset is null ||
-                _editorSession.CurrentConfig is null ||
+            var previewAsset = ResolveBatchPreviewAsset();
+            var sourcePath = previewAsset?.SourcePath;
+            if (previewAsset is null ||
+                string.IsNullOrWhiteSpace(sourcePath) ||
                 string.IsNullOrWhiteSpace(stateName))
             {
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
@@ -123,13 +124,9 @@ public partial class WorkspaceShellViewModel
                 return;
             }
 
-            var selection = new PreviewSelection(
-                stateName,
-                string.IsNullOrWhiteSpace(LandmarkStateName) ? null : LandmarkStateName.Trim(),
-                string.IsNullOrWhiteSpace(OverlayStateName) ? null : OverlayStateName.Trim());
             var direction = GetSafeSelectedDirection();
-            var result = await _buildPreviewUseCase.ExecuteAsync(selection, direction, cancellationToken);
-            if (result.IsFailure)
+            var originalFrameResult = await _readStateFrameUseCase.ExecuteAsync(sourcePath, stateName, direction, cancellationToken);
+            if (originalFrameResult.IsFailure)
             {
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 {
@@ -144,8 +141,13 @@ public partial class WorkspaceShellViewModel
                 return;
             }
 
-            var original = _bitmapSourceFactory.Create(result.Value.BaseImage);
-            var edited = _bitmapSourceFactory.Create(result.Value.CompositeImage ?? result.Value.BaseImage);
+            var originalFrame = originalFrameResult.Value;
+            var editedFrame = _editorSession.CurrentConfig is null
+                ? originalFrame
+                : RenderEditableSurfaceImage(originalFrame, direction) ?? originalFrame;
+
+            var original = _bitmapSourceFactory.Create(originalFrame);
+            var edited = _bitmapSourceFactory.Create(editedFrame);
 
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
@@ -650,7 +652,7 @@ public partial class WorkspaceShellViewModel
             return null;
         }
 
-        var referenceImage = ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage: false), direction);
+        var referenceImage = ResolvePreviewImage(direction, useCompositeImage: false);
         var colors = new Color[resolution.Value.Width * resolution.Value.Height];
         var captions = new string[colors.Length];
 
@@ -710,7 +712,9 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
-        var referenceImage = ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage), direction);
+        var referenceImage = isEditable
+            ? ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage), direction)
+            : ResolvePreviewImage(direction, useCompositeImage: false);
         var renderedEditableImage = isEditable
             ? RenderEditableSurfaceImage(referenceImage, direction)
             : null;
@@ -910,7 +914,7 @@ public partial class WorkspaceShellViewModel
     {
         var previousSelectedStateName = SelectedBatchStateStripItem?.Name;
         BatchStateStripItems.Clear();
-        foreach (var state in _editorSession.LoadedAsset?.States ?? Array.Empty<DmiStateInfo>())
+        foreach (var state in ResolveBatchPreviewAsset()?.States ?? Array.Empty<DmiStateInfo>())
         {
             BatchStateStripItems.Add(new BatchStateStripItemViewModel(state.Name));
         }
@@ -932,16 +936,47 @@ public partial class WorkspaceShellViewModel
             }
         }
 
-        if (SelectedBatchSourceItem is not null &&
-            BatchSourceTreeItems.All(item => !string.Equals(item.FullPath, SelectedBatchSourceItem.FullPath, StringComparison.OrdinalIgnoreCase)))
+        var previousSelectedBatchSourcePath = SelectedBatchSourceItem?.FullPath;
+        if (!string.IsNullOrWhiteSpace(previousSelectedBatchSourcePath))
         {
-            SelectedBatchSourceItem = null;
+            SelectedBatchSourceItem = FindBatchSourceTreeItem(BatchSourceTreeItems, previousSelectedBatchSourcePath!);
+        }
+
+        if (SelectedBatchSourceItem is null && !string.IsNullOrWhiteSpace(previousSelectedBatchSourcePath))
+        {
+            _selectedBatchPreviewAsset = null;
         }
 
         OnPropertyChanged(nameof(BatchStateStripItems));
         OnPropertyChanged(nameof(BatchSourceTreeItems));
         RequestBatchQuickPreviewRefresh();
     }
+
+    private static BatchSourceTreeItemViewModel? FindBatchSourceTreeItem(
+        IEnumerable<BatchSourceTreeItemViewModel> items,
+        string fullPath)
+    {
+        foreach (var item in items)
+        {
+            if (string.Equals(item.FullPath, fullPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return item;
+            }
+
+            var nested = FindBatchSourceTreeItem(item.Children, fullPath);
+            if (nested is not null)
+            {
+                return nested;
+            }
+        }
+
+        return null;
+    }
+
+    private DmiAssetInfo? ResolveBatchPreviewAsset()
+        => SelectedBatchSourceItem is null
+            ? _editorSession.LoadedAsset
+            : _selectedBatchPreviewAsset;
 
     private void RefreshActivePreviewPresentation()
     {
@@ -1035,17 +1070,10 @@ public partial class WorkspaceShellViewModel
         return rendered;
     }
 
-    private Brush CreateSourceCellFill(SpriteImage? image, PixelCoordinate coordinate)
-    {
-        if (_selectedSourceCoordinate == coordinate)
-        {
-            return SelectedBrush;
-        }
-
-        return TryReadPixelColor(image, coordinate, out var color)
+    private static Brush CreateSourceCellFill(SpriteImage? image, PixelCoordinate coordinate)
+        => TryReadPixelColor(image, coordinate, out var color)
             ? CreateBrush(color)
             : NeutralBrush;
-    }
 
     private Brush CreateEditableCellFill(SpriteImage? image, PixelCoordinate coordinate, bool hasMapping, PixelMapping mapping)
     {
@@ -1101,9 +1129,7 @@ public partial class WorkspaceShellViewModel
             return Brushes.Transparent;
         }
 
-        return _selectedSourceCoordinate == coordinate
-            ? SelectedBrush
-            : GridBrush;
+        return GridBrush;
     }
 
     private Brush CreateEditableCellBorder(PixelCoordinate coordinate)
@@ -1121,15 +1147,7 @@ public partial class WorkspaceShellViewModel
         return GridBrush;
     }
 
-    private string BuildSourceCellCaption(PixelCoordinate coordinate)
-    {
-        if (_selectedSourceCoordinate == coordinate)
-        {
-            return "S";
-        }
-
-        return string.Empty;
-    }
+    private static string BuildSourceCellCaption(PixelCoordinate coordinate) => string.Empty;
 
     private string BuildEditableCellCaption(PixelCoordinate coordinate, bool hasMapping, PixelMapping mapping)
     {

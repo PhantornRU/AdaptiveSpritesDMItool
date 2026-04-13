@@ -97,7 +97,7 @@ public partial class WorkspaceShellViewModel
         EditorViewMode = EditorViewMode.CompareSplit;
         SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
         IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded;
-        IsBottomWorkspaceExpanded = false;
+        IsBottomWorkspaceExpanded = true;
         IsFocusMode = false;
     }
 
@@ -208,12 +208,13 @@ public partial class WorkspaceShellViewModel
         SelectedEditorLeftDockTab = EditorLeftDockTab.AssetsDmi;
         SelectedEditorAssetTargetSurface = EditorAssetTargetSurface.Source;
         SelectedEditorAssetTargetLayer = EditorAssetTargetLayer.Base;
-        IsBottomWorkspaceExpanded = false;
+        IsBottomWorkspaceExpanded = true;
         IsPreviewInspectorExpanded = false;
         IsFocusMode = false;
         MirrorAcrossDirections = true;
         UseCentralizedPropagation = true;
         SelectedBatchSourceItem = null;
+        _selectedBatchPreviewAsset = null;
         FocusedDirectionTile = null;
         DirectionMatrixColumns = 2;
         ActiveEditorZoom = 2.0;
