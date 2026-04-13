@@ -652,7 +652,7 @@ public partial class WorkspaceShellViewModel
             return null;
         }
 
-        var referenceImage = ResolvePreviewImage(direction, useCompositeImage: false);
+        var referenceImage = ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage: false), direction);
         var colors = new Color[resolution.Value.Width * resolution.Value.Height];
         var captions = new string[colors.Length];
 
@@ -714,7 +714,7 @@ public partial class WorkspaceShellViewModel
 
         var referenceImage = isEditable
             ? ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage), direction)
-            : ResolvePreviewImage(direction, useCompositeImage: false);
+            : ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage: false), direction);
         var renderedEditableImage = isEditable
             ? RenderEditableSurfaceImage(referenceImage, direction)
             : null;
@@ -910,7 +910,7 @@ public partial class WorkspaceShellViewModel
         return null;
     }
 
-    private void RefreshBatchPipelineState()
+    private void RefreshBatchPipelineState(bool rebuildSourceTree = true)
     {
         var previousSelectedStateName = SelectedBatchStateStripItem?.Name;
         BatchStateStripItems.Clear();
@@ -927,19 +927,22 @@ public partial class WorkspaceShellViewModel
                 string.Equals(item.Name, "human32x", StringComparison.OrdinalIgnoreCase))
             ?? BatchStateStripItems.FirstOrDefault();
 
-        BatchSourceTreeItems.Clear();
-        if (!string.IsNullOrWhiteSpace(BatchInputDirectory) && Directory.Exists(BatchInputDirectory))
-        {
-            foreach (var item in BuildBatchSourceTreeItems(BatchInputDirectory))
-            {
-                BatchSourceTreeItems.Add(item);
-            }
-        }
-
         var previousSelectedBatchSourcePath = SelectedBatchSourceItem?.FullPath;
-        if (!string.IsNullOrWhiteSpace(previousSelectedBatchSourcePath))
+        if (rebuildSourceTree)
         {
-            SelectedBatchSourceItem = FindBatchSourceTreeItem(BatchSourceTreeItems, previousSelectedBatchSourcePath!);
+            BatchSourceTreeItems.Clear();
+            if (!string.IsNullOrWhiteSpace(BatchInputDirectory) && Directory.Exists(BatchInputDirectory))
+            {
+                foreach (var item in BuildBatchSourceTreeItems(BatchInputDirectory))
+                {
+                    BatchSourceTreeItems.Add(item);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(previousSelectedBatchSourcePath))
+            {
+                SelectedBatchSourceItem = FindBatchSourceTreeItem(BatchSourceTreeItems, previousSelectedBatchSourcePath!);
+            }
         }
 
         if (SelectedBatchSourceItem is null && !string.IsNullOrWhiteSpace(previousSelectedBatchSourcePath))
@@ -948,7 +951,10 @@ public partial class WorkspaceShellViewModel
         }
 
         OnPropertyChanged(nameof(BatchStateStripItems));
-        OnPropertyChanged(nameof(BatchSourceTreeItems));
+        if (rebuildSourceTree)
+        {
+            OnPropertyChanged(nameof(BatchSourceTreeItems));
+        }
         RequestBatchQuickPreviewRefresh();
     }
 

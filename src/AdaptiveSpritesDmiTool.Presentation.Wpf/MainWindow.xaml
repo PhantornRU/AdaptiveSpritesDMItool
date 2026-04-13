@@ -1241,7 +1241,7 @@
 
             <Grid Margin="0,0,0,6">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="26" />
+                    <ColumnDefinition Width="32" />
                     <ColumnDefinition Width="4" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
@@ -1710,16 +1710,32 @@
                                                                                        Text="{Binding SourceFileLabel}"
                                                                                        TextTrimming="CharacterEllipsis" />
                                                                         </StackPanel>
-                                                                        <Grid Grid.Column="2" Margin="6,10,0,0" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                                                            <Grid.RowDefinitions>
-                                                                                <RowDefinition Height="Auto" />
-                                                                                <RowDefinition Height="Auto" />
-                                                                            </Grid.RowDefinitions>
-                                                                            <Grid.ColumnDefinitions>
-                                                                                <ColumnDefinition Width="Auto" />
-                                                                                <ColumnDefinition Width="Auto" />
-                                                                            </Grid.ColumnDefinitions>
-                                                                            <CheckBox Grid.Column="0"
+                                                                            <Grid Grid.Column="2" Margin="6,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                                                <Grid.RowDefinitions>
+                                                                                    <RowDefinition Height="Auto" />
+                                                                                    <RowDefinition Height="Auto" />
+                                                                                </Grid.RowDefinitions>
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="Auto" />
+                                                                                    <ColumnDefinition Width="Auto" />
+                                                                                </Grid.ColumnDefinitions>
+                                                                            <Button Grid.Row="0"
+                                                                                    Grid.ColumnSpan="2"
+                                                                                    Style="{StaticResource ItemRemoveButtonStyle}"
+                                                                                    Padding="0"
+                                                                                    Width="18"
+                                                                                    Height="18"
+                                                                                    Margin="0,-8,-4,0"
+                                                                                    HorizontalAlignment="Right"
+                                                                                    VerticalAlignment="Top"
+                                                                                    Panel.ZIndex="2"
+                                                                                    Command="{Binding DataContext.RemoveImportedStateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                    CommandParameter="{Binding}"
+                                                                                    ToolTip="Remove imported state"
+                                                                                    AutomationProperties.Name="Remove imported state"
+                                                                                    Content="X" />
+                                                                            <CheckBox Grid.Row="0"
+                                                                                      Grid.Column="0"
                                                                                       Style="{StaticResource StateLayerToggleStyle}"
                                                                                       IsChecked="{Binding IsBackgroundAssigned, Mode=OneWay}"
                                                                                       Command="{Binding DataContext.ToggleImportedStateBackgroundCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -1727,7 +1743,8 @@
                                                                                       ToolTip="Place under the editable sprite as immutable background"
                                                                                       AutomationProperties.Name="Toggle background layer"
                                                                                       Content="Bg" />
-                                                                            <CheckBox Grid.Column="1"
+                                                                            <CheckBox Grid.Row="0"
+                                                                                      Grid.Column="1"
                                                                                       Style="{StaticResource StateLayerToggleStyle}"
                                                                                       IsChecked="{Binding IsOverlayAssigned, Mode=OneWay}"
                                                                                       Command="{Binding DataContext.ToggleImportedStateOverlayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -1742,20 +1759,6 @@
                                                                                      ToolTip="Higher order overlays lower ones inside the same layer group"
                                                                                      Text="{Binding OrderText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                                                         </Grid>
-                                                                        <Button Grid.ColumnSpan="3"
-                                                                                Style="{StaticResource ItemRemoveButtonStyle}"
-                                                                                Padding="0"
-                                                                                Width="18"
-                                                                                Height="18"
-                                                                                Margin="0,-4,-4,0"
-                                                                                HorizontalAlignment="Right"
-                                                                                VerticalAlignment="Top"
-                                                                                Panel.ZIndex="2"
-                                                                                Command="{Binding DataContext.RemoveImportedStateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                                CommandParameter="{Binding}"
-                                                                                ToolTip="Remove imported state"
-                                                                                AutomationProperties.Name="Remove imported state"
-                                                                                Content="X" />
                                                                     </Grid>
                                                                 </DataTemplate>
                                                             </ListBox.ItemTemplate>

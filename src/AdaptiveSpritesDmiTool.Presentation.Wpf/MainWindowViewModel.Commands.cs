@@ -582,7 +582,7 @@ public partial class WorkspaceShellViewModel
             }
         }
 
-        RefreshBatchPipelineState();
+        RefreshBatchPipelineState(rebuildSourceTree: false);
     }
 
     [RelayCommand]
