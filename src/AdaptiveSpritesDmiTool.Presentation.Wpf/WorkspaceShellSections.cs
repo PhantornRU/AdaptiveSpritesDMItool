@@ -445,6 +445,9 @@ public sealed partial class DirectionNavigatorItemViewModel : ObservableObject
     [ObservableProperty]
     private bool isActive;
 
+    [ObservableProperty]
+    private bool isScopeAffected;
+
     public string ShortLabel => Direction switch
     {
         SpriteDirection.South => "S",
@@ -566,6 +569,9 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public bool ShowBottomStatusBar => Shell.ShowBottomStatusBar;
 
     public bool ShowCompactCanvasHeader => Shell.ShowCompactCanvasHeader;
+
+    public bool IsSourceReferenceDimmed =>
+        Shell.SelectedEditorTool is EditorTool.Move or EditorTool.Delete;
 
     public bool IsAssetsDmiLeftDockSelected => Shell.SelectedEditorLeftDockTab == EditorLeftDockTab.AssetsDmi;
 

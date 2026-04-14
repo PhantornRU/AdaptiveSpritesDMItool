@@ -735,12 +735,20 @@ public partial class WorkspaceShellViewModel
     {
         DirectionNavigatorItems.Clear();
         var activeDirection = GetSafeSelectedDirection();
+        var scopeDirections = SelectedDirectionScope switch
+        {
+            DirectionScope.Single => new HashSet<SpriteDirection>([activeDirection]),
+            DirectionScope.Parallel => new HashSet<SpriteDirection>(ResolveParallelDirections(AvailableDirections.ToArray(), activeDirection)),
+            DirectionScope.All => new HashSet<SpriteDirection>(AvailableDirections),
+            _ => new HashSet<SpriteDirection>([activeDirection])
+        };
 
         foreach (var direction in AvailableDirections)
         {
             var item = new DirectionNavigatorItemViewModel(direction)
             {
                 IsActive = direction == activeDirection,
+                IsScopeAffected = scopeDirections.Contains(direction),
                 PreviewImage = BuildNavigatorPreviewImage(direction)
             };
 

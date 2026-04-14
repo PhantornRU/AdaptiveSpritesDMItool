@@ -594,7 +594,7 @@ public partial class WorkspaceShellViewModel
         {
             EditorTool.Single => "Pick a source pixel, then click Editable to draw it.",
             EditorTool.Fill => "Pick a source pixel, then drag across Editable to fill an area.",
-            EditorTool.Delete => "Click or drag across Editable to erase pixels.",
+            EditorTool.Delete => "Click or drag across Editable to restore original pixels.",
             EditorTool.Undo => "Click an Editable pixel to restore its original source.",
             EditorTool.UndoArea => "Drag across Editable to restore an area.",
             EditorTool.Select => "Drag across Editable to select an area, then drag inside it to move the mapped pixels.",
@@ -603,6 +603,21 @@ public partial class WorkspaceShellViewModel
         };
 
         RefreshInteractionState();
+    }
+
+    partial void OnSelectedDirectionScopeChanged(DirectionScope value)
+    {
+        EditorStatus = value switch
+        {
+            DirectionScope.Single => "Edits affect only the active direction.",
+            DirectionScope.Parallel => "Edits affect the active direction and its horizontal pair.",
+            DirectionScope.All => "Edits affect all available directions.",
+            _ => EditorStatus
+        };
+
+        RefreshEditorSurface();
+        RequestAutoPreviewRefresh();
+        PersistWorkspaceSettingsInBackground();
     }
 
     partial void OnSelectedPreviewDisplayModeChanged(PreviewDisplayMode value) => RefreshActivePreviewPresentation();

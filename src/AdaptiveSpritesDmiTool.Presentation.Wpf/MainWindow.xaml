@@ -945,6 +945,10 @@
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsScopeAffected}" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.AccentMuted}" />
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                            </DataTrigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
                                 <Setter TargetName="Root" Property="BorderThickness" Value="2" />
@@ -1128,6 +1132,22 @@
                                Foreground="{DynamicResource Brush.TextPrimary}"
                                Text="{Binding Label}"
                                TextTrimming="CharacterEllipsis" />
+                    <TextBlock FontSize="9"
+                               Foreground="{DynamicResource Brush.TextSecondary}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="Select direction" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsScopeAffected}" Value="True">
+                                        <Setter Property="Text" Value="Affected by scope" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                        <Setter Property="Text" Value="Active direction" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -1588,7 +1608,7 @@
                                                 <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" ToolTip="Fill Editable area from the selected Source pixel" AutomationProperties.Name="Fill tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="PaintBucket20" /></RadioButton>
                                                 <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" ToolTip="Move one Editable pixel mapping" AutomationProperties.Name="Move tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ArrowMove20" /></RadioButton>
                                                 <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" ToolTip="Select Editable area and move it" AutomationProperties.Name="Select tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="SquareHintApps20" /></RadioButton>
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" ToolTip="Delete Editable pixel or area" AutomationProperties.Name="Delete tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Eraser20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" ToolTip="Restore original pixels in Editable" AutomationProperties.Name="Delete tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Eraser20" /></RadioButton>
 
                                             <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="Scope" />
                                                 <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" ToolTip="Single direction" AutomationProperties.Name="Single direction scope"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Square20" /></RadioButton>
@@ -2028,6 +2048,16 @@
                                                     <Grid MinWidth="{Binding ElementName=SourceViewportScrollViewer, Path=ActualWidth}"
                                                           MinHeight="{Binding ElementName=SourceViewportScrollViewer, Path=ActualHeight}"
                                                           Background="{DynamicResource Brush.ControlBackground}">
+                                                        <Grid.Style>
+                                                            <Style TargetType="Grid">
+                                                                <Setter Property="Opacity" Value="1" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsSourceReferenceDimmed}" Value="True">
+                                                                        <Setter Property="Opacity" Value="0.45" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Grid.Style>
                                                                                 <local:EditorSurfaceControl HorizontalAlignment="Center"
                                                                                    VerticalAlignment="Center"
                                                                                    Surface="{Binding ActiveSourceSurface}"

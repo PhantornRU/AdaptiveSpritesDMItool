@@ -165,7 +165,7 @@ public partial class WorkspaceShellViewModel
                 ResetEditableDragState();
                 _selectedArea = new PixelAreaSelection(cell.Coordinate, cell.Coordinate);
                 SelectedAreaSummary = DescribeArea(_selectedArea.Value);
-                ApplyTransparentOperation(_selectedArea.Value, "Erased editable pixel.");
+                ApplyRestoreOperation(_selectedArea.Value, "Restored editable pixel.");
                 break;
             case EditorTool.Undo:
                 EditorStatus = "Release to restore the editable pixel to its original source.";
@@ -205,7 +205,7 @@ public partial class WorkspaceShellViewModel
             _selectedEditableCoordinate = cell.Coordinate;
             _selectedArea = new PixelAreaSelection(cell.Coordinate, cell.Coordinate);
             SelectedAreaSummary = DescribeArea(_selectedArea.Value);
-            ApplyTransparentOperation(_selectedArea.Value, "Erased editable pixel.");
+            ApplyRestoreOperation(_selectedArea.Value, "Restored editable pixel.");
             return;
         }
 
@@ -373,7 +373,7 @@ public partial class WorkspaceShellViewModel
                 }
 
                 SelectedAreaSummary = DescribeArea(deleteArea);
-                ApplyTransparentOperation(deleteArea, "Applied transparent delete to the editable area.");
+                ApplyRestoreOperation(deleteArea, "Restored the editable area to original source pixels.");
                 break;
             case EditableDragAction.RestoreArea:
                 if (completedArea is not { } restoreArea)
