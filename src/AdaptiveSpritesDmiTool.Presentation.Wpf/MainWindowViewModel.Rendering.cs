@@ -97,7 +97,7 @@ public partial class WorkspaceShellViewModel
         EditorViewMode = EditorViewMode.CompareSplit;
         SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
         IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded;
-        IsBottomWorkspaceExpanded = true;
+        IsBottomWorkspaceExpanded = settings.IsBottomWorkspaceExpanded;
         IsFocusMode = false;
     }
 
@@ -163,7 +163,8 @@ public partial class WorkspaceShellViewModel
             SelectedThemeMode.ToString(),
             SelectedEditorViewportMode.ToString(),
             SelectedBottomWorkspaceTab.ToString(),
-            IsPreviewInspectorExpanded);
+            IsPreviewInspectorExpanded,
+            IsBottomWorkspaceExpanded);
 
     private void ResetWorkspaceCore()
     {
@@ -443,6 +444,16 @@ public partial class WorkspaceShellViewModel
                 if (!payload.TryGetValue(direction, out var directionPayload))
                 {
                     continue;
+                }
+
+                foreach (var editableCoordinate in originArea.Enumerate())
+                {
+                    var transformedOriginEditable = TransformEditableCoordinate(
+                        editableCoordinate,
+                        selectedDirection,
+                        direction,
+                        config.Resolution);
+                    next = next.RemoveMapping(direction, transformedOriginEditable);
                 }
 
                 foreach (var (editableCoordinate, sourceCoordinate) in directionPayload)

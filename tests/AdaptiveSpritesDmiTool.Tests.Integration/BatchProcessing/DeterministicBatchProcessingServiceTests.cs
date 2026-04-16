@@ -105,9 +105,13 @@ public sealed class DeterministicBatchProcessingServiceTests : IDisposable
             cancellationTokenSource.Token);
 
         result.IsSuccess.Should().BeTrue();
+        result.Value.Files.Count(file => file.Status == BatchFileStatus.Processed).Should().Be(1);
         result.Value.Files.Should().Contain(file => file.Status == BatchFileStatus.Cancelled);
+        writer.Requests.Should().ContainSingle();
         progress.Values.Should().NotBeEmpty();
+        progress.Values.Should().Contain(value => value.ProcessedFiles == 1 && value.CurrentFile != null);
         progress.Values[^1].ProcessedFiles.Should().Be(2);
+        progress.Values[^1].CurrentFile.Should().BeNull();
     }
 
     private static BatchJobRequest CreateRequest(string inputDirectory, string outputDirectory, OverwritePolicy overwritePolicy) =>

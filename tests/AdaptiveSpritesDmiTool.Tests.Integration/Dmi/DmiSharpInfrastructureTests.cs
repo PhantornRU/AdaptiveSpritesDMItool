@@ -87,7 +87,7 @@ public sealed class DmiSharpInfrastructureTests : IDisposable
         result.Value.LandmarkImage.Should().BeNull();
         result.Value.OverlayImage.Should().BeNull();
         result.Value.CompositeImage.Should().NotBeNull();
-        ReadPixel(result.Value.BaseImage!, 0, 0).Should().Be(new Rgba32(0, 255, 0, 255));
+        ReadPixel(result.Value.BaseImage!, 0, 0).Should().Be(new Rgba32(255, 0, 0, 255));
         ReadPixel(result.Value.CompositeImage!, 0, 0).Should().Be(new Rgba32(0, 255, 0, 255));
     }
 

@@ -85,7 +85,8 @@ public sealed record WorkspaceSettings(
     string? LastThemeMode,
     string? LastEditorViewportMode,
     string? LastBottomWorkspaceTab,
-    bool IsPreviewInspectorExpanded)
+    bool IsPreviewInspectorExpanded,
+    bool IsBottomWorkspaceExpanded)
 {
     public static WorkspaceSettings Empty { get; } = new(
         LastOpenedDmiPath: null,
@@ -102,7 +103,8 @@ public sealed record WorkspaceSettings(
         LastThemeMode: null,
         LastEditorViewportMode: null,
         LastBottomWorkspaceTab: null,
-        IsPreviewInspectorExpanded: true);
+        IsPreviewInspectorExpanded: true,
+        IsBottomWorkspaceExpanded: true);
 }
 
 public interface IConfigRepository

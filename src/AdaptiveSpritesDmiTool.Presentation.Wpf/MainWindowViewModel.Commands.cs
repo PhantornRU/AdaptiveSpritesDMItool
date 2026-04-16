@@ -40,11 +40,24 @@ public partial class WorkspaceShellViewModel
 
     public async Task PersistWorkspaceSettingsAsync()
     {
+        if (_isDisposed)
+        {
+            return;
+        }
+
         var settings = BuildWorkspaceSettings();
-        await _workspaceSettingsPersistenceGate.WaitAsync().ConfigureAwait(false);
+        var lockAcquired = false;
 
         try
         {
+            await _workspaceSettingsPersistenceGate.WaitAsync().ConfigureAwait(false);
+            lockAcquired = true;
+
+            if (_isDisposed)
+            {
+                return;
+            }
+
             var result = await _saveWorkspaceSettingsUseCase
                 .ExecuteAsync(settings, CancellationToken.None)
                 .ConfigureAwait(false);
@@ -53,13 +66,55 @@ public partial class WorkspaceShellViewModel
                 _logger.LogWarning("Failed to persist workspace settings: {Message}", result.Error.Message);
             }
         }
+        catch (ObjectDisposedException) when (_isDisposed)
+        {
+            return;
+        }
         finally
         {
-            _workspaceSettingsPersistenceGate.Release();
+            if (lockAcquired)
+            {
+                try
+                {
+                    _workspaceSettingsPersistenceGate.Release();
+                }
+                catch (ObjectDisposedException) when (_isDisposed)
+                {
+                }
+            }
         }
     }
 
-    private void PersistWorkspaceSettingsInBackground() => _ = PersistWorkspaceSettingsAsync();
+    private void PersistWorkspaceSettingsInBackground()
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+
+        _ = PersistWorkspaceSettingsSafelyAsync();
+    }
+
+    private async Task PersistWorkspaceSettingsSafelyAsync()
+    {
+        try
+        {
+            await PersistWorkspaceSettingsAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is ObjectDisposedException or InvalidOperationException)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _logger.LogWarning(exception, "Workspace settings background persistence was interrupted.");
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Workspace settings background persistence failed.");
+        }
+    }
 
     private void EnsureActiveDirection(SpriteDirection direction)
     {

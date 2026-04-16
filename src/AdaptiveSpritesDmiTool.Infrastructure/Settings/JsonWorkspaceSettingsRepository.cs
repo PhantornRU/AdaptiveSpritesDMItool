@@ -90,7 +90,8 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             Normalize(document.LastThemeMode),
             Normalize(document.LastEditorViewportMode),
             Normalize(document.LastBottomWorkspaceTab),
-            document.IsPreviewInspectorExpanded);
+            document.IsPreviewInspectorExpanded,
+            document.IsBottomWorkspaceExpanded ?? true);
 
     private static WorkspaceSettingsDocument FromDomain(WorkspaceSettings settings) =>
         new()
@@ -110,7 +111,8 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             LastThemeMode = settings.LastThemeMode,
             LastEditorViewportMode = settings.LastEditorViewportMode,
             LastBottomWorkspaceTab = settings.LastBottomWorkspaceTab,
-            IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded
+            IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded,
+            IsBottomWorkspaceExpanded = settings.IsBottomWorkspaceExpanded
         };
 
     private static string? Normalize(string? value) =>
@@ -174,5 +176,7 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         public string? LastBottomWorkspaceTab { get; set; }
 
         public bool IsPreviewInspectorExpanded { get; set; } = true;
+
+        public bool? IsBottomWorkspaceExpanded { get; set; }
     }
 }

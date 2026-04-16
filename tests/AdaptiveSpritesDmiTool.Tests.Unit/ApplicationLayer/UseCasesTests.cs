@@ -81,9 +81,11 @@ public sealed class UseCasesTests
             "overlay",
             SpriteDirection.East,
             OverwritePolicy.FailIfExists,
+            null,
             "Focused",
             "Mappings",
-            false);
+            false,
+            true);
 
         var result = await useCase.ExecuteAsync(settings, CancellationToken.None);
 

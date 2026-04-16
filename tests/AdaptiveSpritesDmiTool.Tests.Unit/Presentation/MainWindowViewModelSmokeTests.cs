@@ -104,6 +104,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.SelectedEditorViewportMode = EditorViewportMode.Focused;
         viewModel.SelectedBottomWorkspaceTab = BottomWorkspaceTab.Mappings;
         viewModel.IsPreviewInspectorExpanded = false;
+        viewModel.IsBottomWorkspaceExpanded = false;
 
         await viewModel.PersistWorkspaceSettingsAsync();
 
@@ -111,6 +112,7 @@ public sealed class MainWindowViewModelSmokeTests
         settingsRepository.Saved!.LastEditorViewportMode.Should().Be(nameof(EditorViewportMode.Focused));
         settingsRepository.Saved.LastBottomWorkspaceTab.Should().Be(nameof(BottomWorkspaceTab.Mappings));
         settingsRepository.Saved.IsPreviewInspectorExpanded.Should().BeFalse();
+        settingsRepository.Saved.IsBottomWorkspaceExpanded.Should().BeFalse();
     }
 
     [Fact]
@@ -159,9 +161,11 @@ public sealed class MainWindowViewModelSmokeTests
                 "overlay",
                 SpriteDirection.East,
                 OverwritePolicy.FailIfExists,
+                null,
                 nameof(EditorViewportMode.Focused),
                 nameof(BottomWorkspaceTab.Mappings),
-                false));
+            false,
+            false));
 
         var viewModel = CreateViewModel(
             settingsRepository,
@@ -172,6 +176,7 @@ public sealed class MainWindowViewModelSmokeTests
         await viewModel.InitializeAsync();
 
         viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
+        viewModel.IsBottomWorkspaceExpanded.Should().BeFalse();
     }
 
     [Fact]
@@ -458,7 +463,7 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
-    public async Task SelectToolShouldCopyEditableSelectionToNewLocation()
+    public async Task SelectToolShouldMoveEditableSelectionToNewLocation()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -488,6 +493,8 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.MappingRows.Should().Contain(row => row.Editable == new PixelCoordinate(2, 1) && row.Source == new PixelCoordinate(0, 0));
         viewModel.MappingRows.Should().Contain(row => row.Editable == new PixelCoordinate(2, 2) && row.Source == new PixelCoordinate(0, 1));
+        viewModel.MappingRows.Should().NotContain(row => row.Editable == new PixelCoordinate(1, 1));
+        viewModel.MappingRows.Should().NotContain(row => row.Editable == new PixelCoordinate(1, 2));
         viewModel.SelectedAreaBounds.Should().Be(new PixelAreaBounds(2, 1, 2, 2));
     }
 
@@ -521,6 +528,8 @@ public sealed class MainWindowViewModelSmokeTests
 
         AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 0), new PixelCoordinate(0, 1));
         AssertDirectionHasMapping(viewModel, SpriteDirection.North, new PixelCoordinate(1, 0), new PixelCoordinate(3, 2));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 0));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.North, new PixelCoordinate(2, 0));
     }
 
     [Fact]
@@ -553,6 +562,8 @@ public sealed class MainWindowViewModelSmokeTests
 
         AssertDirectionHasMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(1, 0), new PixelCoordinate(0, 1));
         AssertDirectionHasMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(1, 0), new PixelCoordinate(3, 2));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(0, 0));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(2, 0));
     }
 
     [Fact]
@@ -645,9 +656,11 @@ public sealed class MainWindowViewModelSmokeTests
                 "overlay",
                 SpriteDirection.East,
                 OverwritePolicy.FailIfExists,
+                null,
                 nameof(EditorViewportMode.Focused),
                 nameof(BottomWorkspaceTab.Mappings),
-                false));
+            false,
+            false));
 
         var viewModel = CreateViewModel(
             settingsRepository,
@@ -662,6 +675,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.ConfigSummary.Should().Contain("Restored Config");
         viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
         viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Mappings);
+        viewModel.IsBottomWorkspaceExpanded.Should().BeFalse();
         viewModel.StartTab.HasRecentWorkspace.Should().BeTrue();
     }
 
@@ -836,6 +850,15 @@ public sealed class MainWindowViewModelSmokeTests
     {
         viewModel.SelectedDirection = direction;
         viewModel.MappingRows.Should().Contain(row => row.Editable == editable && row.Source == source);
+    }
+
+    private static void AssertDirectionDoesNotHaveMapping(
+        MainWindowViewModel viewModel,
+        SpriteDirection direction,
+        PixelCoordinate editable)
+    {
+        viewModel.SelectedDirection = direction;
+        viewModel.MappingRows.Should().NotContain(row => row.Editable == editable);
     }
 
     private sealed class InMemorySettingsRepository(WorkspaceSettings settings) : ISettingsRepository

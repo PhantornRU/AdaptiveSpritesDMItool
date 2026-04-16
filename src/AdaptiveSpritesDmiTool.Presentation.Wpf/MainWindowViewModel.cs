@@ -32,6 +32,7 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private readonly ILogger<WorkspaceShellViewModel> _logger;
     private readonly SemaphoreSlim _workspaceSettingsPersistenceGate = new(1, 1);
     private readonly PreviewRefreshCoordinator _previewRefreshCoordinator = new(TimeSpan.FromMilliseconds(250));
+    private bool _isDisposed;
     private CancellationTokenSource? _activeOperationCts;
     private PixelCoordinate? _selectedSourceCoordinate;
     private PixelCoordinate? _selectedEditableCoordinate;
@@ -209,6 +210,7 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        _isDisposed = true;
         NavigationRail.Detach();
         StartTab.Detach();
         EditorWorkspace.Detach();
@@ -218,10 +220,16 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         BatchWorkspace.Detach();
         SettingsTab.Detach();
         OperationalStatusBar.Detach();
+        _activeOperationCts?.Cancel();
+        _activeOperationCts?.Dispose();
         _importedStateRefreshCts?.Cancel();
         _importedStateRefreshCts?.Dispose();
+        _restoreStrokeFlushCts?.Cancel();
+        _restoreStrokeFlushCts?.Dispose();
         _batchQuickPreviewRefreshCts?.Cancel();
         _batchQuickPreviewRefreshCts?.Dispose();
+        _batchSourceValidationCts?.Cancel();
+        _batchSourceValidationCts?.Dispose();
         _previewRefreshCoordinator.Dispose();
         _workspaceSettingsPersistenceGate.Dispose();
         GC.SuppressFinalize(this);

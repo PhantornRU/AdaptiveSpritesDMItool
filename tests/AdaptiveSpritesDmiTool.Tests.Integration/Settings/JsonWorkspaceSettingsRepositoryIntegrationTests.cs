@@ -31,8 +31,10 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
             "overlay",
             SpriteDirection.NorthEast,
             OverwritePolicy.FailIfExists,
+            null,
             "Focused",
             "Mappings",
+            false,
             false);
 
         (await repository.SaveAsync(settings, CancellationToken.None)).IsSuccess.Should().BeTrue();
@@ -74,6 +76,7 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
         result.Value.LastEditorViewportMode.Should().BeNull();
         result.Value.LastBottomWorkspaceTab.Should().BeNull();
         result.Value.IsPreviewInspectorExpanded.Should().BeTrue();
+        result.Value.IsBottomWorkspaceExpanded.Should().BeTrue();
     }
 
     [Fact]
@@ -84,7 +87,7 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
             path,
             """
             {
-              "version": 3,
+              "version": 4,
               "lastOpenedDmiPath": "sprite.dmi",
               "lastOpenedConfigPath": "config.json",
               "lastImportedLegacyCsvPath": "legacy.csv",

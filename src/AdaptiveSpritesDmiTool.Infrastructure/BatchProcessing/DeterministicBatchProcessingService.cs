@@ -29,14 +29,7 @@ public sealed class DeterministicBatchProcessingService(IDmiWriter dmiWriter)
             if (cancellationToken.IsCancellationRequested)
             {
                 results.Add(new BatchFileResult(inputPath, null, BatchFileStatus.Cancelled, "Batch processing was cancelled."));
-                continue;
-            }
-
-            progress?.Report(new BatchProgress(index + 1, inputFiles.Length, inputPath));
-
-            if (cancellationToken.IsCancellationRequested)
-            {
-                results.Add(new BatchFileResult(inputPath, null, BatchFileStatus.Cancelled, "Batch processing was cancelled."));
+                ReportProgress(progress, results.Count, inputFiles.Length, inputPath);
                 continue;
             }
 
@@ -45,6 +38,7 @@ public sealed class DeterministicBatchProcessingService(IDmiWriter dmiWriter)
             if (overwriteDecision is not null)
             {
                 results.Add(overwriteDecision);
+                ReportProgress(progress, results.Count, inputFiles.Length, inputPath);
                 continue;
             }
 
@@ -59,9 +53,10 @@ public sealed class DeterministicBatchProcessingService(IDmiWriter dmiWriter)
                         outputPath,
                         applyResult.Error.Code == "cancelled" ? BatchFileStatus.Cancelled : BatchFileStatus.Failed,
                         applyResult.Error.Message));
+            ReportProgress(progress, results.Count, inputFiles.Length, inputPath);
         }
 
-        progress?.Report(new BatchProgress(results.Count, inputFiles.Length, null));
+        ReportProgress(progress, results.Count, inputFiles.Length, null);
         return Result.Success(new BatchJobResult(results));
     }
 
@@ -108,6 +103,9 @@ public sealed class DeterministicBatchProcessingService(IDmiWriter dmiWriter)
                 new BatchFileResult(inputPath, outputPath, BatchFileStatus.Failed, "Output file already exists."),
             _ => null
         };
+
+    private static void ReportProgress(IProgress<BatchProgress>? progress, int processedFiles, int totalFiles, string? currentFile) =>
+        progress?.Report(new BatchProgress(processedFiles, totalFiles, currentFile));
 
     private static class SystemFileSystem
     {
