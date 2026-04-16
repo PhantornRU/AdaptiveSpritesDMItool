@@ -497,6 +497,37 @@ public partial class WorkspaceShellViewModel
         ApplyMutationResult(result, successMessage);
     }
 
+    private void ApplyRestoreOperations(
+        IReadOnlyCollection<PixelCoordinate> editableCoordinates,
+        string successMessage,
+        bool refreshWorkspace,
+        bool rebuildNavigator,
+        bool refreshPreview)
+    {
+        if (editableCoordinates.Count == 0)
+        {
+            return;
+        }
+
+        var result = _applyConfigTransformUseCase.Execute(config =>
+        {
+            var next = config;
+            foreach (var editableCoordinate in editableCoordinates)
+            {
+                next = ApplyScopedRestore(next, editableCoordinate);
+            }
+
+            return next;
+        });
+
+        ApplyMutationResult(
+            result,
+            successMessage,
+            refreshWorkspace: refreshWorkspace,
+            rebuildNavigator: rebuildNavigator,
+            refreshPreview: refreshPreview);
+    }
+
     private SpriteConfig ApplyScopedMapping(SpriteConfig config, PixelCoordinate editableCoordinate, PixelCoordinate? sourceCoordinate)
     {
         var next = config;
@@ -619,7 +650,12 @@ public partial class WorkspaceShellViewModel
     private static PixelCoordinate ClampCoordinate(PixelCoordinate coordinate, SpriteResolution resolution) =>
         new(Math.Clamp(coordinate.X, 0, resolution.Width - 1), Math.Clamp(coordinate.Y, 0, resolution.Height - 1));
 
-    private void ApplyMutationResult(Result<SpriteConfig> result, string successMessage)
+    private void ApplyMutationResult(
+        Result<SpriteConfig> result,
+        string successMessage,
+        bool refreshWorkspace = true,
+        bool rebuildNavigator = true,
+        bool refreshPreview = true)
     {
         if (result.IsFailure)
         {
@@ -629,10 +665,26 @@ public partial class WorkspaceShellViewModel
 
         StatusMessage = successMessage;
         NormalizeSelectedDirection();
-        InvalidateNavigatorSnapshotCache();
-        RefreshWorkspaceState();
-        RefreshEditorSurface();
-        RequestAutoPreviewRefresh();
+        if (rebuildNavigator)
+        {
+            InvalidateNavigatorSnapshotCache();
+        }
+
+        if (refreshWorkspace)
+        {
+            RefreshWorkspaceState();
+        }
+
+        RefreshEditorSurface(
+            rebuildNavigator: rebuildNavigator,
+            rebuildPreviewGrid: refreshPreview,
+            rebuildActivePreview: refreshPreview);
+
+        if (refreshPreview)
+        {
+            RequestAutoPreviewRefresh();
+        }
+
         PersistWorkspaceSettingsInBackground();
     }
 
@@ -720,15 +772,29 @@ public partial class WorkspaceShellViewModel
         OnPropertyChanged(string.Empty);
     }
 
-    private void RefreshEditorSurface()
+    private void RefreshEditorSurface(
+        bool rebuildNavigator = true,
+        bool rebuildPreviewGrid = true,
+        bool rebuildActivePreview = true)
     {
         NormalizeSelectedDirection();
         RefreshMappingRows();
         RefreshInteractionState();
         RebuildActiveSurfaceRenderStates();
-        RebuildDirectionNavigatorItems();
-        RebuildPreviewGridRows();
-        RefreshActivePreviewPresentation();
+        if (rebuildNavigator)
+        {
+            RebuildDirectionNavigatorItems();
+        }
+
+        if (rebuildPreviewGrid)
+        {
+            RebuildPreviewGridRows();
+        }
+
+        if (rebuildActivePreview)
+        {
+            RefreshActivePreviewPresentation();
+        }
     }
 
     private void RebuildDirectionNavigatorItems()

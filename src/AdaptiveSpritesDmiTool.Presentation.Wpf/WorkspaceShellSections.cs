@@ -571,7 +571,7 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public bool ShowCompactCanvasHeader => Shell.ShowCompactCanvasHeader;
 
     public bool IsSourceReferenceDimmed =>
-        Shell.SelectedEditorTool is EditorTool.Move or EditorTool.Delete;
+        Shell.SelectedEditorTool is EditorTool.Move or EditorTool.Delete or EditorTool.Select;
 
     public bool IsAssetsDmiLeftDockSelected => Shell.SelectedEditorLeftDockTab == EditorLeftDockTab.AssetsDmi;
 

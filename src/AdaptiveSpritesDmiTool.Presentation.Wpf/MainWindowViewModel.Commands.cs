@@ -163,9 +163,7 @@ public partial class WorkspaceShellViewModel
                 break;
             case EditorTool.Delete:
                 ResetEditableDragState();
-                _selectedArea = new PixelAreaSelection(cell.Coordinate, cell.Coordinate);
-                SelectedAreaSummary = DescribeArea(_selectedArea.Value);
-                ApplyRestoreOperation(_selectedArea.Value, "Restored editable pixel.");
+                QueueRestoreStrokeCoordinate(cell.Coordinate);
                 break;
             case EditorTool.Undo:
                 EditorStatus = "Release to restore the editable pixel to its original source.";
@@ -202,10 +200,7 @@ public partial class WorkspaceShellViewModel
 
         if (SelectedEditorTool == EditorTool.Delete)
         {
-            _selectedEditableCoordinate = cell.Coordinate;
-            _selectedArea = new PixelAreaSelection(cell.Coordinate, cell.Coordinate);
-            SelectedAreaSummary = DescribeArea(_selectedArea.Value);
-            ApplyRestoreOperation(_selectedArea.Value, "Restored editable pixel.");
+            QueueRestoreStrokeCoordinate(cell.Coordinate);
             return;
         }
 
@@ -277,10 +272,106 @@ public partial class WorkspaceShellViewModel
 
                 ApplySourcePixelToEditable(cell.Coordinate, source, "Applied source pixel to Editable.");
                 break;
+            case EditorTool.Delete:
+                FinalizeRestoreStroke();
+                break;
             case EditorTool.Undo:
                 ApplyRestoreOperation(new PixelAreaSelection(cell.Coordinate, cell.Coordinate), "Restored editable pixel.");
                 break;
         }
+    }
+
+    private void QueueRestoreStrokeCoordinate(PixelCoordinate coordinate)
+    {
+        _selectedEditableCoordinate = coordinate;
+        _selectedArea = new PixelAreaSelection(coordinate, coordinate);
+        SelectedAreaSummary = DescribeArea(_selectedArea.Value);
+
+        if (_pendingRestoreStrokeCoordinates.Add(coordinate))
+        {
+            _hasPendingRestoreStrokeFinalize = true;
+        }
+
+        ScheduleRestoreStrokeFlush();
+    }
+
+    private void ScheduleRestoreStrokeFlush()
+    {
+        _restoreStrokeFlushCts?.Cancel();
+        _restoreStrokeFlushCts?.Dispose();
+
+        var cancellationSource = new CancellationTokenSource();
+        _restoreStrokeFlushCts = cancellationSource;
+        _ = FlushRestoreStrokeAsync(cancellationSource.Token);
+    }
+
+    private async Task FlushRestoreStrokeAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(16, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        await System.Windows.Application.Current.Dispatcher.InvokeAsync(FlushRestoreStrokeIncremental);
+    }
+
+    private void FlushRestoreStrokeIncremental()
+    {
+        if (_pendingRestoreStrokeCoordinates.Count == 0)
+        {
+            return;
+        }
+
+        var coordinates = _pendingRestoreStrokeCoordinates.ToArray();
+        _pendingRestoreStrokeCoordinates.Clear();
+        ApplyRestoreOperations(
+            coordinates,
+            "Restoring editable pixels...",
+            refreshWorkspace: false,
+            rebuildNavigator: false,
+            refreshPreview: false);
+    }
+
+    private void FinalizeRestoreStroke()
+    {
+        _restoreStrokeFlushCts?.Cancel();
+        _restoreStrokeFlushCts?.Dispose();
+        _restoreStrokeFlushCts = null;
+
+        if (_pendingRestoreStrokeCoordinates.Count > 0)
+        {
+            var coordinates = _pendingRestoreStrokeCoordinates.ToArray();
+            _pendingRestoreStrokeCoordinates.Clear();
+            ApplyRestoreOperations(
+                coordinates,
+                "Restored editable pixels.",
+                refreshWorkspace: true,
+                rebuildNavigator: true,
+                refreshPreview: true);
+            _hasPendingRestoreStrokeFinalize = false;
+            return;
+        }
+
+        if (!_hasPendingRestoreStrokeFinalize)
+        {
+            return;
+        }
+
+        _hasPendingRestoreStrokeFinalize = false;
+        InvalidateNavigatorSnapshotCache();
+        RefreshWorkspaceState();
+        RefreshEditorSurface();
+        RequestAutoPreviewRefresh();
+        PersistWorkspaceSettingsInBackground();
     }
 
     private void StartEditableAreaDrag(PixelCoordinate anchor, EditableDragAction action, string statusMessage)
@@ -431,6 +522,11 @@ public partial class WorkspaceShellViewModel
         _editableDragPayload = null;
         _editableDragAction = EditableDragAction.None;
         _isDraggingEditableArea = false;
+        _restoreStrokeFlushCts?.Cancel();
+        _restoreStrokeFlushCts?.Dispose();
+        _restoreStrokeFlushCts = null;
+        _pendingRestoreStrokeCoordinates.Clear();
+        _hasPendingRestoreStrokeFinalize = false;
     }
 
     private Dictionary<SpriteDirection, Dictionary<PixelCoordinate, PixelCoordinate?>> CaptureEditablePayload(PixelAreaSelection area)

@@ -51,6 +51,9 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private readonly Dictionary<(string Path, string StateName, SpriteDirection Direction), SpriteImage?> _importedStateFrameCache = new();
     private CancellationTokenSource? _importedStateRefreshCts;
     private int _importedStateRefreshVersion;
+    private readonly HashSet<PixelCoordinate> _pendingRestoreStrokeCoordinates = [];
+    private CancellationTokenSource? _restoreStrokeFlushCts;
+    private bool _hasPendingRestoreStrokeFinalize;
     private CancellationTokenSource? _batchQuickPreviewRefreshCts;
     private int _batchQuickPreviewRefreshVersion;
     private CancellationTokenSource? _batchSourceValidationCts;
