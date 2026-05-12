@@ -20,7 +20,7 @@ public sealed class DeterministicBatchProcessingService(IDmiWriter dmiWriter)
 
         SystemFileSystem.CreateDirectory(request.OutputDirectory);
 
-        var inputFiles = ResolveInputFiles(request).ToArray();
+        var inputFiles = BatchPathLayout.ResolveInputFiles(request.InputDirectory, request.OutputDirectory, request.ExplicitFiles).ToArray();
         var results = new List<BatchFileResult>(inputFiles.Length);
 
         for (var index = 0; index < inputFiles.Length; index++)
@@ -33,7 +33,7 @@ public sealed class DeterministicBatchProcessingService(IDmiWriter dmiWriter)
                 continue;
             }
 
-            var outputPath = BuildOutputPath(request, inputPath);
+            var outputPath = BatchPathLayout.BuildOutputPath(request.InputDirectory, request.OutputDirectory, inputPath);
             var overwriteDecision = EvaluateOverwritePolicy(request.OverwritePolicy, inputPath, outputPath);
             if (overwriteDecision is not null)
             {
@@ -60,39 +60,6 @@ public sealed class DeterministicBatchProcessingService(IDmiWriter dmiWriter)
         return Result.Success(new BatchJobResult(results));
     }
 
-    private static IEnumerable<string> ResolveInputFiles(BatchJobRequest request)
-    {
-        var inputDirectory = Path.GetFullPath(request.InputDirectory);
-        var outputDirectory = Path.GetFullPath(request.OutputDirectory);
-        var excludeOutputDirectory = IsStrictSubdirectory(inputDirectory, outputDirectory);
-
-        if (request.ExplicitFiles is { Count: > 0 })
-        {
-            return request.ExplicitFiles
-                .Where(static file => !string.IsNullOrWhiteSpace(file))
-                .Select(static file => Path.GetFullPath(file))
-                .Where(file => !excludeOutputDirectory || !IsPathUnderDirectory(file, outputDirectory))
-                .OrderBy(static file => file, StringComparer.Ordinal);
-        }
-
-        return SystemFileSystem
-            .EnumerateFiles(inputDirectory, "*.dmi", SearchOption.AllDirectories)
-            .Select(static file => Path.GetFullPath(file))
-            .Where(file => !excludeOutputDirectory || !IsPathUnderDirectory(file, outputDirectory))
-            .OrderBy(static file => file, StringComparer.Ordinal);
-    }
-
-    private static string BuildOutputPath(BatchJobRequest request, string inputPath)
-    {
-        var inputDirectory = Path.GetFullPath(request.InputDirectory);
-        var fullInputPath = Path.GetFullPath(inputPath);
-        var relativePath = Path.GetRelativePath(inputDirectory, fullInputPath);
-
-        return IsRelativePathInsideRoot(relativePath)
-            ? Path.Combine(request.OutputDirectory, relativePath)
-            : Path.Combine(request.OutputDirectory, Path.GetFileName(fullInputPath));
-    }
-
     private static BatchFileResult? EvaluateOverwritePolicy(OverwritePolicy overwritePolicy, string inputPath, string outputPath) =>
         overwritePolicy switch
         {
@@ -115,34 +82,5 @@ public sealed class DeterministicBatchProcessingService(IDmiWriter dmiWriter)
 
         public static void CreateDirectory(string path) => Directory.CreateDirectory(path);
 
-        public static IEnumerable<string> EnumerateFiles(string path, string searchPattern, SearchOption searchOption) =>
-            Directory.EnumerateFiles(path, searchPattern, searchOption);
     }
-
-    private static bool IsRelativePathInsideRoot(string relativePath) =>
-        !string.IsNullOrWhiteSpace(relativePath) &&
-        !Path.IsPathRooted(relativePath) &&
-        !relativePath.Equals(".", StringComparison.Ordinal) &&
-        !relativePath.StartsWith("..", StringComparison.Ordinal) &&
-        !relativePath.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal) &&
-        !relativePath.StartsWith($"..{Path.AltDirectorySeparatorChar}", StringComparison.Ordinal);
-
-    private static bool IsStrictSubdirectory(string parentDirectory, string candidateDirectory) =>
-        !string.Equals(parentDirectory, candidateDirectory, PathComparison) &&
-        IsPathUnderDirectory(candidateDirectory, parentDirectory);
-
-    private static bool IsPathUnderDirectory(string path, string directory)
-    {
-        var fullPath = Path.GetFullPath(path);
-        var fullDirectory = EnsureTrailingSeparator(Path.GetFullPath(directory));
-        return fullPath.StartsWith(fullDirectory, PathComparison);
-    }
-
-    private static string EnsureTrailingSeparator(string path) =>
-        path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
-            ? path
-            : path + Path.DirectorySeparatorChar;
-
-    private static StringComparison PathComparison =>
-        OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 }

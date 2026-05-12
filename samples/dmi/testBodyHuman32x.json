@@ -1,0 +1,22 @@
+{
+  "Version": 1,
+  "Name": "New Config",
+  "Resolution": {
+    "Width": 32,
+    "Height": 32
+  },
+  "SupportedDirections": "four",
+  "Metadata": {
+    "CreatedUtc": "2026-04-10T11:05:36.0467552+00:00",
+    "UpdatedUtc": "2026-04-10T11:05:36.0467552+00:00",
+    "Source": "UserCreated",
+    "SourceIdentifier": "presentation-shell",
+    "ImportedFromLegacy": null
+  },
+  "Mappings": {
+    "South": [],
+    "North": [],
+    "East": [],
+    "West": []
+  }
+}

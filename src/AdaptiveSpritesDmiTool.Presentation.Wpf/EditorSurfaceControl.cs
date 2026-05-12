@@ -325,14 +325,23 @@ public sealed class EditorSurfaceControl : FrameworkElement
 
     private void DrawCaption(DrawingContext drawingContext, string caption, Rect rect)
     {
+        var fontSize = Math.Max(4d, Math.Min(12d, rect.Width * 0.42d));
         var formattedText = new FormattedText(
             caption,
             CultureInfo.InvariantCulture,
             System.Windows.FlowDirection.LeftToRight,
             CaptionTypeface,
-            Math.Max(6, rect.Width * 0.45d),
+            fontSize,
             Brushes.Black,
             VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+        var maxWidth = Math.Max(1d, rect.Width - 2d);
+        var maxHeight = Math.Max(1d, rect.Height - 2d);
+        if (formattedText.Width > maxWidth || formattedText.Height > maxHeight)
+        {
+            var scale = Math.Min(maxWidth / formattedText.Width, maxHeight / formattedText.Height);
+            formattedText.SetFontSize(Math.Max(3d, fontSize * scale));
+        }
 
         var origin = new Point(
             rect.Left + Math.Max(0, (rect.Width - formattedText.Width) / 2),

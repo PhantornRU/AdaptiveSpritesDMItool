@@ -1,0 +1,53 @@
+{
+  "Version": 1,
+  "Name": "default",
+  "Resolution": {
+    "Width": 32,
+    "Height": 32
+  },
+  "SupportedDirections": "four",
+  "Metadata": {
+    "CreatedUtc": "2026-04-10T13:03:59.2060249+00:00",
+    "UpdatedUtc": "2026-04-10T13:09:29.8517374+00:00",
+    "Source": "UserCreated",
+    "SourceIdentifier": "presentation-shell",
+    "ImportedFromLegacy": null
+  },
+  "Mappings": {
+    "South": [],
+    "North": [],
+    "East": [],
+    "West": [
+      {
+        "Source": {
+          "X": 14,
+          "Y": 14
+        },
+        "Target": {
+          "X": 13,
+          "Y": 17
+        }
+      },
+      {
+        "Source": {
+          "X": 13,
+          "Y": 17
+        },
+        "Target": {
+          "X": 14,
+          "Y": 17
+        }
+      },
+      {
+        "Source": {
+          "X": 15,
+          "Y": 19
+        },
+        "Target": {
+          "X": 16,
+          "Y": 18
+        }
+      }
+    ]
+  }
+}

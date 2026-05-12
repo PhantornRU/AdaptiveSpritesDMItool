@@ -317,6 +317,12 @@ public sealed class EditorCommandBarViewModel(WorkspaceShellViewModel shell) : S
         set => Shell.GridAboveImage = value;
     }
 
+    public bool ShowSourceCoordinateCaptions
+    {
+        get => Shell.ShowSourceCoordinateCaptions;
+        set => Shell.ShowSourceCoordinateCaptions = value;
+    }
+
     public bool ShowOverlay
     {
         get => Shell.ShowOverlay;
@@ -540,12 +546,20 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
         set => Shell.ShowGrid = value;
     }
 
-    public bool ShowGridCaptions => Shell.GridAboveImage;
+    public bool ShowGridCaptions => Shell.GridAboveImage || Shell.ShowSourceCoordinateCaptions;
 
     public bool ShowGridCaptionsToggle
     {
         get => Shell.GridAboveImage;
         set => Shell.GridAboveImage = value;
+    }
+
+    public bool ShowSourceCoordinateCaptions => Shell.ShowSourceCoordinateCaptions;
+
+    public bool ShowSourceCoordinateCaptionsToggle
+    {
+        get => Shell.ShowSourceCoordinateCaptions;
+        set => Shell.ShowSourceCoordinateCaptions = value;
     }
 
     public bool ShowOverlayToggle

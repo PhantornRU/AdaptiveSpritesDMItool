@@ -1565,6 +1565,10 @@
                                                       IsChecked="{Binding GridAboveImage, Mode=TwoWay}"
                                                       ToolTip="Show grid captions over pixels"
                                                       Content="Captions" />
+                                            <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
+                                                      IsChecked="{Binding ShowSourceCoordinateCaptions, Mode=TwoWay}"
+                                                      ToolTip="Show source coordinate labels on mapped editable pixels"
+                                                      Content="Source #" />
                                         </StackPanel>
 
                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
@@ -1647,6 +1651,12 @@
                                                           ToolTip="Show captions on grid cells"
                                                           AutomationProperties.Name="Show captions">
                                                     <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Grid20" />
+                                                </CheckBox>
+                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
+                                                          IsChecked="{Binding ShowSourceCoordinateCaptions, Mode=TwoWay}"
+                                                          ToolTip="Show source coordinate labels on mapped editable pixels"
+                                                          AutomationProperties.Name="Show source coordinate labels">
+                                                    <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="NumberSymbol20" />
                                                 </CheckBox>
                                             </StackPanel>
 
