@@ -90,8 +90,30 @@ public sealed class LoadDmiFileUseCase(IDmiReader reader, EditorSession session,
             return loadResult;
         }
 
-        session.LoadAsset(loadResult.Value);
-        workspaceService.Load(loadResult.Value);
+        if (session.CurrentConfig is { } currentConfig)
+        {
+            var compatibility = currentConfig.ValidateCompatibility(
+                loadResult.Value.Resolution,
+                loadResult.Value.SupportedDirections);
+
+            if (!compatibility.IsValid)
+            {
+                return Result.Failure<DmiAssetInfo>(Errors.Validation(compatibility.Errors[0].Message));
+            }
+        }
+
+        var sessionResult = session.LoadAsset(loadResult.Value);
+        if (sessionResult.IsFailure)
+        {
+            return Result.Failure<DmiAssetInfo>(sessionResult.Error);
+        }
+
+        var workspaceResult = workspaceService.Load(loadResult.Value);
+        if (workspaceResult.IsFailure)
+        {
+            return Result.Failure<DmiAssetInfo>(workspaceResult.Error);
+        }
+
         return loadResult;
     }
 }

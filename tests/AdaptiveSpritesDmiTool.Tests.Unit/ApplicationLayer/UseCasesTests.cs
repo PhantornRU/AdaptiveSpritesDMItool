@@ -40,6 +40,31 @@ public sealed class UseCasesTests
     }
 
     [Fact]
+    public async Task LoadDmiFileUseCaseShouldRejectAssetIncompatibleWithActiveConfig()
+    {
+        var existingConfig = SpriteConfig.CreateEmpty(
+            "config",
+            new SpriteResolution(32, 32),
+            SupportedDirectionSet.Four,
+            ConfigMetadata.CreateNew(ConfigSource.UserCreated, "test"));
+        var asset = new DmiAssetInfo("asset", "sample.dmi", new SpriteResolution(64, 32), SupportedDirectionSet.Four, []);
+        var reader = new StubDmiReader(asset);
+        var session = new EditorSession();
+        session.SetCurrentConfig(existingConfig).IsSuccess.Should().BeTrue();
+        var workspace = new EditorWorkspaceService();
+        var useCase = new LoadDmiFileUseCase(reader, session, workspace);
+
+        var result = await useCase.ExecuteAsync("sample.dmi", CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("validation");
+        result.Error.Message.Should().Contain("Config resolution");
+        session.LoadedAsset.Should().BeNull();
+        session.CurrentConfig.Should().BeSameAs(existingConfig);
+        workspace.Current.IsEmpty.Should().BeTrue();
+    }
+
+    [Fact]
     public void SetPreviewSelectionUseCaseShouldNormalizeOptionalValues()
     {
         var session = new EditorSession();

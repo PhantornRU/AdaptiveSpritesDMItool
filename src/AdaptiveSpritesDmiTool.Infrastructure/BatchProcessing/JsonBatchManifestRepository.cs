@@ -2,6 +2,7 @@ using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using Newtonsoft.Json;
+using System.Globalization;
 
 namespace AdaptiveSpritesDmiTool.Infrastructure.BatchProcessing;
 
@@ -147,7 +148,9 @@ public sealed class JsonBatchManifestRepository : IBatchManifestRepository
 
     private static BatchRunMode ParseRunMode(string? value)
     {
-        if (!Enum.TryParse<BatchRunMode>(value, true, out var mode))
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _) ||
+            !Enum.TryParse<BatchRunMode>(value, true, out var mode) ||
+            !Enum.IsDefined(mode))
         {
             throw new JsonException($"Unsupported batch run mode '{value}'.");
         }
@@ -157,7 +160,9 @@ public sealed class JsonBatchManifestRepository : IBatchManifestRepository
 
     private static OverwritePolicy ParseOverwritePolicy(string? value)
     {
-        if (!Enum.TryParse<OverwritePolicy>(value, true, out var policy))
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _) ||
+            !Enum.TryParse<OverwritePolicy>(value, true, out var policy) ||
+            !Enum.IsDefined(policy))
         {
             throw new JsonException($"Unsupported overwrite policy '{value}'.");
         }
