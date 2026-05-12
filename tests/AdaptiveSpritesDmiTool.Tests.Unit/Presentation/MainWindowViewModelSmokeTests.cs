@@ -4,6 +4,7 @@ using AdaptiveSpritesDmiTool.Domain.Configurations;
 using AdaptiveSpritesDmiTool.Presentation.Wpf;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Reflection;
 
 namespace AdaptiveSpritesDmiTool.Tests.Unit.Presentation;
 
@@ -146,7 +147,7 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
-    public async Task RestoreWorkspaceShouldForceMatrixViewportWhileFocusedPathIsDisabled()
+    public async Task RestoreWorkspaceShouldApplyLastEditorViewportMode()
     {
         var settingsRepository = new InMemorySettingsRepository(
             new WorkspaceSettings(
@@ -175,8 +176,38 @@ public sealed class MainWindowViewModelSmokeTests
 
         await viewModel.InitializeAsync();
 
-        viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
+        viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Focused);
         viewModel.IsBottomWorkspaceExpanded.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("Unknown")]
+    [InlineData("1")]
+    public async Task RestoreWorkspaceShouldFallbackToMatrixForMissingOrInvalidViewportMode(string? viewportMode)
+    {
+        var settingsRepository = new InMemorySettingsRepository(
+            WorkspaceSettings.Empty with { LastEditorViewportMode = viewportMode });
+        var viewModel = CreateViewModel(settingsRepository);
+
+        await viewModel.InitializeAsync();
+
+        viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
+    }
+
+    [Fact]
+    public async Task PersistWorkspaceSettingsAsyncShouldHonorCancellation()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var viewModel = CreateViewModel(settingsRepository);
+        using var cancellationSource = new CancellationTokenSource();
+
+        await viewModel.InitializeAsync();
+        cancellationSource.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => viewModel.PersistWorkspaceSettingsAsync(cancellationSource.Token));
     }
 
     [Fact]
@@ -194,6 +225,26 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.SelectedDirectionScope.Should().Be(DirectionScope.All);
         viewModel.EditorWorkspace.CommandBar.IsMoveToolSelected.Should().BeTrue();
         viewModel.EditorWorkspace.CommandBar.IsAllScopeSelected.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task EditorViewModeCommandsShouldSelectRequestedMode()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var viewModel = CreateViewModel(settingsRepository);
+
+        await viewModel.InitializeAsync();
+
+        viewModel.SetEditableOnlyModeCommand.Execute(null);
+
+        viewModel.EditorViewMode.Should().Be(EditorViewMode.EditableOnly);
+        viewModel.IsEditableOnlyMode.Should().BeTrue();
+        viewModel.IsCompareSplitMode.Should().BeFalse();
+
+        viewModel.SetCompareSplitModeCommand.Execute(null);
+
+        viewModel.EditorViewMode.Should().Be(EditorViewMode.CompareSplit);
+        viewModel.IsCompareSplitMode.Should().BeTrue();
     }
 
     [Fact]
@@ -499,6 +550,41 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task SelectToolShouldMoveOverlappingEditableSelectionFromCapturedPayload()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 3), new PixelCoordinate(0, 1));
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 2), new PixelCoordinate(1, 1));
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 3), new PixelCoordinate(2, 1));
+
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 1), new PixelCoordinate(3, 3));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 1), new PixelCoordinate(2, 2));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 1), new PixelCoordinate(0, 3));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 1));
+    }
+
+    [Fact]
     public async Task ScopedMoveShouldUseDirectionSpecificPayload()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -673,7 +759,7 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.SelectedShellSection.Should().Be(ShellSectionKind.Editor);
         viewModel.ConfigSummary.Should().Contain("Restored Config");
-        viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
+        viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Focused);
         viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Mappings);
         viewModel.IsBottomWorkspaceExpanded.Should().BeFalse();
         viewModel.StartTab.HasRecentWorkspace.Should().BeTrue();
@@ -722,6 +808,109 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task RemovingFinalActiveConfigQueueItemShouldCreateFreshDraftForLoadedAsset()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService,
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        ApplySingleMapping(
+            viewModel,
+            SpriteDirection.South,
+            new PixelCoordinate(1, 1),
+            new PixelCoordinate(2, 2));
+        var removedConfig = session.CurrentConfig;
+        var activeItem = viewModel.ConfigQueueItems.Single(static item => item.IsActive);
+
+        viewModel.RemoveConfigQueueItemCommand.Execute(activeItem);
+
+        session.CurrentConfig.Should().NotBeNull();
+        session.CurrentConfig.Should().NotBeSameAs(removedConfig);
+        session.CurrentConfig!.GetMappings(SpriteDirection.South).Should().BeEmpty();
+        viewModel.ConfigQueueItems.Should().ContainSingle(item => item.IsActive);
+        viewModel.MappingRows.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RemovingFinalActiveConfigQueueItemWithoutLoadedAssetShouldClearCurrentConfig()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var dialogService = new StubFileDialogService { ConfigPath = "config.json" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            configRepository: new SuccessfulConfigRepository(CreateConfig("Loaded Only")),
+            fileDialogService: dialogService,
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.LoadConfigCommand.ExecuteAsync(null);
+        var activeItem = viewModel.ConfigQueueItems.Single(static item => item.IsActive);
+
+        viewModel.RemoveConfigQueueItemCommand.Execute(activeItem);
+
+        session.CurrentConfig.Should().BeNull();
+        session.CurrentConfigPath.Should().BeNull();
+        viewModel.ConfigQueueItems.Should().BeEmpty();
+        viewModel.HasActiveConfig.Should().BeFalse();
+    }
+
+    [Fact]
+    public void BuildBatchSourceTreeItemsShouldSkipChildDirectoriesWithEnumerationErrors()
+    {
+        var root = Path.Combine("batch", "root");
+        var deniedDirectory = Path.Combine(root, "denied");
+        var validDirectory = Path.Combine(root, "valid");
+        var validFile = Path.Combine(validDirectory, "sprite.dmi");
+        Func<string, IEnumerable<string>> enumerateDirectories = path =>
+            string.Equals(path, root, StringComparison.Ordinal)
+                ? [deniedDirectory, validDirectory]
+                : string.Equals(path, deniedDirectory, StringComparison.Ordinal)
+                    ? throw new UnauthorizedAccessException("Denied for test.")
+                    : [];
+        Func<string, IEnumerable<string>> enumerateFiles = path =>
+            string.Equals(path, validDirectory, StringComparison.Ordinal)
+                ? [validFile]
+                : [];
+
+        var items = BuildBatchSourceTreeItemsForTest(root, enumerateDirectories, enumerateFiles);
+
+        items.Should().ContainSingle(item => item.FullPath == validDirectory);
+        items.Should().NotContain(item => item.FullPath == deniedDirectory);
+        items.Single().Children.Should().ContainSingle(item => item.FullPath == validFile);
+    }
+
+    [Fact]
+    public void BuildBatchSourceTreeItemsShouldSkipChildFilesWithEnumerationErrors()
+    {
+        var root = Path.Combine("batch", "root");
+        var validDirectory = Path.Combine(root, "valid");
+        var validFile = Path.Combine(root, "sprite.dmi");
+        Func<string, IEnumerable<string>> enumerateDirectories = path =>
+            string.Equals(path, root, StringComparison.Ordinal)
+                ? [validDirectory]
+                : [];
+        Func<string, IEnumerable<string>> enumerateFiles = path =>
+            string.Equals(path, validDirectory, StringComparison.Ordinal)
+                ? throw new IOException("I/O failure for test.")
+                : string.Equals(path, root, StringComparison.Ordinal)
+                    ? [validFile]
+                    : [];
+
+        var items = BuildBatchSourceTreeItemsForTest(root, enumerateDirectories, enumerateFiles);
+
+        items.Should().ContainSingle(item => item.FullPath == validFile);
+        items.Should().NotContain(item => item.FullPath == validDirectory);
+    }
+
+    [Fact]
     public async Task ManualPreviewRefreshShouldHandleMissingOptionalLayers()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -752,9 +941,10 @@ public sealed class MainWindowViewModelSmokeTests
         IDmiReader? dmiReader = null,
         IPreviewBuilder? previewBuilder = null,
         IBatchProcessingService? batchProcessingService = null,
-        IFileDialogService? fileDialogService = null)
+        IFileDialogService? fileDialogService = null,
+        EditorSession? editorSession = null)
     {
-        var session = new EditorSession();
+        var session = editorSession ?? new EditorSession();
         var workspace = new EditorWorkspaceService();
 
         return new MainWindowViewModel(
@@ -779,6 +969,20 @@ public sealed class MainWindowViewModelSmokeTests
             fileDialogService ?? new StubFileDialogService(),
             session,
             NullLogger<WorkspaceShellViewModel>.Instance);
+    }
+
+    private static BatchSourceTreeItemViewModel[] BuildBatchSourceTreeItemsForTest(
+        string rootDirectory,
+        Func<string, IEnumerable<string>> enumerateDirectories,
+        Func<string, IEnumerable<string>> enumerateFiles)
+    {
+        var method = typeof(WorkspaceShellViewModel)
+            .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
+            .Single(static candidate =>
+                candidate.Name == "BuildBatchSourceTreeItems" &&
+                candidate.GetParameters().Length == 3);
+        var result = method.Invoke(null, [rootDirectory, enumerateDirectories, enumerateFiles]);
+        return ((IEnumerable<BatchSourceTreeItemViewModel>)result!).ToArray();
     }
 
     private static string CreateTempDirectory()
@@ -872,6 +1076,7 @@ public sealed class MainWindowViewModelSmokeTests
 
         public Task<Result> SaveAsync(WorkspaceSettings settings, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             Current = settings;
             Saved = settings;
             return Task.FromResult(Result.Success());

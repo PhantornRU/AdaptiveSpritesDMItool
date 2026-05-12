@@ -63,7 +63,7 @@ public partial class WorkspaceShellViewModel
                 StatusMessage = HasEditorWorkflow
                     ? "Last workspace restored."
                     : "No recent workspace could be restored.";
-                await PersistWorkspaceSettingsAsync();
+                await PersistWorkspaceSettingsAsync(cancellationToken);
             });
     }
 
@@ -187,7 +187,7 @@ public partial class WorkspaceShellViewModel
                     $"{cancelledCount} cancelled.";
                 StatusMessage = BatchSummary;
                 NavigateToSection(ShellSectionKind.Batch);
-                await PersistWorkspaceSettingsAsync();
+                await PersistWorkspaceSettingsAsync(cancellationToken);
             });
     }
 
@@ -512,7 +512,7 @@ public partial class WorkspaceShellViewModel
     }
 
     [RelayCommand]
-    private void SetEditableOnlyMode() => SetEditorViewMode(EditorViewMode.CompareSplit, "Dual workspace active.");
+    private void SetEditableOnlyMode() => SetEditorViewMode(EditorViewMode.EditableOnly, "Editable workspace active.");
 
     [RelayCommand]
     private void SetCompareSplitMode() => SetEditorViewMode(EditorViewMode.CompareSplit, "Dual workspace active.");
@@ -548,14 +548,14 @@ public partial class WorkspaceShellViewModel
     private async Task ResetWorkspaceAsync()
     {
         await RunBusyOperationAsync(
-            async _ =>
+            async cancellationToken =>
             {
                 ResetWorkspaceCore();
                 RefreshWorkspaceState();
                 RefreshPreviewSelectionSummary();
                 RefreshEditorSurface();
                 NavigateToSection(ShellSectionKind.Start);
-                await PersistWorkspaceSettingsAsync();
+                await PersistWorkspaceSettingsAsync(cancellationToken);
             });
     }
 

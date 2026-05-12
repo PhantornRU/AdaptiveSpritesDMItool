@@ -7,6 +7,7 @@ using AdaptiveSpritesDmiTool.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
@@ -18,8 +19,12 @@ namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
 public partial class App : System.Windows.Application
 {
+    private static readonly TimeSpan ShutdownPersistenceTimeout = TimeSpan.FromSeconds(2);
+
     private IHost? _host;
     private ILogger<App>? _logger;
+    private bool _isShutdownPersistenceComplete;
+    private bool _isShutdownPersistenceRunning;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -37,6 +42,7 @@ public partial class App : System.Windows.Application
             var viewModel = _host.Services.GetRequiredService<MainWindowViewModel>();
 
             MainWindow = mainWindow;
+            mainWindow.Closing += OnMainWindowClosing;
             mainWindow.Show();
             _ = InitializeMainWindowAsync(mainWindow, viewModel);
         }
@@ -46,18 +52,21 @@ public partial class App : System.Windows.Application
         }
     }
 
-    protected override void OnExit(ExitEventArgs e)
+    protected override async void OnExit(ExitEventArgs e)
     {
         try
         {
             if (_host is not null)
             {
-                var viewModel = _host.Services.GetService<MainWindowViewModel>();
-                viewModel?.PersistWorkspaceSettingsAsync().GetAwaiter().GetResult();
-
-                _host.StopAsync().GetAwaiter().GetResult();
+                using var cancellationSource = new CancellationTokenSource(ShutdownPersistenceTimeout);
+                await _host.StopAsync(cancellationSource.Token);
                 _host.Dispose();
+                _host = null;
             }
+        }
+        catch (OperationCanceledException)
+        {
+            _logger?.LogWarning("Host shutdown was cancelled.");
         }
         catch (Exception exception)
         {
@@ -67,6 +76,61 @@ public partial class App : System.Windows.Application
         {
             base.OnExit(e);
         }
+    }
+
+    private async void OnMainWindowClosing(object? sender, CancelEventArgs e)
+    {
+        if (_host is null || _isShutdownPersistenceComplete || _isShutdownPersistenceRunning)
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        _isShutdownPersistenceRunning = true;
+
+        if (sender is Window window)
+        {
+            window.IsEnabled = false;
+        }
+
+        try
+        {
+            await PersistWorkspaceSettingsForShutdownAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            _logger?.LogWarning("Shutdown workspace settings persistence was cancelled.");
+        }
+        catch (Exception exception)
+        {
+            _logger?.LogError(exception, "Shutdown workspace settings persistence failed.");
+        }
+        finally
+        {
+            _isShutdownPersistenceComplete = true;
+            _isShutdownPersistenceRunning = false;
+
+            if (sender is Window closingWindow)
+            {
+                closingWindow.Closing -= OnMainWindowClosing;
+                closingWindow.Close();
+            }
+            else
+            {
+                Shutdown();
+            }
+        }
+    }
+
+    private async Task PersistWorkspaceSettingsForShutdownAsync()
+    {
+        if (_host?.Services.GetService<MainWindowViewModel>() is not { } viewModel)
+        {
+            return;
+        }
+
+        using var cancellationSource = new CancellationTokenSource(ShutdownPersistenceTimeout);
+        await viewModel.PersistWorkspaceSettingsAsync(cancellationSource.Token).ConfigureAwait(false);
     }
 
     private static IHost BuildHost() =>

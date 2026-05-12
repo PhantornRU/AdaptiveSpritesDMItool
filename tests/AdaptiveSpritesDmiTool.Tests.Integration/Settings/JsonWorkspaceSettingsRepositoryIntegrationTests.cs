@@ -114,6 +114,57 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
         result.Error.Message.Should().Contain("Unsupported workspace settings version");
     }
 
+    [Theory]
+    [InlineData("1")]
+    [InlineData("999")]
+    [InlineData("DeleteExisting")]
+    public async Task RepositoryShouldRejectNumericOrUndefinedOverwritePolicy(string overwritePolicy)
+    {
+        var path = Path.Combine(_tempDirectory, $"{Guid.NewGuid():N}.json");
+        await File.WriteAllTextAsync(
+            path,
+            $$"""
+            {
+              "version": 3,
+              "lastOverwritePolicy": "{{overwritePolicy}}"
+            }
+            """);
+
+        var repository = new JsonWorkspaceSettingsRepository(path);
+
+        var result = await repository.LoadAsync(CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("validation");
+        result.Error.Message.Should().Contain("Unsupported overwrite policy");
+    }
+
+    [Theory]
+    [InlineData("1")]
+    [InlineData("999")]
+    [InlineData("Sideways")]
+    public async Task RepositoryShouldRejectNumericOrUndefinedSelectedDirection(string selectedDirection)
+    {
+        var path = Path.Combine(_tempDirectory, $"{Guid.NewGuid():N}.json");
+        await File.WriteAllTextAsync(
+            path,
+            $$"""
+            {
+              "version": 3,
+              "lastSelectedDirection": "{{selectedDirection}}",
+              "lastOverwritePolicy": "SkipExisting"
+            }
+            """);
+
+        var repository = new JsonWorkspaceSettingsRepository(path);
+
+        var result = await repository.LoadAsync(CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("validation");
+        result.Error.Message.Should().Contain("Unsupported sprite direction");
+    }
+
     [Fact]
     public async Task RepositoryShouldRejectMissingSettingsFile()
     {

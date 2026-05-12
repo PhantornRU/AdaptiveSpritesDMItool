@@ -38,19 +38,23 @@ public partial class WorkspaceShellViewModel
         NavigateToSection(HasEditorWorkflow ? ShellSectionKind.Editor : ShellSectionKind.Start);
     }
 
-    public async Task PersistWorkspaceSettingsAsync()
+    public Task PersistWorkspaceSettingsAsync() =>
+        PersistWorkspaceSettingsAsync(CancellationToken.None);
+
+    public async Task PersistWorkspaceSettingsAsync(CancellationToken cancellationToken)
     {
         if (_isDisposed)
         {
             return;
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         var settings = BuildWorkspaceSettings();
         var lockAcquired = false;
 
         try
         {
-            await _workspaceSettingsPersistenceGate.WaitAsync().ConfigureAwait(false);
+            await _workspaceSettingsPersistenceGate.WaitAsync(cancellationToken).ConfigureAwait(false);
             lockAcquired = true;
 
             if (_isDisposed)
@@ -59,7 +63,7 @@ public partial class WorkspaceShellViewModel
             }
 
             var result = await _saveWorkspaceSettingsUseCase
-                .ExecuteAsync(settings, CancellationToken.None)
+                .ExecuteAsync(settings, cancellationToken)
                 .ConfigureAwait(false);
             if (result.IsFailure)
             {
@@ -100,6 +104,9 @@ public partial class WorkspaceShellViewModel
         try
         {
             await PersistWorkspaceSettingsAsync().ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
         }
         catch (Exception exception) when (exception is ObjectDisposedException or InvalidOperationException)
         {
@@ -971,7 +978,7 @@ public partial class WorkspaceShellViewModel
                 UpsertCurrentSessionIntoConfigQueue();
                 StatusMessage = $"Saved config to '{SaveConfigPath}'.";
                 RefreshWorkspaceState();
-                await PersistWorkspaceSettingsAsync();
+                await PersistWorkspaceSettingsAsync(cancellationToken);
             });
     }
 
@@ -1095,7 +1102,7 @@ public partial class WorkspaceShellViewModel
 
         if (persistSettings)
         {
-            await PersistWorkspaceSettingsAsync();
+            await PersistWorkspaceSettingsAsync(cancellationToken);
         }
     }
 
@@ -1261,7 +1268,7 @@ public partial class WorkspaceShellViewModel
 
         if (persistSettings)
         {
-            await PersistWorkspaceSettingsAsync();
+            await PersistWorkspaceSettingsAsync(cancellationToken);
         }
     }
 
@@ -1295,7 +1302,7 @@ public partial class WorkspaceShellViewModel
 
         if (persistSettings)
         {
-            await PersistWorkspaceSettingsAsync();
+            await PersistWorkspaceSettingsAsync(cancellationToken);
         }
     }
 }
