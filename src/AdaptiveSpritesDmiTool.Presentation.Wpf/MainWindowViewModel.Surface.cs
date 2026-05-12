@@ -695,7 +695,7 @@ public partial class WorkspaceShellViewModel
                 var index = (y * resolution.Value.Width) + x;
                 var hasMapping = mappings.TryGetValue(coordinate, out var mapping);
                 colors[index] = ResolveSurfaceCellColor(renderedEditableImage, coordinate, hasMapping, mapping);
-                captions[index] = BuildStaticCaption(hasMapping, mapping);
+                captions[index] = BuildMappingCaption(hasMapping, mapping);
             }
         }
 
@@ -1172,12 +1172,7 @@ public partial class WorkspaceShellViewModel
             return "A";
         }
 
-        if (!GridAboveImage)
-        {
-            return string.Empty;
-        }
-
-        return !hasMapping ? string.Empty : mapping.IsTransparent ? "X" : mapping.Target is not null ? "M" : string.Empty;
+        return BuildMappingCaption(hasMapping, mapping);
     }
 
     private static string BuildSourceCellToolTip(PixelCoordinate coordinate) =>
@@ -1190,15 +1185,27 @@ public partial class WorkspaceShellViewModel
                 ? $"Editable {coordinate} -> transparent"
                 : $"Editable {coordinate} <- Source {mapping.Target}";
 
-    private string BuildStaticCaption(bool hasMapping, PixelMapping mapping)
+    private string BuildMappingCaption(bool hasMapping, PixelMapping mapping)
     {
-        if (!GridAboveImage || !hasMapping)
+        if (!hasMapping)
+        {
+            return string.Empty;
+        }
+
+        if (ShowSourceCoordinateCaptions && mapping.Target is { } sourceCoordinate)
+        {
+            return FormatCoordinateCaption(sourceCoordinate);
+        }
+
+        if (!GridAboveImage)
         {
             return string.Empty;
         }
 
         return mapping.IsTransparent ? "X" : mapping.Target is not null ? "M" : string.Empty;
     }
+
+    private static string FormatCoordinateCaption(PixelCoordinate coordinate) => $"{coordinate.X},{coordinate.Y}";
 
     private static bool TryReadPixelColor(SpriteImage? image, PixelCoordinate coordinate, out Color color)
     {

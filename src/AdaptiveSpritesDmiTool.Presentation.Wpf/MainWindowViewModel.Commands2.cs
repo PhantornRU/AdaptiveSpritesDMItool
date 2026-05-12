@@ -650,6 +650,8 @@ public partial class WorkspaceShellViewModel
 
     partial void OnGridAboveImageChanged(bool value) => RefreshEditorSurface();
 
+    partial void OnShowSourceCoordinateCaptionsChanged(bool value) => RefreshEditorSurface();
+
     partial void OnShowOverlayChanged(bool value)
     {
         InvalidateNavigatorSnapshotCache();

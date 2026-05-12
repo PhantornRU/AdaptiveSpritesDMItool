@@ -298,6 +298,9 @@ public partial class WorkspaceShellViewModel
     private bool gridAboveImage;
 
     [ObservableProperty]
+    private bool showSourceCoordinateCaptions;
+
+    [ObservableProperty]
     private bool showOverlay = true;
 
     [ObservableProperty]

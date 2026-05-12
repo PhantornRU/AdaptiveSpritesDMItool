@@ -727,6 +727,35 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task SourceCoordinateCaptionsShouldShowMappedOriginalOnEditablePixels()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        ApplySingleMapping(
+            viewModel,
+            SpriteDirection.South,
+            source: new PixelCoordinate(2, 1),
+            editable: new PixelCoordinate(3, 0));
+
+        var captionIndex = viewModel.ActiveTargetSurface!.GetIndex(3, 0);
+        viewModel.ActiveTargetSurface.Captions[captionIndex].Should().BeEmpty();
+
+        viewModel.ShowSourceCoordinateCaptions = true;
+
+        viewModel.ActiveTargetSurface!.Captions[captionIndex].Should().Be("2,1");
+        viewModel.EditorWorkspace.ShowGridCaptions.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task ResumeLastWorkspaceShouldRestoreRecentPathsAndReturnToEditor()
     {
         var settingsRepository = new InMemorySettingsRepository(
