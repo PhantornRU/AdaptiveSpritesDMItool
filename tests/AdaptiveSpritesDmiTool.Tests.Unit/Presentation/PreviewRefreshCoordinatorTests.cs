@@ -10,6 +10,7 @@ public sealed class PreviewRefreshCoordinatorTests
     {
         using var coordinator = new PreviewRefreshCoordinator(TimeSpan.FromMilliseconds(40));
         var calls = new List<int>();
+        var latestRefresh = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         coordinator.Request(async token =>
         {
@@ -26,10 +27,11 @@ public sealed class PreviewRefreshCoordinatorTests
         coordinator.Request(async token =>
         {
             calls.Add(3);
+            latestRefresh.SetResult();
             await Task.Delay(5, token);
         });
 
-        await Task.Delay(120);
+        await latestRefresh.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
         calls.Should().Equal(3);
     }
