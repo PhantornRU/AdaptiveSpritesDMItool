@@ -4,6 +4,7 @@ using AdaptiveSpritesDmiTool.Domain.Configurations;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Media.Imaging;
@@ -93,7 +94,7 @@ public partial class WorkspaceShellViewModel
         SelectedOverwritePolicy = settings.LastOverwritePolicy;
         SelectedThemeMode = ParseThemeMode(settings.LastThemeMode);
         App.ApplyThemeMode(SelectedThemeMode);
-        SelectedEditorViewportMode = EditorViewportMode.Matrix;
+        SelectedEditorViewportMode = ParseEditorViewportMode(settings.LastEditorViewportMode);
         EditorViewMode = EditorViewMode.CompareSplit;
         SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
         IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded;
@@ -439,34 +440,35 @@ public partial class WorkspaceShellViewModel
         {
             var next = config;
             var selectedDirection = GetSafeSelectedDirection();
-            foreach (var direction in ResolveDirections(config.SupportedDirections))
+            foreach (var (direction, directionPayload) in payload)
             {
-                if (!payload.TryGetValue(direction, out var directionPayload))
+                if (!config.SupportedDirections.Supports(direction))
                 {
                     continue;
                 }
 
-                foreach (var editableCoordinate in originArea.Enumerate())
+                var moves = directionPayload
+                    .Select(entry =>
+                    {
+                        var destinationEditableCoordinate = ClampCoordinate(
+                            new PixelCoordinate(entry.Key.X + deltaX, entry.Key.Y + deltaY),
+                            config.Resolution);
+
+                        return (
+                            Origin: TransformEditableCoordinate(entry.Key, selectedDirection, direction, config.Resolution),
+                            Destination: TransformEditableCoordinate(destinationEditableCoordinate, selectedDirection, direction, config.Resolution),
+                            Source: entry.Value);
+                    })
+                    .ToArray();
+
+                foreach (var move in moves)
                 {
-                    var transformedOriginEditable = TransformEditableCoordinate(
-                        editableCoordinate,
-                        selectedDirection,
-                        direction,
-                        config.Resolution);
-                    next = next.RemoveMapping(direction, transformedOriginEditable);
+                    next = next.RemoveMapping(direction, move.Origin);
                 }
 
-                foreach (var (editableCoordinate, sourceCoordinate) in directionPayload)
+                foreach (var move in moves)
                 {
-                    var destinationEditableCoordinate = ClampCoordinate(
-                        new PixelCoordinate(editableCoordinate.X + deltaX, editableCoordinate.Y + deltaY),
-                        config.Resolution);
-                    var transformedEditable = TransformEditableCoordinate(
-                        destinationEditableCoordinate,
-                        selectedDirection,
-                        direction,
-                        config.Resolution);
-                    next = next.SetMapping(direction, transformedEditable, sourceCoordinate);
+                    next = next.SetMapping(direction, move.Destination, move.Source);
                 }
             }
 
@@ -991,10 +993,19 @@ public partial class WorkspaceShellViewModel
         return string.Empty;
     }
 
-    private static EditorViewportMode ParseEditorViewportMode(string? value) =>
-        Enum.TryParse<EditorViewportMode>(value, true, out var mode)
-            ? mode
-            : EditorViewportMode.Matrix;
+    private static EditorViewportMode ParseEditorViewportMode(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value) ||
+            int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+        {
+            return EditorViewportMode.Matrix;
+        }
+
+        return Enum.TryParse<EditorViewportMode>(value, true, out var mode) &&
+            Enum.IsDefined(mode)
+                ? mode
+                : EditorViewportMode.Matrix;
+    }
 
     private static BottomWorkspaceTab ParseBottomWorkspaceTab(string? value) =>
         Enum.TryParse<BottomWorkspaceTab>(value, true, out var tab)

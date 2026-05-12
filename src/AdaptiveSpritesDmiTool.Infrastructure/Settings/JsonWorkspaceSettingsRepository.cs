@@ -2,6 +2,7 @@ using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using Newtonsoft.Json;
+using System.Globalization;
 
 namespace AdaptiveSpritesDmiTool.Infrastructure.Settings;
 
@@ -41,6 +42,10 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         {
             return Result.Failure<WorkspaceSettings>(Errors.Validation($"Workspace settings JSON is invalid: {exception.Message}"));
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception exception)
         {
             return Result.Failure<WorkspaceSettings>(Errors.Unexpected($"Failed to load workspace settings: {exception.Message}"));
@@ -67,6 +72,10 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             var json = JsonConvert.SerializeObject(FromDomain(settings), Formatting.Indented);
             await File.WriteAllTextAsync(filePath, json, cancellationToken).ConfigureAwait(false);
             return Result.Success();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception exception)
         {
@@ -120,7 +129,14 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
 
     private static OverwritePolicy ParseOverwritePolicy(string? value)
     {
-        if (!Enum.TryParse<OverwritePolicy>(value, true, out var policy))
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return OverwritePolicy.SkipExisting;
+        }
+
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _) ||
+            !Enum.TryParse<OverwritePolicy>(value, true, out var policy) ||
+            !Enum.IsDefined(policy))
         {
             throw new JsonException($"Unsupported overwrite policy '{value}'.");
         }
@@ -135,7 +151,9 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             return null;
         }
 
-        if (!Enum.TryParse<SpriteDirection>(value, true, out var direction))
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _) ||
+            !Enum.TryParse<SpriteDirection>(value, true, out var direction) ||
+            !Enum.IsDefined(direction))
         {
             throw new JsonException($"Unsupported sprite direction '{value}'.");
         }

@@ -525,8 +525,11 @@ public partial class WorkspaceShellViewModel
         ConfigPath = string.Empty;
         SaveConfigPath = string.Empty;
         DraftConfigName = "Unsaved Draft";
+        _editorSession.Reset();
         StatusMessage = "Removed the active config.";
         RefreshWorkspaceState();
+        RefreshPreviewSelectionSummary();
+        RefreshEditorSurface();
         PersistWorkspaceSettingsInBackground();
     }
 
@@ -1250,23 +1253,83 @@ public partial class WorkspaceShellViewModel
     private static string? NormalizeOptionalPath(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-    private static IEnumerable<BatchSourceTreeItemViewModel> BuildBatchSourceTreeItems(string rootDirectory)
+    private static IEnumerable<BatchSourceTreeItemViewModel> BuildBatchSourceTreeItems(string rootDirectory) =>
+        BuildBatchSourceTreeItems(
+            rootDirectory,
+            Directory.EnumerateDirectories,
+            static directory => Directory.EnumerateFiles(directory, "*.dmi"));
+
+    private static IEnumerable<BatchSourceTreeItemViewModel> BuildBatchSourceTreeItems(
+        string rootDirectory,
+        Func<string, IEnumerable<string>> enumerateDirectories,
+        Func<string, IEnumerable<string>> enumerateDmiFiles) =>
+        TryBuildBatchSourceTreeItems(rootDirectory, enumerateDirectories, enumerateDmiFiles, out var items)
+            ? items
+            : [];
+
+    private static bool TryBuildBatchSourceTreeItems(
+        string rootDirectory,
+        Func<string, IEnumerable<string>> enumerateDirectories,
+        Func<string, IEnumerable<string>> enumerateDmiFiles,
+        out IReadOnlyList<BatchSourceTreeItemViewModel> items)
     {
-        foreach (var directory in Directory.EnumerateDirectories(rootDirectory).OrderBy(static path => path, StringComparer.OrdinalIgnoreCase))
+        items = [];
+        if (!TryEnumerateBatchSourcePaths(rootDirectory, enumerateDirectories, out var directories) ||
+            !TryEnumerateBatchSourcePaths(rootDirectory, enumerateDmiFiles, out var files))
         {
-            yield return new BatchSourceTreeItemViewModel(
-                Path.GetFileName(directory),
-                directory,
-                isDirectory: true,
-                BuildBatchSourceTreeItems(directory));
+            return false;
         }
 
-        foreach (var file in Directory.EnumerateFiles(rootDirectory, "*.dmi").OrderBy(static path => path, StringComparer.OrdinalIgnoreCase))
+        var treeItems = new List<BatchSourceTreeItemViewModel>();
+        foreach (var directory in directories)
         {
-            yield return new BatchSourceTreeItemViewModel(
-                Path.GetFileName(file),
-                file,
-                isDirectory: false);
+            if (!TryBuildBatchSourceTreeItems(directory, enumerateDirectories, enumerateDmiFiles, out var children))
+            {
+                continue;
+            }
+
+            treeItems.Add(
+                new BatchSourceTreeItemViewModel(
+                    Path.GetFileName(directory),
+                    directory,
+                    isDirectory: true,
+                    children));
+        }
+
+        foreach (var file in files)
+        {
+            treeItems.Add(
+                new BatchSourceTreeItemViewModel(
+                    Path.GetFileName(file),
+                    file,
+                    isDirectory: false));
+        }
+
+        items = treeItems;
+        return true;
+    }
+
+    private static bool TryEnumerateBatchSourcePaths(
+        string rootDirectory,
+        Func<string, IEnumerable<string>> enumeratePaths,
+        out IReadOnlyList<string> paths)
+    {
+        try
+        {
+            paths = enumeratePaths(rootDirectory)
+                .OrderBy(static path => path, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            return true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            paths = [];
+            return false;
+        }
+        catch (IOException)
+        {
+            paths = [];
+            return false;
         }
     }
 
