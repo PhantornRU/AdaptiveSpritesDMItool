@@ -4,7 +4,6 @@ using AdaptiveSpritesDmiTool.Domain.Configurations;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Media.Imaging;
@@ -317,71 +316,71 @@ public partial class WorkspaceShellViewModel
 
         try
         {
-        var selectionResult = _setPreviewSelectionUseCase.Execute(BaseStateName, LandmarkStateName, OverlayStateName);
-        if (selectionResult.IsFailure)
-        {
-            ClearPreviewArtifacts();
-            PreviewSummary = selectionResult.Error.Message;
+            var selectionResult = _setPreviewSelectionUseCase.Execute(BaseStateName, LandmarkStateName, OverlayStateName);
+            if (selectionResult.IsFailure)
+            {
+                ClearPreviewArtifacts();
+                PreviewSummary = selectionResult.Error.Message;
+                if (userInitiated)
+                {
+                    StatusMessage = selectionResult.Error.Message;
+                }
+                return;
+            }
+
+            var direction = GetSafeSelectedDirection();
+            var selection = new PreviewSelection(
+                BaseStateName,
+                string.IsNullOrWhiteSpace(LandmarkStateName) ? null : LandmarkStateName.Trim(),
+                string.IsNullOrWhiteSpace(OverlayStateName) ? null : OverlayStateName.Trim());
+
+            var result = await _buildPreviewUseCase.ExecuteAsync(selection, direction, cancellationToken);
+            if (result.IsFailure)
+            {
+                ClearPreviewArtifacts();
+                PreviewSummary = result.Error.Message;
+                if (userInitiated)
+                {
+                    StatusMessage = result.Error.Message;
+                }
+                RefreshActivePreviewPresentation();
+                return;
+            }
+
+            _baseImage = result.Value.BaseImage;
+            _landmarkImage = result.Value.LandmarkImage;
+            _overlayImage = result.Value.OverlayImage;
+            _compositeImage = result.Value.CompositeImage;
+            _navigatorBaseImages.Clear();
+            _navigatorCompositeImages.Clear();
+            _navigatorBaseImages[direction] = result.Value.BaseImage;
+            _navigatorCompositeImages[direction] = result.Value.CompositeImage;
+
+            foreach (var previewDirection in AvailableDirections.Where(candidate => candidate != direction))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var previewResult = await _buildPreviewUseCase.ExecuteAsync(selection, previewDirection, cancellationToken);
+                if (previewResult.IsFailure)
+                {
+                    continue;
+                }
+
+                _navigatorBaseImages[previewDirection] = previewResult.Value.BaseImage;
+                _navigatorCompositeImages[previewDirection] = previewResult.Value.CompositeImage;
+            }
+
+            InvalidateNavigatorSnapshotCache();
+            PreviewSummary =
+                $"Preview built for direction {direction}. " +
+                $"Landmark {(result.Value.LandmarkImage is null ? "missing or not selected" : "available")}, " +
+                $"overlay {(result.Value.OverlayImage is null ? "missing or not selected" : "available")}.";
             if (userInitiated)
             {
-                StatusMessage = selectionResult.Error.Message;
+                StatusMessage = "Preview refreshed.";
             }
-            return;
-        }
-
-        var direction = GetSafeSelectedDirection();
-        var selection = new PreviewSelection(
-            BaseStateName,
-            string.IsNullOrWhiteSpace(LandmarkStateName) ? null : LandmarkStateName.Trim(),
-            string.IsNullOrWhiteSpace(OverlayStateName) ? null : OverlayStateName.Trim());
-
-        var result = await _buildPreviewUseCase.ExecuteAsync(selection, direction, cancellationToken);
-        if (result.IsFailure)
-        {
-            ClearPreviewArtifacts();
-            PreviewSummary = result.Error.Message;
-            if (userInitiated)
-            {
-                StatusMessage = result.Error.Message;
-            }
+            RefreshPreviewSelectionSummary();
             RefreshActivePreviewPresentation();
-            return;
-        }
-
-        _baseImage = result.Value.BaseImage;
-        _landmarkImage = result.Value.LandmarkImage;
-        _overlayImage = result.Value.OverlayImage;
-        _compositeImage = result.Value.CompositeImage;
-        _navigatorBaseImages.Clear();
-        _navigatorCompositeImages.Clear();
-        _navigatorBaseImages[direction] = result.Value.BaseImage;
-        _navigatorCompositeImages[direction] = result.Value.CompositeImage;
-
-        foreach (var previewDirection in AvailableDirections.Where(candidate => candidate != direction))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var previewResult = await _buildPreviewUseCase.ExecuteAsync(selection, previewDirection, cancellationToken);
-            if (previewResult.IsFailure)
-            {
-                continue;
-            }
-
-            _navigatorBaseImages[previewDirection] = previewResult.Value.BaseImage;
-            _navigatorCompositeImages[previewDirection] = previewResult.Value.CompositeImage;
-        }
-
-        InvalidateNavigatorSnapshotCache();
-        PreviewSummary =
-            $"Preview built for direction {direction}. " +
-            $"Landmark {(result.Value.LandmarkImage is null ? "missing or not selected" : "available")}, " +
-            $"overlay {(result.Value.OverlayImage is null ? "missing or not selected" : "available")}.";
-        if (userInitiated)
-        {
-            StatusMessage = "Preview refreshed.";
-        }
-        RefreshPreviewSelectionSummary();
-        RefreshActivePreviewPresentation();
-        RefreshEditorSurface();
+            RefreshEditorSurface();
         }
         catch (OperationCanceledException)
         {
@@ -993,29 +992,14 @@ public partial class WorkspaceShellViewModel
         return string.Empty;
     }
 
-    private static EditorViewportMode ParseEditorViewportMode(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value) ||
-            int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
-        {
-            return EditorViewportMode.Matrix;
-        }
-
-        return Enum.TryParse<EditorViewportMode>(value, true, out var mode) &&
-            Enum.IsDefined(mode)
-                ? mode
-                : EditorViewportMode.Matrix;
-    }
+    private static EditorViewportMode ParseEditorViewportMode(string? value) =>
+        WorkspaceEnumParsing.ParseDefinedEnumOrDefault(value, EditorViewportMode.Matrix);
 
     private static BottomWorkspaceTab ParseBottomWorkspaceTab(string? value) =>
-        Enum.TryParse<BottomWorkspaceTab>(value, true, out var tab)
-            ? tab
-            : BottomWorkspaceTab.Mappings;
+        WorkspaceEnumParsing.ParseDefinedEnumOrDefault(value, BottomWorkspaceTab.Mappings);
 
     private static WorkspaceThemeMode ParseThemeMode(string? value) =>
-        Enum.TryParse<WorkspaceThemeMode>(value, true, out var mode)
-            ? mode
-            : WorkspaceThemeMode.Dark;
+        WorkspaceEnumParsing.ParseDefinedEnumOrDefault(value, WorkspaceThemeMode.Dark);
 
     private static IReadOnlyList<SpriteDirection> GetPresentationDirectionOrder(SupportedDirectionSet supportedDirections)
     {

@@ -281,14 +281,19 @@ public sealed class RunBatchManifestUseCase(
             }
 
             var normalizedSubdirectory = NormalizeOutputSubdirectory(job.OutputSubdirectory);
-            if (!outputSubdirectories.Add(normalizedSubdirectory))
-            {
-                return Result.Failure(Errors.Validation($"Manifest contains duplicate outputSubdirectory '{job.OutputSubdirectory}' among enabled jobs."));
-            }
 
-            if (!IsSafeOutputSubdirectory(job.OutputSubdirectory))
+            if (!IsSafeOutputSubdirectory(normalizedSubdirectory))
             {
                 return Result.Failure(Errors.Validation($"Output subdirectory '{job.OutputSubdirectory}' is invalid for job '{job.JobId}'."));
+            }
+
+            var outputDirectoryKey = NormalizeOutputDirectoryKey(
+                manifest.OutputRoot,
+                normalizedSubdirectory);
+
+            if (!outputSubdirectories.Add(outputDirectoryKey))
+            {
+                return Result.Failure(Errors.Validation($"Manifest contains duplicate outputSubdirectory '{job.OutputSubdirectory}' among enabled jobs."));
             }
 
             if (job.ExplicitFiles is not { Count: > 0 })
@@ -323,10 +328,36 @@ public sealed class RunBatchManifestUseCase(
             ? Path.GetFullPath(outputRoot)
             : Path.GetFullPath(Path.Combine(outputRoot, outputSubdirectory));
 
-    private static string NormalizeOutputSubdirectory(string value) =>
-        string.IsNullOrWhiteSpace(value) || value == "."
-            ? string.Empty
-            : value.Trim().Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+    private static string NormalizeOutputDirectoryKey(
+        string outputRoot,
+        string outputSubdirectory)
+    {
+        var outputDirectory = ResolveManifestJobOutputDirectory(
+            outputRoot,
+            outputSubdirectory);
+
+        return Path.TrimEndingDirectorySeparator(
+            Path.GetFullPath(outputDirectory));
+    }
+
+    private static string NormalizeOutputSubdirectory(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var normalized = value
+            .Trim()
+            .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+
+        if (normalized == ".")
+        {
+            return string.Empty;
+        }
+
+        return Path.TrimEndingDirectorySeparator(normalized);
+    }
 }
 
 internal static class BatchExecutionCoordinator

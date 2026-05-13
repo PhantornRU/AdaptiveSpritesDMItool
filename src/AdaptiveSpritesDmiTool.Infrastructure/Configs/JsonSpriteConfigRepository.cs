@@ -129,18 +129,18 @@ public sealed class JsonSpriteConfigRepository : IConfigRepository
             supportedDirections,
             metadata);
 
-            foreach (var pair in model.Mappings)
+        foreach (var pair in model.Mappings)
+        {
+            var direction = Enum.Parse<SpriteDirection>(pair.Key, true);
+            foreach (var mapping in pair.Value)
             {
-                var direction = Enum.Parse<SpriteDirection>(pair.Key, true);
-                foreach (var mapping in pair.Value)
-                {
-                    var source = new PixelCoordinate(mapping.Source.X, mapping.Source.Y);
-                    PixelCoordinate? target = mapping.Target is null
-                        ? null
-                        : new PixelCoordinate(mapping.Target.X, mapping.Target.Y);
-                    config = config.SetMapping(direction, source, target, metadata.UpdatedUtc);
-                }
+                var source = new PixelCoordinate(mapping.Source.X, mapping.Source.Y);
+                PixelCoordinate? target = mapping.Target is null
+                    ? null
+                    : new PixelCoordinate(mapping.Target.X, mapping.Target.Y);
+                config = config.SetMapping(direction, source, target, metadata.UpdatedUtc);
             }
+        }
 
         return config.WithMetadata(metadata);
     }
