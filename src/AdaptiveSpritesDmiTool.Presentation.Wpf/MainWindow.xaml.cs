@@ -90,11 +90,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void BatchSourceTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-    {
-        await ViewModel.HandleBatchSourceSelectionAsync(e.NewValue as BatchSourceTreeItemViewModel);
-    }
-
     private void ThemeModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (sender is System.Windows.Controls.ComboBox { SelectedItem: WorkspaceThemeMode mode })

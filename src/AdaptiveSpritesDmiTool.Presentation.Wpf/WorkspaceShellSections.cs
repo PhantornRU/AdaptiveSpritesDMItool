@@ -920,6 +920,8 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
 
     public ObservableCollection<BatchStateStripItemViewModel> StateStripItems => Shell.BatchStateStripItems;
 
+    public BatchSourceTreeItemViewModel? SelectedSourceItem => Shell.SelectedBatchSourceItem;
+
     public BatchStateStripItemViewModel? SelectedStateStripItem
     {
         get => Shell.SelectedBatchStateStripItem;
@@ -965,6 +967,25 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
             : "Selected file";
 
     public string SourceSelectionPath => Shell.SelectedBatchSourceItem?.FullPath ?? Shell.BatchInputDirectory;
+
+    public async Task SelectSourceItemAsync(BatchSourceTreeItemViewModel? item)
+    {
+        await Shell.HandleBatchSourceSelectionAsync(item);
+
+        OnPropertyChanged(nameof(SelectedSourceItem));
+        OnPropertyChanged(nameof(SourceSelectionName));
+        OnPropertyChanged(nameof(SourceSelectionDetail));
+        OnPropertyChanged(nameof(SourceSelectionPath));
+        OnPropertyChanged(nameof(SelectedStateName));
+        OnPropertyChanged(nameof(CurrentFileSummary));
+        OnPropertyChanged(nameof(QuickPreviewSummary));
+        OnPropertyChanged(nameof(QuickPreviewSelectionSummary));
+        OnPropertyChanged(nameof(HasQuickPreview));
+        OnPropertyChanged(nameof(HasQuickPreviewOriginalImage));
+        OnPropertyChanged(nameof(HasQuickPreviewEditedImage));
+        OnPropertyChanged(nameof(QuickPreviewOriginalImage));
+        OnPropertyChanged(nameof(QuickPreviewEditedImage));
+    }
 
     public string ActiveConfigName => ActiveConfigItem?.Name ?? "No config";
 
