@@ -958,6 +958,10 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
 
     public bool HasBatchResults => Shell.BatchResults.Count > 0;
 
+    public bool HasNoBatchResults => !HasBatchResults;
+
+    public bool IsBusy => Shell.IsBusy;
+
     public string SourceSelectionName => Shell.SelectedBatchSourceItem?.Name ?? "All DMI files";
 
     public string SourceSelectionDetail => Shell.SelectedBatchSourceItem is null
@@ -1015,12 +1019,36 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
         Shell.ConfigQueueItems.FirstOrDefault(static item => item.IsActive) ??
         Shell.ConfigQueueItems.FirstOrDefault();
 
+    protected override void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        base.OnShellPropertyChanged(sender, e);
+
+        if (string.IsNullOrEmpty(e.PropertyName) ||
+            e.PropertyName is nameof(WorkspaceShellViewModel.IsBusy))
+        {
+            OnPropertyChanged(nameof(IsBusy));
+        }
+
+        if (string.IsNullOrEmpty(e.PropertyName) ||
+            e.PropertyName is nameof(WorkspaceShellViewModel.BatchSummary)
+                or nameof(WorkspaceShellViewModel.BatchCurrentFile)
+                or nameof(WorkspaceShellViewModel.BatchProcessedFiles)
+                or nameof(WorkspaceShellViewModel.BatchTotalFiles))
+        {
+            OnPropertyChanged(nameof(BatchSummary));
+            OnPropertyChanged(nameof(BatchCurrentFile));
+            OnPropertyChanged(nameof(CurrentFileSummary));
+            OnPropertyChanged(nameof(BatchProgressSummary));
+        }
+    }
+
     private void OnBatchCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (ReferenceEquals(sender, Shell.BatchResults))
         {
             UpdateBatchResultCounts(e);
             OnPropertyChanged(nameof(HasBatchResults));
+            OnPropertyChanged(nameof(HasNoBatchResults));
             OnPropertyChanged(nameof(BatchProgressSummary));
             OnPropertyChanged(nameof(ProcessedResultCount));
             OnPropertyChanged(nameof(SkippedResultCount));

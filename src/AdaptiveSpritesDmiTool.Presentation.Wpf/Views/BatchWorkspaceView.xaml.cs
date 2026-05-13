@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using WpfUserControl = System.Windows.Controls.UserControl;
 
@@ -19,6 +20,17 @@ public partial class BatchWorkspaceView : WpfUserControl
             return;
         }
 
-        await viewModel.SelectSourceItemAsync(e.NewValue as BatchSourceTreeItemViewModel);
+        try
+        {
+            await viewModel.SelectSourceItemAsync(e.NewValue as BatchSourceTreeItemViewModel);
+        }
+        catch (OperationCanceledException)
+        {
+            // Selection preview refresh was superseded by another selection.
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine($"[BatchWorkspaceView] Source selection failed: {exception}");
+        }
     }
 }

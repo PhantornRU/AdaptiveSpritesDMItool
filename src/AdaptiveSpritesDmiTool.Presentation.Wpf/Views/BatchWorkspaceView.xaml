@@ -9,6 +9,35 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <local:OverwritePolicyLabelConverter x:Key="OverwritePolicyLabelConverter" />
+
+        <SolidColorBrush
+            x:Key="{x:Static SystemColors.WindowBrushKey}"
+            Color="{DynamicResource Color.ControlBackground}" />
+        <SolidColorBrush
+            x:Key="{x:Static SystemColors.ControlBrushKey}"
+            Color="{DynamicResource Color.ControlBackground}" />
+        <SolidColorBrush
+            x:Key="{x:Static SystemColors.ControlTextBrushKey}"
+            Color="{DynamicResource Color.TextPrimary}" />
+        <SolidColorBrush
+            x:Key="{x:Static SystemColors.WindowTextBrushKey}"
+            Color="{DynamicResource Color.TextPrimary}" />
+        <SolidColorBrush
+            x:Key="{x:Static SystemColors.HighlightBrushKey}"
+            Color="{DynamicResource Color.AccentMuted}" />
+        <SolidColorBrush
+            x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
+            Color="{DynamicResource Color.TextPrimary}" />
+        <SolidColorBrush
+            x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+            Color="{DynamicResource Color.AccentMuted}" />
+        <SolidColorBrush
+            x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}"
+            Color="{DynamicResource Color.TextPrimary}" />
+        <SolidColorBrush
+            x:Key="{x:Static SystemColors.GrayTextBrushKey}"
+            Color="{DynamicResource Color.TextSecondary}" />
 
         <Style x:Key="BatchCard" TargetType="{x:Type Border}">
             <Setter Property="Background" Value="{DynamicResource Brush.CardBackground}" />
@@ -47,7 +76,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
 
-        <Style x:Key="BatchFlatButton" TargetType="{x:Type Button}">
+        <Style x:Key="BatchButtonBase" TargetType="{x:Type Button}">
             <Setter Property="Height" Value="30" />
             <Setter Property="MinWidth" Value="72" />
             <Setter Property="Padding" Value="10,4" />
@@ -56,21 +85,202 @@
             <Setter Property="Background" Value="{DynamicResource Brush.ControlBackground}" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
             <Setter Property="VerticalAlignment" Value="Bottom" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border
+                            x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="3"
+                            SnapsToDevicePixels="True">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                RecognizesAccessKey="True" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.ControlBackground}" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.PanelBorder}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+                                <Setter Property="Opacity" Value="0.48" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
-        <Style x:Key="BatchPrimaryButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BatchFlatButton}">
-            <Setter Property="MinWidth" Value="96" />
+        <Style
+            x:Key="BatchFlatButton"
+            TargetType="{x:Type Button}"
+            BasedOn="{StaticResource BatchButtonBase}" />
+
+        <Style
+            x:Key="BatchPrimaryButton"
+            TargetType="{x:Type Button}"
+            BasedOn="{StaticResource BatchButtonBase}">
+            <Setter Property="MinWidth" Value="108" />
             <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
+        <Style x:Key="BatchComboBoxItem" TargetType="{x:Type ComboBoxItem}">
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Background" Value="{DynamicResource Brush.ControlBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ComboBoxItem}">
+                        <Border
+                            x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="0"
+                            SnapsToDevicePixels="True">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                VerticalAlignment="Center" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+                                <Setter Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="BatchComboBox" TargetType="{x:Type ComboBox}">
             <Setter Property="Height" Value="30" />
-            <Setter Property="Padding" Value="6,3" />
+            <Setter Property="Padding" Value="8,4" />
             <Setter Property="Background" Value="{DynamicResource Brush.ControlBackground}" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.PanelBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource BatchComboBoxItem}" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ComboBox}">
+                        <Grid SnapsToDevicePixels="True">
+                            <ToggleButton
+                                x:Name="ToggleButton"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                ClickMode="Press"
+                                Focusable="False"
+                                IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                                        <Border
+                                            x:Name="Root"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="3">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="26" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <Path
+                                                    Grid.Column="1"
+                                                    Width="8"
+                                                    Height="5"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Data="M 0 0 L 4 5 L 8 0 Z"
+                                                    Fill="{DynamicResource Brush.TextSecondary}" />
+                                            </Grid>
+                                        </Border>
+
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter TargetName="Root" Property="Opacity" Value="0.5" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+
+                            <ContentPresenter
+                                x:Name="ContentSite"
+                                Margin="8,0,28,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Content="{TemplateBinding SelectionBoxItem}"
+                                ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                IsHitTestVisible="False" />
+
+                            <Popup
+                                x:Name="PART_Popup"
+                                AllowsTransparency="True"
+                                Focusable="False"
+                                IsOpen="{TemplateBinding IsDropDownOpen}"
+                                Placement="Bottom"
+                                PopupAnimation="Fade">
+                                <Border
+                                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                    MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                    Background="{DynamicResource Brush.ControlBackground}"
+                                    BorderBrush="{DynamicResource Brush.PanelBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="3"
+                                    SnapsToDevicePixels="True">
+                                    <ScrollViewer
+                                        CanContentScroll="True"
+                                        Background="{DynamicResource Brush.ControlBackground}">
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="HasItems" Value="False">
+                                <Setter TargetName="PART_Popup" Property="MinHeight" Value="32" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+                                <Setter Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style TargetType="{x:Type TreeView}">
@@ -101,26 +311,195 @@
         </Style>
 
         <Style TargetType="{x:Type ListBoxItem}">
-            <Setter Property="Padding" Value="7,4" />
+            <Setter Property="MinHeight" Value="26" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Margin" Value="0,0,0,2" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Border
+                            x:Name="Root"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="3"
+                            SnapsToDevicePixels="True">
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                VerticalAlignment="Center" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.ControlBackground}" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.PanelBorder}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+                                <Setter Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="BatchDataGridColumnHeader" TargetType="{x:Type DataGridColumnHeader}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Background" Value="{DynamicResource Brush.ControlBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.PanelBorder}" />
+            <Setter Property="BorderThickness" Value="0,0,1,1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="BatchDataGridCell" TargetType="{x:Type DataGridCell}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.PanelBorder}" />
+            <Setter Property="BorderThickness" Value="0,0,1,0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter
+                                Margin="6,0"
+                                VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="BatchDataGridRow" TargetType="{x:Type DataGridRow}">
+            <Setter Property="Background" Value="{DynamicResource Brush.SurfaceSubtle}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.PanelBorder}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource Brush.ControlBackground}" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="BatchResultsGrid" TargetType="{x:Type DataGrid}">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserDeleteRows" Value="False" />
+            <Setter Property="CanUserResizeRows" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="RowHeight" Value="26" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="{DynamicResource Brush.SurfaceSubtle}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Brush.PanelBorder}" />
+            <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource Brush.PanelBorder}" />
+            <Setter Property="ColumnHeaderStyle" Value="{StaticResource BatchDataGridColumnHeader}" />
+            <Setter Property="CellStyle" Value="{StaticResource BatchDataGridCell}" />
+            <Setter Property="RowStyle" Value="{StaticResource BatchDataGridRow}" />
+            <Setter Property="SelectionMode" Value="Single" />
+            <Setter Property="SelectionUnit" Value="FullRow" />
+            <Setter Property="EnableRowVirtualization" Value="True" />
+            <Setter Property="EnableColumnVirtualization" Value="True" />
+        </Style>
+
+        <Style x:Key="BatchResultsGridWithVisibility" TargetType="{x:Type DataGrid}" BasedOn="{StaticResource BatchResultsGrid}">
+            <Setter Property="Visibility" Value="Visible" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasNoBatchResults}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="BatchGridTextBlock" TargetType="{x:Type TextBlock}">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="BatchGridStatusTextBlock" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource BatchGridTextBlock}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding StatusText}" Value="Processed">
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding StatusText}" Value="Failed">
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.Warning}" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding StatusText}" Value="Cancelled">
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="BatchResultsPlaceholder" TargetType="{x:Type TextBlock}">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasNoBatchResults}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <HierarchicalDataTemplate
             DataType="{x:Type local:BatchSourceTreeItemViewModel}"
             ItemsSource="{Binding Children}">
-            <DockPanel
-                LastChildFill="True"
-                ToolTip="{Binding FullPath}">
+            <Grid ToolTip="{Binding FullPath}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
                 <TextBlock
-                    DockPanel.Dock="Right"
+                    Grid.Column="0"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis"
+                    Foreground="{DynamicResource Brush.TextPrimary}" />
+
+                <TextBlock
+                    Grid.Column="1"
                     Text="!"
                     FontWeight="Bold"
                     Foreground="{DynamicResource Brush.Warning}"
                     ToolTip="{Binding ValidationMessage}"
-                    Margin="6,0,0,0">
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center">
                     <TextBlock.Style>
                         <Style TargetType="{x:Type TextBlock}">
                             <Setter Property="Visibility" Value="Collapsed" />
+                            <Setter Property="Opacity" Value="0.85" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsValid}" Value="False">
                                     <Setter Property="Visibility" Value="Visible" />
@@ -129,12 +508,7 @@
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
-
-                <TextBlock
-                    Text="{Binding Name}"
-                    TextTrimming="CharacterEllipsis"
-                    Foreground="{DynamicResource Brush.TextPrimary}" />
-            </DockPanel>
+            </Grid>
         </HierarchicalDataTemplate>
 
         <DataTemplate DataType="{x:Type local:BatchStateStripItemViewModel}">
@@ -145,11 +519,14 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Margin="12">
+    <Grid
+        Margin="10"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="184" />
+            <RowDefinition Height="*" MinHeight="340" />
+            <RowDefinition Height="170" />
         </Grid.RowDefinitions>
 
         <Border
@@ -163,110 +540,98 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.25*" />
-                    <ColumnDefinition Width="78" />
-                    <ColumnDefinition Width="1.25*" />
-                    <ColumnDefinition Width="78" />
-                    <ColumnDefinition Width="154" />
-                    <ColumnDefinition Width="104" />
-                    <ColumnDefinition Width="86" />
-                </Grid.ColumnDefinitions>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="82" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="82" />
+                    </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,0">
-                    <TextBlock Text="Source folder" Style="{StaticResource BatchLabel}" />
-                    <TextBox
-                        Style="{StaticResource BatchPathBox}"
-                        Text="{Binding BatchInputDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Source folder" Style="{StaticResource BatchLabel}" />
+                        <TextBox
+                            Style="{StaticResource BatchPathBox}"
+                            Text="{Binding BatchInputDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
 
-                <Button
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    Content="Browse"
-                    Command="{Binding BrowseBatchInputDirectoryCommand}"
-                    Style="{StaticResource BatchFlatButton}" />
+                    <Button
+                        Grid.Column="1"
+                        Content="Browse"
+                        Command="{Binding BrowseBatchInputDirectoryCommand}"
+                        Style="{StaticResource BatchFlatButton}" />
 
-                <StackPanel Grid.Row="0" Grid.Column="2" Margin="10,0,8,0">
-                    <TextBlock Text="Output folder" Style="{StaticResource BatchLabel}" />
-                    <TextBox
-                        Style="{StaticResource BatchPathBox}"
-                        Text="{Binding BatchOutputDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                    <StackPanel Grid.Column="3">
+                        <TextBlock Text="Output folder" Style="{StaticResource BatchLabel}" />
+                        <TextBox
+                            Style="{StaticResource BatchPathBox}"
+                            Text="{Binding BatchOutputDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
 
-                <Button
-                    Grid.Row="0"
-                    Grid.Column="3"
-                    Content="Browse"
-                    Command="{Binding BrowseBatchOutputDirectoryCommand}"
-                    Style="{StaticResource BatchFlatButton}" />
+                    <Button
+                        Grid.Column="4"
+                        Content="Browse"
+                        Command="{Binding BrowseBatchOutputDirectoryCommand}"
+                        Style="{StaticResource BatchFlatButton}" />
+                </Grid>
 
-                <StackPanel Grid.Row="0" Grid.Column="4" Margin="10,0,8,0">
-                    <TextBlock Text="Overwrite policy" Style="{StaticResource BatchLabel}" />
+                <Grid Grid.Row="1" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="160" />
+                        <ColumnDefinition Width="112" />
+                        <ColumnDefinition Width="88" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        TextTrimming="CharacterEllipsis">
+                        <Run Text="Config: " Foreground="{DynamicResource Brush.TextSecondary}" />
+                        <Run Text="{Binding ActiveConfigName, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" />
+                        <Run Text="  -  " Foreground="{DynamicResource Brush.TextSecondary}" />
+                        <Run Text="Current: " Foreground="{DynamicResource Brush.TextSecondary}" />
+                        <Run Text="{Binding CurrentFileSummary, Mode=OneWay}" Foreground="{DynamicResource Brush.TextSecondary}" />
+                    </TextBlock>
+
                     <ComboBox
+                        Grid.Column="1"
+                        Margin="0,0,8,0"
                         Style="{StaticResource BatchComboBox}"
                         ItemsSource="{Binding OverwritePolicies}"
-                        SelectedItem="{Binding SelectedOverwritePolicy, Mode=TwoWay}" />
-                </StackPanel>
+                        SelectedItem="{Binding SelectedOverwritePolicy, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock
+                                    Text="{Binding Converter={StaticResource OverwritePolicyLabelConverter}}"
+                                    Foreground="{DynamicResource Brush.TextPrimary}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
-                <Button
-                    Grid.Row="0"
-                    Grid.Column="5"
-                    Content="Run batch"
-                    Command="{Binding RunBatchCommand}"
-                    Style="{StaticResource BatchPrimaryButton}" />
+                    <Button
+                        Grid.Column="2"
+                        Margin="0,0,8,0"
+                        Content="Run batch"
+                        Command="{Binding RunBatchCommand}"
+                        Style="{StaticResource BatchPrimaryButton}" />
 
-                <Button
-                    Grid.Row="0"
-                    Grid.Column="6"
-                    Content="Cancel"
-                    Command="{Binding CancelCommand}"
-                    Style="{StaticResource BatchFlatButton}" />
-
-                <DockPanel
-                    Grid.Row="1"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="7"
-                    Margin="0,8,0,0"
-                    LastChildFill="True">
-                    <TextBlock
-                        DockPanel.Dock="Left"
-                        Text="Config:"
-                        Style="{StaticResource BatchMutedText}"
-                        Margin="0,0,4,0" />
-
-                    <TextBlock
-                        DockPanel.Dock="Left"
-                        Text="{Binding ActiveConfigName}"
-                        Foreground="{DynamicResource Brush.TextPrimary}"
-                        FontWeight="SemiBold"
-                        TextTrimming="CharacterEllipsis"
-                        Margin="0,0,6,0" />
-
-                    <TextBlock
-                        DockPanel.Dock="Left"
-                        Text="{Binding ActiveConfigStorage}"
-                        Style="{StaticResource BatchMutedText}"
-                        Margin="0,0,20,0" />
-
-                    <TextBlock
-                        DockPanel.Dock="Left"
-                        Text="Current:"
-                        Style="{StaticResource BatchMutedText}"
-                        Margin="0,0,4,0" />
-
-                    <TextBlock
-                        Text="{Binding CurrentFileSummary}"
-                        Style="{StaticResource BatchMutedText}" />
-                </DockPanel>
+                    <Button
+                        Grid.Column="3"
+                        Content="Cancel"
+                        Command="{Binding CancelCommand}"
+                        IsEnabled="{Binding IsBusy}"
+                        Style="{StaticResource BatchFlatButton}" />
+                </Grid>
             </Grid>
         </Border>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="330" />
-                <ColumnDefinition Width="8" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="400" MinWidth="340" />
+                <ColumnDefinition Width="6" />
+                <ColumnDefinition Width="*" MinWidth="620" />
             </Grid.ColumnDefinitions>
 
             <Border
@@ -280,17 +645,26 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <DockPanel Grid.Row="0" LastChildFill="True">
+                    <Grid Grid.Row="0" Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
                         <TextBlock
+                            Grid.Column="0"
                             Text="Source files"
                             Style="{StaticResource BatchSectionTitle}" />
-                        <TextBlock
-                            DockPanel.Dock="Right"
-                            Text="{Binding SourceSelectionDetail}"
-                            Style="{StaticResource BatchMutedText}" />
-                    </DockPanel>
 
-                    <StackPanel Grid.Row="1" Margin="0,4,0,8">
+                        <TextBlock
+                            Grid.Column="1"
+                            Text="{Binding SourceSelectionDetail}"
+                            Style="{StaticResource BatchMutedText}"
+                            HorizontalAlignment="Right"
+                            Margin="12,0,0,0" />
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" Margin="0,0,0,8">
                         <TextBlock
                             Text="{Binding SourceSelectionName}"
                             Foreground="{DynamicResource Brush.TextPrimary}"
@@ -309,6 +683,15 @@
                 </Grid>
             </Border>
 
+            <GridSplitter
+                Grid.Column="1"
+                Width="6"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="Transparent"
+                ResizeDirection="Columns"
+                ResizeBehavior="PreviousAndNext" />
+
             <Border
                 Grid.Column="2"
                 Style="{StaticResource BatchCard}"
@@ -319,19 +702,28 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <DockPanel Grid.Row="0" LastChildFill="True" Margin="0,0,0,8">
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
                         <TextBlock
+                            Grid.Column="0"
                             Text="Preview"
                             Style="{StaticResource BatchSectionTitle}" />
+
                         <TextBlock
-                            DockPanel.Dock="Right"
+                            Grid.Column="1"
                             Text="{Binding QuickPreviewSummary}"
-                            Style="{StaticResource BatchMutedText}" />
-                    </DockPanel>
+                            Style="{StaticResource BatchMutedText}"
+                            HorizontalAlignment="Right"
+                            Margin="12,0,0,0" />
+                    </Grid>
 
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="190" />
+                            <ColumnDefinition Width="170" />
                             <ColumnDefinition Width="8" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="8" />
@@ -376,6 +768,10 @@
                                     Grid.Row="1"
                                     Source="{Binding QuickPreviewOriginalImage}"
                                     Stretch="Uniform"
+                                    MaxWidth="340"
+                                    MaxHeight="320"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
                                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                                     SnapsToDevicePixels="True" />
                             </Grid>
@@ -402,6 +798,10 @@
                                     Grid.Row="1"
                                     Source="{Binding QuickPreviewEditedImage}"
                                     Stretch="Uniform"
+                                    MaxWidth="340"
+                                    MaxHeight="320"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
                                     RenderOptions.BitmapScalingMode="NearestNeighbor"
                                     SnapsToDevicePixels="True" />
                             </Grid>
@@ -453,46 +853,41 @@
                     </TextBlock>
                 </DockPanel>
 
-                <DataGrid
-                    Grid.Row="1"
-                    ItemsSource="{Binding BatchResults}"
-                    AutoGenerateColumns="False"
-                    IsReadOnly="True"
-                    CanUserAddRows="False"
-                    CanUserDeleteRows="False"
-                    CanUserResizeRows="False"
-                    HeadersVisibility="Column"
-                    GridLinesVisibility="Horizontal"
-                    RowHeight="24"
-                    BorderThickness="0"
-                    Background="{DynamicResource Brush.SurfaceSubtle}"
-                    Foreground="{DynamicResource Brush.TextPrimary}"
-                    HorizontalGridLinesBrush="{DynamicResource Brush.PanelBorder}"
-                    VerticalGridLinesBrush="{DynamicResource Brush.PanelBorder}"
-                    EnableRowVirtualization="True"
-                    EnableColumnVirtualization="True">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn
-                            Header="Status"
-                            Binding="{Binding StatusText}"
-                            Width="90" />
+                <Grid Grid.Row="1">
+                    <DataGrid
+                        ItemsSource="{Binding BatchResults}"
+                        Style="{StaticResource BatchResultsGridWithVisibility}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn
+                                Header="Status"
+                                Binding="{Binding StatusText}"
+                                Width="96"
+                                ElementStyle="{StaticResource BatchGridStatusTextBlock}" />
 
-                        <DataGridTextColumn
-                            Header="Input"
-                            Binding="{Binding InputPath}"
-                            Width="2*" />
+                            <DataGridTextColumn
+                                Header="Input"
+                                Binding="{Binding InputPath}"
+                                Width="2*"
+                                ElementStyle="{StaticResource BatchGridTextBlock}" />
 
-                        <DataGridTextColumn
-                            Header="Output"
-                            Binding="{Binding OutputPath}"
-                            Width="2*" />
+                            <DataGridTextColumn
+                                Header="Output"
+                                Binding="{Binding OutputPath}"
+                                Width="2*"
+                                ElementStyle="{StaticResource BatchGridTextBlock}" />
 
-                        <DataGridTextColumn
-                            Header="Message"
-                            Binding="{Binding Message}"
-                            Width="2*" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                            <DataGridTextColumn
+                                Header="Message"
+                                Binding="{Binding Message}"
+                                Width="2*"
+                                ElementStyle="{StaticResource BatchGridTextBlock}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock
+                        Text="No batch results yet. Run batch to populate this table."
+                        Style="{StaticResource BatchResultsPlaceholder}" />
+                </Grid>
             </Grid>
         </Border>
     </Grid>

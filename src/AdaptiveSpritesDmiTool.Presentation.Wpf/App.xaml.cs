@@ -273,10 +273,29 @@ public partial class App : System.Windows.Application
         SetBrush(resources, "Brush.ScrollThumb", palette.ScrollThumb);
         SetBrush(resources, "Brush.ScrollThumbHover", palette.ScrollThumbHover);
         SetBrush(resources, "Brush.ScrollThumbPressed", palette.ScrollThumbPressed);
+
+        SetColor(resources, "Color.WindowBackground", palette.WindowBackground);
+        SetColor(resources, "Color.PanelBackground", palette.PanelBackground);
+        SetColor(resources, "Color.PanelBorder", palette.PanelBorder);
+        SetColor(resources, "Color.Accent", palette.Accent);
+        SetColor(resources, "Color.AccentMuted", palette.AccentMuted);
+        SetColor(resources, "Color.Warning", palette.Warning);
+        SetColor(resources, "Color.TextPrimary", palette.TextPrimary);
+        SetColor(resources, "Color.TextSecondary", palette.TextSecondary);
+        SetColor(resources, "Color.ControlBackground", palette.ControlBackground);
+        SetColor(resources, "Color.CardBackground", palette.CardBackground);
+        SetColor(resources, "Color.SurfaceSubtle", palette.SurfaceSubtle);
+        SetColor(resources, "Color.ScrollTrack", palette.ScrollTrack);
+        SetColor(resources, "Color.ScrollThumb", palette.ScrollThumb);
+        SetColor(resources, "Color.ScrollThumbHover", palette.ScrollThumbHover);
+        SetColor(resources, "Color.ScrollThumbPressed", palette.ScrollThumbPressed);
     }
 
     private static void SetBrush(ResourceDictionary resources, string key, MediaColor color)
         => resources[key] = new SolidColorBrush(color);
+
+    private static void SetColor(ResourceDictionary resources, string key, MediaColor color)
+        => resources[key] = color;
 
     private readonly record struct ThemePalette(
         MediaColor WindowBackground,
