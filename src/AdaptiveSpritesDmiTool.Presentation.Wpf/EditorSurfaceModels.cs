@@ -129,6 +129,8 @@ public sealed class BatchResultRowViewModel(BatchFileResult result)
 {
     public BatchFileStatus Status { get; } = result.Status;
 
+    public string StatusText => Status.ToString();
+
     public string InputPath { get; } = result.InputPath;
 
     public string OutputPath { get; } = result.OutputPath ?? string.Empty;

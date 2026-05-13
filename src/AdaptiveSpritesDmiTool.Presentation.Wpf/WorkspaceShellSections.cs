@@ -2,6 +2,7 @@ using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -145,16 +146,30 @@ public sealed class PreviewRefreshCoordinator(TimeSpan? debounce = null) : IDisp
 
 public abstract class ShellSectionViewModel(WorkspaceShellViewModel shell) : ObservableObject
 {
+    private bool _isAttached;
+
     protected WorkspaceShellViewModel Shell { get; } = shell;
 
     public virtual void Attach()
     {
+        if (_isAttached)
+        {
+            return;
+        }
+
+        _isAttached = true;
         Shell.PropertyChanged += OnShellPropertyChanged;
     }
 
     public virtual void Detach()
     {
+        if (!_isAttached)
+        {
+            return;
+        }
+
         Shell.PropertyChanged -= OnShellPropertyChanged;
+        _isAttached = false;
     }
 
     protected virtual void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -865,6 +880,40 @@ public sealed class PreviewPanelViewModel(WorkspaceShellViewModel shell) : Shell
 
 public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
 {
+    private bool _areBatchCollectionsAttached;
+    private int _cancelledResultCount;
+    private int _failedResultCount;
+    private int _processedResultCount;
+    private int _skippedResultCount;
+
+    public override void Attach()
+    {
+        base.Attach();
+        if (_areBatchCollectionsAttached)
+        {
+            return;
+        }
+
+        _areBatchCollectionsAttached = true;
+        RefreshBatchResultCounts();
+        Shell.BatchResults.CollectionChanged += OnBatchCollectionChanged;
+        Shell.ConfigQueueItems.CollectionChanged += OnBatchCollectionChanged;
+    }
+
+    public override void Detach()
+    {
+        if (!_areBatchCollectionsAttached)
+        {
+            base.Detach();
+            return;
+        }
+
+        Shell.BatchResults.CollectionChanged -= OnBatchCollectionChanged;
+        Shell.ConfigQueueItems.CollectionChanged -= OnBatchCollectionChanged;
+        _areBatchCollectionsAttached = false;
+        base.Detach();
+    }
+
     public bool IsAvailable => Shell.HasActiveConfig;
 
     public ObservableCollection<BatchSourceTreeItemViewModel> SourceTreeItems => Shell.BatchSourceTreeItems;
@@ -904,6 +953,119 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
     public string BatchSummary => Shell.BatchSummary;
 
     public string BatchCurrentFile => Shell.BatchCurrentFile;
+
+    public bool HasBatchResults => Shell.BatchResults.Count > 0;
+
+    public string SourceSelectionName => Shell.SelectedBatchSourceItem?.Name ?? "All DMI files";
+
+    public string SourceSelectionDetail => Shell.SelectedBatchSourceItem is null
+        ? "Whole source folder"
+        : Shell.SelectedBatchSourceItem.IsDirectory
+            ? "Selected folder"
+            : "Selected file";
+
+    public string SourceSelectionPath => Shell.SelectedBatchSourceItem?.FullPath ?? Shell.BatchInputDirectory;
+
+    public string ActiveConfigName => ActiveConfigItem?.Name ?? "No config";
+
+    public string ActiveConfigStorage => ActiveConfigItem?.PathSummary ?? "Load a config";
+
+    public string SelectedStateName => SelectedStateStripItem?.Name ?? "No state";
+
+    public string BatchProgressSummary => Shell.BatchTotalFiles > 0
+        ? $"{Shell.BatchProcessedFiles}/{Shell.BatchTotalFiles}"
+        : HasBatchResults
+            ? $"{Shell.BatchResults.Count} result(s)"
+            : "Idle";
+
+    public string CurrentFileSummary => string.IsNullOrWhiteSpace(Shell.BatchCurrentFile)
+        ? "No active file"
+        : Shell.BatchCurrentFile;
+
+    public int ProcessedResultCount => _processedResultCount;
+
+    public int SkippedResultCount => _skippedResultCount;
+
+    public int FailedResultCount => _failedResultCount;
+
+    public int CancelledResultCount => _cancelledResultCount;
+
+    private ConfigQueueItemViewModel? ActiveConfigItem =>
+        Shell.ConfigQueueItems.FirstOrDefault(static item => item.IsActive) ??
+        Shell.ConfigQueueItems.FirstOrDefault();
+
+    private void OnBatchCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (ReferenceEquals(sender, Shell.BatchResults))
+        {
+            UpdateBatchResultCounts(e);
+            OnPropertyChanged(nameof(HasBatchResults));
+            OnPropertyChanged(nameof(BatchProgressSummary));
+            OnPropertyChanged(nameof(ProcessedResultCount));
+            OnPropertyChanged(nameof(SkippedResultCount));
+            OnPropertyChanged(nameof(FailedResultCount));
+            OnPropertyChanged(nameof(CancelledResultCount));
+            return;
+        }
+
+        if (ReferenceEquals(sender, Shell.ConfigQueueItems))
+        {
+            OnPropertyChanged(nameof(ActiveConfigName));
+            OnPropertyChanged(nameof(ActiveConfigStorage));
+        }
+    }
+
+    private void RefreshBatchResultCounts()
+    {
+        _processedResultCount = Shell.BatchResults.Count(static row => row.Status == BatchFileStatus.Processed);
+        _skippedResultCount = Shell.BatchResults.Count(static row => row.Status == BatchFileStatus.Skipped);
+        _failedResultCount = Shell.BatchResults.Count(static row => row.Status == BatchFileStatus.Failed);
+        _cancelledResultCount = Shell.BatchResults.Count(static row => row.Status == BatchFileStatus.Cancelled);
+    }
+
+    private void UpdateBatchResultCounts(NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action is NotifyCollectionChangedAction.Reset)
+        {
+            RefreshBatchResultCounts();
+            return;
+        }
+
+        if (e.OldItems is not null)
+        {
+            foreach (var row in e.OldItems.OfType<BatchResultRowViewModel>())
+            {
+                AdjustBatchResultCount(row.Status, -1);
+            }
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (var row in e.NewItems.OfType<BatchResultRowViewModel>())
+            {
+                AdjustBatchResultCount(row.Status, 1);
+            }
+        }
+    }
+
+    private void AdjustBatchResultCount(BatchFileStatus status, int delta)
+    {
+        switch (status)
+        {
+            case BatchFileStatus.Processed:
+                _processedResultCount += delta;
+                break;
+            case BatchFileStatus.Skipped:
+                _skippedResultCount += delta;
+                break;
+            case BatchFileStatus.Failed:
+                _failedResultCount += delta;
+                break;
+            case BatchFileStatus.Cancelled:
+                _cancelledResultCount += delta;
+                break;
+        }
+    }
 
     public BitmapSource? QuickPreviewOriginalImage => Shell.BatchQuickPreviewOriginalImage;
 
