@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Windows.Data;
 using System.Windows.Media.Imaging;
 using ImageSource = System.Windows.Media.ImageSource;
 
@@ -878,13 +879,126 @@ public sealed class PreviewPanelViewModel(WorkspaceShellViewModel shell) : Shell
     public IAsyncRelayCommand BuildPreviewCommand => Shell.BuildPreviewCommand;
 }
 
-public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+public sealed partial class BatchCandidateFileViewModel : ObservableObject
+{
+    public BatchCandidateFileViewModel(
+        BatchSourceTreeItemViewModel sourceItem,
+        string rootDirectory,
+        string? outputDirectory)
+    {
+        SourceItem = sourceItem;
+        FullPath = Path.GetFullPath(sourceItem.FullPath);
+        RootDirectory = Path.GetFullPath(rootDirectory);
+        RelativePath = Path.GetRelativePath(RootDirectory, FullPath);
+        FileName = Path.GetFileName(FullPath);
+        FolderPath = Path.GetDirectoryName(RelativePath) ?? string.Empty;
+        IsInsideOutputDirectory =
+            !string.IsNullOrWhiteSpace(outputDirectory) &&
+            BatchPathLayout.IsPathUnderDirectory(FullPath, Path.GetFullPath(outputDirectory));
+        IsValid = sourceItem.IsValid && !IsInsideOutputDirectory;
+        ValidationMessage = IsInsideOutputDirectory
+            ? "Output folder is excluded from batch input."
+            : string.IsNullOrWhiteSpace(sourceItem.ValidationMessage)
+                ? "Ready"
+                : sourceItem.ValidationMessage;
+        message = ValidationMessage;
+        isSelected = IsValid;
+    }
+
+    public BatchSourceTreeItemViewModel SourceItem { get; }
+
+    public string RootDirectory { get; }
+
+    public string FullPath { get; }
+
+    public string RelativePath { get; }
+
+    public string FileName { get; }
+
+    public string FolderPath { get; }
+
+    public bool IsValid { get; }
+
+    public bool IsInsideOutputDirectory { get; }
+
+    public string ValidationMessage { get; }
+
+    public string StatusText => LastStatus?.ToString() ?? (IsValid ? "Ready" : "Invalid");
+
+    public string RunScopeText => IsSelected && IsValid ? "Included" : "Excluded";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RunScopeText))]
+    private bool isSelected;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    private BatchFileStatus? lastStatus;
+
+    [ObservableProperty]
+    private string? outputPath;
+
+    [ObservableProperty]
+    private string? message;
+}
+
+public sealed partial class BatchFolderTreeItemViewModel : ObservableObject
+{
+    public BatchFolderTreeItemViewModel(string name, string fullPath, string rootDirectory)
+    {
+        Name = name;
+        FullPath = Path.GetFullPath(fullPath);
+        RelativePath = Path.GetRelativePath(Path.GetFullPath(rootDirectory), FullPath);
+    }
+
+    public string Name { get; }
+
+    public string FullPath { get; }
+
+    public string RelativePath { get; }
+
+    public ObservableCollection<BatchFolderTreeItemViewModel> Children { get; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CountSummary))]
+    private int fileCount;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CountSummary))]
+    private int selectedCount;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CountSummary))]
+    private bool isOutputExcluded;
+
+    public string CountSummary => IsOutputExcluded
+        ? "output excluded"
+        : FileCount == 1
+            ? "1 file"
+            : $"{FileCount} files";
+}
+
+public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
 {
     private bool _areBatchCollectionsAttached;
     private int _cancelledResultCount;
     private int _failedResultCount;
     private int _processedResultCount;
     private int _skippedResultCount;
+    private string _candidateFilter = string.Empty;
+    private bool _includeSubdirectories = true;
+    private BatchCandidateFileViewModel? _selectedCandidateFile;
+    private BatchFolderTreeItemViewModel? _selectedFolder;
+
+    public BatchWorkspaceViewModel(WorkspaceShellViewModel shell)
+        : base(shell)
+    {
+        CandidateFilesView = CollectionViewSource.GetDefaultView(CandidateFiles);
+        CandidateFilesView.Filter = FilterCandidateFile;
+        SelectAllVisibleCandidatesCommand = new RelayCommand(() => AreAllVisibleCandidatesSelected = true);
+        ClearCandidateSelectionCommand = new RelayCommand(() => AreAllVisibleCandidatesSelected = false);
+        RunSelectedBatchCommand = new AsyncRelayCommand(RunSelectedBatchAsync, () => CanRunSelectedBatch);
+    }
 
     public override void Attach()
     {
@@ -896,8 +1010,10 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
 
         _areBatchCollectionsAttached = true;
         RefreshBatchResultCounts();
+        RebuildCandidateFiles();
         Shell.BatchResults.CollectionChanged += OnBatchCollectionChanged;
         Shell.ConfigQueueItems.CollectionChanged += OnBatchCollectionChanged;
+        Shell.BatchSourceTreeItems.CollectionChanged += OnBatchCollectionChanged;
     }
 
     public override void Detach()
@@ -910,6 +1026,12 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
 
         Shell.BatchResults.CollectionChanged -= OnBatchCollectionChanged;
         Shell.ConfigQueueItems.CollectionChanged -= OnBatchCollectionChanged;
+        Shell.BatchSourceTreeItems.CollectionChanged -= OnBatchCollectionChanged;
+        foreach (var file in CandidateFiles)
+        {
+            file.PropertyChanged -= OnCandidateFilePropertyChanged;
+        }
+
         _areBatchCollectionsAttached = false;
         base.Detach();
     }
@@ -917,6 +1039,12 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
     public bool IsAvailable => Shell.HasActiveConfig;
 
     public ObservableCollection<BatchSourceTreeItemViewModel> SourceTreeItems => Shell.BatchSourceTreeItems;
+
+    public ObservableCollection<BatchCandidateFileViewModel> CandidateFiles { get; } = [];
+
+    public ICollectionView CandidateFilesView { get; }
+
+    public ObservableCollection<BatchFolderTreeItemViewModel> FolderTreeItems { get; } = [];
 
     public ObservableCollection<BatchStateStripItemViewModel> StateStripItems => Shell.BatchStateStripItems;
 
@@ -929,6 +1057,70 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
     }
 
     public ObservableCollection<ConfigQueueItemViewModel> ConfigQueueItems => Shell.ConfigQueueItems;
+
+    public bool IncludeSubdirectories
+    {
+        get => _includeSubdirectories;
+        set
+        {
+            if (!SetProperty(ref _includeSubdirectories, value))
+            {
+                return;
+            }
+
+            RebuildCandidateFiles();
+        }
+    }
+
+    public string CandidateFilter
+    {
+        get => _candidateFilter;
+        set
+        {
+            if (!SetProperty(ref _candidateFilter, value))
+            {
+                return;
+            }
+
+            CandidateFilesView.Refresh();
+            RefreshCandidateSelectionProperties();
+        }
+    }
+
+    public BatchCandidateFileViewModel? SelectedCandidateFile
+    {
+        get => _selectedCandidateFile;
+        set
+        {
+            if (!SetProperty(ref _selectedCandidateFile, value))
+            {
+                return;
+            }
+
+            _ = SelectCandidatePreviewAsync(value);
+        }
+    }
+
+    public BatchFolderTreeItemViewModel? SelectedFolder
+    {
+        get => _selectedFolder;
+        set
+        {
+            if (!SetProperty(ref _selectedFolder, value))
+            {
+                return;
+            }
+
+            CandidateFilesView.Refresh();
+            RefreshCandidateSelectionProperties();
+        }
+    }
+
+    public IRelayCommand SelectAllVisibleCandidatesCommand { get; }
+
+    public IRelayCommand ClearCandidateSelectionCommand { get; }
+
+    public AsyncRelayCommand RunSelectedBatchCommand { get; }
 
     public string BatchInputDirectory
     {
@@ -962,6 +1154,75 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
 
     public bool IsBusy => Shell.IsBusy;
 
+    public int CandidateFileCount => CandidateFiles.Count;
+
+    public int ValidCandidateFileCount => CandidateFiles.Count(static file => file.IsValid);
+
+    public int InvalidCandidateFileCount => CandidateFiles.Count(static file => !file.IsValid);
+
+    public int SelectedCandidateFileCount => CandidateFiles.Count(static file => file.IsSelected && file.IsValid);
+
+    public string CandidateSelectionSummary =>
+        $"{SelectedCandidateFileCount} selected / {ValidCandidateFileCount} valid / {CandidateFileCount} found";
+
+    public string RunBatchButtonText =>
+        SelectedCandidateFileCount == ValidCandidateFileCount && ValidCandidateFileCount > 0
+            ? $"Run all {ValidCandidateFileCount}"
+            : $"Run {SelectedCandidateFileCount} selected";
+
+    public bool CanRunSelectedBatch => SelectedCandidateFileCount > 0 && !Shell.IsBusy;
+
+    public bool IsOutputInsideInputDirectory =>
+        !string.IsNullOrWhiteSpace(BatchInputDirectory) &&
+        !string.IsNullOrWhiteSpace(BatchOutputDirectory) &&
+        BatchPathLayout.IsPathUnderDirectory(BatchOutputDirectory, BatchInputDirectory);
+
+    public string OutputExclusionSummary => IsOutputInsideInputDirectory
+        ? "Output folder is inside source and will be excluded from input scan."
+        : string.Empty;
+
+    public string RunLogDetail => Shell.IsBusy ? CurrentFileSummary : "Batch is idle.";
+
+    public bool? AreAllVisibleCandidatesSelected
+    {
+        get
+        {
+            var visible = CandidateFilesView
+                .Cast<BatchCandidateFileViewModel>()
+                .Where(static file => file.IsValid)
+                .ToArray();
+
+            if (visible.Length == 0)
+            {
+                return false;
+            }
+
+            var selected = visible.Count(static file => file.IsSelected);
+
+            return selected == visible.Length
+                ? true
+                : selected == 0
+                    ? false
+                    : null;
+        }
+        set
+        {
+            if (value is not { } isSelected)
+            {
+                return;
+            }
+
+            foreach (var file in CandidateFilesView
+                         .Cast<BatchCandidateFileViewModel>()
+                         .Where(static file => file.IsValid))
+            {
+                file.IsSelected = isSelected;
+            }
+
+            RefreshCandidateSelectionProperties();
+        }
+    }
+
     public string SourceSelectionName => Shell.SelectedBatchSourceItem?.Name ?? "All DMI files";
 
     public string SourceSelectionDetail => Shell.SelectedBatchSourceItem is null
@@ -989,6 +1250,33 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
         OnPropertyChanged(nameof(HasQuickPreviewEditedImage));
         OnPropertyChanged(nameof(QuickPreviewOriginalImage));
         OnPropertyChanged(nameof(QuickPreviewEditedImage));
+    }
+
+    public void SelectFolder(BatchFolderTreeItemViewModel? folder)
+    {
+        SelectedFolder = folder;
+    }
+
+    private async Task SelectCandidatePreviewAsync(BatchCandidateFileViewModel? file)
+    {
+        await SelectSourceItemAsync(file?.SourceItem);
+    }
+
+    private async Task RunSelectedBatchAsync()
+    {
+        var selectedFiles = CandidateFiles
+            .Where(static file => file.IsSelected && file.IsValid)
+            .Select(static file => file.FullPath)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (selectedFiles.Length == 0)
+        {
+            Shell.StatusMessage = "Select at least one valid DMI file to run batch.";
+            return;
+        }
+
+        await Shell.RunBatchForExplicitFilesAsync(selectedFiles);
     }
 
     public string ActiveConfigName => ActiveConfigItem?.Name ?? "No config";
@@ -1027,6 +1315,10 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
             e.PropertyName is nameof(WorkspaceShellViewModel.IsBusy))
         {
             OnPropertyChanged(nameof(IsBusy));
+            OnPropertyChanged(nameof(CanRunSelectedBatch));
+            OnPropertyChanged(nameof(RunBatchButtonText));
+            OnPropertyChanged(nameof(RunLogDetail));
+            RunSelectedBatchCommand.NotifyCanExecuteChanged();
         }
 
         if (string.IsNullOrEmpty(e.PropertyName) ||
@@ -1039,6 +1331,16 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
             OnPropertyChanged(nameof(BatchCurrentFile));
             OnPropertyChanged(nameof(CurrentFileSummary));
             OnPropertyChanged(nameof(BatchProgressSummary));
+            OnPropertyChanged(nameof(RunLogDetail));
+        }
+
+        if (string.IsNullOrEmpty(e.PropertyName) ||
+            e.PropertyName is nameof(WorkspaceShellViewModel.BatchInputDirectory)
+                or nameof(WorkspaceShellViewModel.BatchOutputDirectory))
+        {
+            RebuildCandidateFiles();
+            OnPropertyChanged(nameof(IsOutputInsideInputDirectory));
+            OnPropertyChanged(nameof(OutputExclusionSummary));
         }
     }
 
@@ -1054,6 +1356,14 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
             OnPropertyChanged(nameof(SkippedResultCount));
             OnPropertyChanged(nameof(FailedResultCount));
             OnPropertyChanged(nameof(CancelledResultCount));
+            if (e.NewItems is not null)
+            {
+                foreach (var row in e.NewItems.OfType<BatchResultRowViewModel>())
+                {
+                    ApplyBatchResultToCandidate(row);
+                }
+            }
+
             return;
         }
 
@@ -1061,6 +1371,12 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
         {
             OnPropertyChanged(nameof(ActiveConfigName));
             OnPropertyChanged(nameof(ActiveConfigStorage));
+            return;
+        }
+
+        if (ReferenceEquals(sender, Shell.BatchSourceTreeItems))
+        {
+            RebuildCandidateFiles();
         }
     }
 
@@ -1114,6 +1430,193 @@ public sealed class BatchWorkspaceViewModel(WorkspaceShellViewModel shell) : She
                 _cancelledResultCount += delta;
                 break;
         }
+    }
+
+    private void RebuildCandidateFiles()
+    {
+        foreach (var file in CandidateFiles)
+        {
+            file.PropertyChanged -= OnCandidateFilePropertyChanged;
+        }
+
+        CandidateFiles.Clear();
+        FolderTreeItems.Clear();
+        _selectedCandidateFile = null;
+        _selectedFolder = null;
+
+        if (string.IsNullOrWhiteSpace(Shell.BatchInputDirectory))
+        {
+            CandidateFilesView.Refresh();
+            RefreshCandidateSelectionProperties();
+            OnPropertyChanged(nameof(SelectedCandidateFile));
+            OnPropertyChanged(nameof(SelectedFolder));
+            return;
+        }
+
+        var rootDirectory = Path.GetFullPath(Shell.BatchInputDirectory);
+        var outputDirectory = string.IsNullOrWhiteSpace(Shell.BatchOutputDirectory)
+            ? null
+            : Path.GetFullPath(Shell.BatchOutputDirectory);
+
+        var rootName = Path.GetFileName(rootDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var rootFolder = new BatchFolderTreeItemViewModel(
+            string.IsNullOrWhiteSpace(rootName) ? rootDirectory : rootName,
+            rootDirectory,
+            rootDirectory);
+        FolderTreeItems.Add(rootFolder);
+        BuildFolderChildren(rootFolder, Shell.BatchSourceTreeItems, rootDirectory, outputDirectory);
+
+        var sourceItems = EnumerateCandidateSourceItems(Shell.BatchSourceTreeItems, rootDirectory)
+            .OrderBy(static item => item.FullPath, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        foreach (var sourceItem in sourceItems)
+        {
+            var candidate = new BatchCandidateFileViewModel(sourceItem, rootDirectory, outputDirectory);
+            candidate.PropertyChanged += OnCandidateFilePropertyChanged;
+            CandidateFiles.Add(candidate);
+        }
+
+        RefreshFolderCounts(rootFolder);
+        SelectedFolder = rootFolder;
+        SelectedCandidateFile = CandidateFiles.FirstOrDefault(static file => file.IsValid) ?? CandidateFiles.FirstOrDefault();
+        CandidateFilesView.Refresh();
+        RefreshCandidateSelectionProperties();
+        OnPropertyChanged(nameof(IsOutputInsideInputDirectory));
+        OnPropertyChanged(nameof(OutputExclusionSummary));
+    }
+
+    private IEnumerable<BatchSourceTreeItemViewModel> EnumerateCandidateSourceItems(
+        IEnumerable<BatchSourceTreeItemViewModel> items,
+        string rootDirectory)
+    {
+        foreach (var item in items)
+        {
+            if (item.IsDirectory)
+            {
+                if (!IncludeSubdirectories)
+                {
+                    continue;
+                }
+
+                foreach (var child in EnumerateCandidateSourceItems(item.Children, rootDirectory))
+                {
+                    yield return child;
+                }
+
+                continue;
+            }
+
+            if (Path.GetExtension(item.FullPath).Equals(".dmi", StringComparison.OrdinalIgnoreCase))
+            {
+                if (IncludeSubdirectories ||
+                    Path.GetDirectoryName(Path.GetFullPath(item.FullPath))?.Equals(rootDirectory, StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    yield return item;
+                }
+            }
+        }
+    }
+
+    private static void BuildFolderChildren(
+        BatchFolderTreeItemViewModel parent,
+        IEnumerable<BatchSourceTreeItemViewModel> items,
+        string rootDirectory,
+        string? outputDirectory)
+    {
+        foreach (var item in items.Where(static item => item.IsDirectory))
+        {
+            var folder = new BatchFolderTreeItemViewModel(item.Name, item.FullPath, rootDirectory)
+            {
+                IsOutputExcluded = !string.IsNullOrWhiteSpace(outputDirectory) &&
+                    (Path.GetFullPath(item.FullPath).Equals(outputDirectory, StringComparison.OrdinalIgnoreCase) ||
+                     BatchPathLayout.IsPathUnderDirectory(item.FullPath, outputDirectory))
+            };
+            parent.Children.Add(folder);
+            BuildFolderChildren(folder, item.Children, rootDirectory, outputDirectory);
+        }
+    }
+
+    private void RefreshFolderCounts(BatchFolderTreeItemViewModel folder)
+    {
+        folder.FileCount = CandidateFiles.Count(file =>
+            file.IsValid &&
+            (file.FullPath.Equals(folder.FullPath, StringComparison.OrdinalIgnoreCase) ||
+             BatchPathLayout.IsPathUnderDirectory(file.FullPath, folder.FullPath)));
+        folder.SelectedCount = CandidateFiles.Count(file =>
+            file.IsSelected &&
+            file.IsValid &&
+            (file.FullPath.Equals(folder.FullPath, StringComparison.OrdinalIgnoreCase) ||
+             BatchPathLayout.IsPathUnderDirectory(file.FullPath, folder.FullPath)));
+
+        foreach (var child in folder.Children)
+        {
+            RefreshFolderCounts(child);
+        }
+    }
+
+    private bool FilterCandidateFile(object item)
+    {
+        if (item is not BatchCandidateFileViewModel file)
+        {
+            return false;
+        }
+
+        if (SelectedFolder is not null &&
+            !file.FullPath.Equals(SelectedFolder.FullPath, StringComparison.OrdinalIgnoreCase) &&
+            !BatchPathLayout.IsPathUnderDirectory(file.FullPath, SelectedFolder.FullPath))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CandidateFilter))
+        {
+            return true;
+        }
+
+        return file.FileName.Contains(CandidateFilter, StringComparison.OrdinalIgnoreCase) ||
+               file.RelativePath.Contains(CandidateFilter, StringComparison.OrdinalIgnoreCase) ||
+               file.FolderPath.Contains(CandidateFilter, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void OnCandidateFilePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(BatchCandidateFileViewModel.IsSelected))
+        {
+            RefreshCandidateSelectionProperties();
+            if (FolderTreeItems.FirstOrDefault() is { } root)
+            {
+                RefreshFolderCounts(root);
+            }
+        }
+    }
+
+    private void RefreshCandidateSelectionProperties()
+    {
+        OnPropertyChanged(nameof(CandidateFileCount));
+        OnPropertyChanged(nameof(ValidCandidateFileCount));
+        OnPropertyChanged(nameof(InvalidCandidateFileCount));
+        OnPropertyChanged(nameof(SelectedCandidateFileCount));
+        OnPropertyChanged(nameof(CandidateSelectionSummary));
+        OnPropertyChanged(nameof(RunBatchButtonText));
+        OnPropertyChanged(nameof(CanRunSelectedBatch));
+        OnPropertyChanged(nameof(AreAllVisibleCandidatesSelected));
+        RunSelectedBatchCommand.NotifyCanExecuteChanged();
+    }
+
+    private void ApplyBatchResultToCandidate(BatchResultRowViewModel row)
+    {
+        var candidate = CandidateFiles.FirstOrDefault(file =>
+            file.FullPath.Equals(row.InputPath, StringComparison.OrdinalIgnoreCase));
+
+        if (candidate is null)
+        {
+            return;
+        }
+
+        candidate.LastStatus = row.Status;
+        candidate.OutputPath = row.OutputPath;
+        candidate.Message = row.Message;
     }
 
     public BitmapSource? QuickPreviewOriginalImage => Shell.BatchQuickPreviewOriginalImage;

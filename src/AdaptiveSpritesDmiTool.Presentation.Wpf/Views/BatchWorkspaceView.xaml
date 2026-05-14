@@ -333,6 +333,77 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
+        <Style x:Key="BatchSmallButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BatchFlatButton}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinWidth" Value="64" />
+            <Setter Property="Padding" Value="8,3" />
+        </Style>
+
+        <Style x:Key="BatchSearchBox" TargetType="{x:Type TextBox}" BasedOn="{StaticResource BatchPathBox}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="8,3" />
+        </Style>
+
+        <Style TargetType="{x:Type CheckBox}">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type CheckBox}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border
+                                x:Name="Box"
+                                Width="14"
+                                Height="14"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource Brush.ControlBackground}"
+                                BorderBrush="{DynamicResource Brush.PanelBorder}"
+                                BorderThickness="1"
+                                CornerRadius="2">
+                                <TextBlock
+                                    x:Name="Glyph"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="10"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource Brush.TextPrimary}"
+                                    Text="" />
+                            </Border>
+
+                            <ContentPresenter
+                                Grid.Column="1"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                RecognizesAccessKey="True" />
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                                <Setter TargetName="Glyph" Property="Text" Value="✓" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="{x:Null}">
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                                <Setter TargetName="Glyph" Property="Text" Value="-" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style TargetType="{x:Type TreeView}">
             <Setter Property="Background" Value="{DynamicResource Brush.SurfaceSubtle}" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
@@ -561,6 +632,30 @@
             </Grid>
         </HierarchicalDataTemplate>
 
+        <HierarchicalDataTemplate
+            DataType="{x:Type local:BatchFolderTreeItemViewModel}"
+            ItemsSource="{Binding Children}">
+            <Grid ToolTip="{Binding FullPath}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    Grid.Column="0"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis"
+                    Foreground="{DynamicResource Brush.TextPrimary}" />
+
+                <TextBlock
+                    Grid.Column="1"
+                    Text="{Binding CountSummary}"
+                    Foreground="{DynamicResource Brush.TextSecondary}"
+                    FontSize="11"
+                    Margin="8,0,0,0" />
+            </Grid>
+        </HierarchicalDataTemplate>
+
         <DataTemplate DataType="{x:Type local:BatchStateStripItemViewModel}">
             <TextBlock
                 Text="{Binding Name}"
@@ -575,8 +670,8 @@
         SnapsToDevicePixels="True">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" MinHeight="330" />
-            <RowDefinition Height="168" />
+            <RowDefinition Height="*" MinHeight="360" />
+            <RowDefinition Height="148" />
         </Grid.RowDefinitions>
 
         <Border
@@ -692,8 +787,8 @@
 
                 <Button
                     Grid.Column="10"
-                    Content="Run batch"
-                    Command="{Binding RunBatchCommand}"
+                    Content="{Binding RunBatchButtonText}"
+                    Command="{Binding RunSelectedBatchCommand}"
                     Style="{StaticResource BatchRailPrimaryButton}" />
 
                 <Button
@@ -710,146 +805,285 @@
             Style="{StaticResource BatchCard}"
             Padding="10">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="8" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="390" MinWidth="340" />
+                    <ColumnDefinition Width="260" MinWidth="220" />
                     <ColumnDefinition Width="8" />
-                    <ColumnDefinition Width="168" MinWidth="140" />
+                    <ColumnDefinition Width="*" MinWidth="560" />
                     <ColumnDefinition Width="8" />
-                    <ColumnDefinition Width="*" MinWidth="260" />
-                    <ColumnDefinition Width="8" />
-                    <ColumnDefinition Width="*" MinWidth="260" />
+                    <ColumnDefinition Width="380" MinWidth="320" />
                 </Grid.ColumnDefinitions>
 
-                <Grid Grid.Row="0" Grid.Column="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock
-                        Grid.Column="0"
-                        Text="Source files"
-                        Style="{StaticResource BatchSectionTitle}" />
-
-                    <TextBlock
-                        Grid.Column="1"
-                        Text="{Binding SourceSelectionDetail}"
-                        Style="{StaticResource BatchMutedText}"
-                        HorizontalAlignment="Right"
-                        TextTrimming="CharacterEllipsis"
-                        Margin="12,0,0,0" />
-                </Grid>
-
-                <TextBlock
-                    Grid.Row="0"
-                    Grid.Column="2"
-                    Text="States"
-                    Style="{StaticResource BatchSectionTitle}" />
-
-                <TextBlock
-                    Grid.Row="0"
-                    Grid.Column="4"
-                    Text="Original"
-                    Style="{StaticResource BatchSectionTitle}" />
-
-                <TextBlock
-                    Grid.Row="0"
-                    Grid.Column="6"
-                    Text="Edited"
-                    Style="{StaticResource BatchSectionTitle}" />
-
-                <Grid Grid.Row="2" Grid.Column="0">
+                <Grid Grid.Column="0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="6" />
+                        <RowDefinition Height="8" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Border
-                        Grid.Row="0"
-                        Background="{DynamicResource Brush.SurfaceSubtle}"
-                        BorderBrush="{DynamicResource Brush.PanelBorder}"
-                        BorderThickness="1"
-                        CornerRadius="3"
-                        Padding="8,6">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                            <TextBlock
-                                Grid.Row="0"
-                                Text="{Binding SourceSelectionName}"
-                                Foreground="{DynamicResource Brush.TextPrimary}"
-                                FontWeight="SemiBold"
-                                TextTrimming="CharacterEllipsis"
-                                ToolTip="{Binding SourceSelectionName}" />
+                        <TextBlock
+                            Grid.Row="0"
+                            Text="Folders"
+                            Style="{StaticResource BatchSectionTitle}" />
 
-                            <TextBlock
-                                Grid.Row="1"
-                                Text="{Binding SourceSelectionPath}"
-                                Style="{StaticResource BatchMutedText}"
-                                ToolTip="{Binding SourceSelectionPath}" />
-                        </Grid>
-                    </Border>
+                        <TextBlock
+                            Grid.Row="1"
+                            Text="{Binding BatchInputDirectory}"
+                            Style="{StaticResource BatchMutedText}"
+                            ToolTip="{Binding BatchInputDirectory}" />
+                    </Grid>
 
                     <TreeView
-                        x:Name="BatchSourceTreeView"
+                        x:Name="BatchFolderTreeView"
                         Grid.Row="2"
-                        ItemsSource="{Binding SourceTreeItems}"
-                        SelectedItemChanged="BatchSourceTreeView_SelectedItemChanged" />
+                        ItemsSource="{Binding FolderTreeItems}"
+                        SelectedItemChanged="BatchFolderTreeView_SelectedItemChanged" />
                 </Grid>
 
-                <ListBox
-                    Grid.Row="2"
-                    Grid.Column="2"
-                    ItemsSource="{Binding StateStripItems}"
-                    SelectedItem="{Binding SelectedStateStripItem, Mode=TwoWay}" />
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="4" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
 
-                <Border
-                    Grid.Row="2"
-                    Grid.Column="4"
-                    Background="{DynamicResource Brush.SurfaceSubtle}"
-                    BorderBrush="{DynamicResource Brush.PanelBorder}"
-                    BorderThickness="1"
-                    CornerRadius="3"
-                    Padding="10">
-                    <Image
-                        Source="{Binding QuickPreviewOriginalImage}"
-                        Stretch="Uniform"
-                        MaxWidth="320"
-                        MaxHeight="300"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        RenderOptions.BitmapScalingMode="NearestNeighbor"
-                        SnapsToDevicePixels="True" />
-                </Border>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="180" />
+                        </Grid.ColumnDefinitions>
 
-                <Border
-                    Grid.Row="2"
-                    Grid.Column="6"
-                    Background="{DynamicResource Brush.SurfaceSubtle}"
-                    BorderBrush="{DynamicResource Brush.PanelBorder}"
-                    BorderThickness="1"
-                    CornerRadius="3"
-                    Padding="10">
-                    <Image
-                        Source="{Binding QuickPreviewEditedImage}"
-                        Stretch="Uniform"
-                        MaxWidth="320"
-                        MaxHeight="300"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        RenderOptions.BitmapScalingMode="NearestNeighbor"
-                        SnapsToDevicePixels="True" />
-                </Border>
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="Files to process"
+                            Style="{StaticResource BatchSectionTitle}" />
+
+                        <CheckBox
+                            Grid.Column="2"
+                            Content="Include subfolders"
+                            IsChecked="{Binding IncludeSubdirectories, Mode=TwoWay}" />
+
+                        <Button
+                            Grid.Column="4"
+                            Content="Select all"
+                            Command="{Binding SelectAllVisibleCandidatesCommand}"
+                            Style="{StaticResource BatchSmallButton}" />
+
+                        <Button
+                            Grid.Column="6"
+                            Content="Clear"
+                            Command="{Binding ClearCandidateSelectionCommand}"
+                            Style="{StaticResource BatchSmallButton}" />
+
+                        <TextBlock
+                            Grid.Column="7"
+                            Text="{Binding CandidateSelectionSummary}"
+                            Style="{StaticResource BatchMutedText}"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Margin="12,0" />
+
+                        <TextBox
+                            Grid.Column="8"
+                            Style="{StaticResource BatchSearchBox}"
+                            Text="{Binding CandidateFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="Filter files" />
+                    </Grid>
+
+                    <TextBlock
+                        Grid.Row="2"
+                        Text="{Binding OutputExclusionSummary}"
+                        Foreground="{DynamicResource Brush.Warning}"
+                        FontSize="11"
+                        TextTrimming="CharacterEllipsis">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsOutputInsideInputDirectory}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <DataGrid
+                        Grid.Row="4"
+                        ItemsSource="{Binding CandidateFilesView}"
+                        SelectedItem="{Binding SelectedCandidateFile, Mode=TwoWay}"
+                        Style="{StaticResource BatchResultsGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="38">
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <CheckBox
+                                            HorizontalAlignment="Center"
+                                            IsThreeState="True"
+                                            IsChecked="{Binding DataContext.AreAllVisibleCandidatesSelected,
+                                                                RelativeSource={RelativeSource AncestorType=DataGrid},
+                                                                Mode=TwoWay,
+                                                                UpdateSourceTrigger=PropertyChanged}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
+
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox
+                                            HorizontalAlignment="Center"
+                                            IsEnabled="{Binding IsValid}"
+                                            IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn
+                                Header="Status"
+                                Binding="{Binding StatusText}"
+                                Width="90"
+                                ElementStyle="{StaticResource BatchGridStatusTextBlock}" />
+
+                            <DataGridTextColumn
+                                Header="File"
+                                Binding="{Binding FileName}"
+                                Width="1.4*"
+                                ElementStyle="{StaticResource BatchGridTextBlock}" />
+
+                            <DataGridTextColumn
+                                Header="Folder"
+                                Binding="{Binding FolderPath}"
+                                Width="1.2*"
+                                ElementStyle="{StaticResource BatchGridTextBlock}" />
+
+                            <DataGridTextColumn
+                                Header="Message"
+                                Binding="{Binding Message}"
+                                Width="1.6*"
+                                ElementStyle="{StaticResource BatchGridTextBlock}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <Grid Grid.Column="4">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="120" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="Preview"
+                            Style="{StaticResource BatchSectionTitle}" />
+
+                        <TextBlock
+                            Grid.Column="1"
+                            Text="{Binding SelectedCandidateFile.FileName}"
+                            Style="{StaticResource BatchMutedText}"
+                            HorizontalAlignment="Right"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTip="{Binding SelectedCandidateFile.FullPath}" />
+                    </Grid>
+
+                    <ListBox
+                        Grid.Row="2"
+                        ItemsSource="{Binding StateStripItems}"
+                        SelectedItem="{Binding SelectedStateStripItem, Mode=TwoWay}" />
+
+                    <Grid Grid.Row="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border
+                            Grid.Column="0"
+                            Background="{DynamicResource Brush.SurfaceSubtle}"
+                            BorderBrush="{DynamicResource Brush.PanelBorder}"
+                            BorderThickness="1"
+                            CornerRadius="3"
+                            Padding="8">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Text="Original"
+                                    Style="{StaticResource BatchSectionTitle}"
+                                    Margin="0,0,0,6" />
+
+                                <Image
+                                    Grid.Row="1"
+                                    Source="{Binding QuickPreviewOriginalImage}"
+                                    Stretch="Uniform"
+                                    MaxWidth="170"
+                                    MaxHeight="220"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                    SnapsToDevicePixels="True" />
+                            </Grid>
+                        </Border>
+
+                        <Border
+                            Grid.Column="2"
+                            Background="{DynamicResource Brush.SurfaceSubtle}"
+                            BorderBrush="{DynamicResource Brush.PanelBorder}"
+                            BorderThickness="1"
+                            CornerRadius="3"
+                            Padding="8">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Text="Edited"
+                                    Style="{StaticResource BatchSectionTitle}"
+                                    Margin="0,0,0,6" />
+
+                                <Image
+                                    Grid.Row="1"
+                                    Source="{Binding QuickPreviewEditedImage}"
+                                    Stretch="Uniform"
+                                    MaxWidth="170"
+                                    MaxHeight="220"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                    SnapsToDevicePixels="True" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
             </Grid>
         </Border>
 
@@ -868,14 +1102,14 @@
                     Grid.Row="0"
                     Margin="10,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="64" />
+                        <ColumnDefinition Width="70" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <TextBlock
                         Grid.Column="0"
-                        Text="Results"
+                        Text="Run log"
                         Style="{StaticResource BatchSectionTitle}"
                         VerticalAlignment="Center" />
 
@@ -903,41 +1137,12 @@
                     </TextBlock>
                 </Grid>
 
-                <Grid Grid.Row="1">
-                    <DataGrid
-                        ItemsSource="{Binding BatchResults}"
-                        Style="{StaticResource BatchResultsGridWithVisibility}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn
-                                Header="Status"
-                                Binding="{Binding StatusText}"
-                                Width="96"
-                                ElementStyle="{StaticResource BatchGridStatusTextBlock}" />
-
-                            <DataGridTextColumn
-                                Header="Input"
-                                Binding="{Binding InputPath}"
-                                Width="2*"
-                                ElementStyle="{StaticResource BatchGridTextBlock}" />
-
-                            <DataGridTextColumn
-                                Header="Output"
-                                Binding="{Binding OutputPath}"
-                                Width="2*"
-                                ElementStyle="{StaticResource BatchGridTextBlock}" />
-
-                            <DataGridTextColumn
-                                Header="Message"
-                                Binding="{Binding Message}"
-                                Width="2*"
-                                ElementStyle="{StaticResource BatchGridTextBlock}" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <TextBlock
-                        Text="Run batch to see results."
-                        Style="{StaticResource BatchResultsPlaceholder}" />
-                </Grid>
+                <TextBlock
+                    Grid.Row="1"
+                    Text="{Binding RunLogDetail}"
+                    Foreground="{DynamicResource Brush.TextSecondary}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center" />
             </Grid>
         </Border>
     </Grid>

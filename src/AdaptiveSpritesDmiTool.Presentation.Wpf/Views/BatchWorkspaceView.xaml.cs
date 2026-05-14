@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Windows;
 using WpfUserControl = System.Windows.Controls.UserControl;
 
@@ -11,7 +10,7 @@ public partial class BatchWorkspaceView : WpfUserControl
         InitializeComponent();
     }
 
-    private async void BatchSourceTreeView_SelectedItemChanged(
+    private void BatchFolderTreeView_SelectedItemChanged(
         object sender,
         RoutedPropertyChangedEventArgs<object> e)
     {
@@ -20,17 +19,6 @@ public partial class BatchWorkspaceView : WpfUserControl
             return;
         }
 
-        try
-        {
-            await viewModel.SelectSourceItemAsync(e.NewValue as BatchSourceTreeItemViewModel);
-        }
-        catch (OperationCanceledException)
-        {
-            // Selection preview refresh was superseded by another selection.
-        }
-        catch (Exception exception)
-        {
-            Debug.WriteLine($"[BatchWorkspaceView] Source selection failed: {exception}");
-        }
+        viewModel.SelectFolder(e.NewValue as BatchFolderTreeItemViewModel);
     }
 }

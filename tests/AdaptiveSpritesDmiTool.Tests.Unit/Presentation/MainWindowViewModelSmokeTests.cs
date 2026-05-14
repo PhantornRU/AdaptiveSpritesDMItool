@@ -837,6 +837,51 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task BatchWorkspaceRunPlanShouldSelectValidFilesAndExcludeOutputDirectory()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var tempRoot = CreateTempDirectory();
+        var inputDirectory = Path.Combine(tempRoot, "input");
+        var nestedDirectory = Path.Combine(inputDirectory, "nested");
+        var outputDirectory = Path.Combine(inputDirectory, "processed");
+        Directory.CreateDirectory(nestedDirectory);
+        Directory.CreateDirectory(outputDirectory);
+        var rootFile = Path.Combine(inputDirectory, "root.dmi");
+        var nestedFile = Path.Combine(nestedDirectory, "nested.dmi");
+        var outputFile = Path.Combine(outputDirectory, "already-processed.dmi");
+        await File.WriteAllTextAsync(rootFile, "placeholder");
+        await File.WriteAllTextAsync(nestedFile, "placeholder");
+        await File.WriteAllTextAsync(outputFile, "placeholder");
+
+        var batchService = new RecordingBatchProcessingService();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            batchProcessingService: batchService,
+            fileDialogService: new StubFileDialogService { DmiPath = "sprite.dmi" });
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.BatchInputDirectory = inputDirectory;
+        viewModel.BatchOutputDirectory = outputDirectory;
+
+        viewModel.BatchWorkspace.CandidateFileCount.Should().Be(3);
+        viewModel.BatchWorkspace.ValidCandidateFileCount.Should().Be(2);
+        viewModel.BatchWorkspace.SelectedCandidateFileCount.Should().Be(2);
+        viewModel.BatchWorkspace.CandidateFiles.Should().Contain(file =>
+            file.FullPath == outputFile &&
+            !file.IsValid &&
+            !file.IsSelected &&
+            file.ValidationMessage.Contains("Output folder", StringComparison.OrdinalIgnoreCase));
+
+        await viewModel.BatchWorkspace.RunSelectedBatchCommand.ExecuteAsync(null);
+
+        batchService.Request.Should().NotBeNull();
+        batchService.Request!.ExplicitFiles.Should().BeEquivalentTo([rootFile, nestedFile]);
+    }
+
+    [Fact]
     public async Task RemovingFinalActiveConfigQueueItemShouldCreateFreshDraftForLoadedAsset()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -1217,9 +1262,12 @@ public sealed class MainWindowViewModelSmokeTests
     {
         public int CallCount { get; private set; }
 
+        public BatchJobRequest? Request { get; private set; }
+
         public Task<Result<BatchJobResult>> RunAsync(BatchJobRequest request, IProgress<BatchProgress>? progress, CancellationToken cancellationToken)
         {
             CallCount++;
+            Request = request;
             progress?.Report(new BatchProgress(1, 1, "sprite.dmi"));
             return Task.FromResult(
                 Result.Success(

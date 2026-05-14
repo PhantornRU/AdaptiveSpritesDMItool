@@ -1,6 +1,7 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using CommunityToolkit.Mvvm.Input;
+using System.IO;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
@@ -125,6 +126,34 @@ public partial class WorkspaceShellViewModel
     [RelayCommand(CanExecute = nameof(CanRunBatch))]
     private async Task RunBatchAsync()
     {
+        var explicitFiles = SelectedBatchSourceItem is { IsDirectory: false, FullPath: not null }
+            ? new[] { SelectedBatchSourceItem.FullPath }
+            : null;
+
+        await RunBatchCoreAsync(explicitFiles);
+    }
+
+    public Task RunBatchForExplicitFilesAsync(IReadOnlyCollection<string> explicitFiles)
+    {
+        ArgumentNullException.ThrowIfNull(explicitFiles);
+
+        var normalizedFiles = explicitFiles
+            .Where(static file => !string.IsNullOrWhiteSpace(file))
+            .Select(static file => Path.GetFullPath(file))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (normalizedFiles.Length == 0)
+        {
+            StatusMessage = "No files selected for batch.";
+            return Task.CompletedTask;
+        }
+
+        return RunBatchCoreAsync(normalizedFiles);
+    }
+
+    private async Task RunBatchCoreAsync(IReadOnlyList<string>? explicitFiles)
+    {
         if (string.IsNullOrWhiteSpace(BatchInputDirectory) || string.IsNullOrWhiteSpace(BatchOutputDirectory))
         {
             StatusMessage = "Select both input and output folders before running batch processing.";
@@ -150,10 +179,6 @@ public partial class WorkspaceShellViewModel
                     OperationProgressMaximum = Math.Max(1, value.TotalFiles);
                     OperationProgressValue = Math.Min(value.ProcessedFiles, OperationProgressMaximum);
                 });
-
-                var explicitFiles = SelectedBatchSourceItem is { IsDirectory: false, FullPath: not null }
-                    ? new[] { SelectedBatchSourceItem.FullPath }
-                    : null;
 
                 var result = await _applyConfigToDmiBatchUseCase.ExecuteAsync(
                     BatchInputDirectory,
