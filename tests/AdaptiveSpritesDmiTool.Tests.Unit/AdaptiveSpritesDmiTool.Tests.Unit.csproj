@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AdaptiveSpritesDmiTool.Application\AdaptiveSpritesDmiTool.Application.csproj" />
+    <ProjectReference Include="..\..\src\AdaptiveSpritesDmiTool.Domain\AdaptiveSpritesDmiTool.Domain.csproj" />
+    <ProjectReference Include="..\..\src\AdaptiveSpritesDmiTool.Presentation.Wpf\AdaptiveSpritesDmiTool.Presentation.Wpf.csproj" />
+  </ItemGroup>
+</Project>

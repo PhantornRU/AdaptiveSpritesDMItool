@@ -1,0 +1,35 @@
+name: dotnet-ci
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Check hidden Unicode controls
+        shell: pwsh
+        run: ./eng/check-hidden-unicode.ps1
+
+      - name: Restore
+        run: dotnet restore AdaptiveSpritesDMItool.sln
+
+      - name: Build
+        run: dotnet build AdaptiveSpritesDMItool.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test AdaptiveSpritesDMItool.sln --configuration Release --no-build

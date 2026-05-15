@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\Brand\wpfui-icon.ico</ApplicationIcon>
+    <PackageIcon>AdaptiveToolLogo.png</PackageIcon>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CA1720;CA1826;CA1848;CA1859;CA2254</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AdaptiveSpritesDmiTool.Application\AdaptiveSpritesDmiTool.Application.csproj" />
+    <ProjectReference Include="..\AdaptiveSpritesDmiTool.Infrastructure\AdaptiveSpritesDmiTool.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="WPF-UI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Brand\wpfui-icon.ico" />
+    <Resource Include="Assets\Brand\AdaptiveToolLogo.png" />
+    <None Update="Assets\Brand\AdaptiveToolLogo.png">
+      <Pack>True</Pack>
+      <PackagePath>AdaptiveToolLogo.png</PackagePath>
+      <Visible>False</Visible>
+    </None>
+  </ItemGroup>
+</Project>

@@ -1,166 +1,113 @@
-<h1 align="center">
-  <img src="Assets/logo.png" alt="logo.png" width="256"/>
-  <br/>
-  Adaptive DMI Tool
-</h1>
+# Adaptive Sprites DMI Tool
 
-#   
-#  
-#  
+Production-grade WPF application for authoring and applying pixel-mapping configs to `.dmi` sprites.
 
-<h1 align="center">
-!!!!!!! This is a BETA program !!!!!!!!
-</h1>
-<h3 align="center">
-The tool is under development, there are inconveniences and bugs.
-</h3>
-Known issues:
+## What It Does
 
-- No support for any resolution except 32x32
-- There is no empty workspace and methods for cleaning it (plans to fix)
-- There is no saving of the workspace and settings.
-- There is no ability to set a suffix and prefix to each state and file if necessary.
-- There is no REDO hotkey.
-- Inconvenient location of windows (at the moment, the interface is being improved)
-- It is necessary to add a button to invert the parallel state for the config
+- starts with an empty workspace and no demo/test asset dependency
+- opens `.dmi` files manually
+- edits per-pixel mappings for `4-dir` and `8-dir` sprites
+- previews base, landmark, overlay, composite, grid, and text-grid states
+- saves and loads versioned JSON configs
+- imports legacy CSV configs as a migration path
+- runs deterministic, awaitable, cancellable batch processing with per-file results
+- persists workspace/settings across restarts
 
-#   
-#  
-#  
+## Current Workflow
 
-README Available languages:
+1. Start the app. The shell opens in an empty workspace.
+2. Open a `.dmi` file.
+3. Create a new config or load/import an existing one.
+4. Pick base, landmark, and overlay states from the state explorer.
+5. Edit mappings in the source/editable panes with tools such as `Single`, `Fill`, `Delete`, `Undo`, `UndoArea`, `Select`, and `Move`.
+6. Save the config as JSON.
+7. Run batch processing against an input folder and review per-file results.
 
-[English](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README.md)
+## Sample Assets
 
-[Russian](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/README-ru.md)
+Optional example `.dmi` files are available under `samples/dmi`.
 
-# Tool for adapting .dmi files
-This tool is designed to edit .dmi files with the potential to adapt them to any shape, size, offsets and other parameters imposed on all selected files through the config editor, storing tabular pixel data and their offsets.
-Sprite displacement configuration tool to statically create sprites based on those configs.
+- they are kept in the repository for manual exploration and debugging
+- they are not loaded automatically on startup
+- the application still starts with an empty workspace
 
-## The following were used for implementation:
-* Interface [WPF](https://github.com/dotnet/wpf) framework.
-* Framework for processing DMI files [DMI Sharp](https://github.com/bobbah/DMISharp)
+See [samples/dmi/README.md](samples/dmi/README.md).
 
-## Usage
+## Architecture
 
-### Demo-Video
-[<img src="AssetsGitHub/VideoPic.png" alt="logo.png" width="256"/>](https://youtu.be/X_SbgLqKqvI)
+The repository is organized as a layered solution:
 
-### Pages
-The program has 3 pages:
-* Home - [WIP] Page for working with the workspace, saving the latest user settings, loading presets.
+- `src/AdaptiveSpritesDmiTool.Domain`
+  Pure domain model, value objects, validation, direction model, empty workspace model.
+- `src/AdaptiveSpritesDmiTool.Application`
+  Use cases, editor session, undo/redo, batch orchestration, progress/cancellation, settings contracts.
+- `src/AdaptiveSpritesDmiTool.Infrastructure`
+  DMISharp adapters, JSON config repository, legacy CSV importer, settings repository, preview builder, deterministic batch processor.
+- `src/AdaptiveSpritesDmiTool.Presentation.Wpf`
+  MVVM shell, dialogs, pointer adapter, preview/editor UI, startup/runtime hardening.
+- `tests/AdaptiveSpritesDmiTool.Tests.Unit`
+  Domain, application, and WPF shell smoke tests.
+- `tests/AdaptiveSpritesDmiTool.Tests.Integration`
+  JSON persistence, legacy CSV import, DMI adapters, settings persistence, batch processing.
 
-* Edit - Page for editing configs by changing pixels on preview canvases.
-* Data - Page for processing files for selected configs.
+Legacy static controllers and the old root WPF runtime path were removed from the active runtime architecture.
 
-### Home
-[WIP]
+## Config Formats
 
-### Edit
+Primary format:
 
-1 - Page selection
+- versioned JSON
 
-2 - Toolbar, buttons for interaction and editing PREVIEW. Editing, deleting, changing mode (parallel), grid, overlay. Toolbar tools may not be fully displayed, you can display full tools by expanding the window or clicking on the "check mark" button in the drop-down on the right.
+Legacy compatibility:
 
-3 - Preview image displaying all edited sprites for configs, overlays (editable images), previews (left non-editable image) and landmarks (right non-editable image).
+- CSV import only
+- new configs are not written as CSV
 
-4 - Status bar information of the mouse located on top of the preview windows.
+See:
 
-5 - Window for loading DMI files and selecting DMI States from them to display on top. You can configure on top of which preview the state will be displayed.
+- [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md)
+- [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 
-6 - Window for saving and creating new configs.
+## Build And Run
 
-Here you can:
+Requirements:
 
-- Create a new config (DO NOT FORGET SAVE IT)
+- Windows
+- .NET 8 SDK
 
-- Load an existing config
+Commands:
 
-- Save the current config
+```powershell
+dotnet build AdaptiveSpritesDMItool.sln -m:1 -v minimal
+dotnet test AdaptiveSpritesDMItool.sln -m:1 -v minimal
+dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj
+```
 
-- Save the current config as a new file.
+## Testing
 
-When you select a config, it is superimposed on the preview.
+Automated coverage currently includes:
 
-  <img src="AssetsGitHub/1 Edit Page.png" alt="logo.png" width="512"/>
-  
-### Data
+- empty-workspace startup
+- DMI load validation, including empty/invalid inputs
+- JSON config roundtrip and validation failures
+- legacy CSV import
+- `4-dir` and `8-dir` compatibility
+- undo/redo and grouped editor mutations
+- deterministic batch overwrite behavior
+- real DMI write/apply integration
+- workspace settings persistence
+- WPF shell smoke checks
 
-1 - Displays all files loaded from the "Import" directory for processing in the Export folder.
+See [docs/TEST_PLAN.md](docs/TEST_PLAN.md).
 
-- The "Override" button will switch the mode of overwriting similar files in the Export directory.
+## Key Documents
 
-2 - Displays the states of the selected .dmi file
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/REFACTOR_PLAN.md](docs/REFACTOR_PLAN.md)
+- [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
+- [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md)
+- [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 
-3 - Panel for selecting a config for processing all files. You can select several configs at once. The config name will be used as the name of the new folder in the Export directory.
+## License
 
-4 - Setting the paths of the Import and Export directories. By default, files will be processed in the folder of the working build.
-
-5 - Loading bar showing how many files have already been processed.
-
-6 - Button for processing all files under the selected configs.
-
-After pressing - wait for it to complete.
-
-All processed files will be exported to Directory/"Config Name"/
-
-  <img src="AssetsGitHub/2 Data Page.png" alt="logo.png" width="512"/>
-
-## Delelopment
-The program is divided into controllers, resources, models and auxiliary classes for more convenient access to the code. Inside the code there are divisions into regions for even more convenient navigation and separation.
-
-### For .NET 7
-These tool require Visual Studio 2022(v17.7), Visual Studio 2022 for Mac (v17.6) to build, test, and deploy, and also require the .NET 7 SDK.
-
-[Get a free copy of Visual Studio 2022 Community Edition](https://www.visualstudio.com/wpf-vs)
-
-[.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
-
-### View Models
-In addition to Views that contain WPF pages, they use:
-* Dashboard View Model - [WIP]
-* States Editor View Model - a model for implementing changes to config selection, preview states, working with files and loading them, saving configs and storing State Item's.
-* Data View Model - a model for implementing changes to the selected config, displaying Tree View with all selected files that will be displayed and processed in the future.
-* Settings View Model - a model for settings of the current theme.
-* Main Window View Model - a model for navigating through pages.
-
-### Models
-* Config Item - a model for a config that stores the path to a table for quick access.
-* State Item - a model for a state with a .DMI file that stores a preview, path, file name and state name.
-* Data Image State - a model for working with preview images that superimpose "preview, landmark and overlay" states on top of each other for further visualization.
-* State Edit Type - model of enumeration of various types:
-** StateEditType - Editing mode of the main preview window
-** StateQuantityType - Type of state editing.
-** StateImageType - Type of preview element.
-** StateImageSideType - Side of the preview element.
-** SelectMode - Current mode of the pixel moving tool.
-** StatusBarType - Type of the status bar element.
-** StatePreviewType - Selected preview type for overlaying states.
-
-### Controllers
-* Environment Controller - Workspace and environment initialization controller.
-* Draw Controller - Image processing controller that stores all functions for drawing on the canvas and editing pixels.
-* Editor Controller - Controller of current canvas editing modes and button logic.
-* Mouse Controller - Controller for processing pressed mouse buttons and finding the cursor position on the canvas.
-* Buttons Controller - Controller for processing pressed keys, hotkeys.
-* States Controller - Controller that stores information about current states, modes, configs and statuses of elements used by the entire program.
-* Status Bar Controller - Controller of information displayed on the status bar.
-
-### Processors
-DMI State Processor - File processor from these states for selected configs.
-
-### Helpers
-Image Encoder - DMI State processor in Writeable Bitmap for display and editing on the "Edit" page.
-Files Searcher - Search engine for the correct directory.
-
-## Contact
-Questions or want to help with the implementation? You can contact me on discord: **PHANTOMRU** (don't confuse the nickname on GitHub, there "m == rn" xdd)
-
-
-
-
-
-
-# License
-Unless otherwise mentioned, the samples are released under the [MIT license](https://github.com/PhantornRU/AdaptiveSpritesDMItool/blob/main/LICENSE)
+This repository is distributed under the terms of the GPL v3 license. See [LICENSE](LICENSE).

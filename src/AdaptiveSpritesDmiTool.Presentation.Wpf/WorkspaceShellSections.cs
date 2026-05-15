@@ -1,0 +1,1716 @@
+using AdaptiveSpritesDmiTool.Application;
+using AdaptiveSpritesDmiTool.Domain.Configurations;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Collections.Specialized;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Windows.Data;
+using System.Windows.Media.Imaging;
+using ImageSource = System.Windows.Media.ImageSource;
+
+namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
+
+public enum ShellSectionKind
+{
+    Start = 0,
+    Editor = 1,
+    Batch = 2,
+    Settings = 3
+}
+
+public enum AutoPreviewMode
+{
+    Enabled = 0,
+    Disabled = 1
+}
+
+public sealed class PreviewRefreshCoordinator(TimeSpan? debounce = null) : IDisposable
+{
+    private readonly TimeSpan _debounce = debounce ?? TimeSpan.FromMilliseconds(250);
+    private CancellationTokenSource? _refreshCts;
+
+#if DEBUG
+    private int _requestId;
+#endif
+
+    public void Request(Func<CancellationToken, Task> refreshAsync)
+    {
+        ArgumentNullException.ThrowIfNull(refreshAsync);
+        Cancel();
+
+        var cts = new CancellationTokenSource();
+        _refreshCts = cts;
+
+#if DEBUG
+        var requestId = Interlocked.Increment(ref _requestId);
+        Debug.WriteLine($"[PreviewRefreshCoordinator] Request #{requestId} created cts={cts.GetHashCode()}");
+#else
+        const int requestId = 0;
+#endif
+
+        _ = RunAsync(refreshAsync, cts, requestId);
+    }
+
+    public async Task RefreshNowAsync(Func<CancellationToken, Task> refreshAsync)
+    {
+        ArgumentNullException.ThrowIfNull(refreshAsync);
+        Cancel();
+
+        var cts = new CancellationTokenSource();
+        _refreshCts = cts;
+
+        try
+        {
+            await refreshAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (ObjectDisposedException)
+        {
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RefreshNowAsync disposed cts={cts.GetHashCode()}");
+#endif
+        }
+        finally
+        {
+            if (ReferenceEquals(_refreshCts, cts))
+            {
+                _refreshCts = null;
+            }
+
+            cts.Dispose();
+        }
+    }
+
+    public void Cancel()
+    {
+        var cts = Interlocked.Exchange(ref _refreshCts, null);
+        if (cts is null)
+        {
+            return;
+        }
+
+        cts.Cancel();
+
+#if DEBUG
+        Debug.WriteLine($"[PreviewRefreshCoordinator] Cancel cts={cts.GetHashCode()}");
+#endif
+    }
+
+    public void Dispose() => Cancel();
+
+    private async Task RunAsync(Func<CancellationToken, Task> refreshAsync, CancellationTokenSource cts, int requestId)
+    {
+        try
+        {
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RunAsync #{requestId} delay start cts={cts.GetHashCode()}");
+#endif
+            await Task.Delay(_debounce, cts.Token);
+
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RunAsync #{requestId} invoke refresh cts={cts.GetHashCode()}");
+#endif
+            await refreshAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RunAsync #{requestId} cancelled cts={cts.GetHashCode()}");
+#endif
+        }
+        catch (ObjectDisposedException)
+        {
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RunAsync #{requestId} disposed cts={cts.GetHashCode()}");
+#endif
+        }
+        finally
+        {
+            if (ReferenceEquals(_refreshCts, cts))
+            {
+                _refreshCts = null;
+            }
+
+#if DEBUG
+            Debug.WriteLine($"[PreviewRefreshCoordinator] RunAsync #{requestId} disposing cts={cts.GetHashCode()}");
+#endif
+            cts.Dispose();
+        }
+    }
+}
+
+public abstract class ShellSectionViewModel(WorkspaceShellViewModel shell) : ObservableObject
+{
+    private bool _isAttached;
+
+    protected WorkspaceShellViewModel Shell { get; } = shell;
+
+    public virtual void Attach()
+    {
+        if (_isAttached)
+        {
+            return;
+        }
+
+        _isAttached = true;
+        Shell.PropertyChanged += OnShellPropertyChanged;
+    }
+
+    public virtual void Detach()
+    {
+        if (!_isAttached)
+        {
+            return;
+        }
+
+        Shell.PropertyChanged -= OnShellPropertyChanged;
+        _isAttached = false;
+    }
+
+    protected virtual void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        OnPropertyChanged(string.Empty);
+    }
+}
+
+public sealed class NavigationRailViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public ObservableCollection<NavigationRailItemViewModel> Items { get; } =
+    [
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Start, "Start", "Home24", () => true),
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Editor, "Editor", "BoxEdit24", () => shell.EditorWorkspace.IsAvailable),
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Batch, "Data", "BookDatabase24", () => shell.BatchWorkspace.IsAvailable),
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Settings, "Settings", "Settings24", () => true)
+    ];
+
+    public ShellSectionKind SelectedSection
+    {
+        get => Shell.SelectedShellSection;
+        set => Shell.NavigateToSection(value);
+    }
+
+    protected override void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        base.OnShellPropertyChanged(sender, e);
+
+        foreach (var item in Items)
+        {
+            item.Refresh();
+        }
+    }
+}
+
+public sealed class StartTabViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public string WelcomeTitle => Shell.HasLoadedAsset ? "Continue with this sprite" : "Open or import a workspace";
+
+    public string WelcomeBody => Shell.HasLoadedAsset
+        ? "The sprite is ready. Create, load, or resume a config to move into the editor."
+        : "Open a DMI first, then load JSON or import a legacy CSV when you need an existing mapping set.";
+
+    public bool ShowCreateConfigAction => Shell.HasLoadedAsset && !Shell.HasActiveConfig;
+
+    public bool ShowContinueEditorAction => Shell.HasActiveConfig;
+
+    public bool ShowOpenDmiPrimaryAction => !ShowCreateConfigAction && !ShowContinueEditorAction;
+
+    public bool HasRecentDmi => !string.IsNullOrWhiteSpace(Shell.DmiPath);
+
+    public bool HasRecentConfig => !string.IsNullOrWhiteSpace(Shell.ConfigPath);
+
+    public bool HasRecentLegacyCsv => !string.IsNullOrWhiteSpace(Shell.LegacyCsvPath);
+
+    public bool HasRecentWorkspace => Shell.HasEditorWorkflow || HasRecentDmi || HasRecentConfig || HasRecentLegacyCsv;
+
+    public bool ShowRecentPaths => HasRecentDmi || HasRecentConfig || HasRecentLegacyCsv || !string.IsNullOrWhiteSpace(Shell.BatchOutputDirectory);
+
+    public string ResumeEditorHint => Shell.HasActiveConfig
+        ? "A sprite and config are already staged. Continue in Editor to keep working."
+        : Shell.HasLoadedAsset
+            ? "A sprite is loaded. Create a config to begin editing."
+            : "Start by opening a DMI.";
+
+    public string LastDmiPathSummary => string.IsNullOrWhiteSpace(Shell.DmiPath) ? "No DMI selected yet." : Shell.DmiPath;
+
+    public string LastConfigPathSummary => string.IsNullOrWhiteSpace(Shell.ConfigPath) ? "No JSON config selected yet." : Shell.ConfigPath;
+
+    public string LastLegacyImportSummary => string.IsNullOrWhiteSpace(Shell.LegacyCsvPath) ? "No legacy CSV imported yet." : Shell.LegacyCsvPath;
+
+    public string LastBatchOutputSummary => string.IsNullOrWhiteSpace(Shell.BatchOutputDirectory) ? "No batch output folder selected yet." : Shell.BatchOutputDirectory;
+
+    public string DraftConfigName
+    {
+        get => Shell.DraftConfigName;
+        set => Shell.DraftConfigName = value;
+    }
+
+    public IAsyncRelayCommand OpenDmiCommand => Shell.OpenDmiCommand;
+
+    public IRelayCommand ContinueToEditorCommand => Shell.ContinueToEditorCommand;
+
+    public IAsyncRelayCommand ResumeLastWorkspaceCommand => Shell.ResumeLastWorkspaceCommand;
+
+    public IAsyncRelayCommand OpenRecentDmiCommand => Shell.OpenRecentDmiCommand;
+
+    public IAsyncRelayCommand OpenRecentConfigCommand => Shell.OpenRecentConfigCommand;
+
+    public IAsyncRelayCommand ImportRecentLegacyCsvCommand => Shell.ImportRecentLegacyCsvCommand;
+
+    public IRelayCommand CreateConfigCommand => Shell.CreateConfigCommand;
+
+    public IAsyncRelayCommand LoadConfigCommand => Shell.LoadConfigCommand;
+
+    public IAsyncRelayCommand ImportLegacyConfigCommand => Shell.ImportLegacyConfigCommand;
+
+    public IAsyncRelayCommand ResetWorkspaceCommand => Shell.ResetWorkspaceCommand;
+}
+
+public sealed class EditorCommandBarViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public IReadOnlyList<EditorTool> PaintTools { get; } = [EditorTool.Single, EditorTool.Fill];
+
+    public IReadOnlyList<EditorTool> EditTools { get; } = [EditorTool.Move, EditorTool.Select, EditorTool.Delete, EditorTool.Undo, EditorTool.UndoArea];
+
+    public IReadOnlyList<EditorTool> EditorTools { get; } = [EditorTool.Single, EditorTool.Fill, EditorTool.Delete, EditorTool.Undo, EditorTool.UndoArea, EditorTool.Select, EditorTool.Move];
+
+    public IReadOnlyList<EditorViewportMode> ViewportModes { get; } = [EditorViewportMode.Matrix, EditorViewportMode.Focused];
+
+    public IReadOnlyList<DirectionScope> DirectionScopes => Shell.DirectionScopes;
+
+    public IReadOnlyList<SpriteDirection> AvailableDirections => Shell.AvailableDirections;
+
+    public SpriteDirection SelectedDirection
+    {
+        get => Shell.SelectedDirection;
+        set => Shell.SelectedDirection = value;
+    }
+
+    public EditorTool SelectedEditorTool
+    {
+        get => Shell.SelectedEditorTool;
+        set => Shell.SelectedEditorTool = value;
+    }
+
+    public DirectionScope SelectedDirectionScope
+    {
+        get => Shell.SelectedDirectionScope;
+        set => Shell.SelectedDirectionScope = value;
+    }
+
+    public EditorViewportMode SelectedViewportMode
+    {
+        get => Shell.SelectedEditorViewportMode;
+        set => Shell.SelectedEditorViewportMode = value;
+    }
+
+    public bool MirrorAcrossDirections
+    {
+        get => Shell.MirrorAcrossDirections;
+        set => Shell.MirrorAcrossDirections = value;
+    }
+
+    public bool UseCentralizedPropagation
+    {
+        get => Shell.UseCentralizedPropagation;
+        set => Shell.UseCentralizedPropagation = value;
+    }
+
+    public bool ShowGrid
+    {
+        get => Shell.ShowGrid;
+        set => Shell.ShowGrid = value;
+    }
+
+    public bool GridAboveImage
+    {
+        get => Shell.GridAboveImage;
+        set => Shell.GridAboveImage = value;
+    }
+
+    public bool ShowSourceCoordinateCaptions
+    {
+        get => Shell.ShowSourceCoordinateCaptions;
+        set => Shell.ShowSourceCoordinateCaptions = value;
+    }
+
+    public bool ShowOverlay
+    {
+        get => Shell.ShowOverlay;
+        set => Shell.ShowOverlay = value;
+    }
+
+    public bool ShowTextGrid
+    {
+        get => Shell.ShowTextGrid;
+        set => Shell.ShowTextGrid = value;
+    }
+
+    public EditorViewMode EditorViewMode
+    {
+        get => Shell.EditorViewMode;
+        set => Shell.EditorViewMode = value;
+    }
+
+    public bool IsEditableOnlyMode => Shell.IsEditableOnlyMode;
+
+    public bool IsCompareSplitMode => Shell.IsCompareSplitMode;
+
+    public bool IsOverlayCompareMode => Shell.IsOverlayCompareMode;
+
+    public bool IsFocusMode
+    {
+        get => Shell.IsFocusMode;
+        set => Shell.IsFocusMode = value;
+    }
+
+    public bool CanFitViewport => Shell.CanFitViewport;
+
+    public bool IsSingleToolSelected => SelectedEditorTool == EditorTool.Single;
+
+    public bool IsFillToolSelected => SelectedEditorTool == EditorTool.Fill;
+
+    public bool IsMoveToolSelected => SelectedEditorTool == EditorTool.Move;
+
+    public bool IsSelectToolSelected => SelectedEditorTool == EditorTool.Select;
+
+    public bool IsDeleteToolSelected => SelectedEditorTool == EditorTool.Delete;
+
+    public bool IsUndoToolSelected => SelectedEditorTool == EditorTool.Undo;
+
+    public bool IsUndoAreaToolSelected => SelectedEditorTool == EditorTool.UndoArea;
+
+    public bool IsSingleScopeSelected => SelectedDirectionScope == DirectionScope.Single;
+
+    public bool IsParallelScopeSelected => SelectedDirectionScope == DirectionScope.Parallel;
+
+    public bool IsAllScopeSelected => SelectedDirectionScope == DirectionScope.All;
+
+    public bool IsMatrixViewportSelected => SelectedViewportMode == EditorViewportMode.Matrix;
+
+    public bool IsFocusedViewportSelected => SelectedViewportMode == EditorViewportMode.Focused;
+
+    public bool ShowFocusedDirectionPicker => IsFocusedViewportSelected && AvailableDirections.Count > 1;
+
+    public IRelayCommand<EditorTool> SelectEditorToolCommand => Shell.SelectEditorToolCommand;
+
+    public IRelayCommand<DirectionScope> SelectDirectionScopeCommand => Shell.SelectDirectionScopeCommand;
+
+    public IRelayCommand<EditorViewportMode> SelectViewportModeCommand => Shell.SelectViewportModeCommand;
+
+    public IRelayCommand ClearSelectionCommand => Shell.ClearSelectionCommand;
+
+    public IRelayCommand UndoCommand => Shell.UndoCommand;
+
+    public IRelayCommand RedoCommand => Shell.RedoCommand;
+
+    public IRelayCommand SetEditableOnlyModeCommand => Shell.SetEditableOnlyModeCommand;
+
+    public IRelayCommand SetCompareSplitModeCommand => Shell.SetCompareSplitModeCommand;
+
+    public IRelayCommand SetOverlayCompareModeCommand => Shell.SetOverlayCompareModeCommand;
+
+    public IRelayCommand ToggleFocusModeCommand => Shell.ToggleFocusModeCommand;
+
+    public IRelayCommand FitViewportCommand => Shell.FitViewportCommand;
+}
+
+public sealed class DirectionMatrixViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public ObservableCollection<DirectionTileViewModel> Tiles => Shell.DirectionTiles;
+
+    public bool IsMatrixMode => Shell.SelectedEditorViewportMode == EditorViewportMode.Matrix;
+
+    public bool IsFocusedMode => Shell.SelectedEditorViewportMode == EditorViewportMode.Focused;
+
+    public int MatrixColumns => Shell.DirectionMatrixColumns;
+
+    public DirectionTileViewModel? FocusedTile => Shell.FocusedDirectionTile;
+}
+
+public sealed partial class DirectionNavigatorItemViewModel : ObservableObject
+{
+    public DirectionNavigatorItemViewModel(SpriteDirection direction)
+    {
+        Direction = direction;
+        Label = direction switch
+        {
+            SpriteDirection.South => "SOUTH",
+            SpriteDirection.North => "NORTH",
+            SpriteDirection.East => "EAST",
+            SpriteDirection.West => "WEST",
+            SpriteDirection.SouthEast => "SOUTH EAST",
+            SpriteDirection.SouthWest => "SOUTH WEST",
+            SpriteDirection.NorthEast => "NORTH EAST",
+            SpriteDirection.NorthWest => "NORTH WEST",
+            _ => direction.ToString().ToUpperInvariant()
+        };
+    }
+
+    public SpriteDirection Direction { get; }
+
+    public string Label { get; }
+
+    public ImageSource? PreviewImage
+    {
+        get => previewImage;
+        set => SetProperty(ref previewImage, value);
+    }
+
+    private ImageSource? previewImage;
+
+    [ObservableProperty]
+    private bool isActive;
+
+    [ObservableProperty]
+    private bool isScopeAffected;
+
+    public string ShortLabel => Direction switch
+    {
+        SpriteDirection.South => "S",
+        SpriteDirection.North => "N",
+        SpriteDirection.East => "E",
+        SpriteDirection.West => "W",
+        SpriteDirection.SouthEast => "SE",
+        SpriteDirection.SouthWest => "SW",
+        SpriteDirection.NorthEast => "NE",
+        SpriteDirection.NorthWest => "NW",
+        _ => Label
+    };
+}
+
+public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public bool IsAvailable => Shell.HasEditorWorkflow;
+
+    public string SpriteContractSummary => Shell.SpriteContractSummary;
+
+    public string ConfigSummary => Shell.ConfigSummary;
+
+    public string RolesSummary =>
+        $"{BaseStateSummary} • {LandmarkStateSummary} • {OverlayStateSummary}";
+
+    public string BaseStateSummary => string.IsNullOrWhiteSpace(Shell.BaseStateName) ? "Base: not selected" : $"Base: {Shell.BaseStateName}";
+
+    public string LandmarkStateSummary => string.IsNullOrWhiteSpace(Shell.LandmarkStateName) ? "Landmark: none" : $"Landmark: {Shell.LandmarkStateName}";
+
+    public string OverlayStateSummary => string.IsNullOrWhiteSpace(Shell.OverlayStateName) ? "Overlay: none" : $"Overlay: {Shell.OverlayStateName}";
+
+    public string LeftRailSummary => Shell.HasActiveConfig
+        ? $"Config: {Shell.ConfigSummary}"
+        : "Load or create a config to edit mappings.";
+
+    public string HoverAndStatusSummary => $"{Shell.SelectedSourceSummary}  {Shell.SelectedAreaSummary}";
+
+    public string HoverSummary => Shell.HoverSummary;
+
+    public string HoverToken => Shell.HoveredCanvasKind switch
+    {
+        EditorCanvasKind.Source when Shell.SourceHoveredCoordinate is { } coordinate => $"Source {coordinate}",
+        EditorCanvasKind.Editable when Shell.EditableHoveredCoordinate is { } coordinate => $"Editable {coordinate}",
+        _ => "None"
+    };
+
+    public string SelectionSummary => $"{Shell.SelectedSourceSummary}  {Shell.SelectedAreaSummary}";
+
+    public string ActiveDirectionLabel => Shell.SelectedDirection.ToString();
+
+    public SpriteDirection SelectedDirection
+    {
+        get => Shell.SelectedDirection;
+        set => Shell.SelectedDirection = value;
+    }
+
+    public bool IsBottomWorkspaceExpanded
+    {
+        get => Shell.IsBottomWorkspaceExpanded;
+        set => Shell.IsBottomWorkspaceExpanded = value;
+    }
+
+    public double ActiveEditorZoom => Shell.ActiveEditorZoom;
+
+    public string ActiveEditorZoomLabel => Shell.ActiveEditorZoomLabel;
+
+    public EditorSurfaceRenderState? ActiveSourceSurface => Shell.ActiveSourceSurface;
+
+    public EditorSurfaceRenderState? ActiveTargetSurface => Shell.ActiveTargetSurface;
+
+    public PixelCoordinate? SourceHoveredCoordinate => Shell.SourceHoveredCoordinate;
+
+    public PixelCoordinate? EditableHoveredCoordinate => Shell.EditableHoveredCoordinate;
+
+    public IReadOnlyList<PixelCoordinate> SourceLinkedHoverCoordinates => Shell.SourceLinkedHoverCoordinates;
+
+    public IReadOnlyList<PixelCoordinate> EditableLinkedHoverCoordinates => Shell.EditableLinkedHoverCoordinates;
+
+    public PixelCoordinate? SelectedSourceCoordinate => Shell.SelectedSourceCoordinateView;
+
+    public PixelCoordinate? SelectedTargetCoordinate => Shell.SelectedTargetCoordinate;
+
+    public PixelAreaBounds? SelectedAreaBounds => Shell.SelectedAreaBounds;
+
+    public bool ShowGrid => Shell.ShowGrid;
+
+    public bool ShowGridToggle
+    {
+        get => Shell.ShowGrid;
+        set => Shell.ShowGrid = value;
+    }
+
+    public bool ShowGridCaptions => Shell.GridAboveImage || Shell.ShowSourceCoordinateCaptions;
+
+    public bool ShowGridCaptionsToggle
+    {
+        get => Shell.GridAboveImage;
+        set => Shell.GridAboveImage = value;
+    }
+
+    public bool ShowSourceCoordinateCaptions => Shell.ShowSourceCoordinateCaptions;
+
+    public bool ShowSourceCoordinateCaptionsToggle
+    {
+        get => Shell.ShowSourceCoordinateCaptions;
+        set => Shell.ShowSourceCoordinateCaptions = value;
+    }
+
+    public bool ShowOverlayToggle
+    {
+        get => Shell.ShowOverlay;
+        set => Shell.ShowOverlay = value;
+    }
+
+    public bool ShowStatesRail => Shell.ShowStatesRail;
+
+    public bool ShowEditorLeftRail => Shell.ShowEditorLeftRail;
+
+    public bool ShowRightDirectionStrip => Shell.ShowRightDirectionStrip;
+
+    public bool ShowStateLayersPanel => Shell.ShowStateLayersPanel;
+
+    public bool ShowSourcePalettePane => Shell.ShowSourcePalettePane;
+
+    public bool ShowDirectionsInSidebar => Shell.ShowDirectionsInSidebar;
+
+    public bool ShowBottomStatusBar => Shell.ShowBottomStatusBar;
+
+    public bool ShowCompactCanvasHeader => Shell.ShowCompactCanvasHeader;
+
+    public bool IsSourceReferenceDimmed =>
+        Shell.SelectedEditorTool is EditorTool.Move or EditorTool.Delete or EditorTool.Select;
+
+    public bool IsAssetsDmiLeftDockSelected => Shell.SelectedEditorLeftDockTab == EditorLeftDockTab.AssetsDmi;
+
+    public bool IsConfigsLeftDockSelected => Shell.SelectedEditorLeftDockTab == EditorLeftDockTab.Configs;
+
+    public bool ShowSingleStateStrip => Shell.ShowSingleStateStrip;
+
+    public bool UseHorizontalDirectionsStrip => Shell.UseHorizontalDirectionsStrip;
+
+    public bool UseVerticalDirectionsRail => Shell.UseVerticalDirectionsRail;
+
+    public bool HasDirectionSelector => Shell.HasDirectionSelector;
+
+    public bool IsReferencePaneVisible => Shell.IsReferencePaneVisible;
+
+    public bool ShowOverlayCompareLayer => Shell.ShowOverlayCompareLayer;
+
+    public bool IsFocusMode => Shell.IsFocusMode;
+
+    public PixelCoordinate? OppositeHighlightedCoordinate => Shell.OppositeHighlightedCoordinate;
+
+    public string HoverMappingSummary => Shell.HoverMappingSummary;
+
+    public string HoverMappingToken => Shell.HoverMappingSummary switch
+    {
+        var text when string.IsNullOrWhiteSpace(text) => "none",
+        var text when text.Contains("no hover mapping", StringComparison.OrdinalIgnoreCase) => "none",
+        var text when text.Contains("has no", StringComparison.OrdinalIgnoreCase) => "none",
+        _ => "mapped"
+    };
+
+    public ObservableCollection<EditorAssetItemViewModel> EditorAssetItems => Shell.EditorAssetItems;
+
+    public IReadOnlyList<EditorLeftDockTab> EditorLeftDockTabs => Shell.EditorLeftDockTabs;
+
+    public IReadOnlyList<EditorAssetTargetSurface> EditorAssetTargetSurfaces => Shell.EditorAssetTargetSurfaces;
+
+    public IReadOnlyList<EditorAssetTargetLayer> EditorAssetTargetLayers => Shell.EditorAssetTargetLayers;
+
+    public int SelectedEditorLeftDockTabIndex
+    {
+        get => Shell.SelectedEditorLeftDockTabIndex;
+        set => Shell.SelectedEditorLeftDockTabIndex = value;
+    }
+
+    public EditorLeftDockTab SelectedEditorLeftDockTab
+    {
+        get => Shell.SelectedEditorLeftDockTab;
+        set => Shell.SelectedEditorLeftDockTab = value;
+    }
+
+    public EditorAssetTargetSurface SelectedEditorAssetTargetSurface
+    {
+        get => Shell.SelectedEditorAssetTargetSurface;
+        set => Shell.SelectedEditorAssetTargetSurface = value;
+    }
+
+    public EditorAssetTargetLayer SelectedEditorAssetTargetLayer
+    {
+        get => Shell.SelectedEditorAssetTargetLayer;
+        set => Shell.SelectedEditorAssetTargetLayer = value;
+    }
+
+    public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
+
+    public ObservableCollection<ImportedDmiStateItemViewModel> ImportedDmiStateItems => Shell.ImportedDmiStateItems;
+
+    public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems => Shell.DirectionNavigatorItems;
+
+    public int DirectionNavigatorColumns => Shell.DirectionNavigatorColumns;
+
+    public string SelectedExplorerState
+    {
+        get => Shell.SelectedExplorerState;
+        set => Shell.SelectedExplorerState = value;
+    }
+
+    public string CurrentStateLabel => string.IsNullOrWhiteSpace(Shell.SelectedExplorerState)
+        ? NormalizeStateLabel(Shell.BaseStateName)
+        : Shell.SelectedExplorerState;
+
+    public string StateCountLabel => Shell.AvailableStates.Count switch
+    {
+        1 => "1 state",
+        _ => $"{Shell.AvailableStates.Count} states"
+    };
+
+    public string CurrentAssetDisplayName => Shell.CurrentAssetDisplayName;
+
+    public string CurrentDmiDisplayName => Shell.CurrentDmiDisplayName;
+
+    public string CurrentDmiPathSummary => Shell.CurrentDmiPathSummary;
+
+    public string ConfigToken => !Shell.HasActiveConfig
+        ? "None"
+        : Shell.ConfigSummary.Contains("unsaved", StringComparison.OrdinalIgnoreCase)
+            ? "Unsaved Draft"
+            : string.IsNullOrWhiteSpace(Shell.DraftConfigName)
+                ? "Loaded"
+                : Shell.DraftConfigName;
+
+    public string DraftToken => Shell.ConfigSummary.Contains("unsaved", StringComparison.OrdinalIgnoreCase)
+        ? "Draft"
+        : "Saved";
+
+    public string MappingCountToken => Shell.MappingRows.Count.ToString(CultureInfo.InvariantCulture);
+
+    public string EditableBackgroundSummary => Shell.EditableBackgroundSummary;
+
+    public DirectionMatrixViewModel DirectionMatrix { get; } = new(shell);
+
+    public EditorCommandBarViewModel CommandBar { get; } = new(shell);
+
+    public IRelayCommand UseSelectedStateAsBaseCommand => Shell.UseSelectedStateAsBaseCommand;
+
+    public IRelayCommand UseSelectedStateAsLandmarkCommand => Shell.UseSelectedStateAsLandmarkCommand;
+
+    public IRelayCommand UseSelectedStateAsOverlayCommand => Shell.UseSelectedStateAsOverlayCommand;
+
+    public IRelayCommand ClearOptionalPreviewLayersCommand => Shell.ClearOptionalPreviewLayersCommand;
+
+    public IAsyncRelayCommand AddDmiStatesCommand => Shell.AddDmiStatesCommand;
+
+    public IAsyncRelayCommand ClearImportedStatesCommand => Shell.ClearImportedStatesCommand;
+
+    public IRelayCommand<ImportedDmiStateItemViewModel> ToggleImportedStateBackgroundCommand => Shell.ToggleImportedStateBackgroundCommand;
+
+    public IRelayCommand<ImportedDmiStateItemViewModel> ToggleImportedStateOverlayCommand => Shell.ToggleImportedStateOverlayCommand;
+
+    public IRelayCommand<ImportedDmiStateItemViewModel> RemoveImportedStateCommand => Shell.RemoveImportedStateCommand;
+
+    public IRelayCommand<EditorLeftDockTab> SelectEditorLeftDockTabCommand => Shell.SelectEditorLeftDockTabCommand;
+
+    public IRelayCommand CycleEditorAssetTargetSurfaceCommand => Shell.CycleEditorAssetTargetSurfaceCommand;
+
+    public IRelayCommand CycleEditorAssetTargetLayerCommand => Shell.CycleEditorAssetTargetLayerCommand;
+
+    public IRelayCommand ResetEditorZoomCommand => Shell.ResetEditorZoomCommand;
+
+    public IRelayCommand FitViewportCommand => Shell.FitViewportCommand;
+
+    public IRelayCommand<SpriteDirection> SelectDirectionCommand => Shell.SelectDirectionCommand;
+
+    private static string NormalizeStateLabel(string stateName) => string.IsNullOrWhiteSpace(stateName) ? "State not selected" : stateName;
+}
+
+public sealed class ConfigWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public ObservableCollection<ConfigQueueItemViewModel> Items => Shell.ConfigQueueItems;
+
+    public ObservableCollection<SampleConfigItemViewModel> SampleConfigItems => Shell.SampleConfigItems;
+
+    public string ActiveConfigSummary => Shell.ConfigSummary;
+
+    public IRelayCommand CreateConfigCommand => Shell.CreateConfigCommand;
+
+    public IAsyncRelayCommand LoadConfigCommand => Shell.LoadConfigCommand;
+
+    public IAsyncRelayCommand SaveConfigCommand => Shell.SaveConfigCommand;
+
+    public IAsyncRelayCommand SaveConfigAsCommand => Shell.SaveConfigAsCommand;
+
+    public IRelayCommand BrowseSaveConfigPathCommand => Shell.BrowseSaveConfigPathCommand;
+
+    public IAsyncRelayCommand ImportLegacyConfigCommand => Shell.ImportLegacyConfigCommand;
+
+    public IAsyncRelayCommand<SampleConfigItemViewModel> ActivateSampleConfigCommand => Shell.ActivateSampleConfigCommand;
+
+    public IRelayCommand<ConfigQueueItemViewModel> ActivateConfigQueueItemCommand => Shell.ActivateConfigQueueItemCommand;
+
+    public IRelayCommand<ConfigQueueItemViewModel> RemoveConfigQueueItemCommand => Shell.RemoveConfigQueueItemCommand;
+}
+
+public sealed class BottomWorkspaceViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public BottomWorkspaceTab SelectedTab
+    {
+        get => Shell.SelectedBottomWorkspaceTab;
+        set => Shell.SelectedBottomWorkspaceTab = value;
+    }
+
+    public bool IsExpanded
+    {
+        get => Shell.IsBottomWorkspaceExpanded;
+        set => Shell.IsBottomWorkspaceExpanded = value;
+    }
+
+    public bool IsMappingsSelected => SelectedTab == BottomWorkspaceTab.Mappings;
+
+    public bool IsAdvancedSelected => SelectedTab == BottomWorkspaceTab.Advanced;
+
+    public ObservableCollection<string> AvailableStates => Shell.AvailableStates;
+
+    public ObservableCollection<ConfigQueueItemViewModel> ConfigQueueItems => Shell.ConfigQueueItems;
+
+    public ObservableCollection<MappingRowViewModel> MappingRows => Shell.MappingRows;
+
+    public ObservableCollection<BatchResultRowViewModel> BatchResults => Shell.BatchResults;
+
+    public string MappingSummary => Shell.MappingRows.Count == 0
+        ? "No mappings yet."
+        : $"{Shell.MappingRows.Count} mapping(s) in the active direction.";
+
+    public string HighlightedMappingSummary => SelectedMapping is not null
+        ? $"{SelectedMapping.EditableText} <- {SelectedMapping.SourceText}"
+        : Shell.MappingRows.Count > 0
+            ? $"{Shell.MappingRows[0].EditableText} <- {Shell.MappingRows[0].SourceText}"
+            : "No coordinate pairs.";
+
+    public bool HasBatchResults => Shell.BatchResults.Count > 0;
+
+    public MappingRowViewModel? SelectedMapping
+    {
+        get => Shell.SelectedMapping;
+        set => Shell.SelectedMapping = value;
+    }
+
+    public IRelayCommand<BottomWorkspaceTab> SelectBottomWorkspaceTabCommand => Shell.SelectBottomWorkspaceTabCommand;
+
+    public IRelayCommand RemoveSelectedMappingCommand => Shell.RemoveSelectedMappingCommand;
+}
+
+public sealed class PreviewPanelViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public IReadOnlyList<PreviewDisplayMode> PreviewDisplayModes => Shell.PreviewDisplayModes;
+
+    public PreviewDisplayMode SelectedPreviewDisplayMode
+    {
+        get => Shell.SelectedPreviewDisplayMode;
+        set => Shell.SelectedPreviewDisplayMode = value;
+    }
+
+    public AutoPreviewMode AutoPreviewMode
+    {
+        get => Shell.AutoPreviewMode;
+        set => Shell.AutoPreviewMode = value;
+    }
+
+    public bool IsAutoPreviewEnabled
+    {
+        get => Shell.AutoPreviewMode == AutoPreviewMode.Enabled;
+        set => Shell.AutoPreviewMode = value ? AutoPreviewMode.Enabled : AutoPreviewMode.Disabled;
+    }
+
+    public bool IsExpanded
+    {
+        get => Shell.IsPreviewInspectorExpanded;
+        set => Shell.IsPreviewInspectorExpanded = value;
+    }
+
+    public string PreviewSelectionSummary => Shell.PreviewSelectionSummary;
+
+    public string PreviewSummary => Shell.PreviewSummary;
+
+    public BitmapSource? CurrentPreviewImage => Shell.CurrentPreviewImage;
+
+    public bool IsPreviewImageVisible => Shell.IsPreviewImageVisible;
+
+    public bool IsPreviewGridVisible => Shell.IsPreviewGridVisible;
+
+    public bool IsPreviewTextVisible => Shell.IsPreviewTextVisible;
+
+    public bool HasImagePreview => IsPreviewImageVisible && CurrentPreviewImage is not null;
+
+    public bool HasGridPreview => IsPreviewGridVisible && PreviewGridRows.Count > 0;
+
+    public bool HasTextPreview => IsPreviewTextVisible && !string.IsNullOrWhiteSpace(PreviewTextGrid);
+
+    public bool HasRenderablePreview => HasImagePreview || HasGridPreview || HasTextPreview;
+
+    public ObservableCollection<PixelRowViewModel> PreviewGridRows => Shell.PreviewGridRows;
+
+    public string PreviewTextGrid => Shell.PreviewTextGrid;
+
+    public IAsyncRelayCommand BuildPreviewCommand => Shell.BuildPreviewCommand;
+}
+
+public sealed partial class BatchCandidateFileViewModel : ObservableObject
+{
+    public BatchCandidateFileViewModel(
+        BatchSourceTreeItemViewModel sourceItem,
+        string rootDirectory,
+        string? outputDirectory)
+    {
+        SourceItem = sourceItem;
+        FullPath = Path.GetFullPath(sourceItem.FullPath);
+        RootDirectory = Path.GetFullPath(rootDirectory);
+        RelativePath = Path.GetRelativePath(RootDirectory, FullPath);
+        FileName = Path.GetFileName(FullPath);
+        FolderPath = Path.GetDirectoryName(RelativePath) ?? string.Empty;
+        IsInsideOutputDirectory =
+            !string.IsNullOrWhiteSpace(outputDirectory) &&
+            BatchPathLayout.IsPathUnderDirectory(FullPath, Path.GetFullPath(outputDirectory));
+        IsValid = sourceItem.IsValid && !IsInsideOutputDirectory;
+        ValidationMessage = IsInsideOutputDirectory
+            ? "Output folder is excluded from batch input."
+            : string.IsNullOrWhiteSpace(sourceItem.ValidationMessage)
+                ? "Ready"
+                : sourceItem.ValidationMessage;
+        message = ValidationMessage;
+        isSelected = IsValid;
+    }
+
+    public BatchSourceTreeItemViewModel SourceItem { get; }
+
+    public string RootDirectory { get; }
+
+    public string FullPath { get; }
+
+    public string RelativePath { get; }
+
+    public string FileName { get; }
+
+    public string FolderPath { get; }
+
+    public bool IsValid { get; }
+
+    public bool IsInsideOutputDirectory { get; }
+
+    public string ValidationMessage { get; }
+
+    public string StatusText => LastStatus?.ToString() ?? (IsValid ? "Ready" : "Invalid");
+
+    public string RunScopeText => IsSelected && IsValid ? "Included" : "Excluded";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RunScopeText))]
+    private bool isSelected;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    private BatchFileStatus? lastStatus;
+
+    [ObservableProperty]
+    private string? outputPath;
+
+    [ObservableProperty]
+    private string? message;
+}
+
+public sealed partial class BatchFolderTreeItemViewModel : ObservableObject
+{
+    public BatchFolderTreeItemViewModel(string name, string fullPath, string rootDirectory)
+    {
+        Name = name;
+        FullPath = Path.GetFullPath(fullPath);
+        RelativePath = Path.GetRelativePath(Path.GetFullPath(rootDirectory), FullPath);
+    }
+
+    public string Name { get; }
+
+    public string FullPath { get; }
+
+    public string RelativePath { get; }
+
+    public ObservableCollection<BatchFolderTreeItemViewModel> Children { get; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CountSummary))]
+    private int fileCount;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CountSummary))]
+    private int selectedCount;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CountSummary))]
+    private bool isOutputExcluded;
+
+    public string CountSummary => IsOutputExcluded
+        ? "output excluded"
+        : FileCount == 1
+            ? "1 file"
+            : $"{FileCount} files";
+}
+
+public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
+{
+    private bool _areBatchCollectionsAttached;
+    private int _cancelledResultCount;
+    private int _failedResultCount;
+    private int _processedResultCount;
+    private int _skippedResultCount;
+    private string _candidateFilter = string.Empty;
+    private bool _includeSubdirectories = true;
+    private BatchCandidateFileViewModel? _selectedCandidateFile;
+    private BatchFolderTreeItemViewModel? _selectedFolder;
+
+    public BatchWorkspaceViewModel(WorkspaceShellViewModel shell)
+        : base(shell)
+    {
+        CandidateFilesView = CollectionViewSource.GetDefaultView(CandidateFiles);
+        CandidateFilesView.Filter = FilterCandidateFile;
+        SelectAllVisibleCandidatesCommand = new RelayCommand(() => AreAllVisibleCandidatesSelected = true);
+        ClearCandidateSelectionCommand = new RelayCommand(() => AreAllVisibleCandidatesSelected = false);
+        RunSelectedBatchCommand = new AsyncRelayCommand(RunSelectedBatchAsync, () => CanRunSelectedBatch);
+    }
+
+    public override void Attach()
+    {
+        base.Attach();
+        if (_areBatchCollectionsAttached)
+        {
+            return;
+        }
+
+        _areBatchCollectionsAttached = true;
+        RefreshBatchResultCounts();
+        RebuildCandidateFiles();
+        Shell.BatchResults.CollectionChanged += OnBatchCollectionChanged;
+        Shell.ConfigQueueItems.CollectionChanged += OnBatchCollectionChanged;
+        Shell.BatchSourceTreeItems.CollectionChanged += OnBatchCollectionChanged;
+    }
+
+    public override void Detach()
+    {
+        if (!_areBatchCollectionsAttached)
+        {
+            base.Detach();
+            return;
+        }
+
+        Shell.BatchResults.CollectionChanged -= OnBatchCollectionChanged;
+        Shell.ConfigQueueItems.CollectionChanged -= OnBatchCollectionChanged;
+        Shell.BatchSourceTreeItems.CollectionChanged -= OnBatchCollectionChanged;
+        foreach (var file in CandidateFiles)
+        {
+            file.PropertyChanged -= OnCandidateFilePropertyChanged;
+        }
+
+        _areBatchCollectionsAttached = false;
+        base.Detach();
+    }
+
+    public bool IsAvailable => Shell.HasActiveConfig;
+
+    public ObservableCollection<BatchSourceTreeItemViewModel> SourceTreeItems => Shell.BatchSourceTreeItems;
+
+    public ObservableCollection<BatchCandidateFileViewModel> CandidateFiles { get; } = [];
+
+    public ICollectionView CandidateFilesView { get; }
+
+    public ObservableCollection<BatchFolderTreeItemViewModel> FolderTreeItems { get; } = [];
+
+    public ObservableCollection<BatchStateStripItemViewModel> StateStripItems => Shell.BatchStateStripItems;
+
+    public BatchSourceTreeItemViewModel? SelectedSourceItem => Shell.SelectedBatchSourceItem;
+
+    public BatchStateStripItemViewModel? SelectedStateStripItem
+    {
+        get => Shell.SelectedBatchStateStripItem;
+        set => Shell.SelectedBatchStateStripItem = value;
+    }
+
+    public ObservableCollection<ConfigQueueItemViewModel> ConfigQueueItems => Shell.ConfigQueueItems;
+
+    public bool IncludeSubdirectories
+    {
+        get => _includeSubdirectories;
+        set
+        {
+            if (!SetProperty(ref _includeSubdirectories, value))
+            {
+                return;
+            }
+
+            RebuildCandidateFiles();
+        }
+    }
+
+    public string CandidateFilter
+    {
+        get => _candidateFilter;
+        set
+        {
+            if (!SetProperty(ref _candidateFilter, value))
+            {
+                return;
+            }
+
+            CandidateFilesView.Refresh();
+            RefreshCandidateSelectionProperties();
+        }
+    }
+
+    public BatchCandidateFileViewModel? SelectedCandidateFile
+    {
+        get => _selectedCandidateFile;
+        set
+        {
+            if (!SetProperty(ref _selectedCandidateFile, value))
+            {
+                return;
+            }
+
+            _ = SelectCandidatePreviewAsync(value);
+        }
+    }
+
+    public BatchFolderTreeItemViewModel? SelectedFolder
+    {
+        get => _selectedFolder;
+        set
+        {
+            if (!SetProperty(ref _selectedFolder, value))
+            {
+                return;
+            }
+
+            CandidateFilesView.Refresh();
+            RefreshCandidateSelectionProperties();
+        }
+    }
+
+    public IRelayCommand SelectAllVisibleCandidatesCommand { get; }
+
+    public IRelayCommand ClearCandidateSelectionCommand { get; }
+
+    public AsyncRelayCommand RunSelectedBatchCommand { get; }
+
+    public string BatchInputDirectory
+    {
+        get => Shell.BatchInputDirectory;
+        set => Shell.BatchInputDirectory = value;
+    }
+
+    public string BatchOutputDirectory
+    {
+        get => Shell.BatchOutputDirectory;
+        set => Shell.BatchOutputDirectory = value;
+    }
+
+    public IReadOnlyList<OverwritePolicy> OverwritePolicies => Shell.OverwritePolicies;
+
+    public OverwritePolicy SelectedOverwritePolicy
+    {
+        get => Shell.SelectedOverwritePolicy;
+        set => Shell.SelectedOverwritePolicy = value;
+    }
+
+    public ObservableCollection<BatchResultRowViewModel> BatchResults => Shell.BatchResults;
+
+    public string BatchSummary => Shell.BatchSummary;
+
+    public string BatchCurrentFile => Shell.BatchCurrentFile;
+
+    public bool HasBatchResults => Shell.BatchResults.Count > 0;
+
+    public bool HasNoBatchResults => !HasBatchResults;
+
+    public bool IsBusy => Shell.IsBusy;
+
+    public int CandidateFileCount => CandidateFiles.Count;
+
+    public int ValidCandidateFileCount => CandidateFiles.Count(static file => file.IsValid);
+
+    public int InvalidCandidateFileCount => CandidateFiles.Count(static file => !file.IsValid);
+
+    public int SelectedCandidateFileCount => CandidateFiles.Count(static file => file.IsSelected && file.IsValid);
+
+    public string CandidateSelectionSummary =>
+        $"{SelectedCandidateFileCount} selected / {ValidCandidateFileCount} valid / {CandidateFileCount} found";
+
+    public string RunBatchButtonText =>
+        SelectedCandidateFileCount == ValidCandidateFileCount && ValidCandidateFileCount > 0
+            ? $"Run all {ValidCandidateFileCount}"
+            : $"Run {SelectedCandidateFileCount} selected";
+
+    public bool CanRunSelectedBatch => SelectedCandidateFileCount > 0 && !Shell.IsBusy;
+
+    public bool IsOutputInsideInputDirectory =>
+        !string.IsNullOrWhiteSpace(BatchInputDirectory) &&
+        !string.IsNullOrWhiteSpace(BatchOutputDirectory) &&
+        BatchPathLayout.IsPathUnderDirectory(BatchOutputDirectory, BatchInputDirectory);
+
+    public string OutputExclusionSummary => IsOutputInsideInputDirectory
+        ? "Output folder is inside source and will be excluded from input scan."
+        : string.Empty;
+
+    public string RunLogDetail => Shell.IsBusy ? CurrentFileSummary : "Batch is idle.";
+
+    public bool? AreAllVisibleCandidatesSelected
+    {
+        get
+        {
+            var visible = CandidateFilesView
+                .Cast<BatchCandidateFileViewModel>()
+                .Where(static file => file.IsValid)
+                .ToArray();
+
+            if (visible.Length == 0)
+            {
+                return false;
+            }
+
+            var selected = visible.Count(static file => file.IsSelected);
+
+            return selected == visible.Length
+                ? true
+                : selected == 0
+                    ? false
+                    : null;
+        }
+        set
+        {
+            if (value is not { } isSelected)
+            {
+                return;
+            }
+
+            foreach (var file in CandidateFilesView
+                         .Cast<BatchCandidateFileViewModel>()
+                         .Where(static file => file.IsValid))
+            {
+                file.IsSelected = isSelected;
+            }
+
+            RefreshCandidateSelectionProperties();
+        }
+    }
+
+    public string SourceSelectionName => Shell.SelectedBatchSourceItem?.Name ?? "All DMI files";
+
+    public string SourceSelectionDetail => Shell.SelectedBatchSourceItem is null
+        ? "Whole source folder"
+        : Shell.SelectedBatchSourceItem.IsDirectory
+            ? "Selected folder"
+            : "Selected file";
+
+    public string SourceSelectionPath => Shell.SelectedBatchSourceItem?.FullPath ?? Shell.BatchInputDirectory;
+
+    public async Task SelectSourceItemAsync(BatchSourceTreeItemViewModel? item)
+    {
+        await Shell.HandleBatchSourceSelectionAsync(item);
+
+        OnPropertyChanged(nameof(SelectedSourceItem));
+        OnPropertyChanged(nameof(SourceSelectionName));
+        OnPropertyChanged(nameof(SourceSelectionDetail));
+        OnPropertyChanged(nameof(SourceSelectionPath));
+        OnPropertyChanged(nameof(SelectedStateName));
+        OnPropertyChanged(nameof(CurrentFileSummary));
+        OnPropertyChanged(nameof(QuickPreviewSummary));
+        OnPropertyChanged(nameof(QuickPreviewSelectionSummary));
+        OnPropertyChanged(nameof(HasQuickPreview));
+        OnPropertyChanged(nameof(HasQuickPreviewOriginalImage));
+        OnPropertyChanged(nameof(HasQuickPreviewEditedImage));
+        OnPropertyChanged(nameof(QuickPreviewOriginalImage));
+        OnPropertyChanged(nameof(QuickPreviewEditedImage));
+    }
+
+    public void SelectFolder(BatchFolderTreeItemViewModel? folder)
+    {
+        SelectedFolder = folder;
+    }
+
+    private async Task SelectCandidatePreviewAsync(BatchCandidateFileViewModel? file)
+    {
+        await SelectSourceItemAsync(file?.SourceItem);
+    }
+
+    private async Task RunSelectedBatchAsync()
+    {
+        var selectedFiles = CandidateFiles
+            .Where(static file => file.IsSelected && file.IsValid)
+            .Select(static file => file.FullPath)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (selectedFiles.Length == 0)
+        {
+            Shell.StatusMessage = "Select at least one valid DMI file to run batch.";
+            return;
+        }
+
+        await Shell.RunBatchForExplicitFilesAsync(selectedFiles);
+    }
+
+    public string ActiveConfigName => ActiveConfigItem?.Name ?? "No config";
+
+    public string ActiveConfigStorage => ActiveConfigItem?.PathSummary ?? "Load a config";
+
+    public string SelectedStateName => SelectedStateStripItem?.Name ?? "No state";
+
+    public string BatchProgressSummary => Shell.BatchTotalFiles > 0
+        ? $"{Shell.BatchProcessedFiles}/{Shell.BatchTotalFiles}"
+        : HasBatchResults
+            ? $"{Shell.BatchResults.Count} result(s)"
+            : "Idle";
+
+    public string CurrentFileSummary => string.IsNullOrWhiteSpace(Shell.BatchCurrentFile)
+        ? "No active file"
+        : Shell.BatchCurrentFile;
+
+    public int ProcessedResultCount => _processedResultCount;
+
+    public int SkippedResultCount => _skippedResultCount;
+
+    public int FailedResultCount => _failedResultCount;
+
+    public int CancelledResultCount => _cancelledResultCount;
+
+    private ConfigQueueItemViewModel? ActiveConfigItem =>
+        Shell.ConfigQueueItems.FirstOrDefault(static item => item.IsActive) ??
+        Shell.ConfigQueueItems.FirstOrDefault();
+
+    protected override void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        base.OnShellPropertyChanged(sender, e);
+
+        if (string.IsNullOrEmpty(e.PropertyName) ||
+            e.PropertyName is nameof(WorkspaceShellViewModel.IsBusy))
+        {
+            OnPropertyChanged(nameof(IsBusy));
+            OnPropertyChanged(nameof(CanRunSelectedBatch));
+            OnPropertyChanged(nameof(RunBatchButtonText));
+            OnPropertyChanged(nameof(RunLogDetail));
+            RunSelectedBatchCommand.NotifyCanExecuteChanged();
+        }
+
+        if (string.IsNullOrEmpty(e.PropertyName) ||
+            e.PropertyName is nameof(WorkspaceShellViewModel.BatchSummary)
+                or nameof(WorkspaceShellViewModel.BatchCurrentFile)
+                or nameof(WorkspaceShellViewModel.BatchProcessedFiles)
+                or nameof(WorkspaceShellViewModel.BatchTotalFiles))
+        {
+            OnPropertyChanged(nameof(BatchSummary));
+            OnPropertyChanged(nameof(BatchCurrentFile));
+            OnPropertyChanged(nameof(CurrentFileSummary));
+            OnPropertyChanged(nameof(BatchProgressSummary));
+            OnPropertyChanged(nameof(RunLogDetail));
+        }
+
+        if (string.IsNullOrEmpty(e.PropertyName) ||
+            e.PropertyName is nameof(WorkspaceShellViewModel.BatchInputDirectory)
+                or nameof(WorkspaceShellViewModel.BatchOutputDirectory))
+        {
+            RebuildCandidateFiles();
+            OnPropertyChanged(nameof(IsOutputInsideInputDirectory));
+            OnPropertyChanged(nameof(OutputExclusionSummary));
+        }
+    }
+
+    private void OnBatchCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (ReferenceEquals(sender, Shell.BatchResults))
+        {
+            UpdateBatchResultCounts(e);
+            OnPropertyChanged(nameof(HasBatchResults));
+            OnPropertyChanged(nameof(HasNoBatchResults));
+            OnPropertyChanged(nameof(BatchProgressSummary));
+            OnPropertyChanged(nameof(ProcessedResultCount));
+            OnPropertyChanged(nameof(SkippedResultCount));
+            OnPropertyChanged(nameof(FailedResultCount));
+            OnPropertyChanged(nameof(CancelledResultCount));
+            if (e.NewItems is not null)
+            {
+                foreach (var row in e.NewItems.OfType<BatchResultRowViewModel>())
+                {
+                    ApplyBatchResultToCandidate(row);
+                }
+            }
+
+            return;
+        }
+
+        if (ReferenceEquals(sender, Shell.ConfigQueueItems))
+        {
+            OnPropertyChanged(nameof(ActiveConfigName));
+            OnPropertyChanged(nameof(ActiveConfigStorage));
+            return;
+        }
+
+        if (ReferenceEquals(sender, Shell.BatchSourceTreeItems))
+        {
+            RebuildCandidateFiles();
+        }
+    }
+
+    private void RefreshBatchResultCounts()
+    {
+        _processedResultCount = Shell.BatchResults.Count(static row => row.Status == BatchFileStatus.Processed);
+        _skippedResultCount = Shell.BatchResults.Count(static row => row.Status == BatchFileStatus.Skipped);
+        _failedResultCount = Shell.BatchResults.Count(static row => row.Status == BatchFileStatus.Failed);
+        _cancelledResultCount = Shell.BatchResults.Count(static row => row.Status == BatchFileStatus.Cancelled);
+    }
+
+    private void UpdateBatchResultCounts(NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action is NotifyCollectionChangedAction.Reset)
+        {
+            RefreshBatchResultCounts();
+            return;
+        }
+
+        if (e.OldItems is not null)
+        {
+            foreach (var row in e.OldItems.OfType<BatchResultRowViewModel>())
+            {
+                AdjustBatchResultCount(row.Status, -1);
+            }
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (var row in e.NewItems.OfType<BatchResultRowViewModel>())
+            {
+                AdjustBatchResultCount(row.Status, 1);
+            }
+        }
+    }
+
+    private void AdjustBatchResultCount(BatchFileStatus status, int delta)
+    {
+        switch (status)
+        {
+            case BatchFileStatus.Processed:
+                _processedResultCount += delta;
+                break;
+            case BatchFileStatus.Skipped:
+                _skippedResultCount += delta;
+                break;
+            case BatchFileStatus.Failed:
+                _failedResultCount += delta;
+                break;
+            case BatchFileStatus.Cancelled:
+                _cancelledResultCount += delta;
+                break;
+        }
+    }
+
+    private void RebuildCandidateFiles()
+    {
+        foreach (var file in CandidateFiles)
+        {
+            file.PropertyChanged -= OnCandidateFilePropertyChanged;
+        }
+
+        CandidateFiles.Clear();
+        FolderTreeItems.Clear();
+        _selectedCandidateFile = null;
+        _selectedFolder = null;
+
+        if (string.IsNullOrWhiteSpace(Shell.BatchInputDirectory))
+        {
+            CandidateFilesView.Refresh();
+            RefreshCandidateSelectionProperties();
+            OnPropertyChanged(nameof(SelectedCandidateFile));
+            OnPropertyChanged(nameof(SelectedFolder));
+            return;
+        }
+
+        var rootDirectory = Path.GetFullPath(Shell.BatchInputDirectory);
+        var outputDirectory = string.IsNullOrWhiteSpace(Shell.BatchOutputDirectory)
+            ? null
+            : Path.GetFullPath(Shell.BatchOutputDirectory);
+
+        var rootName = Path.GetFileName(rootDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var rootFolder = new BatchFolderTreeItemViewModel(
+            string.IsNullOrWhiteSpace(rootName) ? rootDirectory : rootName,
+            rootDirectory,
+            rootDirectory);
+        FolderTreeItems.Add(rootFolder);
+        BuildFolderChildren(rootFolder, Shell.BatchSourceTreeItems, rootDirectory, outputDirectory);
+
+        var sourceItems = EnumerateCandidateSourceItems(Shell.BatchSourceTreeItems, rootDirectory)
+            .OrderBy(static item => item.FullPath, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        foreach (var sourceItem in sourceItems)
+        {
+            var candidate = new BatchCandidateFileViewModel(sourceItem, rootDirectory, outputDirectory);
+            candidate.PropertyChanged += OnCandidateFilePropertyChanged;
+            CandidateFiles.Add(candidate);
+        }
+
+        RefreshFolderCounts(rootFolder);
+        SelectedFolder = rootFolder;
+        SelectedCandidateFile = CandidateFiles.FirstOrDefault(static file => file.IsValid) ?? CandidateFiles.FirstOrDefault();
+        CandidateFilesView.Refresh();
+        RefreshCandidateSelectionProperties();
+        OnPropertyChanged(nameof(IsOutputInsideInputDirectory));
+        OnPropertyChanged(nameof(OutputExclusionSummary));
+    }
+
+    private IEnumerable<BatchSourceTreeItemViewModel> EnumerateCandidateSourceItems(
+        IEnumerable<BatchSourceTreeItemViewModel> items,
+        string rootDirectory)
+    {
+        foreach (var item in items)
+        {
+            if (item.IsDirectory)
+            {
+                if (!IncludeSubdirectories)
+                {
+                    continue;
+                }
+
+                foreach (var child in EnumerateCandidateSourceItems(item.Children, rootDirectory))
+                {
+                    yield return child;
+                }
+
+                continue;
+            }
+
+            if (Path.GetExtension(item.FullPath).Equals(".dmi", StringComparison.OrdinalIgnoreCase))
+            {
+                if (IncludeSubdirectories ||
+                    Path.GetDirectoryName(Path.GetFullPath(item.FullPath))?.Equals(rootDirectory, StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    yield return item;
+                }
+            }
+        }
+    }
+
+    private static void BuildFolderChildren(
+        BatchFolderTreeItemViewModel parent,
+        IEnumerable<BatchSourceTreeItemViewModel> items,
+        string rootDirectory,
+        string? outputDirectory)
+    {
+        foreach (var item in items.Where(static item => item.IsDirectory))
+        {
+            var folder = new BatchFolderTreeItemViewModel(item.Name, item.FullPath, rootDirectory)
+            {
+                IsOutputExcluded = !string.IsNullOrWhiteSpace(outputDirectory) &&
+                    (Path.GetFullPath(item.FullPath).Equals(outputDirectory, StringComparison.OrdinalIgnoreCase) ||
+                     BatchPathLayout.IsPathUnderDirectory(item.FullPath, outputDirectory))
+            };
+            parent.Children.Add(folder);
+            BuildFolderChildren(folder, item.Children, rootDirectory, outputDirectory);
+        }
+    }
+
+    private void RefreshFolderCounts(BatchFolderTreeItemViewModel folder)
+    {
+        folder.FileCount = CandidateFiles.Count(file =>
+            file.IsValid &&
+            (file.FullPath.Equals(folder.FullPath, StringComparison.OrdinalIgnoreCase) ||
+             BatchPathLayout.IsPathUnderDirectory(file.FullPath, folder.FullPath)));
+        folder.SelectedCount = CandidateFiles.Count(file =>
+            file.IsSelected &&
+            file.IsValid &&
+            (file.FullPath.Equals(folder.FullPath, StringComparison.OrdinalIgnoreCase) ||
+             BatchPathLayout.IsPathUnderDirectory(file.FullPath, folder.FullPath)));
+
+        foreach (var child in folder.Children)
+        {
+            RefreshFolderCounts(child);
+        }
+    }
+
+    private bool FilterCandidateFile(object item)
+    {
+        if (item is not BatchCandidateFileViewModel file)
+        {
+            return false;
+        }
+
+        if (SelectedFolder is not null &&
+            !file.FullPath.Equals(SelectedFolder.FullPath, StringComparison.OrdinalIgnoreCase) &&
+            !BatchPathLayout.IsPathUnderDirectory(file.FullPath, SelectedFolder.FullPath))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(CandidateFilter))
+        {
+            return true;
+        }
+
+        return file.FileName.Contains(CandidateFilter, StringComparison.OrdinalIgnoreCase) ||
+               file.RelativePath.Contains(CandidateFilter, StringComparison.OrdinalIgnoreCase) ||
+               file.FolderPath.Contains(CandidateFilter, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void OnCandidateFilePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(BatchCandidateFileViewModel.IsSelected))
+        {
+            RefreshCandidateSelectionProperties();
+            if (FolderTreeItems.FirstOrDefault() is { } root)
+            {
+                RefreshFolderCounts(root);
+            }
+        }
+    }
+
+    private void RefreshCandidateSelectionProperties()
+    {
+        OnPropertyChanged(nameof(CandidateFileCount));
+        OnPropertyChanged(nameof(ValidCandidateFileCount));
+        OnPropertyChanged(nameof(InvalidCandidateFileCount));
+        OnPropertyChanged(nameof(SelectedCandidateFileCount));
+        OnPropertyChanged(nameof(CandidateSelectionSummary));
+        OnPropertyChanged(nameof(RunBatchButtonText));
+        OnPropertyChanged(nameof(CanRunSelectedBatch));
+        OnPropertyChanged(nameof(AreAllVisibleCandidatesSelected));
+        RunSelectedBatchCommand.NotifyCanExecuteChanged();
+    }
+
+    private void ApplyBatchResultToCandidate(BatchResultRowViewModel row)
+    {
+        var candidate = CandidateFiles.FirstOrDefault(file =>
+            file.FullPath.Equals(row.InputPath, StringComparison.OrdinalIgnoreCase));
+
+        if (candidate is null)
+        {
+            return;
+        }
+
+        candidate.LastStatus = row.Status;
+        candidate.OutputPath = row.OutputPath;
+        candidate.Message = row.Message;
+    }
+
+    public BitmapSource? QuickPreviewOriginalImage => Shell.BatchQuickPreviewOriginalImage;
+
+    public BitmapSource? QuickPreviewEditedImage => Shell.BatchQuickPreviewEditedImage;
+
+    public bool HasQuickPreviewOriginalImage => QuickPreviewOriginalImage is not null;
+
+    public bool HasQuickPreviewEditedImage => QuickPreviewEditedImage is not null;
+
+    public bool HasQuickPreview => HasQuickPreviewOriginalImage || HasQuickPreviewEditedImage;
+
+    public string QuickPreviewSummary => string.IsNullOrWhiteSpace(SelectedStateStripItem?.Name)
+        ? "Select a state to compare original and edited output."
+        : $"Selected state: {SelectedStateStripItem.Name}";
+
+    public string QuickPreviewSelectionSummary => string.IsNullOrWhiteSpace(Shell.PreviewSelectionSummary)
+        ? "No preview selection."
+        : Shell.PreviewSelectionSummary;
+
+    public IRelayCommand BrowseBatchInputDirectoryCommand => Shell.BrowseBatchInputDirectoryCommand;
+
+    public IRelayCommand BrowseBatchOutputDirectoryCommand => Shell.BrowseBatchOutputDirectoryCommand;
+
+    public IAsyncRelayCommand LoadConfigCommand => Shell.LoadConfigCommand;
+
+    public IAsyncRelayCommand RunBatchCommand => Shell.RunBatchCommand;
+
+    public IRelayCommand CancelCommand => Shell.CancelCommand;
+}
+
+public sealed class SettingsTabViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public IReadOnlyList<WorkspaceThemeMode> ThemeModes { get; } =
+        [WorkspaceThemeMode.Dark, WorkspaceThemeMode.Light, WorkspaceThemeMode.Warm];
+
+    public IReadOnlyList<EditorViewportMode> ViewportModes { get; } = [EditorViewportMode.Matrix, EditorViewportMode.Focused];
+
+    public WorkspaceThemeMode SelectedThemeMode
+    {
+        get => Shell.SelectedThemeMode;
+        set => Shell.SelectedThemeMode = value;
+    }
+
+    public AutoPreviewMode AutoPreviewMode
+    {
+        get => Shell.AutoPreviewMode;
+        set => Shell.AutoPreviewMode = value;
+    }
+
+    public EditorViewportMode SelectedViewportMode
+    {
+        get => Shell.SelectedEditorViewportMode;
+        set => Shell.SelectedEditorViewportMode = value;
+    }
+
+    public bool IsPreviewInspectorExpanded
+    {
+        get => Shell.IsPreviewInspectorExpanded;
+        set => Shell.IsPreviewInspectorExpanded = value;
+    }
+
+    public bool IsBottomWorkspaceExpanded
+    {
+        get => Shell.IsBottomWorkspaceExpanded;
+        set => Shell.IsBottomWorkspaceExpanded = value;
+    }
+}
+
+public sealed class OperationalStatusBarViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
+{
+    public string StatusMessage => Shell.StatusMessage;
+
+    public string CurrentStateSummary => Shell.CurrentStateSummary;
+
+    public string ActiveDirection => Shell.SelectedDirection.ToString();
+
+    public string ActiveTool => Shell.SelectedEditorTool.ToString();
+
+    public string HoverSummary => Shell.HoverSummary;
+
+    public string SelectionSummary => $"{Shell.SelectedSourceSummary} | {Shell.SelectedAreaSummary}";
+
+    public string MappingSummary => Shell.MappingRows.Count == 0 ? "Mappings 0" : $"Mappings {Shell.MappingRows.Count}";
+
+    public string BatchSummary => Shell.BatchSummary;
+
+    public bool IsBusy => Shell.IsBusy;
+
+    public bool IsProgressIndeterminate => Shell.IsProgressIndeterminate;
+
+    public double OperationProgressValue => Shell.OperationProgressValue;
+
+    public double OperationProgressMaximum => Shell.OperationProgressMaximum;
+
+    public IRelayCommand CancelCommand => Shell.CancelCommand;
+}
