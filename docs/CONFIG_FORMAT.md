@@ -1,17 +1,16 @@
-# Config Format
+# Форматы конфигов v2.0
 
-## Status
+## Статус
 
-Primary format:
+Основной формат пользовательских конфигов в v2.0 - JSON schema `version: 1`.
 
-- versioned JSON
+CSV можно импортировать, но новые конфиги сохраняются как JSON.
 
-Compatibility:
+## JSON Config Schema Version 1
 
-- legacy CSV is supported only as an import path
-- new configs are not written as CSV
+Файл JSON сохраняется и загружается через `JsonSpriteConfigRepository`.
 
-## JSON Shape
+Пример:
 
 ```json
 {
@@ -21,25 +20,15 @@ Compatibility:
     "width": 32,
     "height": 32
   },
-  "directionDepth": 8,
-  "supportedDirections": [
-    "South",
-    "North",
-    "East",
-    "West",
-    "SouthEast",
-    "SouthWest",
-    "NorthEast",
-    "NorthWest"
-  ],
+  "supportedDirections": "eight",
   "metadata": {
-    "createdUtc": "2026-04-05T00:00:00Z",
-    "updatedUtc": "2026-04-05T00:00:00Z",
-    "source": "ImportedLegacyCsv",
-    "sourceIdentifier": "legacy-config.csv",
-    "importedFromLegacy": "legacy-config.csv"
+    "createdUtc": "2026-04-05T00:00:00+00:00",
+    "updatedUtc": "2026-04-05T00:00:00+00:00",
+    "source": "UserCreated",
+    "sourceIdentifier": null,
+    "importedFromLegacy": null
   },
-  "mappingsByDirection": {
+  "mappings": {
     "South": [
       {
         "source": { "x": 0, "y": 0 },
@@ -49,7 +38,8 @@ Compatibility:
         "source": { "x": 2, "y": 0 },
         "target": null
       }
-    ]
+    ],
+    "North": []
   }
 }
 ```
@@ -60,32 +50,133 @@ Compatibility:
 - `name`
 - `resolution.width`
 - `resolution.height`
-- `directionDepth`
 - `supportedDirections`
 - `metadata`
-- `mappingsByDirection`
+- `mappings`
+
+## Field Semantics
+
+- `version`: текущая поддерживаемая версия схемы, сейчас только `1`.
+- `name`: непустое имя конфига.
+- `resolution`: размер sprite frame в пикселях.
+- `supportedDirections`: строка `"four"` или `"eight"`.
+- `metadata.createdUtc`: дата создания конфига.
+- `metadata.updatedUtc`: дата последнего изменения.
+- `metadata.source`: `UserCreated`, `Json` или `ImportedLegacyCsv`.
+- `metadata.sourceIdentifier`: краткий идентификатор источника, например имя импортированного файла.
+- `metadata.importedFromLegacy`: исходный CSV path, если конфиг импортирован.
+- `mappings`: объект, где ключ - имя направления, а значение - массив mappings.
+- `source`: координата исходного пикселя.
+- `target`: координата целевого пикселя или `null`.
+
+`target: null` означает прозрачный выходной пиксель.
+
+Если `source` и `target` совпадают, runtime рассматривает это как отсутствие пользовательского mapping.
+
+## Direction Values
+
+Для `supportedDirections: "four"` используются:
+
+- `South`
+- `North`
+- `East`
+- `West`
+
+Для `supportedDirections: "eight"` используются:
+
+- `South`
+- `North`
+- `East`
+- `West`
+- `SouthEast`
+- `SouthWest`
+- `NorthEast`
+- `NorthWest`
+
+Набор направлений должен быть ровно стандартным 4-dir или 8-dir набором.
 
 ## Validation Rules
 
-- `version` must be supported by the repository
-- `name` must be non-empty
-- `resolution` must be positive
-- `supportedDirections` must match `directionDepth`
-- every mapping source and target must stay within bounds
-- `target: null` means transparent output
-- config resolution must match the target DMI resolution
-- config direction set must match the target DMI direction depth
+- `version` должен быть поддерживаемым.
+- `name` должен быть непустым.
+- `resolution.width` и `resolution.height` должны быть положительными.
+- `supportedDirections` должен быть `"four"` или `"eight"`.
+- каждый direction key в `mappings` должен входить в `supportedDirections`.
+- координаты `source` и `target` должны находиться внутри `resolution`.
+- `metadata.updatedUtc` не должен быть раньше `metadata.createdUtc`.
+- при применении конфига к `.dmi` resolution и direction set должны совпадать с целевым sprite asset.
 
-## Legacy CSV Import
+## CSV Import
 
-Legacy CSV rows are interpreted as:
+CSV импортируется приложением и затем сохраняется как JSON.
+
+Формат строки:
 
 ```text
 Direction,SourceX,SourceY,TargetX,TargetY
 ```
 
-Behavior:
+Текущий importer ожидает строки данных без обязательного header. Пустые строки пропускаются.
 
-- invalid rows fail fast with structured validation errors
-- imported configs keep provenance in `metadata`
-- imported configs should be saved as JSON for future editing and batch processing
+Пример:
+
+```text
+South,0,0,1,0
+South,2,0,-1,-1
+North,0,0,0,1
+```
+
+CSV semantics:
+
+- `Direction` должен быть одним из `SpriteDirection`.
+- координаты должны быть integer values.
+- `TargetX=-1` и `TargetY=-1` означают transparent output.
+- resolution выводится из максимальных координат.
+- supported direction set выводится из направлений в CSV и должен совпасть с 4-dir или 8-dir набором.
+- invalid rows fail fast с validation error.
+- импортированный конфиг получает metadata source `ImportedLegacyCsv`.
+
+После импорта конфиг нужно сохранить как JSON для дальнейшей работы.
+
+## Batch Manifest Version 1
+
+Batch manifest - advanced JSON формат для запуска набора batch jobs через Application layer.
+
+Пример:
+
+```json
+{
+  "version": 1,
+  "outputRoot": "D:\\Sprites\\Export",
+  "defaultRunMode": "Incremental",
+  "jobs": [
+    {
+      "jobId": "jumpsuits",
+      "title": "Jumpsuits",
+      "enabled": true,
+      "inputDirectory": "D:\\Sprites\\Input",
+      "outputSubdirectory": "jumpsuits",
+      "configPath": "D:\\Sprites\\Configs\\jumpsuit-default.json",
+      "overwritePolicy": "SkipExisting",
+      "explicitFiles": null
+    }
+  ]
+}
+```
+
+Supported values:
+
+- `defaultRunMode`: `Incremental` или `RebuildAll`
+- `overwritePolicy`: `SkipExisting`, `OverwriteExisting`, `FailIfExists`
+
+Batch artifacts пишутся в output root под `.adaptive-sprites`:
+
+- `processed-journal.json`
+- `runs/<runId>.json`
+- `runs/<runId>.summary.txt`
+
+## Workspace Settings
+
+Workspace settings - внутренний JSON приложения. Пользователь обычно не редактирует его вручную.
+
+В settings сохраняются последние пути, выбранные states, selected direction, overwrite policy, theme, viewport и состояние рабочих панелей.

@@ -1,112 +1,135 @@
-# Adaptive Sprites DMI Tool
+# Adaptive Sprites DMI Tool v2.0
 
-Production-grade WPF application for authoring and applying pixel-mapping configs to `.dmi` sprites.
+Adaptive Sprites DMI Tool is a Windows WPF application for authoring, previewing, and applying pixel-mapping configs to BYOND `.dmi` sprite files.
+
+Russian documentation: [README-ru.md](README-ru.md)
+
+## Current Release
+
+- Application version: `2.0`
+- Target platform: Windows x64
+- UI framework: WPF on .NET 8
+- Release package: self-contained `win-x64` ZIP
+- Config schema version: `1`
+- Primary config format: versioned JSON
+- CSV compatibility: import only
+
+The release ZIP contains the published WPF app. Extract it and run:
+
+```text
+AdaptiveSpritesDmiTool.Presentation.Wpf.exe
+```
 
 ## What It Does
 
-- starts with an empty workspace and no demo/test asset dependency
-- opens `.dmi` files manually
+- starts with an empty workspace
+- opens base `.dmi` files manually
+- supports optional landmark and overlay state sources for preview work
 - edits per-pixel mappings for `4-dir` and `8-dir` sprites
-- previews base, landmark, overlay, composite, grid, and text-grid states
-- saves and loads versioned JSON configs
-- imports legacy CSV configs as a migration path
-- runs deterministic, awaitable, cancellable batch processing with per-file results
-- persists workspace/settings across restarts
+- supports editor tools such as `Paint`, `Fill`, `Move`, `Erase`, undo, area undo, and selection
+- previews base, landmark, overlay, composite, grid, and text-grid views
+- saves and loads schema-versioned JSON configs
+- imports CSV configs from older workflows
+- validates config resolution and direction compatibility before apply flows
+- runs deterministic batch processing with per-file status results
+- supports batch overwrite policies: `SkipExisting`, `OverwriteExisting`, `FailIfExists`
+- persists workspace settings such as recent paths, selected states, direction, viewport, theme, and batch folders
 
-## Current Workflow
+## Typical Workflow
 
 1. Start the app. The shell opens in an empty workspace.
-2. Open a `.dmi` file.
-3. Create a new config or load/import an existing one.
+2. Open a base `.dmi` file.
+3. Create a new config, load a JSON config, or import a CSV config.
 4. Pick base, landmark, and overlay states from the state explorer.
-5. Edit mappings in the source/editable panes with tools such as `Single`, `Fill`, `Delete`, `Undo`, `UndoArea`, `Select`, and `Move`.
-6. Save the config as JSON.
-7. Run batch processing against an input folder and review per-file results.
-
-## Sample Assets
-
-Optional example `.dmi` files are available under `samples/dmi`.
-
-- they are kept in the repository for manual exploration and debugging
-- they are not loaded automatically on startup
-- the application still starts with an empty workspace
-
-See [samples/dmi/README.md](samples/dmi/README.md).
-
-## Architecture
-
-The repository is organized as a layered solution:
-
-- `src/AdaptiveSpritesDmiTool.Domain`
-  Pure domain model, value objects, validation, direction model, empty workspace model.
-- `src/AdaptiveSpritesDmiTool.Application`
-  Use cases, editor session, undo/redo, batch orchestration, progress/cancellation, settings contracts.
-- `src/AdaptiveSpritesDmiTool.Infrastructure`
-  DMISharp adapters, JSON config repository, legacy CSV importer, settings repository, preview builder, deterministic batch processor.
-- `src/AdaptiveSpritesDmiTool.Presentation.Wpf`
-  MVVM shell, dialogs, pointer adapter, preview/editor UI, startup/runtime hardening.
-- `tests/AdaptiveSpritesDmiTool.Tests.Unit`
-  Domain, application, and WPF shell smoke tests.
-- `tests/AdaptiveSpritesDmiTool.Tests.Integration`
-  JSON persistence, legacy CSV import, DMI adapters, settings persistence, batch processing.
-
-Legacy static controllers and the old root WPF runtime path were removed from the active runtime architecture.
+5. Edit mappings in the source/editable panes.
+6. Preview the result in composite, grid, or text-grid modes.
+7. Save the config as JSON.
+8. Run batch processing against an input folder and review per-file results.
 
 ## Config Formats
 
-Primary format:
+JSON is the primary format in v2.0. The current JSON schema uses:
 
-- versioned JSON
+- `version: 1`
+- `supportedDirections: "four"` or `"eight"`
+- `mappings` grouped by direction name
+- `target: null` for transparent output pixels
 
-Legacy compatibility:
-
-- CSV import only
-- new configs are not written as CSV
+CSV can be imported, but new configs are saved as JSON.
 
 See:
 
 - [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md)
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 
-## Build And Run
+## Build And Run From Source
 
 Requirements:
 
 - Windows
 - .NET 8 SDK
 
-Commands:
+Developer build:
 
 ```powershell
-dotnet build AdaptiveSpritesDMItool.sln -m:1 -v minimal
-dotnet test AdaptiveSpritesDMItool.sln -m:1 -v minimal
-dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj
+dotnet restore AdaptiveSpritesDMItool.sln
+dotnet build AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-restore
+dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
+dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj -c Release
 ```
+
+Release package:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.0 -Runtime win-x64
+```
+
+The script creates:
+
+- `artifacts/publish/AdaptiveSpritesDMItool-v2.0-win-x64/`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.0-win-x64.zip`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.0-win-x64.sha256.txt`
+
+`artifacts/` is generated output and is intentionally ignored by git.
+
+## Architecture
+
+The active v2.0 runtime is a layered solution:
+
+- `src/AdaptiveSpritesDmiTool.Domain`
+  Pure domain model, value objects, validation, direction model, and config invariants.
+- `src/AdaptiveSpritesDmiTool.Application`
+  Use cases, editor session, undo/redo, batch orchestration, progress/cancellation, settings contracts.
+- `src/AdaptiveSpritesDmiTool.Infrastructure`
+  DMISharp adapters, JSON repositories, CSV importer, settings repository, preview builder, deterministic batch processor.
+- `src/AdaptiveSpritesDmiTool.Presentation.Wpf`
+  WPF MVVM shell, dialogs, pointer adapter, editor/preview UI, batch UI, startup/runtime hardening.
+- `tests/AdaptiveSpritesDmiTool.Tests.Unit`
+  Domain, application, and WPF shell smoke coverage.
+- `tests/AdaptiveSpritesDmiTool.Tests.Integration`
+  JSON persistence, CSV import, DMI adapters, settings persistence, and batch processing coverage.
 
 ## Testing
 
-Automated coverage currently includes:
+The v2.0 release validation passed:
 
-- empty-workspace startup
-- DMI load validation, including empty/invalid inputs
-- JSON config roundtrip and validation failures
-- legacy CSV import
-- `4-dir` and `8-dir` compatibility
-- undo/redo and grouped editor mutations
-- deterministic batch overwrite behavior
-- real DMI write/apply integration
-- workspace settings persistence
-- WPF shell smoke checks
+- 102 unit tests
+- 41 integration tests
+- hidden Unicode scan
+- Release build
+- Release test run
+- self-contained Windows x64 publish
+- ZIP smoke check
 
 See [docs/TEST_PLAN.md](docs/TEST_PLAN.md).
 
 ## Key Documents
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [docs/REFACTOR_PLAN.md](docs/REFACTOR_PLAN.md)
-- [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
 - [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md)
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
+- [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
+- [docs/releases/v2.0.md](docs/releases/v2.0.md)
 
 ## License
 

@@ -1,58 +1,48 @@
-# Migration Guide
+# Переход с CSV на JSON
 
-## Legacy To New Config Migration
+В v2.0 основной формат конфигов - JSON. CSV оставлен для импорта старых таблиц mapping.
 
-The legacy application stored mappings in CSV. The migrated application uses versioned JSON as the primary format.
+## Как перенести CSV
 
-## Recommended Path
+1. Запустите приложение.
+2. Откройте нужный `.dmi`.
+3. Импортируйте CSV config.
+4. Проверьте mapping в editor и preview.
+5. Сохраните config как JSON.
+6. Дальше используйте JSON для редактирования и batch processing.
 
-1. Open the new WPF application.
-2. Start from the empty workspace.
-3. Open the target `.dmi`.
-4. Use `Import CSV` to load the legacy config.
-5. Review the imported mapping in the editor and preview panes.
-6. Save the config as JSON.
-7. Use the JSON config for future editing and batch processing.
+## CSV Format
 
-## What Changed
+Каждая строка CSV должна иметь 5 колонок:
 
-- CSV is no longer the primary authoring format.
-- Metadata is stored with each config.
-- Resolution and direction compatibility are validated explicitly.
-- Workspace/settings are persisted independently from the config file.
-- Startup no longer depends on `default.dmi` or any bundled demo/test asset.
+```text
+Direction,SourceX,SourceY,TargetX,TargetY
+```
 
-## Legacy CSV Caveats
+Пример:
 
-- no schema version
-- no metadata
-- rows may be malformed or out of bounds
-- old behavior could accept invalid input silently
-- new behavior validates strictly and returns explicit errors
+```text
+South,0,0,1,0
+South,2,0,-1,-1
+North,0,0,0,1
+```
 
-## Batch Migration
+Правила:
 
-Legacy batch processing used shared mutable progress and unsafe async orchestration.
+- header row не нужен;
+- `TargetX=-1` и `TargetY=-1` означают прозрачный output pixel;
+- directions должны образовывать стандартный 4-dir или 8-dir набор;
+- coordinates должны быть целыми числами;
+- некорректные строки отклоняются с validation error.
 
-The new batch path:
+## После импорта
 
-- is awaitable
-- accepts cancellation tokens
-- reports progress explicitly
-- produces per-file results
-- uses deterministic file ordering
-- honors overwrite policy explicitly
+Проверьте:
 
-## Settings Migration
+- правильный `.dmi` открыт;
+- resolution совпадает с ожидаемым sprite frame;
+- direction set определился как `four` или `eight`;
+- preview выглядит корректно для нескольких states;
+- сохраненный JSON можно заново загрузить.
 
-Legacy settings were tied to static controller state.
-
-The new application stores repository-backed workspace settings, including:
-
-- last opened DMI/config paths
-- last imported legacy CSV path
-- last draft config name
-- last base/landmark/overlay state selection
-- last selected direction
-- batch input/output directories
-- last overwrite policy
+Подробная схема JSON описана в [CONFIG_FORMAT.md](CONFIG_FORMAT.md).

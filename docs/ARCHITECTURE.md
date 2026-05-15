@@ -1,111 +1,74 @@
-# Architecture
+# Архитектура v2.0
 
-## Purpose
+AdaptiveSpritesDMItool v2.0 - WPF-приложение для редактирования и применения pixel-mapping конфигов к `.dmi` sprites.
 
-AdaptiveSpritesDMItool is organized as a layered WPF application with explicit boundaries:
+## Проекты
 
-- `Domain`: pure business model, value objects, and validation
-- `Application`: use cases, editor session, orchestration, undo/redo, progress, cancellation
-- `Infrastructure`: DMI adapters, file system access, JSON persistence, legacy CSV import, preview extraction, batch processing, settings storage
-- `Presentation.Wpf`: MVVM shell, window chrome, bindings, dialogs, and pointer/interaction adapters
-- `Tests`: unit and integration coverage for the contracts between those layers
+- `src/AdaptiveSpritesDmiTool.Domain`
+  Модель конфигов, координаты, разрешение sprite frame, направления, validation и compatibility checks.
+- `src/AdaptiveSpritesDmiTool.Application`
+  Use cases, editor session, undo/redo, preview orchestration, batch orchestration, settings contracts.
+- `src/AdaptiveSpritesDmiTool.Infrastructure`
+  DMISharp adapters, JSON repositories, CSV importer, settings storage, preview builder, batch processing.
+- `src/AdaptiveSpritesDmiTool.Presentation.Wpf`
+  WPF shell, view models, dialogs, editor surface, preview panel, batch workspace.
+- `tests/AdaptiveSpritesDmiTool.Tests.Unit`
+  Unit tests для Domain, Application и Presentation view models.
+- `tests/AdaptiveSpritesDmiTool.Tests.Integration`
+  Integration tests для JSON, CSV, DMI, settings и batch paths.
 
-The current runtime should stay aligned with this structure. The old static-controller runtime is historical context, not the source of truth for new work.
+## Версии
 
-## Current Source Of Truth
+- Application version: `2.0`
+- WPF target framework: `net8.0-windows`
+- Release runtime: `win-x64`
+- Publish mode: self-contained single-file
+- Config schema: JSON `version: 1`
 
-- Entry point and host composition: `src/AdaptiveSpritesDmiTool.Presentation.Wpf/App.xaml` and `App.xaml.cs`
-- Main shell window: `src/AdaptiveSpritesDmiTool.Presentation.Wpf/MainWindow.xaml` and `MainWindow.xaml.cs`
-- Shell state and commands: `src/AdaptiveSpritesDmiTool.Presentation.Wpf/MainWindowViewModel*.cs`
-- Section/view models used by the shell: `src/AdaptiveSpritesDmiTool.Presentation.Wpf/WorkspaceShellSections.cs`
-- Domain models and invariants: `src/AdaptiveSpritesDmiTool.Domain/Configurations/**` and `src/AdaptiveSpritesDmiTool.Domain/Workspaces/**`
-- Application contracts and use cases: `src/AdaptiveSpritesDmiTool.Application/Contracts.cs`, `EditorSession.cs`, `UseCases.cs`
-- Infrastructure adapters: `src/AdaptiveSpritesDmiTool.Infrastructure/Configs/**`, `Dmi/**`, `Preview/**`, `BatchProcessing/**`, `Settings/**`
-- Unit and integration tests: `tests/AdaptiveSpritesDmiTool.Tests.Unit/**` and `tests/AdaptiveSpritesDmiTool.Tests.Integration/**`
+## Точки Входа
 
-## Dependency Rules
+- App composition: `src/AdaptiveSpritesDmiTool.Presentation.Wpf/App.xaml.cs`
+- Main window: `src/AdaptiveSpritesDmiTool.Presentation.Wpf/MainWindow.xaml`
+- Shell state: `src/AdaptiveSpritesDmiTool.Presentation.Wpf/MainWindowViewModel*.cs`
+- Shell sections: `src/AdaptiveSpritesDmiTool.Presentation.Wpf/WorkspaceShellSections.cs`
+- Application use cases: `src/AdaptiveSpritesDmiTool.Application/UseCases.cs`
+- Batch contracts: `src/AdaptiveSpritesDmiTool.Application/BatchContracts.cs`
 
-Allowed dependencies:
+## Зависимости
+
+Разрешены:
 
 - `Presentation.Wpf -> Application`
-- `Presentation.Wpf -> Domain` only for read-only display/value types when needed
+- `Presentation.Wpf -> Domain`
 - `Infrastructure -> Application`
 - `Infrastructure -> Domain`
 - `Application -> Domain`
 
-Forbidden dependencies:
+Запрещены:
 
 - `Domain -> WPF`
 - `Domain -> filesystem`
 - `Domain -> DMISharp`
 - `Application -> WPF controls`
 - `Presentation.Wpf -> DMISharp`
-- any layer -> mutable static global state container
-
-## Bounded Responsibilities
-
-### Domain
-
-- `SpriteConfig` and supporting value objects
-- coordinate, resolution, direction, and compatibility validation
-- mapping invariants and empty-workspace model
-
-### Application
-
-- editor session state
-- use cases
-- undo/redo orchestration
-- batch job orchestration
-- progress and cancellation contracts
-- result/error model
-- overwrite policy
-
-### Infrastructure
-
-- DMI read/write and frame access
-- preview extraction and image conversion
-- JSON config repository
-- legacy CSV importer
-- filesystem/path services
-- workspace/settings persistence
-- deterministic batch engine
-
-### Presentation.Wpf
-
-- shell and navigation
-- commands and bindings
-- dialogs
-- pointer adapters
-- view models
-- error presentation
-- progress display
 
 ## Runtime Flow
 
-1. App starts into an empty workspace.
-2. User opens a base `.dmi` manually.
-3. Optional landmark and overlay sources are loaded independently.
-4. User creates or loads a config.
-5. Editor session applies mapping operations through application commands.
-6. Preview is rebuilt through an application use case backed by infrastructure adapters.
-7. Config is saved as versioned JSON.
-8. Legacy CSV remains supported through an explicit import path.
-9. Batch processing scans input files deterministically, applies the selected config, and emits per-file results.
+1. User opens a `.dmi`.
+2. User creates a config, loads JSON, or imports CSV.
+3. Editor commands update mappings through Application use cases.
+4. Preview is built through Infrastructure adapters.
+5. Config is saved as JSON.
+6. Batch processing applies the active config to selected `.dmi` files or an input folder.
 
-## Current Constraints
+## Batch Outputs
 
-- The app should not depend on demo/sample assets for startup correctness.
-- Config persistence and batch processing are contract-sensitive; changing them requires corresponding test updates.
-- `4-dir` and `8-dir` support must remain explicit and validated rather than inferred from UI defaults.
-- UI should stay MVVM-first; code-behind should remain thin and focused on interaction glue.
+Batch processing writes output `.dmi` files to the selected output directory.
 
-## Definition Of Done For Architecture Changes
+For tracked runs it can also write internal run artifacts under:
 
-- No mandatory dependency on demo assets at startup
-- No static mutable controllers required for runtime correctness
-- Domain remains free of WPF, DMISharp, and filesystem dependencies
-- JSON remains the primary config format
-- CSV remains import-only compatibility
-- Batch flow is awaitable, cancellable, deterministic, and reported per file
-- 4-dir and 8-dir are modeled explicitly and validated
-- UI uses MVVM with minimal code-behind and no control registries as application state
+```text
+.adaptive-sprites/
+```
+
+Those artifacts contain journals and run reports used by incremental batch behavior.

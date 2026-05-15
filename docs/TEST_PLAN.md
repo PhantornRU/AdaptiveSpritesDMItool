@@ -1,74 +1,133 @@
-# Test Plan
+# Test Plan v2.0
 
 ## Strategy
 
-The repository uses three verification layers:
+Проверка v2.0 строится на трех уровнях:
 
-- unit tests for Domain invariants and Application orchestration
-- integration tests for persistence, DMI adapters, preview, settings, and batch behavior
-- WPF shell smoke tests for startup and workspace lifecycle
-
-## Regression Matrix
-
-Mandatory scenarios:
-
-1. startup into an empty workspace
-2. load a valid `.dmi`
-3. reject invalid or empty `.dmi`
-4. save and load a JSON config roundtrip
-5. import legacy CSV config
-6. apply config to `4-dir` DMI
-7. apply config to `8-dir` DMI
-8. overwrite policy behavior
-9. batch processing progress and cancellation
-10. undo/redo sequence
-11. validation rejects out-of-bounds mappings
-12. config incompatibility by resolution
-13. config incompatibility by direction depth
-14. missing landmark or overlay does not crash preview flow
-15. deterministic save/batch behavior when equivalent counts still differ in content
-16. workspace settings persist across restart
+- unit tests для Domain invariants, Application use cases и WPF shell view models;
+- integration tests для JSON persistence, CSV import, DMI adapters, preview, settings и batch behavior;
+- manual smoke checks для реального WPF UI и release ZIP.
 
 ## Automated Coverage
 
 ### Unit
 
+Покрываются:
+
 - `SpriteConfig`, `PixelCoordinate`, `SpriteResolution`, `SupportedDirectionSet`
-- `EditorSession` empty workspace lifecycle
-- grouped editor mutations captured as a single undo step
-- `StartEmptyWorkspaceUseCase`, `LoadDmiFileUseCase`, `SaveConfigUseCase`
+- config validation и compatibility checks
+- empty workspace lifecycle
+- create/load/save/import use cases
 - preview-selection normalization
+- selected direction state
+- mapping operations
+- undo/redo и grouped editor mutations
 - workspace-settings load/save use cases
-- WPF shell smoke tests for empty startup and settings persistence
+- WPF shell smoke checks
+- editor tools and viewport state
+- config queue behavior
+- batch workspace view-model state
 
 ### Integration
 
+Покрываются:
+
 - JSON config repository roundtrip
+- unsupported JSON config version
 - JSON validation failures
-- legacy CSV import success and malformed-input failures
+- CSV import success and malformed-input failures
 - DMI load and direction detection
-- empty DMI rejection
-- preview extraction with missing landmark/overlay
+- empty or invalid DMI rejection
+- preview extraction with optional landmark/overlay
 - DMI writer apply/save for `4-dir` and `8-dir`
 - deterministic batch end-to-end
-- overwrite/skip behavior and stable input/output reporting
+- overwrite/skip behavior
+- stable input/output reporting
 - workspace settings repository roundtrip and version validation
+- batch manifest validation and artifacts behavior
+
+## v2.0 Release Validation
+
+Последняя release-проверка v2.0 прошла:
+
+- hidden Unicode scan
+- `dotnet restore`
+- `dotnet build` in Release configuration
+- `dotnet test` in Release configuration
+- 102 unit tests
+- 41 integration tests
+- self-contained Windows x64 publish
+- ZIP packaging
+- ZIP smoke expand
+- executable existence check
+
+## Regression Matrix
+
+Обязательные сценарии:
+
+1. startup into an empty workspace
+2. load a valid `.dmi`
+3. reject invalid or empty `.dmi`
+4. create a new config
+5. save and load JSON config roundtrip
+6. import CSV config
+7. reject malformed CSV
+8. apply config to `4-dir` DMI
+9. apply config to `8-dir` DMI
+10. reject config with incompatible resolution
+11. reject config with incompatible direction set
+12. preview base state
+13. preview with optional landmark and overlay
+14. preview composite/grid/text-grid modes
+15. edit mapping with paint/fill/move/erase tools
+16. undo and redo sequence
+17. area undo behavior
+18. transparent output pixel behavior
+19. batch processing with `SkipExisting`
+20. batch processing with `OverwriteExisting`
+21. batch processing with `FailIfExists`
+22. batch cancellation
+23. deterministic batch ordering
+24. output folder excluded from input enumeration when nested
+25. workspace settings persist across restart
 
 ## Manual Smoke
 
-Run these checks after large presentation changes:
+Run after large presentation, release, or packaging changes:
 
-1. Launch the app on a clean workspace with no sample assets.
-2. Confirm the shell opens in an empty workspace.
+1. Launch the app from the published folder.
+2. Confirm the shell opens with an empty workspace.
 3. Open a `.dmi` file manually.
-4. Create a config and edit mappings in source/editable panes.
-5. Build preview for base, landmark, and overlay selections.
-6. Save JSON, reload it, and verify the same config appears.
-7. Import a legacy CSV and save it as JSON.
-8. Run batch processing and verify progress, cancellation, and per-file results.
+4. Create a config.
+5. Select base, landmark, and overlay states.
+6. Edit several mappings in source/editable panes.
+7. Verify preview modes: composite, base, landmark, overlay, grid, text-grid.
+8. Save JSON.
+9. Reload JSON and verify the same config appears.
+10. Import a CSV and save it as JSON.
+11. Run batch processing on a small copied input folder.
+12. Verify processed/skipped/failed counts and output files.
+13. Restart the app and verify recent settings were restored.
 
 ## Validation Commands
 
-- `dotnet build AdaptiveSpritesDMItool.sln -m:1 -v minimal`
-- `dotnet test AdaptiveSpritesDMItool.sln -m:1 -v minimal`
-- `git diff --check` for docs-only changes
+Developer validation:
+
+```powershell
+dotnet restore AdaptiveSpritesDMItool.sln
+dotnet build AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-restore
+dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
+```
+
+Release validation:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.0 -Runtime win-x64
+```
+
+Docs-only validation:
+
+```powershell
+git diff --check
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/check-hidden-unicode.ps1
+```
