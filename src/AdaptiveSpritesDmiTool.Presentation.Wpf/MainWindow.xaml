@@ -1164,7 +1164,7 @@
                 </Border>
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                     <TextBlock FontWeight="SemiBold" Text="{Binding}" TextTrimming="CharacterEllipsis" />
-                    <TextBlock FontSize="10" Foreground="{DynamicResource Brush.TextSecondary}" Text="State layer" />
+                    <TextBlock FontSize="10" Foreground="{DynamicResource Brush.TextSecondary}" Text="{DynamicResource Text.StatePool}" />
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -1189,7 +1189,7 @@
                         <Border Padding="3" Background="{DynamicResource Brush.SurfaceSubtle}" BorderBrush="{DynamicResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="7">
                             <Grid>
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextSecondary}" Text="Source" />
+                                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextSecondary}" Text="{DynamicResource Text.Source}" />
                                 <Viewbox Grid.Row="1" Margin="0,3,0,0" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <ItemsControl ItemsSource="{Binding SourceRows}">
                                         <ItemsControl.ItemTemplate>
@@ -1206,7 +1206,7 @@
                         <Border Grid.Column="2" Padding="3" Background="{DynamicResource Brush.ControlBackground}" BorderBrush="{DynamicResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="7">
                             <Grid>
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextSecondary}" Text="Editable" />
+                                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextSecondary}" Text="{DynamicResource Text.Editable}" />
                                 <Viewbox Grid.Row="1" Margin="0,3,0,0" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <ItemsControl ItemsSource="{Binding TargetRows}">
                                         <ItemsControl.ItemTemplate>
@@ -1255,7 +1255,7 @@
                                  IsIndeterminate="{Binding IsProgressIndeterminate, Mode=OneWay}"
                                  Maximum="{Binding OperationProgressMaximum, Mode=OneWay}"
                                  Value="{Binding OperationProgressValue, Mode=OneWay}" />
-                    <Button Style="{StaticResource ThemedButtonStyle}" Padding="10,4" Command="{Binding CancelCommand}" Content="Cancel" />
+                    <Button Style="{StaticResource ThemedButtonStyle}" Padding="10,4" Command="{Binding CancelCommand}" Content="{DynamicResource Text.Cancel}" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -1322,15 +1322,15 @@
                             </StackPanel>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Margin="0,0,6,0" Style="{StaticResource CompactActionButtonStyle}" Command="{Binding OpenDmiCommand}" Content="Open DMI" />
-                            <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding SaveConfigCommand}" Content="Save Config" />
+                            <Button Margin="0,0,6,0" Style="{StaticResource CompactActionButtonStyle}" Command="{Binding OpenDmiCommand}" Content="{DynamicResource Text.OpenDmi}" />
+                            <Button Style="{StaticResource CompactActionButtonStyle}" Command="{Binding SaveConfigCommand}" Content="{DynamicResource Text.SaveConfig}" />
                         </StackPanel>
                     </Grid>
                 </Border>
 
                 <Border Grid.Row="1" Style="{StaticResource CompactPanelBorderStyle}">
                     <TabControl Style="{StaticResource ShellTabControlStyle}" SelectedIndex="{Binding SelectedShellSectionIndex, Mode=TwoWay}">
-                <TabItem Header="Start">
+                <TabItem Header="{DynamicResource Text.Tab.Start}">
                     <Grid DataContext="{Binding StartTab}" Margin="8">
                         <Border MaxWidth="488" Padding="16" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,8,0,0" Background="{DynamicResource Brush.CardBackground}" BorderBrush="{DynamicResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="18">
                             <StackPanel>
@@ -1344,7 +1344,7 @@
                                            TextWrapping="Wrap"
                                            Text="{Binding ResumeEditorHint}" />
 
-                                <Button Margin="0,12,0,0" Command="{Binding ContinueToEditorCommand}" Content="Continue in Editor">
+                                <Button Margin="0,12,0,0" Command="{Binding ContinueToEditorCommand}" Content="{DynamicResource Text.ContinueEditor}">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource StartPrimaryButtonStyle}">
                                             <Setter Property="Visibility" Value="Collapsed" />
@@ -1357,7 +1357,7 @@
                                     </Button.Style>
                                 </Button>
 
-                                <Button Margin="0,12,0,0" Command="{Binding OpenDmiCommand}" Content="Open DMI">
+                                <Button Margin="0,12,0,0" Command="{Binding OpenDmiCommand}" Content="{DynamicResource Text.OpenDmi}">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource StartPrimaryButtonStyle}">
                                             <Setter Property="Visibility" Value="Visible" />
@@ -1372,20 +1372,20 @@
 
                                 <Border Margin="0,10,0,0" Padding="10" Background="{DynamicResource Brush.PanelBackground}" CornerRadius="12" Visibility="{Binding ShowCreateConfigAction, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <StackPanel>
-                                        <TextBlock Foreground="{DynamicResource Brush.TextSecondary}" Text="Create a config for the loaded sprite" />
+                                        <TextBlock Foreground="{DynamicResource Brush.TextSecondary}" Text="{DynamicResource Text.CreateConfigPrompt}" />
                                         <Grid Margin="0,8,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <TextBox Style="{StaticResource ThemedTextBoxStyle}" Padding="12,7" Text="{Binding DraftConfigName, UpdateSourceTrigger=PropertyChanged}" />
-                                            <Button Grid.Column="1" Style="{StaticResource ThemedButtonStyle}" Width="140" Margin="10,0,0,0" Padding="12,7" Command="{Binding CreateConfigCommand}" Content="Create Config" />
+                                            <Button Grid.Column="1" Style="{StaticResource ThemedButtonStyle}" Width="140" Margin="10,0,0,0" Padding="12,7" Command="{Binding CreateConfigCommand}" Content="{DynamicResource Text.CreateConfig}" />
                                         </Grid>
                                     </StackPanel>
                                 </Border>
 
                                 <UniformGrid Margin="0,8,0,0" Columns="3">
-                                    <Button Margin="0,0,6,0" Command="{Binding OpenDmiCommand}" Content="Open DMI">
+                                    <Button Margin="0,0,6,0" Command="{Binding OpenDmiCommand}" Content="{DynamicResource Text.OpenDmi}">
                                         <Button.Style>
                                             <Style TargetType="Button" BasedOn="{StaticResource StartSecondaryButtonStyle}">
                                                 <Setter Property="Visibility" Value="Collapsed" />
@@ -1397,13 +1397,13 @@
                                             </Style>
                                         </Button.Style>
                                     </Button>
-                                    <Button Margin="0,0,6,0" Style="{StaticResource StartSecondaryButtonStyle}" Command="{Binding LoadConfigCommand}" Content="Load JSON" />
-                                    <Button Margin="0" Style="{StaticResource StartSecondaryButtonStyle}" Command="{Binding ImportLegacyConfigCommand}" Content="Import CSV" />
+                                    <Button Margin="0,0,6,0" Style="{StaticResource StartSecondaryButtonStyle}" Command="{Binding LoadConfigCommand}" Content="{DynamicResource Text.LoadJson}" />
+                                    <Button Margin="0" Style="{StaticResource StartSecondaryButtonStyle}" Command="{Binding ImportLegacyConfigCommand}" Content="{DynamicResource Text.ImportCsv}" />
                                 </UniformGrid>
 
-                                <Expander Margin="0,12,0,0" Style="{StaticResource ThemedExpanderStyle}" Header="Recent paths" Visibility="{Binding ShowRecentPaths, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Expander Margin="0,12,0,0" Style="{StaticResource ThemedExpanderStyle}" Header="{DynamicResource Text.RecentPaths}" Visibility="{Binding ShowRecentPaths, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <StackPanel Margin="0,8,0,0">
-                                        <Button Padding="10,7" Command="{Binding ResumeLastWorkspaceCommand}" Content="Resume last workspace">
+                                        <Button Padding="10,7" Command="{Binding ResumeLastWorkspaceCommand}" Content="{DynamicResource Text.ResumeLastWorkspace}">
                                             <Button.Style>
                                                 <Style TargetType="Button" BasedOn="{StaticResource StartSecondaryButtonStyle}">
                                                     <Setter Property="Visibility" Value="Collapsed" />
@@ -1423,7 +1423,7 @@
                                             <StackPanel>
                                                 <TextBlock FontWeight="SemiBold"
                                                            Foreground="{DynamicResource Brush.TextPrimary}"
-                                                           Text="Open last DMI" />
+                                                           Text="{DynamicResource Text.OpenLastDmi}" />
                                                 <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding LastDmiPathSummary}" />
                                             </StackPanel>
                                         </Button>
@@ -1435,7 +1435,7 @@
                                             <StackPanel>
                                                 <TextBlock FontWeight="SemiBold"
                                                            Foreground="{DynamicResource Brush.TextPrimary}"
-                                                           Text="Load last JSON config" />
+                                                           Text="{DynamicResource Text.LoadLastJsonConfig}" />
                                                 <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding LastConfigPathSummary}" />
                                             </StackPanel>
                                         </Button>
@@ -1447,12 +1447,12 @@
                                             <StackPanel>
                                                 <TextBlock FontWeight="SemiBold"
                                                            Foreground="{DynamicResource Brush.TextPrimary}"
-                                                           Text="Import last legacy CSV" />
+                                                           Text="{DynamicResource Text.ImportLastLegacyCsv}" />
                                                 <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding LastLegacyImportSummary}" />
                                             </StackPanel>
                                         </Button>
                                         <DockPanel Margin="0,8,0,0" LastChildFill="True">
-                                            <Button DockPanel.Dock="Right" Style="{StaticResource ThemedButtonStyle}" Margin="12,0,0,0" Padding="12,7" Command="{Binding ResetWorkspaceCommand}" Content="Reset" />
+                                            <Button DockPanel.Dock="Right" Style="{StaticResource ThemedButtonStyle}" Margin="12,0,0,0" Padding="12,7" Command="{Binding ResetWorkspaceCommand}" Content="{DynamicResource Text.Reset}" />
                                             <TextBlock Foreground="{DynamicResource Brush.TextSecondary}" FontSize="12" TextWrapping="Wrap" Text="{Binding LastBatchOutputSummary}" />
                                         </DockPanel>
                                     </StackPanel>
@@ -1462,7 +1462,7 @@
                     </Grid>
                 </TabItem>
 
-                <TabItem Header="Editor" IsEnabled="{Binding EditorWorkspace.IsAvailable}">
+                <TabItem Header="{DynamicResource Text.Tab.Editor}" IsEnabled="{Binding EditorWorkspace.IsAvailable}">
                     <Grid Margin="2" DataContext="{Binding EditorWorkspace}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -1516,19 +1516,19 @@
                                 <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
                                     <DockPanel LastChildFill="False" DataContext="{Binding CommandBar}">
                                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="Tools" />
+                                            <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="{DynamicResource Text.Toolbar.Tools}" />
                                             <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" Content="Paint" />
                                             <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" Content="Fill" />
                                             <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" Content="Move" />
                                             <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" Content="Select" />
                                             <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" Content="Erase" />
 
-                                            <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="Scope" />
+                                            <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="{DynamicResource Text.Toolbar.Scope}" />
                                             <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" Content="Single" />
                                             <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" Content="Parallel" />
                                             <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" Content="All" />
 
-                                            <TextBlock Margin="10,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="View" />
+                                            <TextBlock Margin="10,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="{DynamicResource Text.Toolbar.View}" />
                                             <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" Content="Dual" />
                                             <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" Content="Overlay" />
                                             <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
@@ -1591,65 +1591,65 @@
                                     <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
                                         <DockPanel LastChildFill="False" DataContext="{Binding CommandBar}">
                                             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="Tools" />
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" ToolTip="Pick from Source and paint one Editable pixel" AutomationProperties.Name="Single paint tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="AddSquare20" /></RadioButton>
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" ToolTip="Fill Editable area from the selected Source pixel" AutomationProperties.Name="Fill tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="PaintBucket20" /></RadioButton>
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" ToolTip="Move one Editable pixel mapping" AutomationProperties.Name="Move tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ArrowMove20" /></RadioButton>
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" ToolTip="Select Editable area and move it" AutomationProperties.Name="Select tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="SquareHintApps20" /></RadioButton>
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" ToolTip="Restore original pixels in Editable" AutomationProperties.Name="Delete tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Eraser20" /></RadioButton>
+                                            <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="{DynamicResource Text.Toolbar.Tools}" />
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Single}" IsChecked="{Binding IsSingleToolSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.SinglePaint}" AutomationProperties.Name="Single paint tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="AddSquare20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.Fill}" AutomationProperties.Name="Fill tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="PaintBucket20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.Move}" AutomationProperties.Name="Move tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ArrowMove20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.Select}" AutomationProperties.Name="Select tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="SquareHintApps20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.Delete}" AutomationProperties.Name="Delete tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Eraser20" /></RadioButton>
 
-                                            <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="Scope" />
-                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" ToolTip="Single direction" AutomationProperties.Name="Single direction scope"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Square20" /></RadioButton>
-                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" ToolTip="Parallel directions" AutomationProperties.Name="Parallel direction scope"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="TableCellsMerge20" /></RadioButton>
-                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" ToolTip="All directions" AutomationProperties.Name="All directions scope"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Grid20" /></RadioButton>
+                                            <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="{DynamicResource Text.Toolbar.Scope}" />
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.SingleDirection}" AutomationProperties.Name="Single direction scope"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Square20" /></RadioButton>
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" IsChecked="{Binding IsParallelScopeSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.ParallelDirections}" AutomationProperties.Name="Parallel direction scope"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="TableCellsMerge20" /></RadioButton>
+                                                <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" IsChecked="{Binding IsAllScopeSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.AllDirections}" AutomationProperties.Name="All directions scope"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Grid20" /></RadioButton>
 
-                                            <TextBlock Margin="10,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="View" />
-                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" ToolTip="Dual view" AutomationProperties.Name="Dual view"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="DualScreenMirror20" /></RadioButton>
-                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" ToolTip="Overlay view" AutomationProperties.Name="Overlay view"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="BorderTop20" /></RadioButton>
+                                            <TextBlock Margin="10,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="{DynamicResource Text.Toolbar.View}" />
+                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SetCompareSplitModeCommand}" IsChecked="{Binding IsCompareSplitMode, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.DualView}" AutomationProperties.Name="Dual view"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="DualScreenMirror20" /></RadioButton>
+                                                <RadioButton GroupName="EditorViewModes" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SetOverlayCompareModeCommand}" IsChecked="{Binding IsOverlayCompareMode, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.OverlayView}" AutomationProperties.Name="Overlay view"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="BorderTop20" /></RadioButton>
                                                 <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding DataContext.EditorWorkspace.ShowGridToggle, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                          ToolTip="Show grid"
+                                                          ToolTip="{DynamicResource Text.Tooltip.ShowGrid}"
                                                           AutomationProperties.Name="Show grid">
                                                     <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Grid20" />
                                                 </CheckBox>
                                                 <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding DataContext.EditorWorkspace.ShowOverlayToggle, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                          ToolTip="Show overlay layer"
+                                                          ToolTip="{DynamicResource Text.Tooltip.ShowOverlayLayer}"
                                                           AutomationProperties.Name="Show overlay layer">
                                                     <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Layer20" />
                                                 </CheckBox>
                                                 <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding MirrorAcrossDirections, Mode=TwoWay}"
-                                                          ToolTip="Mirror edits across opposite directions"
+                                                           ToolTip="{DynamicResource Text.Tooltip.MirrorDirections}"
                                                           AutomationProperties.Name="Mirror directions">
                                                     <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="DualScreenMirror20" />
                                                 </CheckBox>
                                                 <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding UseCentralizedPropagation, Mode=TwoWay}"
-                                                          ToolTip="Use centralized mirrored propagation"
+                                                           ToolTip="{DynamicResource Text.Tooltip.CentralizedPropagation}"
                                                           AutomationProperties.Name="Centralized propagation">
                                                     <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="TableCellsMerge20" />
                                                 </CheckBox>
                                                 <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding GridAboveImage, Mode=TwoWay}"
-                                                          ToolTip="Show captions on grid cells"
+                                                           ToolTip="{DynamicResource Text.Tooltip.ShowCaptions}"
                                                           AutomationProperties.Name="Show captions">
                                                     <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Grid20" />
                                                 </CheckBox>
                                                 <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding ShowSourceCoordinateCaptions, Mode=TwoWay}"
-                                                          ToolTip="Show source coordinate labels on mapped editable pixels"
+                                                           ToolTip="{DynamicResource Text.Tooltip.ShowSourceLabels}"
                                                           AutomationProperties.Name="Show source coordinate labels">
                                                     <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="NumberSymbol20" />
                                                 </CheckBox>
                                             </StackPanel>
 
                                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding UndoCommand}" ToolTip="Undo" AutomationProperties.Name="Undo"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ArrowUndo20" /></Button>
-                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding RedoCommand}" ToolTip="Redo" AutomationProperties.Name="Redo"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ArrowRedo20" /></Button>
-                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding ClearSelectionCommand}" ToolTip="Clear selection" AutomationProperties.Name="Clear selection"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Dismiss20" /></Button>
-                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding FitViewportCommand}" ToolTip="Fit viewport" AutomationProperties.Name="Fit viewport"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ZoomFit20" /></Button>
-                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}" IsChecked="{Binding IsFocusMode}" ToolTip="Focus mode" AutomationProperties.Name="Focus mode"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="FullScreenMaximize20" /></CheckBox>
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding UndoCommand}" ToolTip="{DynamicResource Text.Tooltip.Undo}" AutomationProperties.Name="Undo"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ArrowUndo20" /></Button>
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding RedoCommand}" ToolTip="{DynamicResource Text.Tooltip.Redo}" AutomationProperties.Name="Redo"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ArrowRedo20" /></Button>
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding ClearSelectionCommand}" ToolTip="{DynamicResource Text.Tooltip.ClearSelection}" AutomationProperties.Name="Clear selection"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Dismiss20" /></Button>
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}" Command="{Binding FitViewportCommand}" ToolTip="{DynamicResource Text.Tooltip.FitViewport}" AutomationProperties.Name="Fit viewport"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ZoomFit20" /></Button>
+                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}" IsChecked="{Binding IsFocusMode}" ToolTip="{DynamicResource Text.Tooltip.FocusMode}" AutomationProperties.Name="Focus mode"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="FullScreenMaximize20" /></CheckBox>
                                             </StackPanel>
                                         </DockPanel>
                                     </ScrollViewer>
@@ -1667,7 +1667,7 @@
                                             <TabItem.Header>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                     <ui:SymbolIcon Style="{StaticResource LeftDockTabHeaderIconStyle}" Symbol="FolderOpen20" />
-                                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Assets / DMI" />
+                                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="{DynamicResource Text.Left.AssetsDmi}" />
                                                 </StackPanel>
                                             </TabItem.Header>
                                             <Border Style="{StaticResource SidebarSectionBorderStyle}">
@@ -1680,7 +1680,7 @@
                                                             <RowDefinition Height="*" />
                                                         </Grid.RowDefinitions>
                                                         <DockPanel LastChildFill="False">
-                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="State pool" />
+                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="{DynamicResource Text.StatePool}" />
                                                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                                                 <Button Padding="8,5"
                                                                         Style="{StaticResource CompactActionButtonStyle}"
@@ -1690,7 +1690,7 @@
                                                                         AutomationProperties.Name="Clear imported states">
                                                                     <StackPanel Orientation="Horizontal">
                                                                         <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Dismiss20" />
-                                                                        <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Clear" />
+                                                                         <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="{DynamicResource Text.Clear}" />
                                                                     </StackPanel>
                                                                 </Button>
                                                                 <Button Padding="8,5"
@@ -1700,7 +1700,7 @@
                                                                         AutomationProperties.Name="Add DMI states">
                                                                     <StackPanel Orientation="Horizontal">
                                                                         <ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Add20" />
-                                                                        <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Add states" />
+                                                                         <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="{DynamicResource Text.AddStates}" />
                                                                     </StackPanel>
                                                                 </Button>
                                                             </StackPanel>
@@ -1813,7 +1813,7 @@
                                             <TabItem.Header>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                     <ui:SymbolIcon Style="{StaticResource LeftDockTabHeaderIconStyle}" Symbol="Save20" />
-                                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Configs" />
+                                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="{DynamicResource Text.Left.Configs}" />
                                                 </StackPanel>
                                             </TabItem.Header>
                                             <Border Style="{StaticResource SidebarSectionBorderStyle}">
@@ -1825,7 +1825,7 @@
                                                         <RowDefinition Height="Auto" />
                                                     </Grid.RowDefinitions>
                                                     <DockPanel LastChildFill="False">
-                                                        <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Current config" />
+                                                        <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="{DynamicResource Text.CurrentConfig}" />
                                                         <UniformGrid DockPanel.Dock="Right" Rows="1" Columns="4">
                                                             <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.CreateConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="New config" AutomationProperties.Name="New config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="Add20" /></Button>
                                                             <Button Style="{StaticResource DockIconButtonStyle}" Command="{Binding DataContext.LoadConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" ToolTip="Load config" AutomationProperties.Name="Load config"><ui:SymbolIcon Style="{StaticResource DockSymbolIconStyle}" Symbol="FolderOpen20" /></Button>
@@ -1941,11 +1941,11 @@
                                                             <RowDefinition Height="*" />
                                                         </Grid.RowDefinitions>
                                                         <DockPanel LastChildFill="False">
-                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Sample configs" />
+                                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="{DynamicResource Text.SampleConfigs}" />
                                                             <TextBlock DockPanel.Dock="Right"
                                                                        Foreground="{DynamicResource Brush.TextSecondary}"
                                                                        FontSize="10"
-                                                                       Text="Load sample" />
+                                                                       Text="{DynamicResource Text.LoadSample}" />
                                                         </DockPanel>
                                                         <ScrollViewer Grid.Row="1"
                                                                       Margin="0,6,0,0"
@@ -2025,7 +2025,7 @@
                                                     <RowDefinition Height="*" />
                                                 </Grid.RowDefinitions>
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="Source" />
+                                                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="{DynamicResource Text.Source}" />
                                                 </StackPanel>
                                                 <ScrollViewer x:Name="SourceViewportScrollViewer"
                                                               Grid.Row="1"
@@ -2086,7 +2086,7 @@
                                                     <RowDefinition Height="*" />
                                                 </Grid.RowDefinitions>
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="Editable" />
+                                                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="{DynamicResource Text.Editable}" />
                                                 </StackPanel>
                                                 <ScrollViewer x:Name="EditableViewportScrollViewer"
                                                               Grid.Row="1"
@@ -2157,7 +2157,7 @@
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="*" />
                                             </Grid.RowDefinitions>
-                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="DIR" />
+                                            <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="{DynamicResource Text.Directions}" />
                                             <ListBox Grid.Row="1"
                                                      Margin="0,4,0,0"
                                                      ItemsSource="{Binding DirectionNavigatorItems}"
@@ -2208,7 +2208,7 @@
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
                                             <DockPanel Grid.Row="0" LastChildFill="False">
-                                                <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="Mappings" />
+                                                <TextBlock Style="{StaticResource EditorSectionHeaderTextStyle}" Text="{DynamicResource Text.Mappings}" />
                                                 <CheckBox DockPanel.Dock="Right"
                                                           Style="{StaticResource DockIconCheckBoxStyle}"
                                                           IsChecked="{Binding IsExpanded}"
@@ -2295,7 +2295,7 @@
                                                     MinWidth="104"
                                                     MinHeight="28"
                                                     Command="{Binding RemoveSelectedMappingCommand}"
-                                                    Content="Remove selected">
+                                                    Content="{DynamicResource Text.RemoveSelected}">
                                                 <Button.Style>
                                                     <Style TargetType="Button" BasedOn="{StaticResource ThemedButtonStyle}">
                                                         <Setter Property="Visibility" Value="Collapsed" />
@@ -2324,37 +2324,37 @@
                                     <WrapPanel VerticalAlignment="Center">
                                         <Border Style="{StaticResource StatusTokenBorderStyle}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Dir:" />
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Dir}" />
                                                 <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ActiveDirectionLabel}" />
                                             </StackPanel>
                                         </Border>
                                         <Border Style="{StaticResource StatusTokenBorderStyle}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Asset:" />
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Asset}" />
                                                 <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding CurrentAssetDisplayName}" />
                                             </StackPanel>
                                         </Border>
                                         <Border Style="{StaticResource StatusTokenBorderStyle}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Hover:" />
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Hover}" />
                                                 <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding HoverToken}" />
                                             </StackPanel>
                                         </Border>
                                         <Border Style="{StaticResource StatusTokenBorderStyle}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Mapping:" />
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Mapping}" />
                                                 <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding HoverMappingToken}" />
                                             </StackPanel>
                                         </Border>
                                         <Border Style="{StaticResource StatusTokenBorderStyle}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Config:" />
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Config}" />
                                                 <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ConfigToken}" />
                                             </StackPanel>
                                         </Border>
                                         <Border Style="{StaticResource StatusTokenBorderStyle}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Mappings:" />
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Mappings}" />
                                                 <TextBlock Margin="4,0,0,0"
                                                            Style="{StaticResource StatusTokenValueStyle}"
                                                            Text="{Binding MappingCountToken}" />
@@ -2365,7 +2365,7 @@
                                         </Border>
                                         <Border Style="{StaticResource StatusTokenBorderStyle}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Zoom:" />
+                                                <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Zoom}" />
                                                 <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ActiveEditorZoomLabel}" />
                                             </StackPanel>
                                         </Border>
@@ -2404,37 +2404,37 @@
                                 <WrapPanel VerticalAlignment="Center">
                                     <Border Style="{StaticResource StatusTokenBorderStyle}">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Dir:" />
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Dir}" />
                                             <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ActiveDirectionLabel}" />
                                         </StackPanel>
                                     </Border>
                                     <Border Style="{StaticResource StatusTokenBorderStyle}">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Asset:" />
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Asset}" />
                                             <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding CurrentAssetDisplayName}" />
                                         </StackPanel>
                                     </Border>
                                     <Border Style="{StaticResource StatusTokenBorderStyle}">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Hover:" />
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Hover}" />
                                             <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding HoverToken}" />
                                         </StackPanel>
                                     </Border>
                                     <Border Style="{StaticResource StatusTokenBorderStyle}">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Mapping:" />
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Mapping}" />
                                             <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding HoverMappingToken}" />
                                         </StackPanel>
                                     </Border>
                                     <Border Style="{StaticResource StatusTokenBorderStyle}">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Config:" />
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Config}" />
                                             <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ConfigToken}" />
                                         </StackPanel>
                                     </Border>
                                     <Border Style="{StaticResource StatusTokenBorderStyle}">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Mappings:" />
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Mappings}" />
                                             <TextBlock Margin="4,0,0,0"
                                                        Style="{StaticResource StatusTokenValueStyle}"
                                                        Text="{Binding MappingCountToken}" />
@@ -2445,7 +2445,7 @@
                                     </Border>
                                     <Border Style="{StaticResource StatusTokenBorderStyle}">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="Zoom:" />
+                                            <TextBlock Style="{StaticResource StatusTokenLabelStyle}" Text="{DynamicResource Text.Token.Zoom}" />
                                             <TextBlock Margin="4,0,0,0" Style="{StaticResource StatusTokenValueStyle}" Text="{Binding ActiveEditorZoomLabel}" />
                                         </StackPanel>
                                     </Border>
@@ -2455,34 +2455,37 @@
                     </Grid>
                 </TabItem>
 
-                <TabItem Header="Data" IsEnabled="{Binding BatchWorkspace.IsAvailable}">
+                <TabItem Header="{DynamicResource Text.Tab.Data}" IsEnabled="{Binding BatchWorkspace.IsAvailable}">
                     <views:BatchWorkspaceView DataContext="{Binding BatchWorkspace}" />
                 </TabItem>
-                <TabItem Header="Settings">
+                <TabItem Header="{DynamicResource Text.Tab.Settings}">
                     <Grid DataContext="{Binding SettingsTab}" Margin="10">
                         <Border MaxWidth="560" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Top" Background="{DynamicResource Brush.PanelBackground}" BorderBrush="{DynamicResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="18">
                             <StackPanel>
                                 <TextBlock FontSize="22"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource Brush.TextPrimary}"
-                                           Text="Shell Settings" />
-                                <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.TextSecondary}" TextWrapping="Wrap" Text="Presentation-only workspace preferences are stored separately from domain and batch logic." />
+                                           Text="{DynamicResource Text.Settings.Title}" />
+                                <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource Brush.TextSecondary}" TextWrapping="Wrap" Text="{DynamicResource Text.Settings.Description}" />
 
                                 <Border Margin="0,14,0,0" Padding="12" Background="{DynamicResource Brush.CardBackground}" BorderBrush="{DynamicResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
                                     <StackPanel>
                                         <TextBlock FontWeight="SemiBold"
                                                    Foreground="{DynamicResource Brush.TextPrimary}"
-                                                   Text="Appearance" />
+                                                   Text="{DynamicResource Text.Settings.Appearance}" />
                                         <TextBlock Margin="0,4,0,0"
                                                    Foreground="{DynamicResource Brush.TextSecondary}"
                                                    TextWrapping="Wrap"
-                                                   Text="Choose a saved shell color mode. Dark is the default workspace theme." />
+                                                   Text="{DynamicResource Text.Settings.AppearanceDescription}" />
                                         <ComboBox Style="{StaticResource ThemedComboBoxStyle}"
                                                   Margin="0,10,0,0"
                                                   Width="180"
-                                                  ItemsSource="{Binding ThemeModes}"
-                                                  SelectedItem="{Binding SelectedThemeMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                  SelectionChanged="ThemeModeComboBox_SelectionChanged" />
+                                                  SelectedValue="{Binding SelectedThemeMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  SelectedValuePath="Tag">
+                                            <ComboBoxItem Tag="{x:Static local:WorkspaceThemeMode.Dark}" Content="{DynamicResource Text.Theme.Dark}" />
+                                            <ComboBoxItem Tag="{x:Static local:WorkspaceThemeMode.Light}" Content="{DynamicResource Text.Theme.Light}" />
+                                            <ComboBoxItem Tag="{x:Static local:WorkspaceThemeMode.Warm}" Content="{DynamicResource Text.Theme.Warm}" />
+                                        </ComboBox>
                                     </StackPanel>
                                 </Border>
 
@@ -2490,17 +2493,19 @@
                                     <StackPanel>
                                         <TextBlock FontWeight="SemiBold"
                                                    Foreground="{DynamicResource Brush.TextPrimary}"
-                                                   Text="Editor viewport" />
+                                                   Text="{DynamicResource Text.Settings.Language}" />
                                         <TextBlock Margin="0,4,0,0"
                                                    Foreground="{DynamicResource Brush.TextSecondary}"
                                                    TextWrapping="Wrap"
-                                                   Text="Matrix is the default parity path. Focused mode stays experimental until parity is complete." />
+                                                   Text="{DynamicResource Text.Settings.LanguageDescription}" />
                                         <ComboBox Style="{StaticResource ThemedComboBoxStyle}"
                                                   Margin="0,10,0,0"
                                                   Width="180"
-                                                  ItemsSource="{Binding ViewportModes}"
-                                                  SelectedItem="{Binding SelectedViewportMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                  SelectionChanged="ViewportModeComboBox_SelectionChanged" />
+                                                  SelectedValue="{Binding SelectedLanguage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  SelectedValuePath="Tag">
+                                            <ComboBoxItem Tag="{x:Static local:WorkspaceLanguage.English}" Content="{DynamicResource Text.Language.English}" />
+                                            <ComboBoxItem Tag="{x:Static local:WorkspaceLanguage.Russian}" Content="{DynamicResource Text.Language.Russian}" />
+                                        </ComboBox>
                                     </StackPanel>
                                 </Border>
 
@@ -2508,14 +2513,34 @@
                                     <StackPanel>
                                         <TextBlock FontWeight="SemiBold"
                                                    Foreground="{DynamicResource Brush.TextPrimary}"
-                                                   Text="Workspace panels" />
-                                        <CheckBox Style="{StaticResource ThemedCheckBoxStyle}" Margin="0,10,0,0" IsChecked="{Binding IsPreviewInspectorExpanded}" Content="Preview inspector starts expanded" />
-                                        <CheckBox Style="{StaticResource ThemedCheckBoxStyle}" Margin="0,8,0,0" IsChecked="{Binding IsBottomWorkspaceExpanded}" Content="Bottom workspace panels stay expanded" />
+                                                   Text="{DynamicResource Text.Settings.EditorViewport}" />
+                                        <TextBlock Margin="0,4,0,0"
+                                                   Foreground="{DynamicResource Brush.TextSecondary}"
+                                                   TextWrapping="Wrap"
+                                                   Text="{DynamicResource Text.Settings.EditorViewportDescription}" />
+                                        <ComboBox Style="{StaticResource ThemedComboBoxStyle}"
+                                                  Margin="0,10,0,0"
+                                                  Width="180"
+                                                  SelectedValue="{Binding SelectedViewportMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  SelectedValuePath="Tag">
+                                            <ComboBoxItem Tag="{x:Static local:EditorViewportMode.Matrix}" Content="{DynamicResource Text.Viewport.Matrix}" />
+                                            <ComboBoxItem Tag="{x:Static local:EditorViewportMode.Focused}" Content="{DynamicResource Text.Viewport.Focused}" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Margin="0,12,0,0" Padding="12" Background="{DynamicResource Brush.CardBackground}" BorderBrush="{DynamicResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="12">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource Brush.TextPrimary}"
+                                                   Text="{DynamicResource Text.Settings.WorkspacePanels}" />
+                                        <CheckBox Style="{StaticResource ThemedCheckBoxStyle}" Margin="0,10,0,0" IsChecked="{Binding IsPreviewInspectorExpanded}" Content="{DynamicResource Text.Settings.PreviewInspectorExpanded}" />
+                                        <CheckBox Style="{StaticResource ThemedCheckBoxStyle}" Margin="0,8,0,0" IsChecked="{Binding IsBottomWorkspaceExpanded}" Content="{DynamicResource Text.Settings.BottomPanelsExpanded}" />
                                     </StackPanel>
                                 </Border>
 
                                 <Border Margin="0,14,0,0" Padding="0,10,0,0" BorderBrush="{DynamicResource Brush.PanelBorder}" BorderThickness="0,1,0,0">
-                                    <Button Style="{StaticResource ThemedButtonStyle}" Width="160" Padding="12,8" HorizontalAlignment="Left" Command="{Binding DataContext.ResetWorkspaceCommand, RelativeSource={RelativeSource AncestorType=Window}}" Content="Reset Workspace" />
+                                    <Button Style="{StaticResource ThemedButtonStyle}" Width="190" Padding="12,8" HorizontalAlignment="Left" Command="{Binding DataContext.ResetWorkspaceCommand, RelativeSource={RelativeSource AncestorType=Window}}" Content="{DynamicResource Text.Settings.ResetWorkspace}" />
                                 </Border>
                             </StackPanel>
                         </Border>

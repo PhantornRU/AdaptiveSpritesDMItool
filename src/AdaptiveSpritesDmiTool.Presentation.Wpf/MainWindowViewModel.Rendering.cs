@@ -93,6 +93,8 @@ public partial class WorkspaceShellViewModel
         SelectedOverwritePolicy = settings.LastOverwritePolicy;
         SelectedThemeMode = ParseThemeMode(settings.LastThemeMode);
         App.ApplyThemeMode(SelectedThemeMode);
+        SelectedLanguage = ParseLanguage(settings.LastUiLanguage);
+        App.ApplyLanguage(SelectedLanguage);
         SelectedEditorViewportMode = ParseEditorViewportMode(settings.LastEditorViewportMode);
         EditorViewMode = EditorViewMode.CompareSplit;
         SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
@@ -164,7 +166,8 @@ public partial class WorkspaceShellViewModel
             SelectedEditorViewportMode.ToString(),
             SelectedBottomWorkspaceTab.ToString(),
             IsPreviewInspectorExpanded,
-            IsBottomWorkspaceExpanded);
+            IsBottomWorkspaceExpanded,
+            SelectedLanguage.ToString());
 
     private void ResetWorkspaceCore()
     {
@@ -1000,6 +1003,9 @@ public partial class WorkspaceShellViewModel
 
     private static WorkspaceThemeMode ParseThemeMode(string? value) =>
         WorkspaceEnumParsing.ParseDefinedEnumOrDefault(value, WorkspaceThemeMode.Dark);
+
+    private static WorkspaceLanguage ParseLanguage(string? value) =>
+        WorkspaceEnumParsing.ParseDefinedEnumOrDefault(value, WorkspaceLanguage.English);
 
     private static IReadOnlyList<SpriteDirection> GetPresentationDirectionOrder(SupportedDirectionSet supportedDirections)
     {

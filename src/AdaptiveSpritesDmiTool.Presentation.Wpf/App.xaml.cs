@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Media;
@@ -31,6 +32,7 @@ public partial class App : System.Windows.Application
         RegisterGlobalExceptionHandlers();
         base.OnStartup(e);
         ApplyThemeMode(WorkspaceThemeMode.Dark);
+        ApplyLanguage(WorkspaceLanguage.English);
 
         try
         {
@@ -290,6 +292,37 @@ public partial class App : System.Windows.Application
         SetColor(resources, "Color.ScrollThumbHover", palette.ScrollThumbHover);
         SetColor(resources, "Color.ScrollThumbPressed", palette.ScrollThumbPressed);
     }
+
+    public static void ApplyLanguage(WorkspaceLanguage language)
+    {
+        if (Current?.Resources is not ResourceDictionary resources)
+        {
+            return;
+        }
+
+        var cultureName = language == WorkspaceLanguage.Russian ? "ru-RU" : "en-US";
+        var culture = CultureInfo.GetCultureInfo(cultureName);
+        CultureInfo.CurrentUICulture = culture;
+
+        var languageDictionaries = resources.MergedDictionaries
+            .Where(static dictionary => dictionary.Source?.OriginalString.Contains("Resources/Strings.", StringComparison.OrdinalIgnoreCase) == true)
+            .ToArray();
+        foreach (var dictionary in languageDictionaries)
+        {
+            resources.MergedDictionaries.Remove(dictionary);
+        }
+
+        resources.MergedDictionaries.Add(new ResourceDictionary
+        {
+            Source = new Uri($"Resources/Strings.{cultureName}.xaml", UriKind.Relative)
+        });
+    }
+
+    public static string Text(string key) =>
+        Current?.TryFindResource(key) as string ?? key;
+
+    public static string Text(string key, string fallback) =>
+        Current?.TryFindResource(key) as string ?? fallback;
 
     private static void SetBrush(ResourceDictionary resources, string key, MediaColor color)
         => resources[key] = new SolidColorBrush(color);

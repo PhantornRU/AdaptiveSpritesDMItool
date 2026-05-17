@@ -702,6 +702,12 @@ public partial class WorkspaceShellViewModel
         PersistWorkspaceSettingsInBackground();
     }
 
+    partial void OnSelectedLanguageChanged(WorkspaceLanguage value)
+    {
+        App.ApplyLanguage(value);
+        PersistWorkspaceSettingsInBackground();
+    }
+
     partial void OnSelectedEditorAssetTargetSurfaceChanged(EditorAssetTargetSurface value)
     {
         RefreshEditorAssetItems();

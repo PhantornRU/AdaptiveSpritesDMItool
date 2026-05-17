@@ -8,7 +8,7 @@ namespace AdaptiveSpritesDmiTool.Infrastructure.Settings;
 
 public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettingsRepository
 {
-    private const int CurrentVersion = 3;
+    private const int CurrentVersion = 4;
 
     public async Task<Result<WorkspaceSettings>> LoadAsync(CancellationToken cancellationToken)
     {
@@ -100,7 +100,8 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             Normalize(document.LastEditorViewportMode),
             Normalize(document.LastBottomWorkspaceTab),
             document.IsPreviewInspectorExpanded,
-            document.IsBottomWorkspaceExpanded ?? true);
+            document.IsBottomWorkspaceExpanded ?? true,
+            Normalize(document.LastUiLanguage));
 
     private static WorkspaceSettingsDocument FromDomain(WorkspaceSettings settings) =>
         new()
@@ -121,7 +122,8 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             LastEditorViewportMode = settings.LastEditorViewportMode,
             LastBottomWorkspaceTab = settings.LastBottomWorkspaceTab,
             IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded,
-            IsBottomWorkspaceExpanded = settings.IsBottomWorkspaceExpanded
+            IsBottomWorkspaceExpanded = settings.IsBottomWorkspaceExpanded,
+            LastUiLanguage = settings.LastUiLanguage
         };
 
     private static string? Normalize(string? value) =>
@@ -192,6 +194,8 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         public string? LastEditorViewportMode { get; set; }
 
         public string? LastBottomWorkspaceTab { get; set; }
+
+        public string? LastUiLanguage { get; set; }
 
         public bool IsPreviewInspectorExpanded { get; set; } = true;
 

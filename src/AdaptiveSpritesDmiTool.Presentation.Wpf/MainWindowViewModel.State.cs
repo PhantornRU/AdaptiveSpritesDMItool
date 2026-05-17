@@ -46,6 +46,12 @@ public enum WorkspaceThemeMode
     Warm = 2
 }
 
+public enum WorkspaceLanguage
+{
+    English = 0,
+    Russian = 1
+}
+
 public partial class WorkspaceShellViewModel
 {
     private readonly double _minEditorZoom = 1.0;
@@ -157,6 +163,9 @@ public partial class WorkspaceShellViewModel
 
     [ObservableProperty]
     private WorkspaceThemeMode selectedThemeMode = WorkspaceThemeMode.Dark;
+
+    [ObservableProperty]
+    private WorkspaceLanguage selectedLanguage = WorkspaceLanguage.English;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]

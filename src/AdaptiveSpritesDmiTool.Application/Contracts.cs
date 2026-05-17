@@ -86,7 +86,8 @@ public sealed record WorkspaceSettings(
     string? LastEditorViewportMode,
     string? LastBottomWorkspaceTab,
     bool IsPreviewInspectorExpanded,
-    bool IsBottomWorkspaceExpanded)
+    bool IsBottomWorkspaceExpanded,
+    string? LastUiLanguage = null)
 {
     public static WorkspaceSettings Empty { get; } = new(
         LastOpenedDmiPath: null,

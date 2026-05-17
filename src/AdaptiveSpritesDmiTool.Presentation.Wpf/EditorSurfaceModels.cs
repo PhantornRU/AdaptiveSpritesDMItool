@@ -152,14 +152,23 @@ public sealed class NavigationRailItemViewModel : ObservableObject
     {
         _shell = shell;
         Section = section;
-        Label = label;
+        LabelFallback = label;
         IconSymbol = iconSymbol;
         _isAvailable = isAvailable;
     }
 
     public ShellSectionKind Section { get; }
 
-    public string Label { get; }
+    public string Label => Section switch
+    {
+        ShellSectionKind.Start => App.Text("Text.Tab.Start", LabelFallback),
+        ShellSectionKind.Editor => App.Text("Text.Tab.Editor", LabelFallback),
+        ShellSectionKind.Batch => App.Text("Text.Tab.Data", LabelFallback),
+        ShellSectionKind.Settings => App.Text("Text.Tab.Settings", LabelFallback),
+        _ => LabelFallback
+    };
+
+    private string LabelFallback { get; }
 
     public string IconSymbol { get; }
 
@@ -171,6 +180,7 @@ public sealed class NavigationRailItemViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsAvailable));
         OnPropertyChanged(nameof(IsSelected));
+        OnPropertyChanged(nameof(Label));
     }
 }
 

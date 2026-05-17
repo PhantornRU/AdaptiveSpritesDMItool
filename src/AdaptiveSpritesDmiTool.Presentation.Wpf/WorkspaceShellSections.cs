@@ -208,11 +208,13 @@ public sealed class NavigationRailViewModel(WorkspaceShellViewModel shell) : She
 
 public sealed class StartTabViewModel(WorkspaceShellViewModel shell) : ShellSectionViewModel(shell)
 {
-    public string WelcomeTitle => Shell.HasLoadedAsset ? "Continue with this sprite" : "Open or import a workspace";
+    public string WelcomeTitle => Shell.HasLoadedAsset
+        ? App.Text("Text.Start.ContinueTitle", "Continue with this sprite")
+        : App.Text("Text.Start.OpenTitle", "Open or import a workspace");
 
     public string WelcomeBody => Shell.HasLoadedAsset
-        ? "The sprite is ready. Create, load, or resume a config to move into the editor."
-        : "Open a DMI first, then load JSON or import a legacy CSV when you need an existing mapping set.";
+        ? App.Text("Text.Start.ContinueBody", "The sprite is ready. Create, load, or resume a config to move into the editor.")
+        : App.Text("Text.Start.OpenBody", "Open a DMI first, then load JSON or import a legacy CSV when you need an existing mapping set.");
 
     public bool ShowCreateConfigAction => Shell.HasLoadedAsset && !Shell.HasActiveConfig;
 
@@ -231,18 +233,26 @@ public sealed class StartTabViewModel(WorkspaceShellViewModel shell) : ShellSect
     public bool ShowRecentPaths => HasRecentDmi || HasRecentConfig || HasRecentLegacyCsv || !string.IsNullOrWhiteSpace(Shell.BatchOutputDirectory);
 
     public string ResumeEditorHint => Shell.HasActiveConfig
-        ? "A sprite and config are already staged. Continue in Editor to keep working."
+        ? App.Text("Text.Start.ResumeEditorHint", "A sprite and config are already staged. Continue in Editor to keep working.")
         : Shell.HasLoadedAsset
-            ? "A sprite is loaded. Create a config to begin editing."
-            : "Start by opening a DMI.";
+            ? App.Text("Text.Start.CreateConfigHint", "A sprite is loaded. Create a config to begin editing.")
+            : App.Text("Text.Start.OpenDmiHint", "Start by opening a DMI.");
 
-    public string LastDmiPathSummary => string.IsNullOrWhiteSpace(Shell.DmiPath) ? "No DMI selected yet." : Shell.DmiPath;
+    public string LastDmiPathSummary => string.IsNullOrWhiteSpace(Shell.DmiPath)
+        ? App.Text("Text.Start.NoDmi", "No DMI selected yet.")
+        : Shell.DmiPath;
 
-    public string LastConfigPathSummary => string.IsNullOrWhiteSpace(Shell.ConfigPath) ? "No JSON config selected yet." : Shell.ConfigPath;
+    public string LastConfigPathSummary => string.IsNullOrWhiteSpace(Shell.ConfigPath)
+        ? App.Text("Text.Start.NoJson", "No JSON config selected yet.")
+        : Shell.ConfigPath;
 
-    public string LastLegacyImportSummary => string.IsNullOrWhiteSpace(Shell.LegacyCsvPath) ? "No legacy CSV imported yet." : Shell.LegacyCsvPath;
+    public string LastLegacyImportSummary => string.IsNullOrWhiteSpace(Shell.LegacyCsvPath)
+        ? App.Text("Text.Start.NoLegacyCsv", "No legacy CSV imported yet.")
+        : Shell.LegacyCsvPath;
 
-    public string LastBatchOutputSummary => string.IsNullOrWhiteSpace(Shell.BatchOutputDirectory) ? "No batch output folder selected yet." : Shell.BatchOutputDirectory;
+    public string LastBatchOutputSummary => string.IsNullOrWhiteSpace(Shell.BatchOutputDirectory)
+        ? App.Text("Text.Start.NoBatchOutput", "No batch output folder selected yet.")
+        : Shell.BatchOutputDirectory;
 
     public string DraftConfigName
     {
@@ -1653,6 +1663,9 @@ public sealed class SettingsTabViewModel(WorkspaceShellViewModel shell) : ShellS
     public IReadOnlyList<WorkspaceThemeMode> ThemeModes { get; } =
         [WorkspaceThemeMode.Dark, WorkspaceThemeMode.Light, WorkspaceThemeMode.Warm];
 
+    public IReadOnlyList<WorkspaceLanguage> Languages { get; } =
+        [WorkspaceLanguage.English, WorkspaceLanguage.Russian];
+
     public IReadOnlyList<EditorViewportMode> ViewportModes { get; } = [EditorViewportMode.Matrix, EditorViewportMode.Focused];
 
     public WorkspaceThemeMode SelectedThemeMode
@@ -1665,6 +1678,12 @@ public sealed class SettingsTabViewModel(WorkspaceShellViewModel shell) : ShellS
     {
         get => Shell.AutoPreviewMode;
         set => Shell.AutoPreviewMode = value;
+    }
+
+    public WorkspaceLanguage SelectedLanguage
+    {
+        get => Shell.SelectedLanguage;
+        set => Shell.SelectedLanguage = value;
     }
 
     public EditorViewportMode SelectedViewportMode

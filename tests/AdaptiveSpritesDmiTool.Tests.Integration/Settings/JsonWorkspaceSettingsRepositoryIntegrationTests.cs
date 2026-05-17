@@ -35,7 +35,8 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
             "Focused",
             "Mappings",
             false,
-            false);
+            false,
+            "Russian");
 
         (await repository.SaveAsync(settings, CancellationToken.None)).IsSuccess.Should().BeTrue();
 
@@ -75,6 +76,7 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
         result.IsSuccess.Should().BeTrue();
         result.Value.LastEditorViewportMode.Should().BeNull();
         result.Value.LastBottomWorkspaceTab.Should().BeNull();
+        result.Value.LastUiLanguage.Should().BeNull();
         result.Value.IsPreviewInspectorExpanded.Should().BeTrue();
         result.Value.IsBottomWorkspaceExpanded.Should().BeTrue();
     }
@@ -87,7 +89,7 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
             path,
             """
             {
-              "version": 4,
+              "version": 99,
               "lastOpenedDmiPath": "sprite.dmi",
               "lastOpenedConfigPath": "config.json",
               "lastImportedLegacyCsvPath": "legacy.csv",

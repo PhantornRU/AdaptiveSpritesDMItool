@@ -602,6 +602,7 @@ public partial class WorkspaceShellViewModel
         var selectedDirection = GetSafeSelectedDirection();
         foreach (var direction in ResolveDirections(config.SupportedDirections))
         {
+            var mappingsByEditable = config.GetMappings(direction).ToDictionary(static mapping => mapping.Source);
             var directionPayload = new Dictionary<PixelCoordinate, PixelCoordinate?>();
             foreach (var editableCoordinate in area.Enumerate())
             {
@@ -610,7 +611,10 @@ public partial class WorkspaceShellViewModel
                     selectedDirection,
                     direction,
                     config.Resolution);
-                directionPayload[editableCoordinate] = ResolveSourceCoordinateForEditable(direction, scopedEditableCoordinate);
+                if (mappingsByEditable.TryGetValue(scopedEditableCoordinate, out var mapping))
+                {
+                    directionPayload[editableCoordinate] = mapping.Target;
+                }
             }
 
             payload[direction] = directionPayload;

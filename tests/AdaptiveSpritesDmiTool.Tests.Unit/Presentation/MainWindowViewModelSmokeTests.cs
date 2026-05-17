@@ -104,6 +104,7 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.SelectedEditorViewportMode = EditorViewportMode.Focused;
         viewModel.SelectedBottomWorkspaceTab = BottomWorkspaceTab.Mappings;
+        viewModel.SelectedLanguage = WorkspaceLanguage.Russian;
         viewModel.IsPreviewInspectorExpanded = false;
         viewModel.IsBottomWorkspaceExpanded = false;
 
@@ -112,6 +113,7 @@ public sealed class MainWindowViewModelSmokeTests
         settingsRepository.Saved.Should().NotBeNull();
         settingsRepository.Saved!.LastEditorViewportMode.Should().Be(nameof(EditorViewportMode.Focused));
         settingsRepository.Saved.LastBottomWorkspaceTab.Should().Be(nameof(BottomWorkspaceTab.Mappings));
+        settingsRepository.Saved.LastUiLanguage.Should().Be(nameof(WorkspaceLanguage.Russian));
         settingsRepository.Saved.IsPreviewInspectorExpanded.Should().BeFalse();
         settingsRepository.Saved.IsBottomWorkspaceExpanded.Should().BeFalse();
     }
@@ -166,7 +168,8 @@ public sealed class MainWindowViewModelSmokeTests
                 nameof(EditorViewportMode.Focused),
                 nameof(BottomWorkspaceTab.Mappings),
             false,
-            false));
+            false,
+            nameof(WorkspaceLanguage.Russian)));
 
         var viewModel = CreateViewModel(
             settingsRepository,
@@ -177,6 +180,7 @@ public sealed class MainWindowViewModelSmokeTests
         await viewModel.InitializeAsync();
 
         viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Focused);
+        viewModel.SelectedLanguage.Should().Be(WorkspaceLanguage.Russian);
         viewModel.IsBottomWorkspaceExpanded.Should().BeFalse();
     }
 
@@ -582,6 +586,41 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 1), new PixelCoordinate(2, 2));
         AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 1), new PixelCoordinate(0, 3));
         AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 1));
+    }
+
+    [Fact]
+    public async Task SelectToolShouldNotCreateMappingsForUnmappedCellsInSparseSelection()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 0), new PixelCoordinate(1, 1));
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 2), new PixelCoordinate(3, 2));
+
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 1), new PixelCoordinate(0, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 2), new PixelCoordinate(0, 2));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 1));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 1));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 2));
     }
 
     [Fact]
