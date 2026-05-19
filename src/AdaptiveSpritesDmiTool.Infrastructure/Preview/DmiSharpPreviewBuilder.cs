@@ -58,7 +58,11 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
 
                 using var originalBase = baseFrame.Clone();
                 using var transformedBase = baseFrame.Clone();
-                ApplyConfigToFrame(transformedBase, baseFrame, request.Config, ResolveDirection(baseState, request.Direction));
+                var editableBackingOrigins = ApplyConfigToFrame(
+                    transformedBase,
+                    baseFrame,
+                    request.Config,
+                    ResolveDirection(baseState, request.Direction));
 
                 using var landmarkFrame = ReadOptionalFrame(dmiFile, request.Selection.LandmarkState, request.Direction, transformedBase.Width, transformedBase.Height);
                 using var overlayFrame = ReadOptionalFrame(dmiFile, request.Selection.OverlayState, request.Direction, transformedBase.Width, transformedBase.Height);
@@ -68,7 +72,8 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
                     ToSpriteImage(originalBase),
                     landmarkFrame is null ? null : ToSpriteImage(landmarkFrame),
                     overlayFrame is null ? null : ToSpriteImage(overlayFrame),
-                    ToSpriteImage(composite));
+                    ToSpriteImage(composite),
+                    editableBackingOrigins);
 
                 return Result.Success(result);
             }, cancellationToken);
@@ -138,7 +143,7 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
             : availableDirections[0];
     }
 
-    private static void ApplyConfigToFrame(
+    private static Dictionary<PixelCoordinate, PixelCoordinate?> ApplyConfigToFrame(
         Image<Rgba32> targetFrame,
         Image<Rgba32> sourceFrame,
         SpriteConfig config,
@@ -146,6 +151,7 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
     {
         var mappings = config.GetMappings(DmiSharpConversions.ToDomainDirection(direction))
             .ToDictionary(static mapping => mapping.Source, static mapping => mapping.Target);
+        var editableBackingOrigins = new Dictionary<PixelCoordinate, PixelCoordinate?>(targetFrame.Width * targetFrame.Height);
 
         targetFrame.ProcessPixelRows(accessor =>
         {
@@ -157,8 +163,11 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
                     var coordinate = new PixelCoordinate(x, y);
                     if (!mappings.TryGetValue(coordinate, out var mappedCoordinate))
                     {
+                        editableBackingOrigins[coordinate] = coordinate;
                         continue;
                     }
+
+                    editableBackingOrigins[coordinate] = mappedCoordinate;
 
                     row[x] = mappedCoordinate is null
                         ? default
@@ -166,6 +175,8 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
                 }
             }
         });
+
+        return editableBackingOrigins;
     }
 
     private static Image<Rgba32> ComposeLayers(

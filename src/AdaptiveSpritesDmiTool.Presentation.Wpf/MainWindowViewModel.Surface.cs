@@ -681,8 +681,7 @@ public partial class WorkspaceShellViewModel
             return null;
         }
 
-        var referenceImage = ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage), direction);
-        var renderedEditableImage = RenderEditableSurfaceImage(referenceImage, direction);
+        var renderedEditableImage = BuildRenderedEditableSurfaceImage(direction, useCompositeImage);
         var mappings = GetEditableMappings(direction);
         var colors = new Color[resolution.Value.Width * resolution.Value.Height];
         var captions = new string[colors.Length];
@@ -699,7 +698,13 @@ public partial class WorkspaceShellViewModel
             }
         }
 
-        return new EditorSurfaceRenderState(direction, resolution.Value.Width, resolution.Value.Height, colors, captions);
+        return new EditorSurfaceRenderState(
+            direction,
+            resolution.Value.Width,
+            resolution.Value.Height,
+            colors,
+            captions,
+            ResolveEditableBackingOrigins(direction));
     }
 
     private void RebuildPixelRows(
@@ -716,10 +721,10 @@ public partial class WorkspaceShellViewModel
         }
 
         var referenceImage = isEditable
-            ? ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage), direction)
+            ? null
             : ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage: false), direction);
         var renderedEditableImage = isEditable
-            ? RenderEditableSurfaceImage(referenceImage, direction)
+            ? BuildRenderedEditableSurfaceImage(direction, useCompositeImage)
             : null;
         var mappings = GetEditableMappings(direction);
 
@@ -841,6 +846,58 @@ public partial class WorkspaceShellViewModel
         }
 
         return useCompositeImage ? _compositeImage ?? _baseImage : _baseImage;
+    }
+
+    private SpriteImage? BuildRenderedEditableSurfaceImage(SpriteDirection direction, bool includePreviewDecorations)
+    {
+        var referenceImage = ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage: false), direction);
+        var renderedEditableImage = RenderEditableSurfaceImage(referenceImage, direction);
+        if (!includePreviewDecorations || renderedEditableImage is null)
+        {
+            return renderedEditableImage;
+        }
+
+        return ComposePreviewDecorations(renderedEditableImage, direction);
+    }
+
+    private SpriteImage ComposePreviewDecorations(SpriteImage editableBase, SpriteDirection direction)
+    {
+        if (direction != GetSafeSelectedDirection() || (_landmarkImage is null && _overlayImage is null))
+        {
+            return editableBase;
+        }
+
+        var composed = new SpriteImage(
+            editableBase.Width,
+            editableBase.Height,
+            new byte[editableBase.Width * editableBase.Height * 4]);
+
+        if (_landmarkImage is not null)
+        {
+            BlendOver(composed, _landmarkImage);
+        }
+
+        BlendOver(composed, editableBase);
+
+        if (_overlayImage is not null)
+        {
+            BlendOver(composed, _overlayImage);
+        }
+
+        return composed;
+    }
+
+    private IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?> ResolveEditableBackingOrigins(SpriteDirection direction)
+    {
+        var activeDirection = GetSafeSelectedDirection();
+        if (direction == activeDirection)
+        {
+            return _editableBackingOrigins;
+        }
+
+        return _navigatorEditableBackingOrigins.TryGetValue(direction, out var origins)
+            ? origins
+            : _editableBackingOrigins;
     }
 
     private void RefreshEditorAssetItems()
@@ -1054,7 +1111,7 @@ public partial class WorkspaceShellViewModel
             return null;
         }
 
-        var rendered = new SpriteImage(referenceImage.Width, referenceImage.Height, (byte[])referenceImage.RgbaBytes.Clone());
+        var rendered = new SpriteImage(referenceImage.Width, referenceImage.Height, referenceImage.RgbaBytes[..]);
         if (_editorSession.CurrentConfig is null)
         {
             return rendered;
@@ -1062,8 +1119,19 @@ public partial class WorkspaceShellViewModel
 
         foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction))
         {
-            var destinationOffset = ((mapping.Source.Y * rendered.Width) + mapping.Source.X) * 4;
-            if (mapping.Target is not { } sourceCoordinate || !TryReadPixelColor(referenceImage, sourceCoordinate, out var sourceColor))
+            var destCoordinate = mapping.Source;
+            var destinationOffset = ((destCoordinate.Y * rendered.Width) + destCoordinate.X) * 4;
+
+            if (mapping.Target is not { } targetCoordinate)
+            {
+                rendered.RgbaBytes[destinationOffset] = 0;
+                rendered.RgbaBytes[destinationOffset + 1] = 0;
+                rendered.RgbaBytes[destinationOffset + 2] = 0;
+                rendered.RgbaBytes[destinationOffset + 3] = 0;
+                continue;
+            }
+
+            if (!TryReadPixelColor(referenceImage, targetCoordinate, out var sourceColor))
             {
                 rendered.RgbaBytes[destinationOffset] = 0;
                 rendered.RgbaBytes[destinationOffset + 1] = 0;

@@ -216,6 +216,33 @@ public sealed class SpriteConfig
         return new SpriteConfig(Name, Resolution, SupportedDirections, Metadata.Touch(updatedUtc), next);
     }
 
+    /// <summary>
+    /// Forces a mapping regardless of whether <paramref name="target"/> equals <paramref name="source"/>.
+    /// Unlike <see cref="SetMapping"/>, this method never removes the mapping as an identity/no-op
+    /// optimization. Used internally by move operations where the explicit mapping must be preserved
+    /// even when the coordinate maps to itself.
+    /// </summary>
+    public SpriteConfig SetMappingForced(SpriteDirection direction, PixelCoordinate source, PixelCoordinate? target) =>
+        SetMappingForced(direction, source, target, DateTimeOffset.UtcNow);
+
+    /// <summary>
+    /// Forces a mapping regardless of whether <paramref name="target"/> equals <paramref name="source"/>.
+    /// </summary>
+    public SpriteConfig SetMappingForced(SpriteDirection direction, PixelCoordinate source, PixelCoordinate? target, DateTimeOffset updatedUtc)
+    {
+        EnsureDirection(direction);
+        EnsureCoordinate(source, nameof(source));
+
+        if (target is { } concreteTarget)
+        {
+            EnsureCoordinate(concreteTarget, nameof(target));
+        }
+
+        var next = CloneMappings(_mappings);
+        next[direction][source] = new PixelMapping(source, target);
+        return new SpriteConfig(Name, Resolution, SupportedDirections, Metadata.Touch(updatedUtc), next);
+    }
+
     public SpriteConfig RemoveMapping(SpriteDirection direction, PixelCoordinate source)
     {
         EnsureDirection(direction);

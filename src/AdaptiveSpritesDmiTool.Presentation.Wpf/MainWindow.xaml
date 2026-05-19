@@ -2116,6 +2116,7 @@
                                                                                    PreviewMouseLeftButtonDown="TargetSurface_PreviewMouseLeftButtonDown"
                                                                                    MouseMove="TargetSurface_MouseMove"
                                                                                    MouseLeave="TargetSurface_MouseLeave"
+                                                                                   LostMouseCapture="TargetSurface_LostMouseCapture"
                                                                                    PreviewMouseLeftButtonUp="TargetSurface_PreviewMouseLeftButtonUp" />
 
                                                         <local:EditorSurfaceControl HorizontalAlignment="Center"

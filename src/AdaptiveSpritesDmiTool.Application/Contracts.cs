@@ -27,7 +27,8 @@ public sealed record PreviewBuildResult(
     SpriteImage? BaseImage,
     SpriteImage? LandmarkImage,
     SpriteImage? OverlayImage,
-    SpriteImage? CompositeImage);
+    SpriteImage? CompositeImage,
+    IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?>? EditableBackingOrigins = null);
 
 public enum OverwritePolicy
 {

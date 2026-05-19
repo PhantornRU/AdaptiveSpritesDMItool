@@ -19,7 +19,8 @@ public sealed class EditorSurfaceRenderState(
     int width,
     int height,
     Color[] fillColors,
-    string[] captions)
+    string[] captions,
+    IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?>? editableBackingOrigins = null)
 {
     public const double BaseCellSize = 5d;
 
@@ -32,6 +33,9 @@ public sealed class EditorSurfaceRenderState(
     public IReadOnlyList<Color> FillColors { get; } = fillColors;
 
     public IReadOnlyList<string> Captions { get; } = captions;
+
+    public IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?> EditableBackingOrigins { get; } =
+        editableBackingOrigins ?? new Dictionary<PixelCoordinate, PixelCoordinate?>();
 
     public int GetIndex(int x, int y) => (y * Width) + x;
 }

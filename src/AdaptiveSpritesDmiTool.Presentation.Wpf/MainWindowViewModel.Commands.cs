@@ -171,6 +171,16 @@ public partial class WorkspaceShellViewModel
         ClearHoverState();
     }
 
+    public void HandleTargetSurfacePointerLeave()
+    {
+        if (_isDraggingEditableArea)
+        {
+            return;
+        }
+
+        ClearHoverState();
+    }
+
     public void HandleSourceSurfaceHover(PixelCellViewModel cell)
     {
         ArgumentNullException.ThrowIfNull(cell);
@@ -276,7 +286,6 @@ public partial class WorkspaceShellViewModel
         switch (_editableDragAction)
         {
             case EditableDragAction.FillArea:
-            case EditableDragAction.DeleteArea:
             case EditableDragAction.RestoreArea:
             case EditableDragAction.SelectArea:
                 _selectedArea = new PixelAreaSelection(_editableDragAnchor.Value, cell.Coordinate);
@@ -458,7 +467,9 @@ public partial class WorkspaceShellViewModel
         _editableDragAction = action;
         _editableDragAnchor = anchor;
         _editableDragOriginArea = area;
-        _editableDragPayload = CaptureEditablePayload(area);
+        _editableDragPayload = CaptureEditablePayload(
+            area,
+            action is EditableDragAction.MoveSingle or EditableDragAction.MoveSelection);
         _isDraggingEditableArea = true;
         _selectedArea = area;
         _selectedEditableCoordinate = area.Start;
@@ -477,7 +488,6 @@ public partial class WorkspaceShellViewModel
         switch (_editableDragAction)
         {
             case EditableDragAction.FillArea:
-            case EditableDragAction.DeleteArea:
             case EditableDragAction.RestoreArea:
             case EditableDragAction.SelectArea:
                 _selectedArea = new PixelAreaSelection(_editableDragAnchor.Value, releasedCoordinate);
@@ -510,23 +520,14 @@ public partial class WorkspaceShellViewModel
 
                 if (_selectedSourceCoordinate is not { } selectedSource)
                 {
+                    ClearSelectedArea();
                     StatusMessage = "Pick a source pixel first.";
                     RefreshInteractionState();
                     return;
                 }
 
-                SelectedAreaSummary = DescribeArea(fillArea);
+                ClearSelectedArea();
                 ApplySourcePixelToEditableArea(fillArea, selectedSource, "Filled the editable area from the selected source pixel.");
-                break;
-            case EditableDragAction.DeleteArea:
-                if (completedArea is not { } deleteArea)
-                {
-                    RefreshInteractionState();
-                    return;
-                }
-
-                SelectedAreaSummary = DescribeArea(deleteArea);
-                ApplyRestoreOperation(deleteArea, "Restored the editable area to original source pixels.");
                 break;
             case EditableDragAction.RestoreArea:
                 if (completedArea is not { } restoreArea)
@@ -535,7 +536,7 @@ public partial class WorkspaceShellViewModel
                     return;
                 }
 
-                SelectedAreaSummary = DescribeArea(restoreArea);
+                ClearSelectedArea();
                 ApplyRestoreOperation(restoreArea, "Restored the editable area to original source pixels.");
                 break;
             case EditableDragAction.SelectArea:
@@ -559,9 +560,8 @@ public partial class WorkspaceShellViewModel
                     return;
                 }
 
-                _selectedArea = movedArea;
                 _selectedEditableCoordinate = movedArea.Start;
-                SelectedAreaSummary = DescribeArea(movedArea);
+                ClearSelectedArea();
                 ApplyMovedEditableArea(
                     payload,
                     originArea,
@@ -569,6 +569,7 @@ public partial class WorkspaceShellViewModel
                     dragAction == EditableDragAction.MoveSingle
                         ? "Moved the editable pixel mapping."
                         : "Moved the selected editable area.");
+                RefreshInteractionState();
                 break;
             case EditableDragAction.None:
             default:
@@ -591,7 +592,15 @@ public partial class WorkspaceShellViewModel
         _hasPendingRestoreStrokeFinalize = false;
     }
 
-    private Dictionary<SpriteDirection, Dictionary<PixelCoordinate, PixelCoordinate?>> CaptureEditablePayload(PixelAreaSelection area)
+    private void ClearSelectedArea()
+    {
+        _selectedArea = null;
+        SelectedAreaSummary = "No area selected.";
+    }
+
+    private Dictionary<SpriteDirection, Dictionary<PixelCoordinate, PixelCoordinate?>> CaptureEditablePayload(
+        PixelAreaSelection area,
+        bool includeIdentityFallback)
     {
         if (_editorSession.CurrentConfig is not { } config)
         {
@@ -611,10 +620,24 @@ public partial class WorkspaceShellViewModel
                     selectedDirection,
                     direction,
                     config.Resolution);
-                if (mappingsByEditable.TryGetValue(scopedEditableCoordinate, out var mapping))
+
+                if (mappingsByEditable.TryGetValue(scopedEditableCoordinate, out var explicitMapping))
                 {
-                    directionPayload[editableCoordinate] = mapping.Target;
+                    directionPayload[editableCoordinate] = explicitMapping.Target;
+                    continue;
                 }
+
+                if (!includeIdentityFallback)
+                {
+                    continue;
+                }
+
+                var source = ResolveEffectiveSourceCoordinate(
+                    direction,
+                    scopedEditableCoordinate,
+                    includeIdentityFallback: true);
+
+                directionPayload[editableCoordinate] = source;
             }
 
             payload[direction] = directionPayload;
@@ -713,6 +736,38 @@ public partial class WorkspaceShellViewModel
 
     private PixelCoordinate? ResolveSourceCoordinateForEditable(PixelCoordinate editableCoordinate)
         => ResolveSourceCoordinateForEditable(GetSafeSelectedDirection(), editableCoordinate);
+
+    private PixelCoordinate? ResolveEffectiveSourceCoordinate(
+        SpriteDirection direction,
+        PixelCoordinate editableCoordinate,
+        bool includeIdentityFallback)
+    {
+        if (_editorSession.CurrentConfig is null)
+        {
+            return editableCoordinate;
+        }
+
+        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction))
+        {
+            if (mapping.Source == editableCoordinate)
+            {
+                return mapping.Target;
+            }
+        }
+
+        if (!includeIdentityFallback)
+        {
+            return null;
+        }
+
+        var backingOrigins = ResolveEditableBackingOrigins(direction);
+        if (backingOrigins.TryGetValue(editableCoordinate, out var backingOrigin))
+        {
+            return backingOrigin;
+        }
+
+        return editableCoordinate;
+    }
 
     private PixelCoordinate? ResolveSourceCoordinateForEditable(SpriteDirection direction, PixelCoordinate editableCoordinate)
     {

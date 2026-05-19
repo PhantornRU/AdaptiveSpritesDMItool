@@ -356,8 +356,11 @@ public partial class WorkspaceShellViewModel
             _compositeImage = result.Value.CompositeImage;
             _navigatorBaseImages.Clear();
             _navigatorCompositeImages.Clear();
+            _navigatorEditableBackingOrigins.Clear();
+            _editableBackingOrigins = result.Value.EditableBackingOrigins ?? new Dictionary<PixelCoordinate, PixelCoordinate?>();
             _navigatorBaseImages[direction] = result.Value.BaseImage;
             _navigatorCompositeImages[direction] = result.Value.CompositeImage;
+            _navigatorEditableBackingOrigins[direction] = _editableBackingOrigins;
 
             foreach (var previewDirection in AvailableDirections.Where(candidate => candidate != direction))
             {
@@ -370,6 +373,7 @@ public partial class WorkspaceShellViewModel
 
                 _navigatorBaseImages[previewDirection] = previewResult.Value.BaseImage;
                 _navigatorCompositeImages[previewDirection] = previewResult.Value.CompositeImage;
+                _navigatorEditableBackingOrigins[previewDirection] = previewResult.Value.EditableBackingOrigins ?? new Dictionary<PixelCoordinate, PixelCoordinate?>();
             }
 
             InvalidateNavigatorSnapshotCache();
@@ -463,31 +467,24 @@ public partial class WorkspaceShellViewModel
                     })
                     .ToArray();
 
-                foreach (var move in moves)
+                // Two-phase apply: remove all origins first, then set all destinations.
+                // This prevents overlap cut-out where a destination inside the selection
+                // is later erased by its own RemoveMapping call. Removed origins stay
+                // unmapped, which restores the Source[x,y] backing pixel instead of transparency.
+                var uniqueOrigins = moves
+                    .Select(m => m.Origin)
+                    .Distinct()
+                    .ToArray();
+
+                foreach (var origin in uniqueOrigins)
                 {
-                    next = next.RemoveMapping(direction, move.Origin);
+                    next = next.RemoveMapping(direction, origin);
                 }
 
                 foreach (var move in moves)
                 {
-                    next = next.SetMapping(direction, move.Destination, move.Source);
+                    next = next.SetMappingForced(direction, move.Destination, move.Source);
                 }
-            }
-
-            return next;
-        });
-
-        ApplyMutationResult(result, successMessage);
-    }
-
-    private void ApplyTransparentOperation(PixelAreaSelection area, string successMessage)
-    {
-        var result = _applyConfigTransformUseCase.Execute(config =>
-        {
-            var next = config;
-            foreach (var editableCoordinate in area.Enumerate())
-            {
-                next = ApplyScopedMapping(next, editableCoordinate, null);
             }
 
             return next;

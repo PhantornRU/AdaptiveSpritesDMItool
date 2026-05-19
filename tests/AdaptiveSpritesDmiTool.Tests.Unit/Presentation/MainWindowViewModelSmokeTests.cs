@@ -367,6 +367,8 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.MappingRows.Should().HaveCount(4);
         viewModel.MappingRows.Should().OnlyContain(row => row.Source == new PixelCoordinate(0, 1));
+        viewModel.SelectedAreaBounds.Should().BeNull();
+        viewModel.SelectedAreaSummary.Should().Be("No area selected.");
     }
 
     [Fact]
@@ -550,11 +552,38 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.MappingRows.Should().Contain(row => row.Editable == new PixelCoordinate(2, 2) && row.Source == new PixelCoordinate(0, 1));
         viewModel.MappingRows.Should().NotContain(row => row.Editable == new PixelCoordinate(1, 1));
         viewModel.MappingRows.Should().NotContain(row => row.Editable == new PixelCoordinate(1, 2));
-        viewModel.SelectedAreaBounds.Should().Be(new PixelAreaBounds(2, 1, 2, 2));
+        viewModel.SelectedAreaBounds.Should().BeNull();
     }
 
     [Fact]
-    public async Task SelectToolShouldMoveOverlappingEditableSelectionFromCapturedPayload()
+    public async Task SelectToolShouldKeepDragAliveWhenPointerLeavesSurface()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 3, 3));
+        viewModel.HandleTargetSurfacePointerLeave();
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 3, 3));
+
+        viewModel.SelectedAreaBounds.Should().Be(new PixelAreaBounds(0, 0, 3, 3));
+        viewModel.SelectedAreaSummary.Should().Contain("4x4");
+    }
+
+    [Fact]
+    public async Task SelectToolShouldMoveOverlappingEditableSelectionUsingExplicitMappingsOnly()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -589,7 +618,7 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
-    public async Task SelectToolShouldNotCreateMappingsForUnmappedCellsInSparseSelection()
+    public async Task SelectToolShouldRestoreSourceBackgroundForMovedSelectionOrigins()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -617,10 +646,88 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 1));
 
         AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 1), new PixelCoordinate(0, 0));
-        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 2), new PixelCoordinate(0, 2));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 1), new PixelCoordinate(2, 1));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 2), new PixelCoordinate(1, 2));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 2), new PixelCoordinate(2, 2));
         AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 1));
-        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 1));
-        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 2));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 2));
+    }
+
+    [Fact]
+    public async Task SelectToolShouldKeepFullOverlappingSelectionMaterialized()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 3), new PixelCoordinate(0, 1));
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 2), new PixelCoordinate(1, 1));
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 3), new PixelCoordinate(2, 1));
+
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.MappingRows.Should().HaveCount(3);
+        viewModel.MappingRows.Should().ContainSingle(row =>
+            row.Editable == new PixelCoordinate(1, 1) &&
+            row.Source == new PixelCoordinate(3, 3));
+        viewModel.MappingRows.Should().ContainSingle(row =>
+            row.Editable == new PixelCoordinate(2, 1) &&
+            row.Source == new PixelCoordinate(2, 2));
+        viewModel.MappingRows.Should().ContainSingle(row =>
+            row.Editable == new PixelCoordinate(3, 1) &&
+            row.Source == new PixelCoordinate(0, 3));
+    }
+
+    [Fact]
+    public async Task SelectToolShouldMoveUnmappedPixelsWithoutTransparentOrigins()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 1, 0));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 1, 0));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 1, 0));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 1, 0));
+
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 0), new PixelCoordinate(0, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 0), new PixelCoordinate(1, 0));
+
+        var sourceSurface = viewModel.ActiveSourceSurface!;
+        var editableSurface = viewModel.ActiveTargetSurface!;
+        editableSurface.FillColors[editableSurface.GetIndex(0, 0)].Should()
+            .Be(sourceSurface.FillColors[sourceSurface.GetIndex(0, 0)]);
     }
 
     [Fact]
@@ -763,6 +870,38 @@ public sealed class MainWindowViewModelSmokeTests
 
         remappedEditableColor.Should().Be(sourceColor);
         remappedEditableColor.Should().NotBe(originalEditableColor);
+    }
+
+    [Fact]
+    public async Task EditableSurfaceShouldNotApplyConfigTwiceWhenCompositePreviewExists()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var previewBuilder = new ConfigApplyingPreviewBuilder();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            previewBuilder: previewBuilder,
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 0), new PixelCoordinate(0, 0));
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 0), new PixelCoordinate(2, 2));
+
+        viewModel.SelectedExplorerState = "idle";
+        viewModel.UseSelectedStateAsBaseCommand.Execute(null);
+        await viewModel.BuildPreviewCommand.ExecuteAsync(null);
+
+        var sourceSurface = viewModel.ActiveSourceSurface!;
+        var editableSurface = viewModel.ActiveTargetSurface!;
+        var expectedSourceColor = sourceSurface.FillColors[sourceSurface.GetIndex(0, 0)];
+        var doubleAppliedColor = sourceSurface.FillColors[sourceSurface.GetIndex(1, 0)];
+
+        editableSurface.FillColors[editableSurface.GetIndex(2, 2)].Should().Be(expectedSourceColor);
+        editableSurface.FillColors[editableSurface.GetIndex(2, 2)].Should().NotBe(doubleAppliedColor);
     }
 
     [Fact]
@@ -1262,7 +1401,25 @@ public sealed class MainWindowViewModelSmokeTests
                         BaseImage: image,
                         LandmarkImage: null,
                         OverlayImage: null,
-                        CompositeImage: image)));
+                        CompositeImage: image,
+                        EditableBackingOrigins: BuildBackingOrigins(4, 4))));
+        }
+    }
+
+    private sealed class ConfigApplyingPreviewBuilder : IPreviewBuilder
+    {
+        public Task<Result<PreviewBuildResult>> BuildAsync(PreviewBuildRequest request, CancellationToken cancellationToken)
+        {
+            var image = CreateCoordinateImage(4, 4);
+            var composite = ApplyConfigToImage(image, request.Config, request.Direction);
+            return Task.FromResult(
+                Result.Success(
+                    new PreviewBuildResult(
+                        BaseImage: image,
+                        LandmarkImage: null,
+                        OverlayImage: null,
+                        CompositeImage: composite,
+                        EditableBackingOrigins: BuildBackingOrigins(4, 4))));
         }
     }
 
@@ -1279,10 +1436,26 @@ public sealed class MainWindowViewModelSmokeTests
                         BaseImage: CreateImage(),
                         LandmarkImage: null,
                         OverlayImage: null,
-                        CompositeImage: CreateImage())));
+                        CompositeImage: CreateImage(),
+                        EditableBackingOrigins: BuildBackingOrigins(4, 4))));
         }
 
         private static SpriteImage CreateImage() => new(4, 4, new byte[4 * 4 * 4]);
+    }
+
+    private static Dictionary<PixelCoordinate, PixelCoordinate?> BuildBackingOrigins(int width, int height)
+    {
+        var result = new Dictionary<PixelCoordinate, PixelCoordinate?>(width * height);
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var coordinate = new PixelCoordinate(x, y);
+                result[coordinate] = coordinate;
+            }
+        }
+
+        return result;
     }
 
     private sealed class NullStateFrameReader : IStateFrameReader
@@ -1358,5 +1531,30 @@ public sealed class MainWindowViewModelSmokeTests
         }
 
         return new SpriteImage(width, height, pixels);
+    }
+
+    private static SpriteImage ApplyConfigToImage(SpriteImage image, SpriteConfig config, SpriteDirection direction)
+    {
+        var pixels = image.RgbaBytes[..];
+        foreach (var mapping in config.GetMappings(direction))
+        {
+            var destinationIndex = ((mapping.Source.Y * image.Width) + mapping.Source.X) * 4;
+            if (mapping.Target is not { } target)
+            {
+                pixels[destinationIndex] = 0;
+                pixels[destinationIndex + 1] = 0;
+                pixels[destinationIndex + 2] = 0;
+                pixels[destinationIndex + 3] = 0;
+                continue;
+            }
+
+            var sourceIndex = ((target.Y * image.Width) + target.X) * 4;
+            pixels[destinationIndex] = image.RgbaBytes[sourceIndex];
+            pixels[destinationIndex + 1] = image.RgbaBytes[sourceIndex + 1];
+            pixels[destinationIndex + 2] = image.RgbaBytes[sourceIndex + 2];
+            pixels[destinationIndex + 3] = image.RgbaBytes[sourceIndex + 3];
+        }
+
+        return new SpriteImage(image.Width, image.Height, pixels);
     }
 }

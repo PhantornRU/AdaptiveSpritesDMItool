@@ -47,8 +47,10 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private SpriteImage? _landmarkImage;
     private SpriteImage? _overlayImage;
     private SpriteImage? _compositeImage;
+    private IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?> _editableBackingOrigins = new Dictionary<PixelCoordinate, PixelCoordinate?>();
     private readonly Dictionary<SpriteDirection, SpriteImage?> _navigatorBaseImages = new();
     private readonly Dictionary<SpriteDirection, SpriteImage?> _navigatorCompositeImages = new();
+    private readonly Dictionary<SpriteDirection, IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?>> _navigatorEditableBackingOrigins = new();
     private readonly Dictionary<(string Path, string StateName, SpriteDirection Direction), SpriteImage?> _importedStateFrameCache = new();
     private CancellationTokenSource? _importedStateRefreshCts;
     private int _importedStateRefreshVersion;
@@ -67,11 +69,10 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     {
         None = 0,
         FillArea = 1,
-        DeleteArea = 2,
-        RestoreArea = 3,
-        SelectArea = 4,
-        MoveSingle = 5,
-        MoveSelection = 6
+        RestoreArea = 2,
+        SelectArea = 3,
+        MoveSingle = 4,
+        MoveSelection = 5
     }
 
     public WorkspaceShellViewModel(
