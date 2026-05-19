@@ -713,6 +713,18 @@ public partial class WorkspaceShellViewModel
 
     partial void OnShowTextGridChanged(bool value) => RefreshActivePreviewPresentation();
 
+    partial void OnHideInactiveSourceCanvasesChanged(bool value)
+    {
+        RefreshEditorSurface();
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    partial void OnFitMultipleDirectionCanvasesToViewportChanged(bool value)
+    {
+        RefreshEditorSurface();
+        PersistWorkspaceSettingsInBackground();
+    }
+
     partial void OnSelectedEditorViewportModeChanged(EditorViewportMode value)
     {
         RefreshEditorSurface();

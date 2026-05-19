@@ -90,6 +90,8 @@
     <sys:String x:Key="Text.Settings.WorkspacePanels">Workspace panels</sys:String>
     <sys:String x:Key="Text.Settings.PreviewInspectorExpanded">Preview inspector starts expanded</sys:String>
     <sys:String x:Key="Text.Settings.BottomPanelsExpanded">Bottom workspace panels stay expanded</sys:String>
+    <sys:String x:Key="Text.Settings.HideInactiveSourceCanvases">Hide Source canvases when the active tool does not use Source</sys:String>
+    <sys:String x:Key="Text.Settings.FitMultipleDirectionCanvases">Fit multiple direction canvases inside the viewport</sys:String>
     <sys:String x:Key="Text.Settings.ResetWorkspace">Reset Workspace</sys:String>
     <sys:String x:Key="Text.Theme.Dark">Dark</sys:String>
     <sys:String x:Key="Text.Theme.Light">Light</sys:String>

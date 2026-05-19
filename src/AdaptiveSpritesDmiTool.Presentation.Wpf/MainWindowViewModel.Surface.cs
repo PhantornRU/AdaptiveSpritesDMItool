@@ -64,6 +64,7 @@ public partial class WorkspaceShellViewModel
     private void RebuildDirectionViewportSurfaces(SpriteDirection activeDirection)
     {
         var directions = ResolveVisibleEditorViewportDirections(activeDirection);
+        HasMultipleDirectionViewportSurfaces = directions.Count > 1;
         var columns = ResolveEditorSurfaceGridColumns(directions.Count);
         EditorSurfaceGridColumns = columns;
         EditorSurfaceGridRows = Math.Max(1, (int)Math.Ceiling(directions.Count / (double)columns));

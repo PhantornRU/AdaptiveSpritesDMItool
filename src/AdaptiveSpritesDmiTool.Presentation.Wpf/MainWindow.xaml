@@ -2137,12 +2137,36 @@
 
                                     <Grid Grid.Row="0">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="5" />
+                                            <ColumnDefinition>
+                                                <ColumnDefinition.Style>
+                                                    <Style TargetType="ColumnDefinition">
+                                                        <Setter Property="Width" Value="*" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ShowSourceViewportPane}" Value="False">
+                                                                <Setter Property="Width" Value="0" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ColumnDefinition.Style>
+                                            </ColumnDefinition>
+                                            <ColumnDefinition>
+                                                <ColumnDefinition.Style>
+                                                    <Style TargetType="ColumnDefinition">
+                                                        <Setter Property="Width" Value="5" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ShowSourceViewportPane}" Value="False">
+                                                                <Setter Property="Width" Value="0" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ColumnDefinition.Style>
+                                            </ColumnDefinition>
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
 
-                                        <Border Grid.Column="0" Style="{StaticResource ViewportShellBorderStyle}">
+                                        <Border Grid.Column="0"
+                                                Style="{StaticResource ViewportShellBorderStyle}"
+                                                Visibility="{Binding ShowSourceViewportPane, Converter={StaticResource BooleanToVisibilityConverter}}">
                                             <Grid>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto" />
@@ -2166,10 +2190,46 @@
                                                     <Grid MinWidth="{Binding ElementName=SourceViewportScrollViewer, Path=ActualWidth}"
                                                           MinHeight="{Binding ElementName=SourceViewportScrollViewer, Path=ActualHeight}"
                                                           Background="{DynamicResource Brush.ControlBackground}">
+                                                        <Viewbox HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"
+                                                                 Width="{Binding ElementName=SourceViewportScrollViewer, Path=ActualWidth}"
+                                                                 Height="{Binding ElementName=SourceViewportScrollViewer, Path=ActualHeight}"
+                                                                 Stretch="Uniform"
+                                                                 StretchDirection="DownOnly">
+                                                            <Viewbox.Style>
+                                                                <Style TargetType="Viewbox">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding UseFittedDirectionViewportLayout}" Value="True">
+                                                                            <Setter Property="Visibility" Value="Visible" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Viewbox.Style>
+                                                            <ItemsControl ItemsSource="{Binding SourceViewportSurfaces}"
+                                                                          ItemTemplate="{StaticResource SourceViewportSurfaceTemplate}">
+                                                                <ItemsControl.ItemsPanel>
+                                                                    <ItemsPanelTemplate>
+                                                                        <UniformGrid Rows="{Binding DataContext.EditorWorkspace.EditorSurfaceGridRows, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                     Columns="{Binding DataContext.EditorWorkspace.EditorSurfaceGridColumns, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                                                    </ItemsPanelTemplate>
+                                                                </ItemsControl.ItemsPanel>
+                                                            </ItemsControl>
+                                                        </Viewbox>
                                                         <ItemsControl HorizontalAlignment="Center"
                                                                       VerticalAlignment="Center"
                                                                       ItemsSource="{Binding SourceViewportSurfaces}"
                                                                       ItemTemplate="{StaticResource SourceViewportSurfaceTemplate}">
+                                                            <ItemsControl.Style>
+                                                                <Style TargetType="ItemsControl">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding UseScrollableDirectionViewportLayout}" Value="False">
+                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </ItemsControl.Style>
                                                             <ItemsControl.ItemsPanel>
                                                                 <ItemsPanelTemplate>
                                                                     <UniformGrid Rows="{Binding DataContext.EditorWorkspace.EditorSurfaceGridRows, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -2189,7 +2249,8 @@
                                                       VerticalAlignment="Stretch"
                                                       ResizeDirection="Columns"
                                                       ResizeBehavior="PreviousAndNext"
-                                                      ShowsPreview="True" />
+                                                      ShowsPreview="True"
+                                                      Visibility="{Binding ShowSourceViewportPane, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                                         <Border Grid.Column="2" Style="{StaticResource ViewportShellBorderStyle}">
                                             <Grid>
@@ -2215,10 +2276,46 @@
                                                     <Grid MinWidth="{Binding ElementName=EditableViewportScrollViewer, Path=ActualWidth}"
                                                           MinHeight="{Binding ElementName=EditableViewportScrollViewer, Path=ActualHeight}"
                                                           Background="{DynamicResource Brush.ControlBackground}">
+                                                        <Viewbox HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"
+                                                                 Width="{Binding ElementName=EditableViewportScrollViewer, Path=ActualWidth}"
+                                                                 Height="{Binding ElementName=EditableViewportScrollViewer, Path=ActualHeight}"
+                                                                 Stretch="Uniform"
+                                                                 StretchDirection="DownOnly">
+                                                            <Viewbox.Style>
+                                                                <Style TargetType="Viewbox">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding UseFittedDirectionViewportLayout}" Value="True">
+                                                                            <Setter Property="Visibility" Value="Visible" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Viewbox.Style>
+                                                            <ItemsControl ItemsSource="{Binding TargetViewportSurfaces}"
+                                                                          ItemTemplate="{StaticResource EditableViewportSurfaceTemplate}">
+                                                                <ItemsControl.ItemsPanel>
+                                                                    <ItemsPanelTemplate>
+                                                                        <UniformGrid Rows="{Binding DataContext.EditorWorkspace.EditorSurfaceGridRows, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                     Columns="{Binding DataContext.EditorWorkspace.EditorSurfaceGridColumns, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                                                    </ItemsPanelTemplate>
+                                                                </ItemsControl.ItemsPanel>
+                                                            </ItemsControl>
+                                                        </Viewbox>
                                                         <ItemsControl HorizontalAlignment="Center"
                                                                       VerticalAlignment="Center"
                                                                       ItemsSource="{Binding TargetViewportSurfaces}"
                                                                       ItemTemplate="{StaticResource EditableViewportSurfaceTemplate}">
+                                                            <ItemsControl.Style>
+                                                                <Style TargetType="ItemsControl">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding UseScrollableDirectionViewportLayout}" Value="False">
+                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </ItemsControl.Style>
                                                             <ItemsControl.ItemsPanel>
                                                                 <ItemsPanelTemplate>
                                                                     <UniformGrid Rows="{Binding DataContext.EditorWorkspace.EditorSurfaceGridRows, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -2658,6 +2755,8 @@
                                                    Text="{DynamicResource Text.Settings.WorkspacePanels}" />
                                         <CheckBox Style="{StaticResource ThemedCheckBoxStyle}" Margin="0,10,0,0" IsChecked="{Binding IsPreviewInspectorExpanded}" Content="{DynamicResource Text.Settings.PreviewInspectorExpanded}" />
                                         <CheckBox Style="{StaticResource ThemedCheckBoxStyle}" Margin="0,8,0,0" IsChecked="{Binding IsBottomWorkspaceExpanded}" Content="{DynamicResource Text.Settings.BottomPanelsExpanded}" />
+                                        <CheckBox Style="{StaticResource ThemedCheckBoxStyle}" Margin="0,8,0,0" IsChecked="{Binding HideInactiveSourceCanvases}" Content="{DynamicResource Text.Settings.HideInactiveSourceCanvases}" />
+                                        <CheckBox Style="{StaticResource ThemedCheckBoxStyle}" Margin="0,8,0,0" IsChecked="{Binding FitMultipleDirectionCanvasesToViewport}" Content="{DynamicResource Text.Settings.FitMultipleDirectionCanvases}" />
                                     </StackPanel>
                                 </Border>
 

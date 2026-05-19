@@ -239,6 +239,8 @@ public partial class WorkspaceShellViewModel
     private int editorSurfaceGridColumns = 1;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSourceReferenceDimmed))]
+    [NotifyPropertyChangedFor(nameof(ShowSourceViewportPane))]
     private EditorTool selectedEditorTool = EditorTool.Single;
 
     [ObservableProperty]
@@ -324,6 +326,21 @@ public partial class WorkspaceShellViewModel
     private bool showTextGrid = true;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowSourceViewportPane))]
+    private bool hideInactiveSourceCanvases = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UseFittedDirectionViewportLayout))]
+    [NotifyPropertyChangedFor(nameof(UseScrollableDirectionViewportLayout))]
+    private bool fitMultipleDirectionCanvasesToViewport = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowSourceViewportPane))]
+    [NotifyPropertyChangedFor(nameof(UseFittedDirectionViewportLayout))]
+    [NotifyPropertyChangedFor(nameof(UseScrollableDirectionViewportLayout))]
+    private bool hasMultipleDirectionViewportSurfaces;
+
+    [ObservableProperty]
     private int directionMatrixColumns = 2;
 
     [ObservableProperty]
@@ -395,6 +412,16 @@ public partial class WorkspaceShellViewModel
     public bool IsReferencePaneVisible => IsCompareSplitMode && !IsFocusMode;
 
     public bool ShowOverlayCompareLayer => IsOverlayCompareMode && !IsFocusMode;
+
+    public bool IsSourceReferenceDimmed => SelectedEditorTool is not EditorTool.Single and not EditorTool.Fill;
+
+    public bool ShowSourceViewportPane =>
+        !HideInactiveSourceCanvases || !HasMultipleDirectionViewportSurfaces || !IsSourceReferenceDimmed;
+
+    public bool UseFittedDirectionViewportLayout =>
+        FitMultipleDirectionCanvasesToViewport && HasMultipleDirectionViewportSurfaces;
+
+    public bool UseScrollableDirectionViewportLayout => !UseFittedDirectionViewportLayout;
 
     public bool ShowEditorLeftRail => !IsFocusMode;
 

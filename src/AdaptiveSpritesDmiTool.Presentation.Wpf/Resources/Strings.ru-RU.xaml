@@ -90,6 +90,8 @@
     <sys:String x:Key="Text.Settings.WorkspacePanels">Панели рабочей области</sys:String>
     <sys:String x:Key="Text.Settings.PreviewInspectorExpanded">Инспектор предпросмотра открывается развернутым</sys:String>
     <sys:String x:Key="Text.Settings.BottomPanelsExpanded">Нижние панели рабочей области остаются развернутыми</sys:String>
+    <sys:String x:Key="Text.Settings.HideInactiveSourceCanvases">Скрывать Source-полотна, когда активный инструмент не использует Source</sys:String>
+    <sys:String x:Key="Text.Settings.FitMultipleDirectionCanvases">Вписывать несколько direction-полотен в область просмотра</sys:String>
     <sys:String x:Key="Text.Settings.ResetWorkspace">Сбросить рабочую область</sys:String>
     <sys:String x:Key="Text.Theme.Dark">Темная</sys:String>
     <sys:String x:Key="Text.Theme.Light">Светлая</sys:String>

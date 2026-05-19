@@ -101,7 +101,9 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             Normalize(document.LastBottomWorkspaceTab),
             document.IsPreviewInspectorExpanded,
             document.IsBottomWorkspaceExpanded ?? true,
-            Normalize(document.LastUiLanguage));
+            Normalize(document.LastUiLanguage),
+            document.HideInactiveSourceCanvases ?? true,
+            document.FitMultipleDirectionCanvasesToViewport ?? true);
 
     private static WorkspaceSettingsDocument FromDomain(WorkspaceSettings settings) =>
         new()
@@ -123,7 +125,9 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             LastBottomWorkspaceTab = settings.LastBottomWorkspaceTab,
             IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded,
             IsBottomWorkspaceExpanded = settings.IsBottomWorkspaceExpanded,
-            LastUiLanguage = settings.LastUiLanguage
+            LastUiLanguage = settings.LastUiLanguage,
+            HideInactiveSourceCanvases = settings.HideInactiveSourceCanvases,
+            FitMultipleDirectionCanvasesToViewport = settings.FitMultipleDirectionCanvasesToViewport
         };
 
     private static string? Normalize(string? value) =>
@@ -200,5 +204,9 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         public bool IsPreviewInspectorExpanded { get; set; } = true;
 
         public bool? IsBottomWorkspaceExpanded { get; set; }
+
+        public bool? HideInactiveSourceCanvases { get; set; }
+
+        public bool? FitMultipleDirectionCanvasesToViewport { get; set; }
     }
 }

@@ -100,6 +100,8 @@ public partial class WorkspaceShellViewModel
         SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
         IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded;
         IsBottomWorkspaceExpanded = settings.IsBottomWorkspaceExpanded;
+        HideInactiveSourceCanvases = settings.HideInactiveSourceCanvases;
+        FitMultipleDirectionCanvasesToViewport = settings.FitMultipleDirectionCanvasesToViewport;
         IsFocusMode = false;
     }
 
@@ -167,7 +169,9 @@ public partial class WorkspaceShellViewModel
             SelectedBottomWorkspaceTab.ToString(),
             IsPreviewInspectorExpanded,
             IsBottomWorkspaceExpanded,
-            SelectedLanguage.ToString());
+            SelectedLanguage.ToString(),
+            HideInactiveSourceCanvases,
+            FitMultipleDirectionCanvasesToViewport);
 
     private void ResetWorkspaceCore()
     {
@@ -214,6 +218,9 @@ public partial class WorkspaceShellViewModel
         SelectedEditorAssetTargetLayer = EditorAssetTargetLayer.Base;
         IsBottomWorkspaceExpanded = true;
         IsPreviewInspectorExpanded = false;
+        HideInactiveSourceCanvases = true;
+        FitMultipleDirectionCanvasesToViewport = true;
+        HasMultipleDirectionViewportSurfaces = false;
         IsFocusMode = false;
         MirrorAcrossDirections = true;
         UseCentralizedPropagation = true;

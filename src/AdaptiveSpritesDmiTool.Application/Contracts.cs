@@ -88,7 +88,9 @@ public sealed record WorkspaceSettings(
     string? LastBottomWorkspaceTab,
     bool IsPreviewInspectorExpanded,
     bool IsBottomWorkspaceExpanded,
-    string? LastUiLanguage = null)
+    string? LastUiLanguage = null,
+    bool HideInactiveSourceCanvases = true,
+    bool FitMultipleDirectionCanvasesToViewport = true)
 {
     public static WorkspaceSettings Empty { get; } = new(
         LastOpenedDmiPath: null,
@@ -106,7 +108,10 @@ public sealed record WorkspaceSettings(
         LastEditorViewportMode: null,
         LastBottomWorkspaceTab: null,
         IsPreviewInspectorExpanded: true,
-        IsBottomWorkspaceExpanded: true);
+        IsBottomWorkspaceExpanded: true,
+        LastUiLanguage: null,
+        HideInactiveSourceCanvases: true,
+        FitMultipleDirectionCanvasesToViewport: true);
 }
 
 public interface IConfigRepository

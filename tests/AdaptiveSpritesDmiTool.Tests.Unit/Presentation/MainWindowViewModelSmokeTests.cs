@@ -152,6 +152,97 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task MultiDirectionInactiveSourceCanvasesShouldHideByDefault()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+
+        viewModel.HasMultipleDirectionViewportSurfaces.Should().BeTrue();
+        viewModel.ShowSourceViewportPane.Should().BeTrue();
+
+        viewModel.SelectedEditorTool = EditorTool.Move;
+
+        viewModel.IsSourceReferenceDimmed.Should().BeTrue();
+        viewModel.ShowSourceViewportPane.Should().BeFalse();
+
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.ShowSourceViewportPane.Should().BeFalse();
+
+        viewModel.SelectedEditorTool = EditorTool.UndoArea;
+
+        viewModel.ShowSourceViewportPane.Should().BeFalse();
+
+        viewModel.SelectedEditorTool = EditorTool.Fill;
+
+        viewModel.IsSourceReferenceDimmed.Should().BeFalse();
+        viewModel.ShowSourceViewportPane.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HideInactiveSourceCanvasesSettingShouldKeepSourceVisible()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.SelectedDirectionScope = DirectionScope.All;
+        viewModel.SelectedEditorTool = EditorTool.Move;
+
+        viewModel.ShowSourceViewportPane.Should().BeFalse();
+
+        viewModel.HideInactiveSourceCanvases = false;
+
+        viewModel.ShowSourceViewportPane.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task FitMultipleDirectionCanvasesSettingShouldToggleViewportLayout()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.SelectedDirectionScope = DirectionScope.All;
+
+        viewModel.HasMultipleDirectionViewportSurfaces.Should().BeTrue();
+        viewModel.UseFittedDirectionViewportLayout.Should().BeTrue();
+        viewModel.UseScrollableDirectionViewportLayout.Should().BeFalse();
+
+        viewModel.FitMultipleDirectionCanvasesToViewport = false;
+
+        viewModel.UseFittedDirectionViewportLayout.Should().BeFalse();
+        viewModel.UseScrollableDirectionViewportLayout.Should().BeTrue();
+
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+
+        viewModel.HasMultipleDirectionViewportSurfaces.Should().BeFalse();
+        viewModel.UseFittedDirectionViewportLayout.Should().BeFalse();
+        viewModel.UseScrollableDirectionViewportLayout.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task CreateConfigShouldEnableBatchWorkflowAndStayOnEditorSection()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -189,6 +280,8 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.SelectedLanguage = WorkspaceLanguage.Russian;
         viewModel.IsPreviewInspectorExpanded = false;
         viewModel.IsBottomWorkspaceExpanded = false;
+        viewModel.HideInactiveSourceCanvases = false;
+        viewModel.FitMultipleDirectionCanvasesToViewport = false;
 
         await viewModel.PersistWorkspaceSettingsAsync();
 
@@ -198,6 +291,8 @@ public sealed class MainWindowViewModelSmokeTests
         settingsRepository.Saved.LastUiLanguage.Should().Be(nameof(WorkspaceLanguage.Russian));
         settingsRepository.Saved.IsPreviewInspectorExpanded.Should().BeFalse();
         settingsRepository.Saved.IsBottomWorkspaceExpanded.Should().BeFalse();
+        settingsRepository.Saved.HideInactiveSourceCanvases.Should().BeFalse();
+        settingsRepository.Saved.FitMultipleDirectionCanvasesToViewport.Should().BeFalse();
     }
 
     [Fact]

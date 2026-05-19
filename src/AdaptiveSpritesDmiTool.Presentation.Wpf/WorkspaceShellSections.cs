@@ -623,8 +623,13 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public bool ShowCompactCanvasHeader => Shell.ShowCompactCanvasHeader;
 
-    public bool IsSourceReferenceDimmed =>
-        Shell.SelectedEditorTool is EditorTool.Move or EditorTool.Delete or EditorTool.Select;
+    public bool IsSourceReferenceDimmed => Shell.IsSourceReferenceDimmed;
+
+    public bool ShowSourceViewportPane => Shell.ShowSourceViewportPane;
+
+    public bool UseFittedDirectionViewportLayout => Shell.UseFittedDirectionViewportLayout;
+
+    public bool UseScrollableDirectionViewportLayout => Shell.UseScrollableDirectionViewportLayout;
 
     public bool IsAssetsDmiLeftDockSelected => Shell.SelectedEditorLeftDockTab == EditorLeftDockTab.AssetsDmi;
 
@@ -1717,6 +1722,18 @@ public sealed class SettingsTabViewModel(WorkspaceShellViewModel shell) : ShellS
     {
         get => Shell.IsBottomWorkspaceExpanded;
         set => Shell.IsBottomWorkspaceExpanded = value;
+    }
+
+    public bool HideInactiveSourceCanvases
+    {
+        get => Shell.HideInactiveSourceCanvases;
+        set => Shell.HideInactiveSourceCanvases = value;
+    }
+
+    public bool FitMultipleDirectionCanvasesToViewport
+    {
+        get => Shell.FitMultipleDirectionCanvasesToViewport;
+        set => Shell.FitMultipleDirectionCanvasesToViewport = value;
     }
 }
 
