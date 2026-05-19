@@ -48,6 +48,7 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private SpriteImage? _overlayImage;
     private SpriteImage? _compositeImage;
     private IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?> _editableBackingOrigins = new Dictionary<PixelCoordinate, PixelCoordinate?>();
+    private readonly HashSet<SpriteDirection> _allDirectionDisplaySelection = [];
     private readonly Dictionary<SpriteDirection, SpriteImage?> _navigatorBaseImages = new();
     private readonly Dictionary<SpriteDirection, SpriteImage?> _navigatorCompositeImages = new();
     private readonly Dictionary<SpriteDirection, IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?>> _navigatorEditableBackingOrigins = new();

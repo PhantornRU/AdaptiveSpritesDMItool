@@ -480,6 +480,9 @@ public sealed partial class DirectionNavigatorItemViewModel : ObservableObject
     [ObservableProperty]
     private bool isScopeAffected;
 
+    [ObservableProperty]
+    private bool isDisplaySelected;
+
     public string ShortLabel => Direction switch
     {
         SpriteDirection.South => "S",
@@ -549,6 +552,16 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public EditorSurfaceRenderState? ActiveSourceSurface => Shell.ActiveSourceSurface;
 
     public EditorSurfaceRenderState? ActiveTargetSurface => Shell.ActiveTargetSurface;
+
+    public ObservableCollection<EditorDirectionCanvasViewModel> SourceViewportSurfaces => Shell.SourceViewportSurfaces;
+
+    public ObservableCollection<EditorDirectionCanvasViewModel> TargetViewportSurfaces => Shell.TargetViewportSurfaces;
+
+    public int EditorSurfaceGridRows => Shell.EditorSurfaceGridRows;
+
+    public int EditorSurfaceGridColumns => Shell.EditorSurfaceGridColumns;
+
+    public bool ShowAllDirectionDisplayPicker => Shell.ShowAllDirectionDisplayPicker;
 
     public PixelCoordinate? SourceHoveredCoordinate => Shell.SourceHoveredCoordinate;
 
@@ -682,6 +695,8 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems => Shell.DirectionNavigatorItems;
 
     public int DirectionNavigatorColumns => Shell.DirectionNavigatorColumns;
+
+    public IRelayCommand<SpriteDirection> ToggleDisplayedDirectionCommand => Shell.ToggleDisplayedDirectionCommand;
 
     public string SelectedExplorerState
     {

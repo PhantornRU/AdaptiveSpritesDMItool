@@ -130,7 +130,10 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
-        TryApplySelectedDirection(direction, refreshUi: false);
+        if (TryApplySelectedDirection(direction, refreshUi: false))
+        {
+            RefreshDirectionViewportActivation();
+        }
     }
 
     public void HandleSourceCellPointerDown(PixelCellViewModel cell)

@@ -70,6 +70,88 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task ParallelScopeShouldSplitLargeCanvasesByCanonicalDirectionPair()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.SelectedDirection = SpriteDirection.North;
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+
+        viewModel.EditorSurfaceGridRows.Should().Be(2);
+        viewModel.EditorSurfaceGridColumns.Should().Be(1);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.North);
+        viewModel.TargetViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.North);
+        viewModel.TargetViewportSurfaces.Single(surface => surface.Direction == SpriteDirection.North).IsActive.Should().BeTrue();
+
+        viewModel.SelectedDirection = SpriteDirection.West;
+
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.East, SpriteDirection.West);
+        viewModel.TargetViewportSurfaces.Single(surface => surface.Direction == SpriteDirection.West).IsActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task AllScopeShouldToggleDisplayedLargeCanvasDirections()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.SelectedDirectionScope = DirectionScope.All;
+
+        viewModel.ShowAllDirectionDisplayPicker.Should().BeTrue();
+        viewModel.EditorSurfaceGridRows.Should().Be(2);
+        viewModel.EditorSurfaceGridColumns.Should().Be(2);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
+
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.East);
+
+        viewModel.EditorSurfaceGridRows.Should().Be(1);
+        viewModel.EditorSurfaceGridColumns.Should().Be(1);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should().Equal(SpriteDirection.East);
+        viewModel.DirectionNavigatorItems.Single(item => item.Direction == SpriteDirection.East).IsDisplaySelected.Should().BeTrue();
+
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.West);
+
+        viewModel.EditorSurfaceGridRows.Should().Be(2);
+        viewModel.EditorSurfaceGridColumns.Should().Be(1);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.East, SpriteDirection.West);
+
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.South);
+
+        viewModel.EditorSurfaceGridRows.Should().Be(2);
+        viewModel.EditorSurfaceGridColumns.Should().Be(2);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
+
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.East);
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.West);
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.South);
+
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
+        viewModel.DirectionNavigatorItems.Should().OnlyContain(item => !item.IsDisplaySelected);
+    }
+
+    [Fact]
     public async Task CreateConfigShouldEnableBatchWorkflowAndStayOnEditorSection()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);

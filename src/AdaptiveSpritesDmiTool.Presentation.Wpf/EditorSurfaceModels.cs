@@ -112,6 +112,43 @@ public sealed partial class DirectionTileViewModel : ObservableObject
     private bool isActive;
 }
 
+public sealed partial class EditorDirectionCanvasViewModel : ObservableObject
+{
+    public EditorDirectionCanvasViewModel(
+        SpriteDirection direction,
+        EditorSurfaceRenderState? surface,
+        bool isActive,
+        EditorSurfaceRenderState? overlaySurface = null)
+    {
+        Direction = direction;
+        Surface = surface;
+        OverlaySurface = overlaySurface;
+        this.isActive = isActive;
+    }
+
+    public SpriteDirection Direction { get; }
+
+    public string Label => Direction switch
+    {
+        SpriteDirection.South => "SOUTH",
+        SpriteDirection.North => "NORTH",
+        SpriteDirection.East => "EAST",
+        SpriteDirection.West => "WEST",
+        SpriteDirection.SouthEast => "SOUTH EAST",
+        SpriteDirection.SouthWest => "SOUTH WEST",
+        SpriteDirection.NorthEast => "NORTH EAST",
+        SpriteDirection.NorthWest => "NORTH WEST",
+        _ => Direction.ToString().ToUpperInvariant()
+    };
+
+    public EditorSurfaceRenderState? Surface { get; }
+
+    public EditorSurfaceRenderState? OverlaySurface { get; }
+
+    [ObservableProperty]
+    private bool isActive;
+}
+
 public sealed class MappingRowViewModel(PixelMapping mapping)
 {
     public PixelCoordinate Editable { get; } = mapping.Source;

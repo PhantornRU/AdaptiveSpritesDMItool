@@ -939,6 +939,7 @@
             <Setter Property="Margin" Value="0,0,0,2" />
             <Setter Property="Padding" Value="2" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="DirectionNavigatorItem_PreviewMouseLeftButtonDown" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
@@ -949,6 +950,10 @@
                             <DataTrigger Binding="{Binding IsScopeAffected}" Value="True">
                                 <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.AccentMuted}" />
                                 <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsDisplaySelected}" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                                <Setter TargetName="Root" Property="BorderThickness" Value="2" />
                             </DataTrigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
@@ -967,6 +972,7 @@
             <Setter Property="Margin" Value="0,0,4,0" />
             <Setter Property="Padding" Value="4" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="DirectionNavigatorItem_PreviewMouseLeftButtonDown" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
@@ -974,6 +980,11 @@
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsDisplaySelected}" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                                <Setter TargetName="Root" Property="BorderThickness" Value="2" />
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SurfaceSubtle}" />
+                            </DataTrigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
                                 <Setter TargetName="Root" Property="BorderThickness" Value="2" />
@@ -1167,6 +1178,114 @@
                     <TextBlock FontSize="10" Foreground="{DynamicResource Brush.TextSecondary}" Text="{DynamicResource Text.StatePool}" />
                 </StackPanel>
             </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="SourceViewportSurfaceTemplate">
+            <Border Margin="2"
+                    Padding="3"
+                    Background="{DynamicResource Brush.ControlBackground}"
+                    BorderBrush="{DynamicResource Brush.PanelBorder}"
+                    BorderThickness="1"
+                    CornerRadius="7">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Opacity" Value="1" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                                <Setter Property="BorderThickness" Value="2" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding DataContext.EditorWorkspace.IsSourceReferenceDimmed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Margin="0,0,0,2"
+                               HorizontalAlignment="Center"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Brush.TextSecondary}"
+                               Text="{Binding Label}" />
+                    <local:EditorSurfaceControl Grid.Row="1"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Surface="{Binding Surface}"
+                                                Zoom="{Binding DataContext.EditorWorkspace.ActiveEditorZoom, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                ShowGrid="{Binding DataContext.EditorWorkspace.ShowGrid, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                ShowCaptions="{Binding DataContext.EditorWorkspace.ShowGridCaptions, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                SelectedSourceCoordinate="{Binding DataContext.EditorWorkspace.SelectedSourceCoordinate, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                HoveredCoordinate="{Binding DataContext.EditorWorkspace.SourceHoveredCoordinate, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                HighlightedCoordinates="{Binding DataContext.EditorWorkspace.SourceLinkedHoverCoordinates, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                PreviewMouseLeftButtonDown="SourceSurface_PreviewMouseLeftButtonDown"
+                                                PreviewMouseLeftButtonUp="SourceSurface_PreviewMouseLeftButtonUp"
+                                                MouseMove="SourceSurface_MouseMove"
+                                                MouseLeave="SourceSurface_MouseLeave" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="EditableViewportSurfaceTemplate">
+            <Border Margin="2"
+                    Padding="3"
+                    Background="{DynamicResource Brush.ControlBackground}"
+                    BorderBrush="{DynamicResource Brush.PanelBorder}"
+                    BorderThickness="1"
+                    CornerRadius="7">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                                <Setter Property="BorderThickness" Value="2" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Margin="0,0,0,2"
+                               HorizontalAlignment="Center"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Brush.TextSecondary}"
+                               Text="{Binding Label}" />
+                    <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <local:EditorSurfaceControl HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Surface="{Binding Surface}"
+                                                    Zoom="{Binding DataContext.EditorWorkspace.ActiveEditorZoom, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    ShowGrid="{Binding DataContext.EditorWorkspace.ShowGrid, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    ShowCaptions="{Binding DataContext.EditorWorkspace.ShowGridCaptions, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    SelectedTargetCoordinate="{Binding DataContext.EditorWorkspace.SelectedTargetCoordinate, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    SelectedAreaBounds="{Binding DataContext.EditorWorkspace.SelectedAreaBounds, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    HoveredCoordinate="{Binding DataContext.EditorWorkspace.EditableHoveredCoordinate, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    HighlightedCoordinates="{Binding DataContext.EditorWorkspace.EditableLinkedHoverCoordinates, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    PreviewMouseLeftButtonDown="TargetSurface_PreviewMouseLeftButtonDown"
+                                                    MouseMove="TargetSurface_MouseMove"
+                                                    MouseLeave="TargetSurface_MouseLeave"
+                                                    LostMouseCapture="TargetSurface_LostMouseCapture"
+                                                    PreviewMouseLeftButtonUp="TargetSurface_PreviewMouseLeftButtonUp" />
+                        <local:EditorSurfaceControl HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    IsHitTestVisible="False"
+                                                    Opacity="0.35"
+                                                    Visibility="{Binding DataContext.EditorWorkspace.ShowOverlayCompareLayer, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    Surface="{Binding OverlaySurface}"
+                                                    Zoom="{Binding DataContext.EditorWorkspace.ActiveEditorZoom, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    ShowGrid="False"
+                                                    ShowCaptions="False" />
+                    </Grid>
+                </Grid>
+            </Border>
         </DataTemplate>
 
         <DataTemplate x:Key="DirectionTileTemplate">
@@ -2011,7 +2130,12 @@
                                               Visibility="{Binding ShowEditorLeftRail, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                                 <Grid Grid.Row="1" Grid.Column="2">
-                                    <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Grid.Row="0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="5" />
@@ -2042,29 +2166,17 @@
                                                     <Grid MinWidth="{Binding ElementName=SourceViewportScrollViewer, Path=ActualWidth}"
                                                           MinHeight="{Binding ElementName=SourceViewportScrollViewer, Path=ActualHeight}"
                                                           Background="{DynamicResource Brush.ControlBackground}">
-                                                        <Grid.Style>
-                                                            <Style TargetType="Grid">
-                                                                <Setter Property="Opacity" Value="1" />
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsSourceReferenceDimmed}" Value="True">
-                                                                        <Setter Property="Opacity" Value="0.45" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Grid.Style>
-                                                                                <local:EditorSurfaceControl HorizontalAlignment="Center"
-                                                                                   VerticalAlignment="Center"
-                                                                                   Surface="{Binding ActiveSourceSurface}"
-                                                                                   Zoom="{Binding ActiveEditorZoom}"
-                                                                                    ShowGrid="{Binding ShowGrid}"
-                                                                                   ShowCaptions="{Binding ShowGridCaptions}"
-                                                                                   SelectedSourceCoordinate="{Binding SelectedSourceCoordinate}"
-                                                                                   HoveredCoordinate="{Binding SourceHoveredCoordinate}"
-                                                                                   HighlightedCoordinates="{Binding SourceLinkedHoverCoordinates}"
-                                                                                   PreviewMouseLeftButtonDown="SourceSurface_PreviewMouseLeftButtonDown"
-                                                                                   PreviewMouseLeftButtonUp="SourceSurface_PreviewMouseLeftButtonUp"
-                                                                                   MouseMove="SourceSurface_MouseMove"
-                                                                                   MouseLeave="SourceSurface_MouseLeave" />
+                                                        <ItemsControl HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"
+                                                                      ItemsSource="{Binding SourceViewportSurfaces}"
+                                                                      ItemTemplate="{StaticResource SourceViewportSurfaceTemplate}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <UniformGrid Rows="{Binding DataContext.EditorWorkspace.EditorSurfaceGridRows, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                 Columns="{Binding DataContext.EditorWorkspace.EditorSurfaceGridColumns, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                        </ItemsControl>
                                                     </Grid>
                                                 </ScrollViewer>
                                             </Grid>
@@ -2103,36 +2215,45 @@
                                                     <Grid MinWidth="{Binding ElementName=EditableViewportScrollViewer, Path=ActualWidth}"
                                                           MinHeight="{Binding ElementName=EditableViewportScrollViewer, Path=ActualHeight}"
                                                           Background="{DynamicResource Brush.ControlBackground}">
-                                                                                <local:EditorSurfaceControl HorizontalAlignment="Center"
-                                                                                   VerticalAlignment="Center"
-                                                                                   Surface="{Binding ActiveTargetSurface}"
-                                                                                   Zoom="{Binding ActiveEditorZoom}"
-                                                                                   ShowGrid="{Binding ShowGrid}"
-                                                                                    ShowCaptions="{Binding ShowGridCaptions}"
-                                                                                   SelectedTargetCoordinate="{Binding SelectedTargetCoordinate}"
-                                                                                   SelectedAreaBounds="{Binding SelectedAreaBounds}"
-                                                                                   HoveredCoordinate="{Binding EditableHoveredCoordinate}"
-                                                                                   HighlightedCoordinates="{Binding EditableLinkedHoverCoordinates}"
-                                                                                   PreviewMouseLeftButtonDown="TargetSurface_PreviewMouseLeftButtonDown"
-                                                                                   MouseMove="TargetSurface_MouseMove"
-                                                                                   MouseLeave="TargetSurface_MouseLeave"
-                                                                                   LostMouseCapture="TargetSurface_LostMouseCapture"
-                                                                                   PreviewMouseLeftButtonUp="TargetSurface_PreviewMouseLeftButtonUp" />
-
-                                                        <local:EditorSurfaceControl HorizontalAlignment="Center"
-                                                                                   VerticalAlignment="Center"
-                                                                                   IsHitTestVisible="False"
-                                                                                   Opacity="0.35"
-                                                                                   Visibility="{Binding ShowOverlayCompareLayer, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                                                   Surface="{Binding ActiveSourceSurface}"
-                                                                                   Zoom="{Binding ActiveEditorZoom}"
-                                                                                   ShowGrid="False"
-                                                                                   ShowCaptions="False" />
+                                                        <ItemsControl HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"
+                                                                      ItemsSource="{Binding TargetViewportSurfaces}"
+                                                                      ItemTemplate="{StaticResource EditableViewportSurfaceTemplate}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <UniformGrid Rows="{Binding DataContext.EditorWorkspace.EditorSurfaceGridRows, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                 Columns="{Binding DataContext.EditorWorkspace.EditorSurfaceGridColumns, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                        </ItemsControl>
                                                     </Grid>
                                                 </ScrollViewer>
                                             </Grid>
                                         </Border>
                                     </Grid>
+
+                                    <Border Grid.Row="1"
+                                            Margin="0,6,0,0"
+                                            Padding="6"
+                                            Background="{DynamicResource Brush.PanelBackground}"
+                                            BorderBrush="{DynamicResource Brush.PanelBorder}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Visibility="{Binding ShowAllDirectionDisplayPicker, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <ListBox ItemsSource="{Binding DirectionNavigatorItems}"
+                                                 BorderThickness="0"
+                                                 Background="Transparent"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                                 ItemTemplate="{StaticResource HorizontalDirectionStripItemTemplate}"
+                                                 ItemContainerStyle="{StaticResource HorizontalDirectionStripListBoxItemStyle}">
+                                            <ListBox.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel Orientation="Horizontal" />
+                                                </ItemsPanelTemplate>
+                                            </ListBox.ItemsPanel>
+                                        </ListBox>
+                                    </Border>
                                 </Grid>
 
                                 <GridSplitter Grid.RowSpan="3"

@@ -58,6 +58,132 @@ public partial class WorkspaceShellViewModel
         var direction = GetSafeSelectedDirection();
         ActiveSourceSurface = BuildSourceSurfaceRenderState(direction);
         ActiveTargetSurface = BuildEditableSurfaceRenderState(direction, useCompositeImage: ShowOverlay);
+        RebuildDirectionViewportSurfaces(direction);
+    }
+
+    private void RebuildDirectionViewportSurfaces(SpriteDirection activeDirection)
+    {
+        var directions = ResolveVisibleEditorViewportDirections(activeDirection);
+        var columns = ResolveEditorSurfaceGridColumns(directions.Count);
+        EditorSurfaceGridColumns = columns;
+        EditorSurfaceGridRows = Math.Max(1, (int)Math.Ceiling(directions.Count / (double)columns));
+
+        SourceViewportSurfaces.Clear();
+        TargetViewportSurfaces.Clear();
+        foreach (var direction in directions)
+        {
+            var sourceSurface = BuildSourceSurfaceRenderState(direction);
+            SourceViewportSurfaces.Add(new EditorDirectionCanvasViewModel(
+                direction,
+                sourceSurface,
+                direction == activeDirection));
+            TargetViewportSurfaces.Add(new EditorDirectionCanvasViewModel(
+                direction,
+                BuildEditableSurfaceRenderState(direction, useCompositeImage: ShowOverlay),
+                direction == activeDirection,
+                sourceSurface));
+        }
+    }
+
+    private void RefreshDirectionViewportActivation()
+    {
+        var activeDirection = _editorSession.SelectedDirection;
+        foreach (var surface in SourceViewportSurfaces)
+        {
+            surface.IsActive = surface.Direction == activeDirection;
+        }
+
+        foreach (var surface in TargetViewportSurfaces)
+        {
+            surface.IsActive = surface.Direction == activeDirection;
+        }
+
+        foreach (var item in DirectionNavigatorItems)
+        {
+            item.IsActive = item.Direction == activeDirection;
+        }
+    }
+
+    private IReadOnlyList<SpriteDirection> ResolveVisibleEditorViewportDirections(SpriteDirection activeDirection)
+    {
+        var available = AvailableDirections.Count > 0
+            ? OrderViewportDirections(AvailableDirections).ToArray()
+            : [activeDirection];
+
+        return SelectedDirectionScope switch
+        {
+            DirectionScope.Parallel => ResolveParallelViewportDirections(available, activeDirection),
+            DirectionScope.All => ResolveAllViewportDirections(available),
+            _ => [activeDirection]
+        };
+    }
+
+    private IReadOnlyList<SpriteDirection> ResolveAllViewportDirections(IReadOnlyList<SpriteDirection> available)
+    {
+        PruneAllDirectionDisplaySelection(available);
+        if (_allDirectionDisplaySelection.Count is 1 or 2)
+        {
+            return available
+                .Where(_allDirectionDisplaySelection.Contains)
+                .ToArray();
+        }
+
+        return available;
+    }
+
+    private static IReadOnlyList<SpriteDirection> ResolveParallelViewportDirections(
+        IReadOnlyCollection<SpriteDirection> available,
+        SpriteDirection activeDirection)
+    {
+        SpriteDirection[] pair = activeDirection switch
+        {
+            SpriteDirection.South or SpriteDirection.North => [SpriteDirection.South, SpriteDirection.North],
+            SpriteDirection.East or SpriteDirection.West => [SpriteDirection.East, SpriteDirection.West],
+            SpriteDirection.SouthEast or SpriteDirection.NorthWest => [SpriteDirection.SouthEast, SpriteDirection.NorthWest],
+            SpriteDirection.SouthWest or SpriteDirection.NorthEast => [SpriteDirection.SouthWest, SpriteDirection.NorthEast],
+            _ => [activeDirection]
+        };
+
+        var resolved = pair
+            .Where(available.Contains)
+            .ToArray();
+
+        return resolved.Length == 0
+            ? [activeDirection]
+            : resolved;
+    }
+
+    private static int ResolveEditorSurfaceGridColumns(int surfaceCount)
+    {
+        return surfaceCount switch
+        {
+            <= 2 => 1,
+            <= 4 => 2,
+            _ => 4
+        };
+    }
+
+    private static IEnumerable<SpriteDirection> OrderViewportDirections(IEnumerable<SpriteDirection> directions)
+    {
+        var ordered = new[]
+        {
+            SpriteDirection.South,
+            SpriteDirection.East,
+            SpriteDirection.North,
+            SpriteDirection.West,
+            SpriteDirection.SouthEast,
+            SpriteDirection.SouthWest,
+            SpriteDirection.NorthEast,
+            SpriteDirection.NorthWest
+        };
+
+        var directionSet = directions.ToHashSet();
+        return ordered.Where(directionSet.Contains);
+    }
+
+    private void PruneAllDirectionDisplaySelection(IReadOnlyCollection<SpriteDirection> available)
+    {
+        _allDirectionDisplaySelection.RemoveWhere(direction => !available.Contains(direction));
     }
 
     private void RefreshImportedStateComposition()

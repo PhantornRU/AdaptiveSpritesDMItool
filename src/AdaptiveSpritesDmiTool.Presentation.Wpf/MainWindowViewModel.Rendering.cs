@@ -233,6 +233,9 @@ public partial class WorkspaceShellViewModel
         SelectedAreaBounds = null;
         ActiveSourceSurface = null;
         ActiveTargetSurface = null;
+        SourceViewportSurfaces.Clear();
+        TargetViewportSurfaces.Clear();
+        _allDirectionDisplaySelection.Clear();
         InvalidateNavigatorSnapshotCache();
         BatchResults.Clear();
         ConfigQueueItems.Clear();
@@ -813,6 +816,7 @@ public partial class WorkspaceShellViewModel
     {
         DirectionNavigatorItems.Clear();
         var activeDirection = GetSafeSelectedDirection();
+        PruneAllDirectionDisplaySelection(AvailableDirections.ToArray());
         var scopeDirections = SelectedDirectionScope switch
         {
             DirectionScope.Single => new HashSet<SpriteDirection>([activeDirection]),
@@ -827,6 +831,7 @@ public partial class WorkspaceShellViewModel
             {
                 IsActive = direction == activeDirection,
                 IsScopeAffected = scopeDirections.Contains(direction),
+                IsDisplaySelected = SelectedDirectionScope == DirectionScope.All && _allDirectionDisplaySelection.Contains(direction),
                 PreviewImage = BuildNavigatorPreviewImage(direction)
             };
 

@@ -489,6 +489,31 @@ public partial class WorkspaceShellViewModel
     }
 
     [RelayCommand]
+    private void ToggleDisplayedDirection(SpriteDirection direction)
+    {
+        if (SelectedDirectionScope != DirectionScope.All)
+        {
+            SelectedDirection = direction;
+            return;
+        }
+
+        if (!_allDirectionDisplaySelection.Add(direction))
+        {
+            _allDirectionDisplaySelection.Remove(direction);
+        }
+
+        SelectedDirection = direction;
+        RefreshEditorSurface();
+        StatusMessage = _allDirectionDisplaySelection.Count switch
+        {
+            0 => "All directions are displayed.",
+            1 => $"Only {direction} is displayed in the large editor canvas.",
+            2 => "Two selected directions are displayed in the large editor canvas.",
+            _ => "All directions are displayed because three or more directions are selected."
+        };
+    }
+
+    [RelayCommand]
     private void SelectViewportMode(EditorViewportMode mode)
     {
         if (SelectedEditorViewportMode == mode)
@@ -632,6 +657,8 @@ public partial class WorkspaceShellViewModel
 
     partial void OnSelectedDirectionScopeChanged(DirectionScope value)
     {
+        _allDirectionDisplaySelection.Clear();
+
         EditorStatus = value switch
         {
             DirectionScope.Single => "Edits affect only the active direction.",

@@ -302,6 +302,21 @@ public partial class MainWindow : Window
         ViewModel.HandleTargetSurfacePointerLeave();
     }
 
+    private void DirectionNavigatorItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (ViewModel.SelectedDirectionScope != DirectionScope.All)
+        {
+            return;
+        }
+
+        if (sender is FrameworkElement { DataContext: DirectionNavigatorItemViewModel item } &&
+            ViewModel.ToggleDisplayedDirectionCommand.CanExecute(item.Direction))
+        {
+            ViewModel.ToggleDisplayedDirectionCommand.Execute(item.Direction);
+            e.Handled = true;
+        }
+    }
+
     private static bool TryCreateSurfaceCell(object sender, Point position, out PixelCellViewModel cell)
     {
         if (sender is EditorSurfaceControl { Surface: { } surface } control && control.TryGetCoordinate(position, out var coordinate))

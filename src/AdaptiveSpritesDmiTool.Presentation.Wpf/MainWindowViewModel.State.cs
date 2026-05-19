@@ -233,9 +233,16 @@ public partial class WorkspaceShellViewModel
     private EditorSurfaceRenderState? activeTargetSurface;
 
     [ObservableProperty]
+    private int editorSurfaceGridRows = 1;
+
+    [ObservableProperty]
+    private int editorSurfaceGridColumns = 1;
+
+    [ObservableProperty]
     private EditorTool selectedEditorTool = EditorTool.Single;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowAllDirectionDisplayPicker))]
     private DirectionScope selectedDirectionScope = DirectionScope.Single;
 
     [ObservableProperty]
@@ -288,6 +295,7 @@ public partial class WorkspaceShellViewModel
     [NotifyPropertyChangedFor(nameof(ShowCompactCanvasHeader))]
     [NotifyPropertyChangedFor(nameof(ShowStatesRail))]
     [NotifyPropertyChangedFor(nameof(ShowSingleStateStrip))]
+    [NotifyPropertyChangedFor(nameof(ShowAllDirectionDisplayPicker))]
     [NotifyPropertyChangedFor(nameof(UseHorizontalDirectionsStrip))]
     [NotifyPropertyChangedFor(nameof(UseVerticalDirectionsRail))]
     [NotifyPropertyChangedFor(nameof(HasDirectionSelector))]
@@ -347,6 +355,10 @@ public partial class WorkspaceShellViewModel
 
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems { get; } = [];
 
+    public ObservableCollection<EditorDirectionCanvasViewModel> SourceViewportSurfaces { get; } = [];
+
+    public ObservableCollection<EditorDirectionCanvasViewModel> TargetViewportSurfaces { get; } = [];
+
     public ObservableCollection<EditorAssetItemViewModel> EditorAssetItems { get; } = [];
 
     public ObservableCollection<ImportedDmiStateItemViewModel> ImportedDmiStateItems { get; } = [];
@@ -393,6 +405,8 @@ public partial class WorkspaceShellViewModel
     public bool ShowDirectionsInSidebar => HasDirectionSelector && !IsFocusMode;
 
     public bool ShowRightDirectionStrip => HasDirectionSelector && !IsFocusMode;
+
+    public bool ShowAllDirectionDisplayPicker => SelectedDirectionScope == DirectionScope.All && HasDirectionSelector && !IsFocusMode;
 
     public bool ShowBottomStatusBar => !IsFocusMode;
 
