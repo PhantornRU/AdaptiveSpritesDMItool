@@ -28,6 +28,29 @@ public enum AutoPreviewMode
     Disabled = 1
 }
 
+public enum BatchPreviewDirectionMode
+{
+    Single = 0,
+    All = 1
+}
+
+internal static class PresentationText
+{
+    public static string Format(string key, string fallback, params object[] args)
+    {
+        var text = App.Text(key, fallback);
+        for (var index = 0; index < args.Length; index++)
+        {
+            text = text.Replace(
+                "{" + index.ToString(CultureInfo.InvariantCulture) + "}",
+                Convert.ToString(args[index], CultureInfo.CurrentCulture),
+                StringComparison.Ordinal);
+        }
+
+        return text;
+    }
+}
+
 public sealed class PreviewRefreshCoordinator(TimeSpan? debounce = null) : IDisposable
 {
     private readonly TimeSpan _debounce = debounce ?? TimeSpan.FromMilliseconds(250);
@@ -929,9 +952,9 @@ public sealed partial class BatchCandidateFileViewModel : ObservableObject
             BatchPathLayout.IsPathUnderDirectory(FullPath, Path.GetFullPath(outputDirectory));
         IsValid = sourceItem.IsValid && !IsInsideOutputDirectory;
         ValidationMessage = IsInsideOutputDirectory
-            ? "Output folder is excluded from batch input."
+            ? App.Text("Text.Batch.OutputExcludedMessage", "Output folder is excluded from batch input.")
             : string.IsNullOrWhiteSpace(sourceItem.ValidationMessage)
-                ? "Ready"
+                ? App.Text("Text.Batch.Ready", "Ready")
                 : sourceItem.ValidationMessage;
         message = ValidationMessage;
         isSelected = IsValid;
@@ -957,7 +980,20 @@ public sealed partial class BatchCandidateFileViewModel : ObservableObject
 
     public string StatusText => LastStatus?.ToString() ?? (IsValid ? "Ready" : "Invalid");
 
-    public string RunScopeText => IsSelected && IsValid ? "Included" : "Excluded";
+    public string StatusDisplayText => LastStatus switch
+    {
+        BatchFileStatus.Processed => App.Text("Text.Batch.Status.Processed", "Processed"),
+        BatchFileStatus.Skipped => App.Text("Text.Batch.Status.Skipped", "Skipped"),
+        BatchFileStatus.Failed => App.Text("Text.Batch.Status.Failed", "Failed"),
+        BatchFileStatus.Cancelled => App.Text("Text.Batch.Status.Cancelled", "Cancelled"),
+        _ => IsValid
+            ? App.Text("Text.Batch.Ready", "Ready")
+            : App.Text("Text.Batch.Invalid", "Invalid")
+    };
+
+    public string RunScopeText => IsSelected && IsValid
+        ? App.Text("Text.Batch.Included", "Included")
+        : App.Text("Text.Batch.Excluded", "Excluded");
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(RunScopeText))]
@@ -965,6 +1001,7 @@ public sealed partial class BatchCandidateFileViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(StatusDisplayText))]
     private BatchFileStatus? lastStatus;
 
     [ObservableProperty]
@@ -1004,10 +1041,10 @@ public sealed partial class BatchFolderTreeItemViewModel : ObservableObject
     private bool isOutputExcluded;
 
     public string CountSummary => IsOutputExcluded
-        ? "output excluded"
+        ? App.Text("Text.Batch.OutputExcludedShort", "output excluded")
         : FileCount == 1
-            ? "1 file"
-            : $"{FileCount} files";
+            ? App.Text("Text.Batch.OneFile", "1 file")
+            : PresentationText.Format("Text.Batch.FileCountFormat", "{0} files", FileCount);
 }
 
 public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
@@ -1174,6 +1211,32 @@ public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
         set => Shell.SelectedOverwritePolicy = value;
     }
 
+    public bool IsSingleDirectionPreviewSelected
+    {
+        get => Shell.SelectedBatchPreviewDirectionMode == BatchPreviewDirectionMode.Single;
+        set
+        {
+            if (value)
+            {
+                Shell.SelectedBatchPreviewDirectionMode = BatchPreviewDirectionMode.Single;
+            }
+        }
+    }
+
+    public bool IsAllDirectionsPreviewSelected
+    {
+        get => Shell.SelectedBatchPreviewDirectionMode == BatchPreviewDirectionMode.All;
+        set
+        {
+            if (value)
+            {
+                Shell.SelectedBatchPreviewDirectionMode = BatchPreviewDirectionMode.All;
+            }
+        }
+    }
+
+    public bool ShowPreviewDirectionModeSelector => Shell.AvailableDirections.Count > 1;
+
     public ObservableCollection<BatchResultRowViewModel> BatchResults => Shell.BatchResults;
 
     public string BatchSummary => Shell.BatchSummary;
@@ -1195,12 +1258,17 @@ public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
     public int SelectedCandidateFileCount => CandidateFiles.Count(static file => file.IsSelected && file.IsValid);
 
     public string CandidateSelectionSummary =>
-        $"{SelectedCandidateFileCount} selected / {ValidCandidateFileCount} valid / {CandidateFileCount} found";
+        PresentationText.Format(
+            "Text.Batch.CandidateSelectionFormat",
+            "{0} selected / {1} valid / {2} found",
+            SelectedCandidateFileCount,
+            ValidCandidateFileCount,
+            CandidateFileCount);
 
     public string RunBatchButtonText =>
         SelectedCandidateFileCount == ValidCandidateFileCount && ValidCandidateFileCount > 0
-            ? $"Run all {ValidCandidateFileCount}"
-            : $"Run {SelectedCandidateFileCount} selected";
+            ? PresentationText.Format("Text.Batch.RunAllFormat", "Run all {0}", ValidCandidateFileCount)
+            : PresentationText.Format("Text.Batch.RunSelectedFormat", "Run {0} selected", SelectedCandidateFileCount);
 
     public bool CanRunSelectedBatch => SelectedCandidateFileCount > 0 && !Shell.IsBusy;
 
@@ -1210,10 +1278,12 @@ public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
         BatchPathLayout.IsPathUnderDirectory(BatchOutputDirectory, BatchInputDirectory);
 
     public string OutputExclusionSummary => IsOutputInsideInputDirectory
-        ? "Output folder is inside source and will be excluded from input scan."
+        ? App.Text("Text.Batch.OutputInsideInputWarning", "Output folder is inside source and will be excluded from input scan.")
         : string.Empty;
 
-    public string RunLogDetail => Shell.IsBusy ? CurrentFileSummary : "Batch is idle.";
+    public string RunLogDetail => Shell.IsBusy
+        ? CurrentFileSummary
+        : App.Text("Text.Batch.IdleDetail", "Batch is idle.");
 
     public bool? AreAllVisibleCandidatesSelected
     {
@@ -1255,13 +1325,13 @@ public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
         }
     }
 
-    public string SourceSelectionName => Shell.SelectedBatchSourceItem?.Name ?? "All DMI files";
+    public string SourceSelectionName => Shell.SelectedBatchSourceItem?.Name ?? App.Text("Text.Batch.AllDmiFiles", "All DMI files");
 
     public string SourceSelectionDetail => Shell.SelectedBatchSourceItem is null
-        ? "Whole source folder"
+        ? App.Text("Text.Batch.WholeSourceFolder", "Whole source folder")
         : Shell.SelectedBatchSourceItem.IsDirectory
-            ? "Selected folder"
-            : "Selected file";
+            ? App.Text("Text.Batch.SelectedFolder", "Selected folder")
+            : App.Text("Text.Batch.SelectedFile", "Selected file");
 
     public string SourceSelectionPath => Shell.SelectedBatchSourceItem?.FullPath ?? Shell.BatchInputDirectory;
 
@@ -1304,27 +1374,27 @@ public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
 
         if (selectedFiles.Length == 0)
         {
-            Shell.StatusMessage = "Select at least one valid DMI file to run batch.";
+            Shell.StatusMessage = App.Text("Text.Batch.SelectValidDmi", "Select at least one valid DMI file to run batch.");
             return;
         }
 
         await Shell.RunBatchForExplicitFilesAsync(selectedFiles);
     }
 
-    public string ActiveConfigName => ActiveConfigItem?.Name ?? "No config";
+    public string ActiveConfigName => ActiveConfigItem?.Name ?? App.Text("Text.Batch.NoConfig", "No config");
 
-    public string ActiveConfigStorage => ActiveConfigItem?.PathSummary ?? "Load a config";
+    public string ActiveConfigStorage => ActiveConfigItem?.PathSummary ?? App.Text("Text.Batch.LoadConfig", "Load a config");
 
-    public string SelectedStateName => SelectedStateStripItem?.Name ?? "No state";
+    public string SelectedStateName => SelectedStateStripItem?.Name ?? App.Text("Text.Batch.NoState", "No state");
 
     public string BatchProgressSummary => Shell.BatchTotalFiles > 0
         ? $"{Shell.BatchProcessedFiles}/{Shell.BatchTotalFiles}"
         : HasBatchResults
-            ? $"{Shell.BatchResults.Count} result(s)"
-            : "Idle";
+            ? PresentationText.Format("Text.Batch.ResultCountFormat", "{0} result(s)", Shell.BatchResults.Count)
+            : App.Text("Text.Batch.Idle", "Idle");
 
     public string CurrentFileSummary => string.IsNullOrWhiteSpace(Shell.BatchCurrentFile)
-        ? "No active file"
+        ? App.Text("Text.Batch.NoActiveFile", "No active file")
         : Shell.BatchCurrentFile;
 
     public int ProcessedResultCount => _processedResultCount;
@@ -1662,11 +1732,11 @@ public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
     public bool HasQuickPreview => HasQuickPreviewOriginalImage || HasQuickPreviewEditedImage;
 
     public string QuickPreviewSummary => string.IsNullOrWhiteSpace(SelectedStateStripItem?.Name)
-        ? "Select a state to compare original and edited output."
-        : $"Selected state: {SelectedStateStripItem.Name}";
+        ? App.Text("Text.Batch.SelectStatePreview", "Select a state to compare original and edited output.")
+        : PresentationText.Format("Text.Batch.SelectedStateFormat", "Selected state: {0}", SelectedStateStripItem.Name);
 
     public string QuickPreviewSelectionSummary => string.IsNullOrWhiteSpace(Shell.PreviewSelectionSummary)
-        ? "No preview selection."
+        ? App.Text("Text.Batch.NoPreviewSelection", "No preview selection.")
         : Shell.PreviewSelectionSummary;
 
     public IRelayCommand BrowseBatchInputDirectoryCommand => Shell.BrowseBatchInputDirectoryCommand;

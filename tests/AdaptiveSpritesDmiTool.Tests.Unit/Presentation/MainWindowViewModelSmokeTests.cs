@@ -1196,6 +1196,30 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task BatchWorkspaceShouldTogglePreviewDirectionMode()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: new StubFileDialogService { DmiPath = "sprite.dmi" });
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.BatchWorkspace.ShowPreviewDirectionModeSelector.Should().BeTrue();
+        viewModel.BatchWorkspace.IsSingleDirectionPreviewSelected.Should().BeTrue();
+        viewModel.BatchWorkspace.IsAllDirectionsPreviewSelected.Should().BeFalse();
+
+        viewModel.BatchWorkspace.IsAllDirectionsPreviewSelected = true;
+
+        viewModel.SelectedBatchPreviewDirectionMode.Should().Be(BatchPreviewDirectionMode.All);
+        viewModel.BatchWorkspace.IsSingleDirectionPreviewSelected.Should().BeFalse();
+        viewModel.BatchWorkspace.IsAllDirectionsPreviewSelected.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task BatchWorkspaceRunPlanShouldSelectValidFilesAndExcludeOutputDirectory()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);

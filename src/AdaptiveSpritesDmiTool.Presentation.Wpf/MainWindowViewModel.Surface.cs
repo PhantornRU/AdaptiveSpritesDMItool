@@ -251,30 +251,43 @@ public partial class WorkspaceShellViewModel
                 return;
             }
 
-            var direction = GetSafeSelectedDirection();
-            var originalFrameResult = await _readStateFrameUseCase.ExecuteAsync(sourcePath, stateName, direction, cancellationToken);
-            if (originalFrameResult.IsFailure)
+            var directions = ResolveBatchQuickPreviewDirections(previewAsset);
+            var originalFrames = new List<SpriteImage>(directions.Count);
+            var editedFrames = new List<SpriteImage>(directions.Count);
+            foreach (var direction in directions)
             {
-                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                var originalFrameResult = await _readStateFrameUseCase.ExecuteAsync(sourcePath, stateName, direction, cancellationToken);
+                if (originalFrameResult.IsFailure)
                 {
-                    if (requestVersion != _batchQuickPreviewRefreshVersion)
+                    if (SelectedBatchPreviewDirectionMode == BatchPreviewDirectionMode.All && originalFrames.Count > 0)
                     {
-                        return;
+                        continue;
                     }
 
-                    BatchQuickPreviewOriginalImage = null;
-                    BatchQuickPreviewEditedImage = null;
-                });
-                return;
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        if (requestVersion != _batchQuickPreviewRefreshVersion)
+                        {
+                            return;
+                        }
+
+                        BatchQuickPreviewOriginalImage = null;
+                        BatchQuickPreviewEditedImage = null;
+                    });
+                    return;
+                }
+
+                var originalFrame = originalFrameResult.Value;
+                originalFrames.Add(originalFrame);
+                editedFrames.Add(_editorSession.CurrentConfig is null
+                    ? originalFrame
+                    : RenderEditableSurfaceImage(originalFrame, direction) ?? originalFrame);
             }
 
-            var originalFrame = originalFrameResult.Value;
-            var editedFrame = _editorSession.CurrentConfig is null
-                ? originalFrame
-                : RenderEditableSurfaceImage(originalFrame, direction) ?? originalFrame;
-
-            var original = _bitmapSourceFactory.Create(originalFrame);
-            var edited = _bitmapSourceFactory.Create(editedFrame);
+            var originalImage = ComposeBatchPreviewSheet(originalFrames, ResolveEditorSurfaceGridColumns(originalFrames.Count));
+            var editedImage = ComposeBatchPreviewSheet(editedFrames, ResolveEditorSurfaceGridColumns(editedFrames.Count));
+            var original = _bitmapSourceFactory.Create(originalImage);
+            var edited = _bitmapSourceFactory.Create(editedImage);
 
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
@@ -304,6 +317,54 @@ public partial class WorkspaceShellViewModel
                 BatchQuickPreviewEditedImage = null;
             });
         }
+    }
+
+    private IReadOnlyList<SpriteDirection> ResolveBatchQuickPreviewDirections(DmiAssetInfo previewAsset)
+    {
+        var directions = GetPresentationDirectionOrder(previewAsset.SupportedDirections);
+        if (SelectedBatchPreviewDirectionMode == BatchPreviewDirectionMode.All)
+        {
+            return directions;
+        }
+
+        var selectedDirection = GetSafeSelectedDirection();
+        return previewAsset.SupportedDirections.Supports(selectedDirection)
+            ? [selectedDirection]
+            : [directions.First()];
+    }
+
+    private static SpriteImage? ComposeBatchPreviewSheet(IReadOnlyList<SpriteImage> frames, int columns)
+    {
+        if (frames.Count == 0)
+        {
+            return null;
+        }
+
+        columns = Math.Max(1, columns);
+        var cellWidth = frames[0].Width;
+        var cellHeight = frames[0].Height;
+        var rows = Math.Max(1, (int)Math.Ceiling(frames.Count / (double)columns));
+        var sheet = new SpriteImage(cellWidth * columns, cellHeight * rows, new byte[cellWidth * columns * cellHeight * rows * 4]);
+
+        for (var frameIndex = 0; frameIndex < frames.Count; frameIndex++)
+        {
+            var frame = frames[frameIndex];
+            if (frame.Width != cellWidth || frame.Height != cellHeight)
+            {
+                continue;
+            }
+
+            var targetColumn = frameIndex % columns;
+            var targetRow = frameIndex / columns;
+            for (var y = 0; y < cellHeight; y++)
+            {
+                var sourceOffset = y * cellWidth * 4;
+                var targetOffset = (((targetRow * cellHeight) + y) * sheet.Width + (targetColumn * cellWidth)) * 4;
+                Array.Copy(frame.RgbaBytes, sourceOffset, sheet.RgbaBytes, targetOffset, cellWidth * 4);
+            }
+        }
+
+        return sheet;
     }
 
     private async Task RefreshImportedStateCompositionAsync(int requestVersion, CancellationToken cancellationToken)

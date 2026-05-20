@@ -14,9 +14,9 @@ internal sealed class OverwritePolicyLabelConverter : IValueConverter
         CultureInfo culture) =>
         value switch
         {
-            OverwritePolicy.SkipExisting => "Skip existing",
-            OverwritePolicy.OverwriteExisting => "Overwrite existing",
-            OverwritePolicy.FailIfExists => "Fail if exists",
+            OverwritePolicy.SkipExisting => App.Text("Text.Batch.Policy.SkipExisting", "Skip existing"),
+            OverwritePolicy.OverwriteExisting => App.Text("Text.Batch.Policy.OverwriteExisting", "Overwrite existing"),
+            OverwritePolicy.FailIfExists => App.Text("Text.Batch.Policy.FailIfExists", "Fail if exists"),
             _ => value?.ToString() ?? string.Empty
         };
 

@@ -191,7 +191,7 @@ public partial class WorkspaceShellViewModel
                 if (result.IsFailure)
                 {
                     StatusMessage = result.Error.Message;
-                    BatchSummary = "Batch processing failed.";
+                    BatchSummary = App.Text("Text.Batch.ProcessingFailed", "Batch processing failed.");
                     return;
                 }
 
@@ -204,12 +204,15 @@ public partial class WorkspaceShellViewModel
                 var skippedCount = result.Value.Files.Count(file => file.Status == BatchFileStatus.Skipped);
                 var failedCount = result.Value.Files.Count(file => file.Status == BatchFileStatus.Failed);
                 var cancelledCount = result.Value.Files.Count(file => file.Status == BatchFileStatus.Cancelled);
-                var summaryPrefix = result.Value.WasCancelled ? "Batch cancelled with" : "Batch finished with";
-                BatchSummary =
-                    $"{summaryPrefix} {processedCount} processed, " +
-                    $"{skippedCount} skipped, " +
-                    $"{failedCount} failed, " +
-                    $"{cancelledCount} cancelled.";
+                BatchSummary = PresentationText.Format(
+                    result.Value.WasCancelled ? "Text.Batch.SummaryCancelledFormat" : "Text.Batch.SummaryFinishedFormat",
+                    result.Value.WasCancelled
+                        ? "Batch cancelled with {0} processed, {1} skipped, {2} failed, {3} cancelled."
+                        : "Batch finished with {0} processed, {1} skipped, {2} failed, {3} cancelled.",
+                    processedCount,
+                    skippedCount,
+                    failedCount,
+                    cancelledCount);
                 StatusMessage = BatchSummary;
                 NavigateToSection(ShellSectionKind.Batch);
                 await PersistWorkspaceSettingsAsync(cancellationToken);
@@ -802,6 +805,11 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        RequestBatchQuickPreviewRefresh();
+    }
+
+    partial void OnSelectedBatchPreviewDirectionModeChanged(BatchPreviewDirectionMode value)
+    {
         RequestBatchQuickPreviewRefresh();
     }
 

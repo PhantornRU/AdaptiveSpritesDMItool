@@ -111,7 +111,7 @@ public partial class WorkspaceShellViewModel
     private string previewTextGrid = "No config grid is available yet.";
 
     [ObservableProperty]
-    private string batchSummary = "Batch processing is idle.";
+    private string batchSummary = App.Text("Text.Batch.ProcessingIdle", "Batch processing is idle.");
 
     [ObservableProperty]
     private string batchCurrentFile = string.Empty;
@@ -160,6 +160,9 @@ public partial class WorkspaceShellViewModel
 
     [ObservableProperty]
     private BatchStateStripItemViewModel? selectedBatchStateStripItem;
+
+    [ObservableProperty]
+    private BatchPreviewDirectionMode selectedBatchPreviewDirectionMode = BatchPreviewDirectionMode.Single;
 
     [ObservableProperty]
     private WorkspaceThemeMode selectedThemeMode = WorkspaceThemeMode.Dark;

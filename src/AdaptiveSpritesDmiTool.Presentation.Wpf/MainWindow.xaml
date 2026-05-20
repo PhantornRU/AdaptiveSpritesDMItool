@@ -970,9 +970,9 @@
         </Style>
         <Style x:Key="HeaderDirectionToggleStyle" TargetType="CheckBox">
             <Setter Property="Margin" Value="3,0,0,0" />
-            <Setter Property="MinWidth" Value="32" />
-            <Setter Property="Height" Value="24" />
-            <Setter Property="Padding" Value="7,2" />
+            <Setter Property="Width" Value="42" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="Padding" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
             <Setter Property="Template">
@@ -986,17 +986,19 @@
                                 CornerRadius="6">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="4" />
-                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
                                 </Grid.ColumnDefinitions>
                                 <Ellipse x:Name="ActiveMarker"
+                                         Grid.Column="0"
                                          Width="5"
                                          Height="5"
+                                         HorizontalAlignment="Center"
                                          VerticalAlignment="Center"
                                          Fill="{DynamicResource Brush.Accent}"
-                                         Visibility="Collapsed" />
-                                <ContentPresenter Grid.Column="2"
+                                         Opacity="0" />
+                                <ContentPresenter Grid.Column="1"
                                                   HorizontalAlignment="Center"
                                                   VerticalAlignment="Center"
                                                   RecognizesAccessKey="True" />
@@ -1009,9 +1011,8 @@
                                 <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
                             </Trigger>
                             <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                <Setter TargetName="ActiveMarker" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="ActiveMarker" Property="Opacity" Value="1" />
                                 <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
-                                <Setter TargetName="Root" Property="BorderThickness" Value="2" />
                             </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SurfaceSubtle}" />
@@ -2281,14 +2282,13 @@
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="*" />
                                                 </Grid.RowDefinitions>
-                                                <DockPanel Margin="0,0,0,2" LastChildFill="False">
-                                                    <TextBlock DockPanel.Dock="Left"
-                                                               VerticalAlignment="Center"
+                                                <Grid MinHeight="28" Margin="0,0,0,2">
+                                                    <TextBlock VerticalAlignment="Center"
                                                                FontWeight="SemiBold"
                                                                Foreground="{DynamicResource Brush.TextPrimary}"
                                                                Text="{DynamicResource Text.Editable}" />
-                                                    <ItemsControl DockPanel.Dock="Right"
-                                                                  Margin="8,0,0,0"
+                                                    <ItemsControl HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"
                                                                   ItemsSource="{Binding DirectionDisplaySelectorItems}"
                                                                   ItemTemplate="{StaticResource HeaderDirectionSelectorItemTemplate}"
                                                                   Visibility="{Binding ShowAllDirectionDisplayPicker, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -2298,7 +2298,7 @@
                                                             </ItemsPanelTemplate>
                                                         </ItemsControl.ItemsPanel>
                                                     </ItemsControl>
-                                                </DockPanel>
+                                                </Grid>
                                                 <ScrollViewer x:Name="EditableViewportScrollViewer"
                                                               Grid.Row="1"
                                                               Margin="0"

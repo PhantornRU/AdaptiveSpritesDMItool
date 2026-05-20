@@ -203,7 +203,7 @@ public partial class WorkspaceShellViewModel
         SelectedSourceSummary = "Source: none selected.";
         SelectedAreaSummary = "Area: none selected.";
         HoverSummary = "Hover to inspect coordinates.";
-        BatchSummary = "Batch processing is idle.";
+        BatchSummary = App.Text("Text.Batch.ProcessingIdle", "Batch processing is idle.");
         BatchCurrentFile = string.Empty;
         BatchProcessedFiles = 0;
         BatchTotalFiles = 0;
@@ -278,7 +278,7 @@ public partial class WorkspaceShellViewModel
         catch (OperationCanceledException)
         {
             StatusMessage = "Operation cancelled.";
-            BatchSummary = "Batch processing was cancelled.";
+            BatchSummary = App.Text("Text.Batch.ProcessingCancelled", "Batch processing was cancelled.");
         }
         catch (Exception exception)
         {
