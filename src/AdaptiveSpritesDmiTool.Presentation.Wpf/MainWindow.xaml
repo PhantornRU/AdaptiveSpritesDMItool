@@ -968,30 +968,54 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="HorizontalDirectionStripListBoxItemStyle" TargetType="ListBoxItem">
-            <Setter Property="Margin" Value="0,0,4,0" />
-            <Setter Property="Padding" Value="4" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="DirectionNavigatorItem_PreviewMouseLeftButtonDown" />
+        <Style x:Key="HeaderDirectionToggleStyle" TargetType="CheckBox">
+            <Setter Property="Margin" Value="3,0,0,0" />
+            <Setter Property="MinWidth" Value="32" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="7,2" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Root" Padding="{TemplateBinding Padding}" Background="{DynamicResource Brush.SurfaceSubtle}" BorderBrush="{DynamicResource Brush.PanelBorder}" BorderThickness="1" CornerRadius="8">
-                            <ContentPresenter />
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="Root"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{DynamicResource Brush.ControlBackground}"
+                                BorderBrush="{DynamicResource Brush.PanelBorder}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="4" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Ellipse x:Name="ActiveMarker"
+                                         Width="5"
+                                         Height="5"
+                                         VerticalAlignment="Center"
+                                         Fill="{DynamicResource Brush.Accent}"
+                                         Visibility="Collapsed" />
+                                <ContentPresenter Grid.Column="2"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  RecognizesAccessKey="True" />
+                            </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <DataTrigger Binding="{Binding IsDisplaySelected}" Value="True">
+                            <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
-                                <Setter TargetName="Root" Property="BorderThickness" Value="2" />
-                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SurfaceSubtle}" />
-                            </DataTrigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
-                                <Setter TargetName="Root" Property="BorderThickness" Value="2" />
-                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SurfaceSubtle}" />
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
                             </Trigger>
+                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                <Setter TargetName="ActiveMarker" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                                <Setter TargetName="Root" Property="BorderThickness" Value="2" />
+                            </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.ControlBackground}" />
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SurfaceSubtle}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -1116,17 +1140,16 @@
                 </StackPanel>
             </Grid>
         </DataTemplate>
-        <DataTemplate x:Key="HorizontalDirectionStripItemTemplate">
-            <Grid MinWidth="72" MinHeight="52">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Border Width="38" Height="38" HorizontalAlignment="Center" Padding="2" Background="{DynamicResource Brush.ControlBackground}" CornerRadius="6">
-                    <Image Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" SnapsToDevicePixels="True" />
-                </Border>
-                <TextBlock Grid.Row="1" Margin="0,4,0,0" HorizontalAlignment="Center" FontSize="11" FontWeight="SemiBold" Text="{Binding Label}" />
-            </Grid>
+        <DataTemplate x:Key="HeaderDirectionSelectorItemTemplate">
+            <CheckBox Style="{StaticResource HeaderDirectionToggleStyle}"
+                      IsChecked="{Binding IsDisplaySelected, Mode=OneWay}"
+                      Command="{Binding DataContext.EditorWorkspace.ToggleDisplayedDirectionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      CommandParameter="{Binding Direction}"
+                      ToolTip="{Binding Label}">
+                <TextBlock FontSize="11"
+                           FontWeight="SemiBold"
+                           Text="{Binding ShortLabel}" />
+            </CheckBox>
         </DataTemplate>
         <DataTemplate x:Key="SidebarDirectionItemTemplate">
             <Grid MinHeight="38" ToolTip="{Binding Label}">
@@ -2258,9 +2281,24 @@
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="*" />
                                                 </Grid.RowDefinitions>
-                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="{DynamicResource Text.Editable}" />
-                                                </StackPanel>
+                                                <DockPanel Margin="0,0,0,2" LastChildFill="False">
+                                                    <TextBlock DockPanel.Dock="Left"
+                                                               VerticalAlignment="Center"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource Brush.TextPrimary}"
+                                                               Text="{DynamicResource Text.Editable}" />
+                                                    <ItemsControl DockPanel.Dock="Right"
+                                                                  Margin="8,0,0,0"
+                                                                  ItemsSource="{Binding DirectionDisplaySelectorItems}"
+                                                                  ItemTemplate="{StaticResource HeaderDirectionSelectorItemTemplate}"
+                                                                  Visibility="{Binding ShowAllDirectionDisplayPicker, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel Orientation="Horizontal" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                    </ItemsControl>
+                                                </DockPanel>
                                                 <ScrollViewer x:Name="EditableViewportScrollViewer"
                                                               Grid.Row="1"
                                                               Margin="0"
@@ -2329,28 +2367,6 @@
                                         </Border>
                                     </Grid>
 
-                                    <Border Grid.Row="1"
-                                            Margin="0,6,0,0"
-                                            Padding="6"
-                                            Background="{DynamicResource Brush.PanelBackground}"
-                                            BorderBrush="{DynamicResource Brush.PanelBorder}"
-                                            BorderThickness="1"
-                                            CornerRadius="8"
-                                            Visibility="{Binding ShowAllDirectionDisplayPicker, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <ListBox ItemsSource="{Binding DirectionNavigatorItems}"
-                                                 BorderThickness="0"
-                                                 Background="Transparent"
-                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                                 ItemTemplate="{StaticResource HorizontalDirectionStripItemTemplate}"
-                                                 ItemContainerStyle="{StaticResource HorizontalDirectionStripListBoxItemStyle}">
-                                            <ListBox.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel Orientation="Horizontal" />
-                                                </ItemsPanelTemplate>
-                                            </ListBox.ItemsPanel>
-                                        </ListBox>
-                                    </Border>
                                 </Grid>
 
                                 <GridSplitter Grid.RowSpan="3"

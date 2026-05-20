@@ -372,6 +372,11 @@ public partial class WorkspaceShellViewModel
 
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems { get; } = [];
 
+    public IReadOnlyList<DirectionNavigatorItemViewModel> DirectionDisplaySelectorItems =>
+        OrderViewportDirections(DirectionNavigatorItems.Select(static item => item.Direction))
+            .Select(direction => DirectionNavigatorItems.Single(item => item.Direction == direction))
+            .ToArray();
+
     public ObservableCollection<EditorDirectionCanvasViewModel> SourceViewportSurfaces { get; } = [];
 
     public ObservableCollection<EditorDirectionCanvasViewModel> TargetViewportSurfaces { get; } = [];

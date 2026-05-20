@@ -82,9 +82,11 @@ public sealed class MainWindowViewModelSmokeTests
         await viewModel.InitializeAsync();
         await viewModel.OpenDmiCommand.ExecuteAsync(null);
 
+        viewModel.ShowAllDirectionDisplayPicker.Should().BeFalse();
         viewModel.SelectedDirection = SpriteDirection.North;
         viewModel.SelectedDirectionScope = DirectionScope.Parallel;
 
+        viewModel.ShowAllDirectionDisplayPicker.Should().BeFalse();
         viewModel.EditorSurfaceGridRows.Should().Be(2);
         viewModel.EditorSurfaceGridColumns.Should().Be(1);
         viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
@@ -116,6 +118,8 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.SelectedDirectionScope = DirectionScope.All;
 
         viewModel.ShowAllDirectionDisplayPicker.Should().BeTrue();
+        viewModel.DirectionDisplaySelectorItems.Select(item => item.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
         viewModel.EditorSurfaceGridRows.Should().Be(2);
         viewModel.EditorSurfaceGridColumns.Should().Be(2);
         viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()

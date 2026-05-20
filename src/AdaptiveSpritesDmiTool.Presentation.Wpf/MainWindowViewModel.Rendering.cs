@@ -849,6 +849,7 @@ public partial class WorkspaceShellViewModel
         FocusedDirectionTile = null;
 
         OnPropertyChanged(nameof(DirectionNavigatorItems));
+        OnPropertyChanged(nameof(DirectionDisplaySelectorItems));
     }
 
     private BitmapSource? BuildNavigatorPreviewImage(SpriteDirection direction)

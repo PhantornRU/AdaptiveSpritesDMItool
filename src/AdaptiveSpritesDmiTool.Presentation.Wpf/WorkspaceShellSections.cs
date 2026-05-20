@@ -699,6 +699,8 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems => Shell.DirectionNavigatorItems;
 
+    public IReadOnlyList<DirectionNavigatorItemViewModel> DirectionDisplaySelectorItems => Shell.DirectionDisplaySelectorItems;
+
     public int DirectionNavigatorColumns => Shell.DirectionNavigatorColumns;
 
     public IRelayCommand<SpriteDirection> ToggleDisplayedDirectionCommand => Shell.ToggleDisplayedDirectionCommand;
