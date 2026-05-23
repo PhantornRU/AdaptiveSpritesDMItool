@@ -407,9 +407,10 @@ AGENTS/local/EVIDENCE.md
 AGENTS/local/logs/
 
 # Local AI assistant configuration.
-# Keep Zoo/Roo/Codex profiles, prompts, MCP settings, and local VS Code agent settings user-local.
+# Keep Zoo/Roo/Codex profiles, prompts, MCP settings, skills, and local VS Code agent settings user-local.
 .roo/
 .codex/
 .rooignore
 .roomodes
+.roomodes.local
 .vscode/settings.json

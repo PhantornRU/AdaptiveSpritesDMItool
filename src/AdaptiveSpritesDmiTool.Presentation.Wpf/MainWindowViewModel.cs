@@ -58,6 +58,9 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private readonly HashSet<PixelCoordinate> _pendingRestoreStrokeCoordinates = [];
     private CancellationTokenSource? _restoreStrokeFlushCts;
     private bool _hasPendingRestoreStrokeFinalize;
+    private readonly HashSet<PixelCoordinate> _pendingDrawStrokeCoordinates = [];
+    private CancellationTokenSource? _drawStrokeFlushCts;
+    private bool _hasPendingDrawStrokeFinalize;
     private CancellationTokenSource? _batchQuickPreviewRefreshCts;
     private int _batchQuickPreviewRefreshVersion;
     private CancellationTokenSource? _batchSourceValidationCts;
@@ -228,6 +231,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         _importedStateRefreshCts?.Dispose();
         _restoreStrokeFlushCts?.Cancel();
         _restoreStrokeFlushCts?.Dispose();
+        _drawStrokeFlushCts?.Cancel();
+        _drawStrokeFlushCts?.Dispose();
         _batchQuickPreviewRefreshCts?.Cancel();
         _batchQuickPreviewRefreshCts?.Dispose();
         _batchSourceValidationCts?.Cancel();

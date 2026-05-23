@@ -9,7 +9,7 @@
 
 ## Порядок чтения
 1. [`AGENTS/README.md`](AGENTS/README.md).
-2. Stable guidance из [`AGENTS/PROJECT_CONTEXT.md`](AGENTS/PROJECT_CONTEXT.md), [`AGENTS/REFACTOR_GUIDANCE.md`](AGENTS/REFACTOR_GUIDANCE.md), [`AGENTS/CONFIRMED_UNRESOLVED_ERRORS.md`](AGENTS/CONFIRMED_UNRESOLVED_ERRORS.md), [`AGENTS/WORKFLOW_RULES.md`](AGENTS/WORKFLOW_RULES.md), [`AGENTS/POLICIES.md`](AGENTS/POLICIES.md), [`AGENTS/REQUEST_PATTERNS.md`](AGENTS/REQUEST_PATTERNS.md).
+2. Stable guidance из [`AGENTS/PROJECT_CONTEXT.md`](AGENTS/PROJECT_CONTEXT.md), [`AGENTS/REFACTOR_GUIDANCE.md`](AGENTS/REFACTOR_GUIDANCE.md), [`AGENTS/CONFIRMED_UNRESOLVED_ERRORS.md`](AGENTS/CONFIRMED_UNRESOLVED_ERRORS.md), [`AGENTS/WORKFLOW_RULES.md`](AGENTS/WORKFLOW_RULES.md), [`AGENTS/POLICIES.md`](AGENTS/POLICIES.md), [`AGENTS/REQUEST_PATTERNS.md`](AGENTS/REQUEST_PATTERNS.md), [`AGENTS/AGENT_AUTOMATION.md`](AGENTS/AGENT_AUTOMATION.md).
 3. [`AGENTS/local/README.md`](AGENTS/local/README.md) и локальный task-state только если он существует и относится к текущей задаче.
 4. Затем только релевантные product docs и код: [`README.md`](README.md), [`README-ru.md`](README-ru.md), [`AdaptiveSpritesDMItool.sln`](AdaptiveSpritesDMItool.sln), [`docs/**`](docs/ARCHITECTURE.md), [`src/AdaptiveSpritesDmiTool.*`](src/AdaptiveSpritesDmiTool.Application/AdaptiveSpritesDmiTool.Application.csproj), [`tests/AdaptiveSpritesDmiTool.*`](tests/AdaptiveSpritesDmiTool.Tests.Unit/AdaptiveSpritesDmiTool.Tests.Unit.csproj), [`samples/dmi/**`](samples/dmi/README.md) при задачах на import/export/manual smoke.
 

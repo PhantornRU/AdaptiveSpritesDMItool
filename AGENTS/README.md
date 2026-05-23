@@ -10,6 +10,7 @@
   - [WORKFLOW_RULES.md](./WORKFLOW_RULES.md)
   - [POLICIES.md](./POLICIES.md)
   - [REQUEST_PATTERNS.md](./REQUEST_PATTERNS.md)
+  - [AGENT_AUTOMATION.md](./AGENT_AUTOMATION.md)
 - Local task state:
   - [local/README.md](./local/README.md)
   - `local/PLAN.md`

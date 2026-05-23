@@ -907,8 +907,8 @@ public sealed class MainWindowViewModelSmokeTests
 
         var sourceSurface = viewModel.ActiveSourceSurface!;
         var editableSurface = viewModel.ActiveTargetSurface!;
-        editableSurface.FillColors[editableSurface.GetIndex(0, 0)].Should()
-            .Be(sourceSurface.FillColors[sourceSurface.GetIndex(0, 0)]);
+        GetSurfaceColor(editableSurface, 0, 0).Should()
+            .Be(GetSurfaceColor(sourceSurface, 0, 0));
     }
 
     [Fact]
@@ -1045,9 +1045,9 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.ActiveTargetSurface.Should().NotBeNull();
         var sourceSurface = viewModel.ActiveSourceSurface!;
         var editableSurface = viewModel.ActiveTargetSurface!;
-        var sourceColor = sourceSurface.FillColors[sourceSurface.GetIndex(0, 0)];
-        var originalEditableColor = sourceSurface.FillColors[sourceSurface.GetIndex(2, 2)];
-        var remappedEditableColor = editableSurface.FillColors[editableSurface.GetIndex(2, 2)];
+        var sourceColor = GetSurfaceColor(sourceSurface, 0, 0);
+        var originalEditableColor = GetSurfaceColor(sourceSurface, 2, 2);
+        var remappedEditableColor = GetSurfaceColor(editableSurface, 2, 2);
 
         remappedEditableColor.Should().Be(sourceColor);
         remappedEditableColor.Should().NotBe(originalEditableColor);
@@ -1078,11 +1078,11 @@ public sealed class MainWindowViewModelSmokeTests
 
         var sourceSurface = viewModel.ActiveSourceSurface!;
         var editableSurface = viewModel.ActiveTargetSurface!;
-        var expectedSourceColor = sourceSurface.FillColors[sourceSurface.GetIndex(0, 0)];
-        var doubleAppliedColor = sourceSurface.FillColors[sourceSurface.GetIndex(1, 0)];
+        var expectedSourceColor = GetSurfaceColor(sourceSurface, 0, 0);
+        var doubleAppliedColor = GetSurfaceColor(sourceSurface, 1, 0);
 
-        editableSurface.FillColors[editableSurface.GetIndex(2, 2)].Should().Be(expectedSourceColor);
-        editableSurface.FillColors[editableSurface.GetIndex(2, 2)].Should().NotBe(doubleAppliedColor);
+        GetSurfaceColor(editableSurface, 2, 2).Should().Be(expectedSourceColor);
+        GetSurfaceColor(editableSurface, 2, 2).Should().NotBe(doubleAppliedColor);
     }
 
     [Fact]
@@ -1761,5 +1761,15 @@ public sealed class MainWindowViewModelSmokeTests
         }
 
         return new SpriteImage(image.Width, image.Height, pixels);
+    }
+
+    private static System.Windows.Media.Color GetSurfaceColor(EditorSurfaceRenderState surface, int x, int y)
+    {
+        var index = surface.GetIndex(x, y) * 4;
+        return System.Windows.Media.Color.FromArgb(
+            surface.RgbaBytes[index + 3],
+            surface.RgbaBytes[index + 2],
+            surface.RgbaBytes[index + 1],
+            surface.RgbaBytes[index]);
     }
 }

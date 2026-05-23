@@ -221,10 +221,17 @@ public partial class WorkspaceShellViewModel
         switch (SelectedEditorTool)
         {
             case EditorTool.Single:
-                EditorStatus = _selectedSourceCoordinate is null
-                    ? "Pick a source pixel first."
-                    : "Release to draw the selected source into Editable.";
-                RefreshInteractionState();
+                if (_selectedSourceCoordinate is null)
+                {
+                    EditorStatus = "Pick a source pixel first.";
+                    RefreshInteractionState();
+                }
+                else
+                {
+                    EditorStatus = "Drawing the selected source into Editable.";
+                    RefreshInteractionState();
+                    QueueDrawStrokeCoordinate(cell.Coordinate);
+                }
                 break;
             case EditorTool.Fill:
                 if (_selectedSourceCoordinate is null)
@@ -272,6 +279,15 @@ public partial class WorkspaceShellViewModel
         ArgumentNullException.ThrowIfNull(cell);
         EnsureActiveDirection(cell.Direction);
         UpdateEditableHoverState(cell.Coordinate);
+
+        if (SelectedEditorTool == EditorTool.Single)
+        {
+            if (_selectedSourceCoordinate is not null && _hasPendingDrawStrokeFinalize)
+            {
+                QueueDrawStrokeCoordinate(cell.Coordinate);
+            }
+            return;
+        }
 
         if (SelectedEditorTool == EditorTool.Delete)
         {
@@ -344,7 +360,7 @@ public partial class WorkspaceShellViewModel
                     return;
                 }
 
-                ApplySourcePixelToEditable(cell.Coordinate, source, "Applied source pixel to Editable.");
+                FinalizeDrawStroke();
                 break;
             case EditorTool.Delete:
                 FinalizeRestoreStroke();
@@ -441,6 +457,101 @@ public partial class WorkspaceShellViewModel
         }
 
         _hasPendingRestoreStrokeFinalize = false;
+        InvalidateNavigatorSnapshotCache();
+        RefreshWorkspaceState();
+        RefreshEditorSurface();
+        RequestAutoPreviewRefresh();
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    private void QueueDrawStrokeCoordinate(PixelCoordinate coordinate)
+    {
+        _selectedEditableCoordinate = coordinate;
+        _selectedArea = new PixelAreaSelection(coordinate, coordinate);
+        SelectedAreaSummary = DescribeArea(_selectedArea.Value);
+
+        if (_pendingDrawStrokeCoordinates.Add(coordinate))
+        {
+            _hasPendingDrawStrokeFinalize = true;
+        }
+
+        ScheduleDrawStrokeFlush();
+    }
+
+    private void ScheduleDrawStrokeFlush()
+    {
+        _drawStrokeFlushCts?.Cancel();
+        _drawStrokeFlushCts?.Dispose();
+
+        var cancellationSource = new CancellationTokenSource();
+        _drawStrokeFlushCts = cancellationSource;
+        _ = FlushDrawStrokeAsync(cancellationSource.Token);
+    }
+
+    private async Task FlushDrawStrokeAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(16, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        await System.Windows.Application.Current.Dispatcher.InvokeAsync(FlushDrawStrokeIncremental);
+    }
+
+    private void FlushDrawStrokeIncremental()
+    {
+        if (_pendingDrawStrokeCoordinates.Count == 0 || _selectedSourceCoordinate is not { } source)
+        {
+            return;
+        }
+
+        var coordinates = _pendingDrawStrokeCoordinates.ToArray();
+        _pendingDrawStrokeCoordinates.Clear();
+        ApplyDrawOperations(
+            coordinates,
+            source,
+            "Drawing editable pixels...",
+            refreshWorkspace: false,
+            rebuildNavigator: false,
+            refreshPreview: false);
+    }
+
+    private void FinalizeDrawStroke()
+    {
+        _drawStrokeFlushCts?.Cancel();
+        _drawStrokeFlushCts?.Dispose();
+        _drawStrokeFlushCts = null;
+
+        if (_pendingDrawStrokeCoordinates.Count > 0 && _selectedSourceCoordinate is { } source)
+        {
+            var coordinates = _pendingDrawStrokeCoordinates.ToArray();
+            _pendingDrawStrokeCoordinates.Clear();
+            ApplyDrawOperations(
+                coordinates,
+                source,
+                "Applied source pixel to Editable.",
+                refreshWorkspace: true,
+                rebuildNavigator: true,
+                refreshPreview: true);
+            _hasPendingDrawStrokeFinalize = false;
+            return;
+        }
+
+        if (!_hasPendingDrawStrokeFinalize)
+        {
+            return;
+        }
+
+        _hasPendingDrawStrokeFinalize = false;
         InvalidateNavigatorSnapshotCache();
         RefreshWorkspaceState();
         RefreshEditorSurface();
@@ -593,6 +704,11 @@ public partial class WorkspaceShellViewModel
         _restoreStrokeFlushCts = null;
         _pendingRestoreStrokeCoordinates.Clear();
         _hasPendingRestoreStrokeFinalize = false;
+        _drawStrokeFlushCts?.Cancel();
+        _drawStrokeFlushCts?.Dispose();
+        _drawStrokeFlushCts = null;
+        _pendingDrawStrokeCoordinates.Clear();
+        _hasPendingDrawStrokeFinalize = false;
     }
 
     private void ClearSelectedArea()

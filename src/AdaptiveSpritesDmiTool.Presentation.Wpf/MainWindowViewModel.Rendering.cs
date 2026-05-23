@@ -550,6 +550,38 @@ public partial class WorkspaceShellViewModel
             refreshPreview: refreshPreview);
     }
 
+    private void ApplyDrawOperations(
+        IReadOnlyCollection<PixelCoordinate> editableCoordinates,
+        PixelCoordinate sourceCoordinate,
+        string successMessage,
+        bool refreshWorkspace,
+        bool rebuildNavigator,
+        bool refreshPreview)
+    {
+        if (editableCoordinates.Count == 0)
+        {
+            return;
+        }
+
+        var result = _applyConfigTransformUseCase.Execute(config =>
+        {
+            var next = config;
+            foreach (var editableCoordinate in editableCoordinates)
+            {
+                next = ApplyScopedMapping(next, editableCoordinate, sourceCoordinate);
+            }
+
+            return next;
+        });
+
+        ApplyMutationResult(
+            result,
+            successMessage,
+            refreshWorkspace: refreshWorkspace,
+            rebuildNavigator: rebuildNavigator,
+            refreshPreview: refreshPreview);
+    }
+
     private SpriteConfig ApplyScopedMapping(SpriteConfig config, PixelCoordinate editableCoordinate, PixelCoordinate? sourceCoordinate)
     {
         var next = config;
@@ -873,21 +905,7 @@ public partial class WorkspaceShellViewModel
             return null;
         }
 
-        var pixels = new byte[surface.Width * surface.Height * 4];
-        for (var y = 0; y < surface.Height; y++)
-        {
-            for (var x = 0; x < surface.Width; x++)
-            {
-                var color = surface.FillColors[surface.GetIndex(x, y)];
-                var offset = ((y * surface.Width) + x) * 4;
-                pixels[offset] = color.B;
-                pixels[offset + 1] = color.G;
-                pixels[offset + 2] = color.R;
-                pixels[offset + 3] = color.A;
-            }
-        }
-
-        var bitmap = BitmapSource.Create(surface.Width, surface.Height, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, pixels, surface.Width * 4);
+        var bitmap = BitmapSource.Create(surface.Width, surface.Height, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, surface.RgbaBytes, surface.Width * 4);
         bitmap.Freeze();
         NavigatorSnapshotCache[cacheKey] = bitmap;
         return bitmap;

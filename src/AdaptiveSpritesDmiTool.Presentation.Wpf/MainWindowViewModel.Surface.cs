@@ -12,6 +12,11 @@ namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
 public partial class WorkspaceShellViewModel
 {
+    private const string TransparentCaption = "X";
+    private const string MappedCaption = "M";
+    private const string SelectedEditableCaption = "T";
+    private const string SelectedAreaCaption = "A";
+
     private void RefreshMappingRows()
     {
         MappingRows.Clear();
@@ -844,8 +849,8 @@ public partial class WorkspaceShellViewModel
         }
 
         var referenceImage = ComposeImportedLayers(ResolvePreviewImage(direction, useCompositeImage: false), direction);
-        var colors = new Color[resolution.Value.Width * resolution.Value.Height];
-        var captions = new string[colors.Length];
+        var rgbaBytes = new byte[resolution.Value.Width * resolution.Value.Height * 4];
+        var captions = new string[resolution.Value.Width * resolution.Value.Height];
 
         for (var y = 0; y < resolution.Value.Height; y++)
         {
@@ -853,12 +858,19 @@ public partial class WorkspaceShellViewModel
             {
                 var coordinate = new PixelCoordinate(x, y);
                 var index = (y * resolution.Value.Width) + x;
-                colors[index] = ResolveSurfaceCellColor(referenceImage, coordinate);
+                var color = ResolveSurfaceCellColor(referenceImage, coordinate);
+                
+                var byteIndex = index * 4;
+                rgbaBytes[byteIndex] = color.B;
+                rgbaBytes[byteIndex + 1] = color.G;
+                rgbaBytes[byteIndex + 2] = color.R;
+                rgbaBytes[byteIndex + 3] = color.A;
+                
                 captions[index] = string.Empty;
             }
         }
 
-        return new EditorSurfaceRenderState(direction, resolution.Value.Width, resolution.Value.Height, colors, captions);
+        return new EditorSurfaceRenderState(direction, resolution.Value.Width, resolution.Value.Height, rgbaBytes, captions);
     }
 
     private EditorSurfaceRenderState? BuildEditableSurfaceRenderState(SpriteDirection direction, bool useCompositeImage)
@@ -871,8 +883,8 @@ public partial class WorkspaceShellViewModel
 
         var renderedEditableImage = BuildRenderedEditableSurfaceImage(direction, useCompositeImage);
         var mappings = GetEditableMappings(direction);
-        var colors = new Color[resolution.Value.Width * resolution.Value.Height];
-        var captions = new string[colors.Length];
+        var rgbaBytes = new byte[resolution.Value.Width * resolution.Value.Height * 4];
+        var captions = new string[resolution.Value.Width * resolution.Value.Height];
 
         for (var y = 0; y < resolution.Value.Height; y++)
         {
@@ -881,7 +893,14 @@ public partial class WorkspaceShellViewModel
                 var coordinate = new PixelCoordinate(x, y);
                 var index = (y * resolution.Value.Width) + x;
                 var hasMapping = mappings.TryGetValue(coordinate, out var mapping);
-                colors[index] = ResolveSurfaceCellColor(renderedEditableImage, coordinate, hasMapping, mapping);
+                var color = ResolveSurfaceCellColor(renderedEditableImage, coordinate, hasMapping, mapping);
+                
+                var byteIndex = index * 4;
+                rgbaBytes[byteIndex] = color.B;
+                rgbaBytes[byteIndex + 1] = color.G;
+                rgbaBytes[byteIndex + 2] = color.R;
+                rgbaBytes[byteIndex + 3] = color.A;
+                
                 captions[index] = BuildMappingCaption(hasMapping, mapping);
             }
         }
@@ -890,7 +909,7 @@ public partial class WorkspaceShellViewModel
             direction,
             resolution.Value.Width,
             resolution.Value.Height,
-            colors,
+            rgbaBytes,
             captions,
             ResolveEditableBackingOrigins(direction));
     }
@@ -976,7 +995,7 @@ public partial class WorkspaceShellViewModel
                     Fill = isTransparent ? TransparentBrush : isMoved ? MappedBrush : NeutralBrush,
                     Border = ShowGrid ? GridBrush : Brushes.Transparent,
                     Foreground = Brushes.Transparent,
-                    Caption = GridAboveImage ? rowText[x].ToString() : string.Empty,
+                    Caption = GridAboveImage ? isTransparent ? TransparentCaption : isMoved ? MappedCaption : "." : string.Empty,
                     ToolTip = isTransparent
                         ? $"Editable {coordinate} -> transparent"
                         : $"Editable {coordinate} <- Source {effectiveTarget}"
@@ -1420,12 +1439,12 @@ public partial class WorkspaceShellViewModel
     {
         if (_selectedEditableCoordinate == coordinate)
         {
-            return "T";
+            return SelectedEditableCaption;
         }
 
         if (_selectedArea?.Contains(coordinate) == true)
         {
-            return "A";
+            return SelectedAreaCaption;
         }
 
         return BuildMappingCaption(hasMapping, mapping);
@@ -1458,7 +1477,7 @@ public partial class WorkspaceShellViewModel
             return string.Empty;
         }
 
-        return mapping.IsTransparent ? "X" : mapping.Target is not null ? "M" : string.Empty;
+        return mapping.IsTransparent ? TransparentCaption : mapping.Target is not null ? MappedCaption : string.Empty;
     }
 
     private static string FormatCoordinateCaption(PixelCoordinate coordinate) => $"{coordinate.X},{coordinate.Y}";

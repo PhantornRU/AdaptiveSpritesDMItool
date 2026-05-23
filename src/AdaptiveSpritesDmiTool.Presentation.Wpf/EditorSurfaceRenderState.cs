@@ -18,7 +18,7 @@ public sealed class EditorSurfaceRenderState(
     SpriteDirection direction,
     int width,
     int height,
-    Color[] fillColors,
+    byte[] rgbaBytes,
     string[] captions,
     IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?>? editableBackingOrigins = null)
 {
@@ -30,7 +30,7 @@ public sealed class EditorSurfaceRenderState(
 
     public int Height { get; } = height;
 
-    public IReadOnlyList<Color> FillColors { get; } = fillColors;
+    public byte[] RgbaBytes { get; } = rgbaBytes;
 
     public IReadOnlyList<string> Captions { get; } = captions;
 

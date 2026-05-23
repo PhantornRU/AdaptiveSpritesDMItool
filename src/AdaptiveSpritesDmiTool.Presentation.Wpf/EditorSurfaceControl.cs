@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
@@ -29,8 +30,15 @@ public sealed class EditorSurfaceControl : FrameworkElement
     private static readonly Pen HoverPen = CreatePen(Color.FromRgb(196, 137, 16), 1d);
     private static readonly Pen GridPen = CreatePen(Color.FromRgb(217, 207, 192), 0.5d);
     private static readonly Typeface CaptionTypeface = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
+    private static readonly Dictionary<(string Text, double FontSize), FormattedText> _captionCache = new();
     private DrawingGroup? _contentDrawing;
     private bool _isContentDirty = true;
+    private WriteableBitmap? _writeableBitmap;
+
+    public EditorSurfaceControl()
+    {
+        RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.NearestNeighbor);
+    }
 
 #if DEBUG
     private static int _contentRedrawCount;
@@ -205,7 +213,7 @@ public sealed class EditorSurfaceControl : FrameworkElement
         {
             var rect = new Rect(selectedSource.X * cellSize, selectedSource.Y * cellSize, cellSize, cellSize);
             drawingContext.DrawRectangle(SelectedSourceBrush, SelectionPen, rect);
-            if (ShowCaptions)
+            if (ShowCaptions && cellSize >= 12d)
             {
                 DrawCaption(drawingContext, "S", rect);
             }
@@ -215,7 +223,7 @@ public sealed class EditorSurfaceControl : FrameworkElement
         {
             var rect = new Rect(selectedTarget.X * cellSize, selectedTarget.Y * cellSize, cellSize, cellSize);
             drawingContext.DrawRectangle(null, SelectionPen, rect);
-            if (ShowCaptions)
+            if (ShowCaptions && cellSize >= 12d)
             {
                 DrawCaption(drawingContext, "T", rect);
             }
@@ -282,21 +290,30 @@ public sealed class EditorSurfaceControl : FrameworkElement
         }
 
         var cellSize = GetCellSize();
+
+        if (_writeableBitmap is null || _writeableBitmap.IsFrozen || _writeableBitmap.PixelWidth != Surface.Width || _writeableBitmap.PixelHeight != Surface.Height)
+        {
+            _writeableBitmap = new WriteableBitmap(Surface.Width, Surface.Height, 96, 96, PixelFormats.Bgra32, null);
+        }
+
+        _writeableBitmap.WritePixels(new Int32Rect(0, 0, Surface.Width, Surface.Height), Surface.RgbaBytes, Surface.Width * 4, 0);
+
         using (var context = drawing.Open())
         {
-            context.DrawRectangle(Brushes.White, null, new Rect(0, 0, Surface.Width * cellSize, Surface.Height * cellSize));
+            context.DrawImage(_writeableBitmap, new Rect(0, 0, Surface.Width * cellSize, Surface.Height * cellSize));
 
-            for (var y = 0; y < Surface.Height; y++)
+            if (ShowCaptions && cellSize >= 12d)
             {
-                for (var x = 0; x < Surface.Width; x++)
+                for (var y = 0; y < Surface.Height; y++)
                 {
-                    var index = Surface.GetIndex(x, y);
-                    var rect = new Rect(x * cellSize, y * cellSize, cellSize, cellSize);
-                    context.DrawRectangle(GetBrush(Surface.FillColors[index]), null, rect);
-
-                    if (ShowCaptions && !string.IsNullOrEmpty(Surface.Captions[index]))
+                    for (var x = 0; x < Surface.Width; x++)
                     {
-                        DrawCaption(context, Surface.Captions[index], rect);
+                        var index = Surface.GetIndex(x, y);
+                        if (!string.IsNullOrEmpty(Surface.Captions[index]))
+                        {
+                            var rect = new Rect(x * cellSize, y * cellSize, cellSize, cellSize);
+                            DrawCaption(context, Surface.Captions[index], rect);
+                        }
                     }
                 }
             }
@@ -326,21 +343,29 @@ public sealed class EditorSurfaceControl : FrameworkElement
     private void DrawCaption(DrawingContext drawingContext, string caption, Rect rect)
     {
         var fontSize = Math.Max(4d, Math.Min(12d, rect.Width * 0.42d));
-        var formattedText = new FormattedText(
-            caption,
-            CultureInfo.InvariantCulture,
-            System.Windows.FlowDirection.LeftToRight,
-            CaptionTypeface,
-            fontSize,
-            Brushes.Black,
-            VisualTreeHelper.GetDpi(this).PixelsPerDip);
+        var roundedFontSize = Math.Round(fontSize, 0);
+        var cacheKey = (caption, roundedFontSize);
 
-        var maxWidth = Math.Max(1d, rect.Width - 2d);
-        var maxHeight = Math.Max(1d, rect.Height - 2d);
-        if (formattedText.Width > maxWidth || formattedText.Height > maxHeight)
+        if (!_captionCache.TryGetValue(cacheKey, out var formattedText))
         {
-            var scale = Math.Min(maxWidth / formattedText.Width, maxHeight / formattedText.Height);
-            formattedText.SetFontSize(Math.Max(3d, fontSize * scale));
+            formattedText = new FormattedText(
+                caption,
+                CultureInfo.InvariantCulture,
+                System.Windows.FlowDirection.LeftToRight,
+                CaptionTypeface,
+                roundedFontSize,
+                Brushes.Black,
+                VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+            var maxWidth = Math.Max(1d, rect.Width - 2d);
+            var maxHeight = Math.Max(1d, rect.Height - 2d);
+            if (formattedText.Width > maxWidth || formattedText.Height > maxHeight)
+            {
+                var scale = Math.Min(maxWidth / formattedText.Width, maxHeight / formattedText.Height);
+                formattedText.SetFontSize(Math.Max(3d, roundedFontSize * scale));
+            }
+
+            _captionCache[cacheKey] = formattedText;
         }
 
         var origin = new Point(

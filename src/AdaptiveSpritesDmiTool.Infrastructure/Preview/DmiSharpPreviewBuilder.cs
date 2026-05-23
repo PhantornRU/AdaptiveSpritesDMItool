@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Application.Common;
@@ -9,8 +10,10 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace AdaptiveSpritesDmiTool.Infrastructure.Preview;
 
-public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
+public sealed class DmiSharpPreviewBuilder : IPreviewBuilder, IDisposable
 {
+    private readonly ConcurrentDictionary<string, DMIFile> _dmiCache = new();
+
     public async Task<Result<PreviewBuildResult>> BuildAsync(PreviewBuildRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -43,7 +46,8 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                using var dmiFile = new DMIFile(sourcePath);
+                var dmiFile = _dmiCache.GetOrAdd(sourcePath, path => new DMIFile(path));
+
                 var baseState = FindState(dmiFile, request.Selection.BaseState);
                 if (baseState is null)
                 {
@@ -252,5 +256,14 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
         image.CopyPixelDataTo(pixels);
         var bytes = MemoryMarshal.AsBytes(pixels.AsSpan()).ToArray();
         return new SpriteImage(image.Width, image.Height, bytes);
+    }
+
+    public void Dispose()
+    {
+        foreach (var dmiFile in _dmiCache.Values)
+        {
+            dmiFile.Dispose();
+        }
+        _dmiCache.Clear();
     }
 }
