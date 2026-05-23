@@ -147,6 +147,12 @@ public sealed partial class EditorDirectionCanvasViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isActive;
+
+    [ObservableProperty]
+    private PixelAreaBounds? _transformedSelectedAreaBounds;
+
+    [ObservableProperty]
+    private PixelCoordinate? _transformedSelectedTargetCoordinate;
 }
 
 public sealed class MappingRowViewModel(PixelMapping mapping)

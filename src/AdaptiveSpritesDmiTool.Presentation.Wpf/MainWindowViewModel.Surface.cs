@@ -53,6 +53,36 @@ public partial class WorkspaceShellViewModel
             : null;
         SelectedTargetCoordinate = ResolveSelectedEditableCoordinate();
         OppositeHighlightedCoordinate = SelectedTargetCoordinate;
+
+        var activeDirection = GetSafeSelectedDirection();
+        var resolution = ResolveEditorResolution();
+        if (resolution is null)
+        {
+            return;
+        }
+
+        foreach (var surface in TargetViewportSurfaces)
+        {
+            if (_selectedEditableCoordinate.HasValue)
+            {
+                surface.TransformedSelectedTargetCoordinate = TransformEditableCoordinate(_selectedEditableCoordinate.Value, activeDirection, surface.Direction, resolution.Value);
+            }
+            else
+            {
+                surface.TransformedSelectedTargetCoordinate = null;
+            }
+
+            if (_selectedArea is { } selectedArea)
+            {
+                var p1 = TransformEditableCoordinate(new PixelCoordinate(selectedArea.Left, selectedArea.Top), activeDirection, surface.Direction, resolution.Value);
+                var p2 = TransformEditableCoordinate(new PixelCoordinate(selectedArea.Right, selectedArea.Bottom), activeDirection, surface.Direction, resolution.Value);
+                surface.TransformedSelectedAreaBounds = new PixelAreaBounds(Math.Min(p1.X, p2.X), Math.Min(p1.Y, p2.Y), Math.Max(p1.X, p2.X), Math.Max(p1.Y, p2.Y));
+            }
+            else
+            {
+                surface.TransformedSelectedAreaBounds = null;
+            }
+        }
     }
 
     private PixelCoordinate? ResolveSelectedEditableCoordinate()
