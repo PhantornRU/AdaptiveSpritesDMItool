@@ -115,11 +115,11 @@ public partial class App : System.Windows.Application
             if (sender is Window closingWindow)
             {
                 closingWindow.Closing -= OnMainWindowClosing;
-                closingWindow.Close();
+                _ = closingWindow.Dispatcher.InvokeAsync(() => closingWindow.Close());
             }
             else
             {
-                Shutdown();
+                _ = Current.Dispatcher.InvokeAsync(() => Shutdown());
             }
         }
     }
