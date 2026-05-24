@@ -291,6 +291,8 @@ public sealed class EditorSurfaceControl : FrameworkElement
 
         var cellSize = GetCellSize();
 
+        // WriteableBitmap is used for mass pixel rendering to reduce the load on WPF UI thread.
+        // We check IsFrozen to protect against crashes when passing the buffer.
         if (_writeableBitmap is null || _writeableBitmap.IsFrozen || _writeableBitmap.PixelWidth != Surface.Width || _writeableBitmap.PixelHeight != Surface.Height)
         {
             _writeableBitmap = new WriteableBitmap(Surface.Width, Surface.Height, 96, 96, PixelFormats.Bgra32, null);
@@ -344,6 +346,9 @@ public sealed class EditorSurfaceControl : FrameworkElement
     {
         var fontSize = Math.Max(4d, Math.Min(12d, rect.Width * 0.42d));
         var roundedFontSize = Math.Round(fontSize, 0);
+        
+        // We cache FormattedText objects using a tuple with a rounded font size as the key
+        // to prevent excessive memory allocation while keeping enough precision for different sizes.
         var cacheKey = (caption, roundedFontSize);
 
         if (!_captionCache.TryGetValue(cacheKey, out var formattedText))

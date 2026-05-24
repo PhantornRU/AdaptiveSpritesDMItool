@@ -126,6 +126,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Ver
 ## Ключевые документы
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/RENDERING.md](docs/RENDERING.md)
 - [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md)
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 - [docs/TEST_PLAN.md](docs/TEST_PLAN.md)

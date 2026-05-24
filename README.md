@@ -126,6 +126,7 @@ See [docs/TEST_PLAN.md](docs/TEST_PLAN.md).
 ## Key Documents
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/RENDERING.md](docs/RENDERING.md)
 - [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md)
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 - [docs/TEST_PLAN.md](docs/TEST_PLAN.md)

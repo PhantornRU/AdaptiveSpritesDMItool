@@ -12,6 +12,10 @@ namespace AdaptiveSpritesDmiTool.Infrastructure.Preview;
 
 public sealed class DmiSharpPreviewBuilder : IPreviewBuilder, IDisposable
 {
+    /// <summary>
+    /// ConcurrentDictionary is used to cache DMIFiles safely across asynchronous preview builds and concurrent UI requests.
+    /// IDisposable is implemented to ensure manual release of unmanaged resources held by DMIFile objects.
+    /// </summary>
     private readonly ConcurrentDictionary<string, DMIFile> _dmiCache = new();
 
     public async Task<Result<PreviewBuildResult>> BuildAsync(PreviewBuildRequest request, CancellationToken cancellationToken)

@@ -188,9 +188,18 @@ public sealed class SpriteConfig
         return _mappings[direction].TryGetValue(source, out var mapping) && mapping.IsTransparent;
     }
 
+    /// <summary>
+    /// Sets a mapping for a specific direction.
+    /// Includes identity/no-op optimizations: if the target equals the source, the explicit mapping is removed
+    /// to rely on the default transparent/identity behavior. Use this for regular user edits.
+    /// </summary>
     public SpriteConfig SetMapping(SpriteDirection direction, PixelCoordinate source, PixelCoordinate? target) =>
         SetMapping(direction, source, target, DateTimeOffset.UtcNow);
 
+    /// <summary>
+    /// Sets a mapping for a specific direction.
+    /// Includes identity/no-op optimizations: if the target equals the source, the explicit mapping is removed.
+    /// </summary>
     public SpriteConfig SetMapping(SpriteDirection direction, PixelCoordinate source, PixelCoordinate? target, DateTimeOffset updatedUtc)
     {
         EnsureDirection(direction);
@@ -218,15 +227,16 @@ public sealed class SpriteConfig
 
     /// <summary>
     /// Forces a mapping regardless of whether <paramref name="target"/> equals <paramref name="source"/>.
-    /// Unlike <see cref="SetMapping"/>, this method never removes the mapping as an identity/no-op
-    /// optimization. Used internally by move operations where the explicit mapping must be preserved
-    /// even when the coordinate maps to itself.
+    /// Unlike <see cref="SetMapping"/>, this method overwrites existing mappings without identity checks.
+    /// It is intended for use in Undo/Redo mechanisms, Drag & Drop move operations, or mass deserialization.
     /// </summary>
     public SpriteConfig SetMappingForced(SpriteDirection direction, PixelCoordinate source, PixelCoordinate? target) =>
         SetMappingForced(direction, source, target, DateTimeOffset.UtcNow);
 
     /// <summary>
     /// Forces a mapping regardless of whether <paramref name="target"/> equals <paramref name="source"/>.
+    /// Overwrites existing mappings without identity checks.
+    /// Intended for Undo/Redo, Drag & Drop, or mass deserialization.
     /// </summary>
     public SpriteConfig SetMappingForced(SpriteDirection direction, PixelCoordinate source, PixelCoordinate? target, DateTimeOffset updatedUtc)
     {

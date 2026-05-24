@@ -61,6 +61,13 @@ AdaptiveSpritesDMItool v2.0 - WPF-приложение для редактиро
 5. Config is saved as JSON.
 6. Batch processing applies the active config to selected `.dmi` files or an input folder.
 
+## Рендеринг и фоновые процессы
+
+- **Асинхронный превью:** `DmiSharpPreviewBuilder` работает асинхронно, чтобы не блокировать UI-поток во время сборки составных изображений (base + overlay).
+- **Кэширование I/O:** Используется `ConcurrentDictionary` для кэширования загруженных кадров, чтобы избежать повторного чтения с диска при каждой пересборке превью.
+- **Batching обновлений:** Инструменты рисования и стирания генерируют множество событий изменения конфигурации. Чтобы не перегружать пайплайн тяжелыми операциями пересборки превью, применяется батчинг (batching) с использованием 16ms таймера. Это позволяет объединить частые обновления в один цикл рендеринга (примерно 60 FPS).
+- **Оптимизация рендеринга:** Подробное описание WPF-рендеринга и оптимизаций см. в [docs/RENDERING.md](RENDERING.md).
+
 ## Batch Outputs
 
 Batch processing writes output `.dmi` files to the selected output directory.

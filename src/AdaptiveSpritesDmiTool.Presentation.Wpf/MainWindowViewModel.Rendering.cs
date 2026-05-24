@@ -478,6 +478,7 @@ public partial class WorkspaceShellViewModel
                     .ToArray();
 
                 // Two-phase apply: remove all origins first, then set all destinations.
+                // Сначала удаляем все старые маппинги, затем ставим новые, чтобы избежать cut-out эффекта на пересекающихся координатах.
                 // This prevents overlap cut-out where a destination inside the selection
                 // is later erased by its own RemoveMapping call. Removed origins stay
                 // unmapped, which restores the Source[x,y] backing pixel instead of transparency.

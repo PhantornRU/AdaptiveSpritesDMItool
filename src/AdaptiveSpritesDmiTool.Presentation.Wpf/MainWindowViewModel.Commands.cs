@@ -464,6 +464,10 @@ public partial class WorkspaceShellViewModel
         PersistWorkspaceSettingsInBackground();
     }
 
+    /// <summary>
+    /// Queues a coordinate for drawing and schedules an asynchronous flush.
+    /// Batching (timer/queue) is used instead of synchronous updates to prevent blocking the UI thread during continuous drawing.
+    /// </summary>
     private void QueueDrawStrokeCoordinate(PixelCoordinate coordinate)
     {
         _selectedEditableCoordinate = coordinate;
@@ -751,6 +755,8 @@ public partial class WorkspaceShellViewModel
                     continue;
                 }
 
+                // We use ResolveEffectiveSourceCoordinate to dynamically determine the source
+                // depending on the selection or context (explicit mapping vs identity fallback).
                 var source = ResolveEffectiveSourceCoordinate(
                     direction,
                     scopedEditableCoordinate,
