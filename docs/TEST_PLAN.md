@@ -1,8 +1,8 @@
-# Test Plan v2.0
+# Test Plan v2.1
 
 ## Strategy
 
-Проверка v2.0 строится на трех уровнях:
+Проверка v2.1 строится на трех уровнях:
 
 - unit tests для Domain invariants, Application use cases и WPF shell view models;
 - integration tests для JSON persistence, CSV import, DMI adapters, preview, settings и batch behavior;
@@ -46,15 +46,15 @@
 - workspace settings repository roundtrip and version validation
 - batch manifest validation and artifacts behavior
 
-## v2.0 Release Validation
+## v2.1 Release Validation
 
-Последняя release-проверка v2.0 прошла:
+Последняя release-проверка v2.1 прошла:
 
 - hidden Unicode scan
 - `dotnet restore`
 - `dotnet build` in Release configuration
 - `dotnet test` in Release configuration
-- 102 unit tests
+- 118 unit tests
 - 41 integration tests
 - self-contained Windows x64 publish
 - ZIP packaging
@@ -114,7 +114,7 @@ Run after large presentation, release, or packaging changes:
 Developer validation:
 
 ```powershell
-dotnet restore AdaptiveSpritesDMItool.sln
+dotnet restore AdaptiveSpritesDMItool.sln -m:1
 dotnet build AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-restore
 dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 ```
@@ -122,7 +122,7 @@ dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 Release validation:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.0 -Runtime win-x64
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.1 -Runtime win-x64
 ```
 
 Docs-only validation:

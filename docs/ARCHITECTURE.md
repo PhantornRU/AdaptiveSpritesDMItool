@@ -1,6 +1,6 @@
-# Архитектура v2.0
+# Архитектура v2.1
 
-AdaptiveSpritesDMItool v2.0 - WPF-приложение для редактирования и применения pixel-mapping конфигов к `.dmi` sprites.
+AdaptiveSpritesDMItool v2.1 - WPF-приложение для редактирования и применения pixel-mapping конфигов к `.dmi` sprites.
 
 ## Проекты
 
@@ -19,7 +19,7 @@ AdaptiveSpritesDMItool v2.0 - WPF-приложение для редактиро
 
 ## Версии
 
-- Application version: `2.0`
+- Application version: `2.1`
 - WPF target framework: `net8.0-windows`
 - Release runtime: `win-x64`
 - Publish mode: self-contained single-file

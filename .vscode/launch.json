@@ -2,7 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch AdaptiveSpritesDmiTool WPF",
+      "name": "Launch AdaptiveSpritesDmiTool WPF (.NET)",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj"
+    },
+    {
+      "name": "Launch AdaptiveSpritesDmiTool WPF (legacy coreclr fallback)",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "prepare-wpf-debug-run",

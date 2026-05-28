@@ -1,4 +1,4 @@
-# Adaptive Sprites DMI Tool v2.0
+# Adaptive Sprites DMI Tool v2.1
 
 Adaptive Sprites DMI Tool is a Windows WPF application for authoring, previewing, and applying pixel-mapping configs to BYOND `.dmi` sprite files.
 
@@ -6,7 +6,7 @@ Russian documentation: [README-ru.md](README-ru.md)
 
 ## Current Release
 
-- Application version: `2.0`
+- Application version: `2.1`
 - Target platform: Windows x64
 - UI framework: WPF on .NET 8
 - Release package: self-contained `win-x64` ZIP
@@ -48,7 +48,7 @@ AdaptiveSpritesDmiTool.Presentation.Wpf.exe
 
 ## Config Formats
 
-JSON is the primary format in v2.0. The current JSON schema uses:
+JSON is the primary format in v2.1. The current JSON schema uses:
 
 - `version: 1`
 - `supportedDirections: "four"` or `"eight"`
@@ -72,7 +72,7 @@ Requirements:
 Developer build:
 
 ```powershell
-dotnet restore AdaptiveSpritesDMItool.sln
+dotnet restore AdaptiveSpritesDMItool.sln -m:1
 dotnet build AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-restore
 dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj -c Release
@@ -81,20 +81,20 @@ dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSprites
 Release package:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.0 -Runtime win-x64
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.1 -Runtime win-x64
 ```
 
 The script creates:
 
-- `artifacts/publish/AdaptiveSpritesDMItool-v2.0-win-x64/`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.0-win-x64.zip`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.0-win-x64.sha256.txt`
+- `artifacts/publish/AdaptiveSpritesDMItool-v2.1-win-x64/`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.1-win-x64.zip`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.1-win-x64.sha256.txt`
 
 `artifacts/` is generated output and is intentionally ignored by git.
 
 ## Architecture
 
-The active v2.0 runtime is a layered solution:
+The active v2.1 runtime is a layered solution:
 
 - `src/AdaptiveSpritesDmiTool.Domain`
   Pure domain model, value objects, validation, direction model, and config invariants.
@@ -111,9 +111,9 @@ The active v2.0 runtime is a layered solution:
 
 ## Testing
 
-The v2.0 release validation passed:
+The v2.1 release validation passed:
 
-- 102 unit tests
+- 118 unit tests
 - 41 integration tests
 - hidden Unicode scan
 - Release build
@@ -130,7 +130,7 @@ See [docs/TEST_PLAN.md](docs/TEST_PLAN.md).
 - [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md)
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 - [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
-- [docs/releases/v2.0.md](docs/releases/v2.0.md)
+- [docs/releases/v2.1.md](docs/releases/v2.1.md)
 
 ## License
 

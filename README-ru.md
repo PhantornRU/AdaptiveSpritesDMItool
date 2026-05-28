@@ -1,4 +1,4 @@
-# Adaptive Sprites DMI Tool v2.0
+# Adaptive Sprites DMI Tool v2.1
 
 Adaptive Sprites DMI Tool - Windows WPF-приложение для создания, предпросмотра и применения конфигов пиксельных преобразований к BYOND `.dmi` спрайтам.
 
@@ -6,7 +6,7 @@ English documentation: [README.md](README.md)
 
 ## Текущая версия
 
-- Версия приложения: `2.0`
+- Версия приложения: `2.1`
 - Целевая платформа: Windows x64
 - UI: WPF на .NET 8
 - Релизный пакет: self-contained `win-x64` ZIP
@@ -48,7 +48,7 @@ AdaptiveSpritesDmiTool.Presentation.Wpf.exe
 
 ## Форматы конфигов
 
-В v2.0 основной формат - JSON. Текущая схема использует:
+В v2.1 основной формат - JSON. Текущая схема использует:
 
 - `version: 1`
 - `supportedDirections: "four"` или `"eight"`
@@ -72,7 +72,7 @@ CSV можно импортировать, но новые конфиги сох
 Обычная developer-сборка:
 
 ```powershell
-dotnet restore AdaptiveSpritesDMItool.sln
+dotnet restore AdaptiveSpritesDMItool.sln -m:1
 dotnet build AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-restore
 dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj -c Release
@@ -81,20 +81,20 @@ dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSprites
 Релизный пакет:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.0 -Runtime win-x64
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.1 -Runtime win-x64
 ```
 
 Скрипт создает:
 
-- `artifacts/publish/AdaptiveSpritesDMItool-v2.0-win-x64/`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.0-win-x64.zip`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.0-win-x64.sha256.txt`
+- `artifacts/publish/AdaptiveSpritesDMItool-v2.1-win-x64/`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.1-win-x64.zip`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.1-win-x64.sha256.txt`
 
 `artifacts/` - сгенерированный вывод сборки, он намеренно исключен из git.
 
 ## Архитектура
 
-Активная runtime-архитектура v2.0 разделена на слои:
+Активная runtime-архитектура v2.1 разделена на слои:
 
 - `src/AdaptiveSpritesDmiTool.Domain`
   Чистая доменная модель, value objects, валидация, модель направлений и инварианты конфигов.
@@ -111,9 +111,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Ver
 
 ## Тестирование
 
-Для v2.0 пройдена релизная проверка:
+Для v2.1 пройдена релизная проверка:
 
-- 102 unit tests
+- 118 unit tests
 - 41 integration tests
 - hidden Unicode scan
 - Release build
@@ -130,7 +130,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Ver
 - [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md)
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 - [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
-- [docs/releases/v2.0.md](docs/releases/v2.0.md)
+- [docs/releases/v2.1.md](docs/releases/v2.1.md)
 
 ## Лицензия
 
