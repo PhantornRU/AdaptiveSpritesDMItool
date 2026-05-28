@@ -20,12 +20,24 @@ The release ZIP contains the published WPF app. Extract it and run:
 AdaptiveSpritesDmiTool.Presentation.Wpf.exe
 ```
 
+## v2.1 Highlights
+
+- Russian and English UI resources with a persisted language setting.
+- Shell controls for theme, language, editor viewport mode, workspace panel behavior, inactive Source canvas visibility, and multi-direction canvas fitting.
+- Direction editing scopes for `Single`, `Parallel`, and `All` directions, plus larger scoped canvas layouts and a direction display selector.
+- Localized batch workspace with folder/file selection, filtering, status display, run log, output-folder exclusion from input scans, and `One DIR` / `All DIR` preview.
+- Fixes for `Fill`, `Move`, mirrored directions, and parallel direction editing.
+- Rendering and performance improvements for editor updates, drawing, and zoom.
+- More reliable shutdown and workspace state persistence.
+- VS Code debug launch updated to the C# Dev Kit `dotnet` debug type, so the old `coreclr` adapter is no longer required.
+
 ## What It Does
 
 - starts with an empty workspace
 - opens base `.dmi` files manually
 - supports optional landmark and overlay state sources for preview work
 - edits per-pixel mappings for `4-dir` and `8-dir` sprites
+- edits a single direction, parallel directions, or all directions from one workspace
 - supports editor tools such as `Paint`, `Fill`, `Move`, `Erase`, undo, area undo, and selection
 - previews base, landmark, overlay, composite, grid, and text-grid views
 - saves and loads schema-versioned JSON configs
@@ -33,7 +45,8 @@ AdaptiveSpritesDmiTool.Presentation.Wpf.exe
 - validates config resolution and direction compatibility before apply flows
 - runs deterministic batch processing with per-file status results
 - supports batch overwrite policies: `SkipExisting`, `OverwriteExisting`, `FailIfExists`
-- persists workspace settings such as recent paths, selected states, direction, viewport, theme, and batch folders
+- previews batch output direction mode with `One DIR` and `All DIR`
+- persists workspace settings such as recent paths, selected states, direction, viewport, language, theme, panel behavior, source-canvas visibility, and batch folders
 
 ## Typical Workflow
 
@@ -77,6 +90,14 @@ dotnet build AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-restore
 dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj -c Release
 ```
+
+VS Code debug:
+
+- install the recommended workspace extensions from `.vscode/extensions.json`
+- select `Launch AdaptiveSpritesDmiTool WPF (.NET)`
+- press F5
+
+The launch configuration uses `type: "dotnet"` and `projectPath`; it does not require a `coreclr` debug adapter.
 
 Release package:
 

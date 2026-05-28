@@ -20,12 +20,24 @@ English documentation: [README.md](README.md)
 AdaptiveSpritesDmiTool.Presentation.Wpf.exe
 ```
 
+## Главное в v2.1
+
+- Добавлены русские и английские ресурсы интерфейса с сохраняемой настройкой языка.
+- Добавлены настройки оболочки: тема, язык, режим viewport редактора, поведение панелей workspace, видимость неактивных Source-полотен и вписывание нескольких direction-полотен.
+- Добавлены scopes редактора направлений: `Single`, `Parallel` и `All`, большие canvas layout для scope-режимов и selector отображаемых направлений.
+- Улучшен batch workspace: локализация, выбор папок и файлов, фильтрация, статусы, run log, исключение output-папки из input-сканирования и предпросмотр `One DIR` / `All DIR`.
+- Исправлены сценарии `Fill`, `Move`, зеркальные направления и параллельное редактирование направлений.
+- Улучшены rendering и производительность при обновлениях редактора, рисовании и zoom.
+- Сделано более надежное закрытие приложения и сохранение состояния workspace.
+- VS Code debug переведен на C# Dev Kit `dotnet` debug type, поэтому старый `coreclr` adapter больше не требуется.
+
 ## Возможности
 
 - старт с пустой рабочей областью
 - ручное открытие базового `.dmi`
 - подключение дополнительных landmark и overlay state-источников для предпросмотра
 - редактирование pixel mappings для `4-dir` и `8-dir` спрайтов
+- редактирование одного направления, параллельных направлений или всех направлений из одного workspace
 - инструменты редактора: `Paint`, `Fill`, `Move`, `Erase`, undo, area undo и selection
 - предпросмотр base, landmark, overlay, composite, grid и text-grid режимов
 - сохранение и загрузка JSON-конфигов со схемной версией
@@ -33,7 +45,8 @@ AdaptiveSpritesDmiTool.Presentation.Wpf.exe
 - проверка совместимости конфига по разрешению и набору направлений перед применением
 - детерминированная пакетная обработка с результатом по каждому файлу
 - политики перезаписи для batch: `SkipExisting`, `OverwriteExisting`, `FailIfExists`
-- сохранение пользовательских настроек: последние пути, выбранные states, направление, viewport, тема и batch-папки
+- предпросмотр batch output direction mode через `One DIR` и `All DIR`
+- сохранение пользовательских настроек: последние пути, выбранные states, направление, viewport, язык, тема, поведение панелей, видимость Source-полотен и batch-папки
 
 ## Основной сценарий
 
@@ -77,6 +90,14 @@ dotnet build AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-restore
 dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj -c Release
 ```
+
+VS Code debug:
+
+- установите рекомендованные workspace extensions из `.vscode/extensions.json`
+- выберите `Launch AdaptiveSpritesDmiTool WPF (.NET)`
+- нажмите F5
+
+Launch-конфигурация использует `type: "dotnet"` и `projectPath`; `coreclr` debug adapter больше не нужен.
 
 Релизный пакет:
 
