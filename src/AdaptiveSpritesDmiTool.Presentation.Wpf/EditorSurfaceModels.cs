@@ -50,9 +50,8 @@ public enum BottomWorkspaceTab
 
 public enum ImportedStatePlacementMode
 {
-    None = 0,
-    Background = 1,
-    Overlay = 2
+    Background = 0,
+    Overlay = 1
 }
 
 public sealed partial class PixelCellViewModel : ObservableObject
@@ -323,6 +322,8 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
         string sourcePath,
         string sourceFileLabel,
         BitmapSource? previewImage,
+        bool isSourceAssigned,
+        bool isEditableAssigned,
         ImportedStatePlacementMode placementMode,
         int order)
     {
@@ -330,6 +331,8 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
         this.sourcePath = sourcePath;
         this.sourceFileLabel = sourceFileLabel;
         this.previewImage = previewImage;
+        this.isSourceAssigned = isSourceAssigned;
+        this.isEditableAssigned = isEditableAssigned;
         this.placementMode = placementMode;
         this.order = order;
         orderText = order.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -351,6 +354,14 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
 
     [ObservableProperty]
     private string validationMessage = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAssignedToAnySurface))]
+    private bool isSourceAssigned;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAssignedToAnySurface))]
+    private bool isEditableAssigned;
 
     [ObservableProperty]
     private ImportedStatePlacementMode placementMode;
@@ -383,6 +394,8 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
     public bool IsBackgroundAssigned => PlacementMode == ImportedStatePlacementMode.Background;
 
     public bool IsOverlayAssigned => PlacementMode == ImportedStatePlacementMode.Overlay;
+
+    public bool IsAssignedToAnySurface => IsSourceAssigned || IsEditableAssigned;
 
     partial void OnOrderChanged(int value)
     {

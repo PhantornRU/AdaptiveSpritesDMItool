@@ -53,6 +53,7 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private readonly Dictionary<SpriteDirection, SpriteImage?> _navigatorCompositeImages = new();
     private readonly Dictionary<SpriteDirection, IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?>> _navigatorEditableBackingOrigins = new();
     private readonly Dictionary<(string Path, string StateName, SpriteDirection Direction), SpriteImage?> _importedStateFrameCache = new();
+    private IReadOnlyList<WorkspaceImportedStateSettings> _restoredImportedStateSettings = Array.Empty<WorkspaceImportedStateSettings>();
     private CancellationTokenSource? _importedStateRefreshCts;
     private int _importedStateRefreshVersion;
     private readonly HashSet<PixelCoordinate> _pendingRestoreStrokeCoordinates = [];
@@ -68,6 +69,7 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private DmiAssetInfo? _selectedBatchPreviewAsset;
     private Guid? _activeConfigQueueItemId;
     private bool _isSynchronizingSelectedImportedState;
+    private bool _isUpdatingImportedStateItems;
 
     private enum EditableDragAction
     {

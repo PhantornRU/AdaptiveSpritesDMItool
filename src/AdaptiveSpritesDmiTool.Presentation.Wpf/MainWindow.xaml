@@ -382,7 +382,7 @@
                               Background="{TemplateBinding Background}">
                             <Track x:Name="PART_Track"
                                    Orientation="Vertical"
-                                   IsDirectionReversed="False">
+                                   IsDirectionReversed="True">
                                 <Track.DecreaseRepeatButton>
                                     <RepeatButton Style="{StaticResource ThemedScrollRepeatButtonStyle}"
                                                   Command="ScrollBar.PageUpCommand" />
@@ -1892,13 +1892,14 @@
                                                                                 <Grid.RowDefinitions>
                                                                                     <RowDefinition Height="Auto" />
                                                                                     <RowDefinition Height="Auto" />
+                                                                                    <RowDefinition Height="Auto" />
                                                                                 </Grid.RowDefinitions>
                                                                                 <Grid.ColumnDefinitions>
                                                                                     <ColumnDefinition Width="Auto" />
                                                                                     <ColumnDefinition Width="Auto" />
                                                                                 </Grid.ColumnDefinitions>
                                                                             <Button Grid.ColumnSpan="2"
-                                                                                    Grid.RowSpan="2"
+                                                                                    Grid.RowSpan="3"
                                                                                     Style="{StaticResource ItemRemoveButtonStyle}"
                                                                                     Padding="0"
                                                                                     Width="18"
@@ -1915,26 +1916,44 @@
                                                                             <CheckBox Grid.Row="0"
                                                                                       Grid.Column="0"
                                                                                       Style="{StaticResource StateLayerToggleStyle}"
+                                                                                      IsChecked="{Binding IsSourceAssigned, Mode=OneWay}"
+                                                                                      Command="{Binding DataContext.ToggleImportedStateSourceCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                      CommandParameter="{Binding}"
+                                                                                      ToolTip="{DynamicResource Text.StateLayer.SourceTooltip}"
+                                                                                      AutomationProperties.Name="{DynamicResource Text.StateLayer.SourceTooltip}"
+                                                                                      Content="{DynamicResource Text.StateLayer.SourceShort}" />
+                                                                            <CheckBox Grid.Row="0"
+                                                                                      Grid.Column="1"
+                                                                                      Style="{StaticResource StateLayerToggleStyle}"
+                                                                                      IsChecked="{Binding IsEditableAssigned, Mode=OneWay}"
+                                                                                      Command="{Binding DataContext.ToggleImportedStateEditableCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                      CommandParameter="{Binding}"
+                                                                                      ToolTip="{DynamicResource Text.StateLayer.EditableTooltip}"
+                                                                                      AutomationProperties.Name="{DynamicResource Text.StateLayer.EditableTooltip}"
+                                                                                      Content="{DynamicResource Text.StateLayer.EditableShort}" />
+                                                                            <CheckBox Grid.Row="1"
+                                                                                      Grid.Column="0"
+                                                                                      Style="{StaticResource StateLayerToggleStyle}"
                                                                                       IsChecked="{Binding IsBackgroundAssigned, Mode=OneWay}"
                                                                                       Command="{Binding DataContext.ToggleImportedStateBackgroundCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                                       CommandParameter="{Binding}"
-                                                                                      ToolTip="Place under the editable sprite as immutable background"
-                                                                                      AutomationProperties.Name="Toggle background layer"
-                                                                                      Content="Bg" />
-                                                                            <CheckBox Grid.Row="0"
+                                                                                      ToolTip="{DynamicResource Text.StateLayer.BackgroundTooltip}"
+                                                                                      AutomationProperties.Name="{DynamicResource Text.StateLayer.BackgroundTooltip}"
+                                                                                      Content="{DynamicResource Text.StateLayer.BackgroundShort}" />
+                                                                            <CheckBox Grid.Row="1"
                                                                                       Grid.Column="1"
                                                                                       Style="{StaticResource StateLayerToggleStyle}"
                                                                                       IsChecked="{Binding IsOverlayAssigned, Mode=OneWay}"
                                                                                       Command="{Binding DataContext.ToggleImportedStateOverlayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                                       CommandParameter="{Binding}"
-                                                                                      ToolTip="Place over the editable sprite as overlay"
-                                                                                      AutomationProperties.Name="Toggle overlay layer"
-                                                                                      Content="Ov" />
-                                                                            <TextBox Grid.Row="1"
+                                                                                      ToolTip="{DynamicResource Text.StateLayer.OverlayTooltip}"
+                                                                                      AutomationProperties.Name="{DynamicResource Text.StateLayer.OverlayTooltip}"
+                                                                                      Content="{DynamicResource Text.StateLayer.OverlayShort}" />
+                                                                            <TextBox Grid.Row="2"
                                                                                      Grid.ColumnSpan="2"
                                                                                      Style="{StaticResource StateOrderTextBoxStyle}"
                                                                                      HorizontalAlignment="Right"
-                                                                                     ToolTip="Higher order overlays lower ones inside the same layer group"
+                                                                                     ToolTip="{DynamicResource Text.StateLayer.OrderTooltip}"
                                                                                      Text="{Binding OrderText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                                                         </Grid>
                                                                     </Grid>
@@ -2789,4 +2808,3 @@
         </Grid>
     </DockPanel>
 </Window>
-

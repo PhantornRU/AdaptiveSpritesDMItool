@@ -64,6 +64,15 @@
     <sys:String x:Key="Text.StatePool">Список состояний</sys:String>
     <sys:String x:Key="Text.Clear">Очистить</sys:String>
     <sys:String x:Key="Text.AddStates">Добавить состояния</sys:String>
+    <sys:String x:Key="Text.StateLayer.SourceShort">Ис</sys:String>
+    <sys:String x:Key="Text.StateLayer.EditableShort">Ред</sys:String>
+    <sys:String x:Key="Text.StateLayer.BackgroundShort">Фн</sys:String>
+    <sys:String x:Key="Text.StateLayer.OverlayShort">Ов</sys:String>
+    <sys:String x:Key="Text.StateLayer.SourceTooltip">Рисовать это состояние на полотне исходника</sys:String>
+    <sys:String x:Key="Text.StateLayer.EditableTooltip">Рисовать это состояние на редактируемом полотне</sys:String>
+    <sys:String x:Key="Text.StateLayer.BackgroundTooltip">Поместить это состояние в слой фона</sys:String>
+    <sys:String x:Key="Text.StateLayer.OverlayTooltip">Поместить это состояние в слой оверлея</sys:String>
+    <sys:String x:Key="Text.StateLayer.OrderTooltip">Порядок слоя внутри выбранной группы</sys:String>
     <sys:String x:Key="Text.CurrentConfig">Текущий конфиг</sys:String>
     <sys:String x:Key="Text.SampleConfigs">Примеры конфигов</sys:String>
     <sys:String x:Key="Text.LoadSample">Загрузить пример</sys:String>

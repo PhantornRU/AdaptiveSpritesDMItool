@@ -71,6 +71,15 @@ public sealed record BatchJobResult(IReadOnlyList<BatchFileResult> Files)
     public bool WasCancelled => Files.Any(static file => file.Status == BatchFileStatus.Cancelled);
 }
 
+public sealed record WorkspaceImportedStateSettings(
+    string StateName,
+    string SourcePath,
+    string? SourceFileLabel,
+    bool IsSourceAssigned,
+    bool IsEditableAssigned,
+    string PlacementMode,
+    int Order);
+
 public sealed record WorkspaceSettings(
     string? LastOpenedDmiPath,
     string? LastOpenedConfigPath,
@@ -90,7 +99,8 @@ public sealed record WorkspaceSettings(
     bool IsBottomWorkspaceExpanded,
     string? LastUiLanguage = null,
     bool HideInactiveSourceCanvases = true,
-    bool FitMultipleDirectionCanvasesToViewport = true)
+    bool FitMultipleDirectionCanvasesToViewport = true,
+    IReadOnlyList<WorkspaceImportedStateSettings>? ImportedStates = null)
 {
     public static WorkspaceSettings Empty { get; } = new(
         LastOpenedDmiPath: null,
@@ -111,7 +121,8 @@ public sealed record WorkspaceSettings(
         IsBottomWorkspaceExpanded: true,
         LastUiLanguage: null,
         HideInactiveSourceCanvases: true,
-        FitMultipleDirectionCanvasesToViewport: true);
+        FitMultipleDirectionCanvasesToViewport: true,
+        ImportedStates: Array.Empty<WorkspaceImportedStateSettings>());
 }
 
 public interface IConfigRepository

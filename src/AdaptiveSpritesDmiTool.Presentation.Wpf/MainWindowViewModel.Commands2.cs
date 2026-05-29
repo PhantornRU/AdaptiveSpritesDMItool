@@ -60,6 +60,11 @@ public partial class WorkspaceShellViewModel
                     await ImportLegacyConfigFromPathAsync(recentLegacyCsvPath, navigateToEditor: false, persistSettings: false, cancellationToken);
                 }
 
+                if (HasEditorWorkflow && _restoredImportedStateSettings.Count > 0)
+                {
+                    await RestoreImportedStateItemsAsync(cancellationToken);
+                }
+
                 NavigateToSection(HasEditorWorkflow ? ShellSectionKind.Editor : ShellSectionKind.Start);
                 StatusMessage = HasEditorWorkflow
                     ? "Last workspace restored."
@@ -370,55 +375,61 @@ public partial class WorkspaceShellViewModel
     private async Task ClearImportedStatesAsync()
     {
         await RunBusyOperationAsync(
-            async cancellationToken =>
+            cancellationToken =>
             {
-                var loadedAsset = _editorSession.LoadedAsset;
                 ClearImportedStateItems();
-
-                if (loadedAsset is not null)
-                {
-                    await MergeImportedStatesFromAssetAsync(loadedAsset, cancellationToken);
-                    SelectedImportedDmiStateItem = ImportedDmiStateItems
-                        .FirstOrDefault(item => string.Equals(item.StateName, SelectedExplorerState, StringComparison.OrdinalIgnoreCase))
-                        ?? ImportedDmiStateItems.FirstOrDefault(item => string.Equals(item.StateName, "human32x", StringComparison.OrdinalIgnoreCase))
-                        ?? ImportedDmiStateItems.FirstOrDefault();
-                }
-
                 RefreshImportedStateComposition();
-                StatusMessage = loadedAsset is null
-                    ? "Cleared imported states."
-                    : "Cleared added states and restored the primary DMI state pool.";
+                StatusMessage = "Cleared imported states.";
+                return Task.CompletedTask;
             });
     }
 
     [RelayCommand]
-    private Task ToggleImportedStateBackgroundAsync(ImportedDmiStateItemViewModel? item)
+    private void ToggleImportedStateSource(ImportedDmiStateItemViewModel? item)
     {
         if (item is null)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        item.PlacementMode = item.PlacementMode == ImportedStatePlacementMode.Background
-            ? ImportedStatePlacementMode.None
-            : ImportedStatePlacementMode.Background;
-        RequestImportedStateCompositionRefresh(item.PlacementMode != ImportedStatePlacementMode.None);
-        return Task.CompletedTask;
+        item.IsSourceAssigned = !item.IsSourceAssigned;
+        RequestImportedStateCompositionRefresh(item.IsAssignedToAnySurface);
     }
 
     [RelayCommand]
-    private Task ToggleImportedStateOverlayAsync(ImportedDmiStateItemViewModel? item)
+    private void ToggleImportedStateEditable(ImportedDmiStateItemViewModel? item)
     {
         if (item is null)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        item.PlacementMode = item.PlacementMode == ImportedStatePlacementMode.Overlay
-            ? ImportedStatePlacementMode.None
-            : ImportedStatePlacementMode.Overlay;
-        RequestImportedStateCompositionRefresh(item.PlacementMode != ImportedStatePlacementMode.None);
-        return Task.CompletedTask;
+        item.IsEditableAssigned = !item.IsEditableAssigned;
+        RequestImportedStateCompositionRefresh(item.IsAssignedToAnySurface);
+    }
+
+    [RelayCommand]
+    private void ToggleImportedStateBackground(ImportedDmiStateItemViewModel? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        item.PlacementMode = ImportedStatePlacementMode.Background;
+        RequestImportedStateCompositionRefresh(item.IsAssignedToAnySurface);
+    }
+
+    [RelayCommand]
+    private void ToggleImportedStateOverlay(ImportedDmiStateItemViewModel? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        item.PlacementMode = ImportedStatePlacementMode.Overlay;
+        RequestImportedStateCompositionRefresh(item.IsAssignedToAnySurface);
     }
 
     [RelayCommand]

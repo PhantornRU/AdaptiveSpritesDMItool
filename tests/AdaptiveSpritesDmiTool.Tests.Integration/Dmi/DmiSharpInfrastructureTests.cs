@@ -40,6 +40,41 @@ public sealed class DmiSharpInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public async Task ReaderShouldPreserveDmiStateOrder()
+    {
+        var dmiPath = Path.Combine(_tempDirectory, "ordered-states.dmi");
+        CreateDmi(
+            dmiPath,
+            CreateState("human32x", DirectionDepth.Four, 1, 1, static _ => CreateImage(new Rgba32(1, 1, 1, 255))),
+            CreateState("monkey", DirectionDepth.Four, 1, 1, static _ => CreateImage(new Rgba32(2, 2, 2, 255))),
+            CreateState("vox", DirectionDepth.Four, 1, 1, static _ => CreateImage(new Rgba32(3, 3, 3, 255))),
+            CreateState("dwarb", DirectionDepth.Four, 1, 1, static _ => CreateImage(new Rgba32(4, 4, 4, 255))),
+            CreateState("humanBad", DirectionDepth.Four, 1, 1, static _ => CreateImage(new Rgba32(5, 5, 5, 255))),
+            CreateState("underDefault", DirectionDepth.Four, 1, 1, static _ => CreateImage(new Rgba32(6, 6, 6, 255))),
+            CreateState("coatDefault", DirectionDepth.Four, 1, 1, static _ => CreateImage(new Rgba32(7, 7, 7, 255))),
+            CreateState("color32x", DirectionDepth.Four, 1, 1, static _ => CreateImage(new Rgba32(8, 8, 8, 255))),
+            CreateState("colourUnderDefault", DirectionDepth.Four, 1, 1, static _ => CreateImage(new Rgba32(9, 9, 9, 255))),
+            CreateState("Empty", DirectionDepth.Four, 1, 1, static _ => CreateImage(new Rgba32(10, 10, 10, 255))));
+
+        var reader = new DmiSharpReader();
+
+        var result = await reader.LoadAsync(dmiPath, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.States.Select(static state => state.Name).Should().Equal(
+            "human32x",
+            "monkey",
+            "vox",
+            "dwarb",
+            "humanBad",
+            "underDefault",
+            "coatDefault",
+            "color32x",
+            "colourUnderDefault",
+            "Empty");
+    }
+
+    [Fact]
     public async Task ReaderShouldRejectEmptyDmiFiles()
     {
         var dmiPath = Path.Combine(_tempDirectory, "empty.dmi");

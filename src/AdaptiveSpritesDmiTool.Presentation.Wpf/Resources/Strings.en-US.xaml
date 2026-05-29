@@ -64,6 +64,15 @@
     <sys:String x:Key="Text.StatePool">State pool</sys:String>
     <sys:String x:Key="Text.Clear">Clear</sys:String>
     <sys:String x:Key="Text.AddStates">Add states</sys:String>
+    <sys:String x:Key="Text.StateLayer.SourceShort">Sr</sys:String>
+    <sys:String x:Key="Text.StateLayer.EditableShort">Ed</sys:String>
+    <sys:String x:Key="Text.StateLayer.BackgroundShort">Bg</sys:String>
+    <sys:String x:Key="Text.StateLayer.OverlayShort">Ov</sys:String>
+    <sys:String x:Key="Text.StateLayer.SourceTooltip">Draw this state on the Source canvas</sys:String>
+    <sys:String x:Key="Text.StateLayer.EditableTooltip">Draw this state on the Editable canvas</sys:String>
+    <sys:String x:Key="Text.StateLayer.BackgroundTooltip">Place this state in the background layer</sys:String>
+    <sys:String x:Key="Text.StateLayer.OverlayTooltip">Place this state in the overlay layer</sys:String>
+    <sys:String x:Key="Text.StateLayer.OrderTooltip">Layer order inside the selected layer group</sys:String>
     <sys:String x:Key="Text.CurrentConfig">Current config</sys:String>
     <sys:String x:Key="Text.SampleConfigs">Sample configs</sys:String>
     <sys:String x:Key="Text.LoadSample">Load sample</sys:String>

@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Linq;
+using System.Windows.Media.Imaging;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
@@ -1292,47 +1293,208 @@ public partial class WorkspaceShellViewModel
 
     private async Task MergeImportedStatesFromAssetAsync(DmiAssetInfo asset, CancellationToken cancellationToken)
     {
-        foreach (var state in asset.States.OrderBy(static item => item.Name, StringComparer.OrdinalIgnoreCase))
+        InvalidateImportedStateFrameCache();
+        _isUpdatingImportedStateItems = true;
+        try
         {
-            var previewResult = await _readStateFrameUseCase.ExecuteAsync(
-                asset.SourcePath ?? string.Empty,
-                state.Name,
-                SpriteDirection.South,
-                cancellationToken);
-            _importedStateFrameCache[(asset.SourcePath ?? string.Empty, state.Name, SpriteDirection.South)] =
-                previewResult.IsSuccess ? previewResult.Value : null;
-            var previewBitmap = previewResult.IsSuccess ? _bitmapSourceFactory.Create(previewResult.Value) : null;
-            var isValid = previewResult.IsSuccess;
-            var validationMessage = previewResult.IsSuccess ? string.Empty : previewResult.Error.Message;
-
-            var existing = ImportedDmiStateItems.FirstOrDefault(item =>
-                string.Equals(item.StateName, state.Name, StringComparison.OrdinalIgnoreCase));
-            if (existing is null)
+            foreach (var state in asset.States)
             {
-                var order = ImportedDmiStateItems.Count == 0 ? 0 : ImportedDmiStateItems.Max(static item => item.Order) + 1;
-                var imported = new ImportedDmiStateItemViewModel(
-                    state.Name,
+                var previewResult = await _readStateFrameUseCase.ExecuteAsync(
                     asset.SourcePath ?? string.Empty,
-                    Path.GetFileName(asset.SourcePath ?? asset.DisplayName),
-                    previewBitmap,
-                    ImportedStatePlacementMode.None,
-                    order);
-                imported.IsValid = isValid;
-                imported.ValidationMessage = validationMessage;
-                AttachImportedStateItem(imported);
-                ImportedDmiStateItems.Add(imported);
-                continue;
-            }
+                    state.Name,
+                    SpriteDirection.South,
+                    cancellationToken);
+                _importedStateFrameCache[(asset.SourcePath ?? string.Empty, state.Name, SpriteDirection.South)] =
+                    previewResult.IsSuccess ? previewResult.Value : null;
+                var previewBitmap = previewResult.IsSuccess ? _bitmapSourceFactory.Create(previewResult.Value) : null;
+                var isValid = previewResult.IsSuccess;
+                var validationMessage = previewResult.IsSuccess ? string.Empty : previewResult.Error.Message;
 
-            existing.SourceFileLabel = Path.GetFileName(asset.SourcePath ?? asset.DisplayName);
-            existing.PreviewImage = previewBitmap;
-            existing.SourcePath = asset.SourcePath ?? string.Empty;
-            existing.IsValid = isValid;
-            existing.ValidationMessage = validationMessage;
+                var existing = ImportedDmiStateItems.FirstOrDefault(item =>
+                    string.Equals(item.StateName, state.Name, StringComparison.OrdinalIgnoreCase));
+                if (existing is null)
+                {
+                    var order = ImportedDmiStateItems.Count == 0 ? 0 : ImportedDmiStateItems.Max(static item => item.Order) + 1;
+                    var isFirstImportedState = ImportedDmiStateItems.Count == 0;
+                    var isSecondImportedState = ImportedDmiStateItems.Count == 1;
+                    if (isSecondImportedState)
+                    {
+                        ImportedDmiStateItems[0].IsEditableAssigned = false;
+                    }
+
+                    var imported = new ImportedDmiStateItemViewModel(
+                        state.Name,
+                        asset.SourcePath ?? string.Empty,
+                        Path.GetFileName(asset.SourcePath ?? asset.DisplayName),
+                        previewBitmap,
+                        isSourceAssigned: isFirstImportedState,
+                        isEditableAssigned: isFirstImportedState || isSecondImportedState,
+                        ImportedStatePlacementMode.Overlay,
+                        order);
+                    imported.IsValid = isValid;
+                    imported.ValidationMessage = validationMessage;
+                    AttachImportedStateItem(imported);
+                    ImportedDmiStateItems.Add(imported);
+                    continue;
+                }
+
+                existing.SourceFileLabel = Path.GetFileName(asset.SourcePath ?? asset.DisplayName);
+                existing.PreviewImage = previewBitmap;
+                existing.SourcePath = asset.SourcePath ?? string.Empty;
+                existing.IsValid = isValid;
+                existing.ValidationMessage = validationMessage;
+            }
+        }
+        finally
+        {
+            _isUpdatingImportedStateItems = false;
         }
 
         OnPropertyChanged(nameof(ImportedDmiStateItems));
-        InvalidateImportedStateFrameCache();
+    }
+
+    private async Task RestoreImportedStateItemsAsync(CancellationToken cancellationToken)
+    {
+        if (_restoredImportedStateSettings.Count == 0)
+        {
+            return;
+        }
+
+        _isUpdatingImportedStateItems = true;
+        try
+        {
+            ClearImportedStateItems();
+            foreach (var state in _restoredImportedStateSettings.OrderBy(static item => item.Order))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await RestoreImportedStateItemAsync(state, cancellationToken);
+            }
+        }
+        finally
+        {
+            _isUpdatingImportedStateItems = false;
+        }
+
+        SelectedImportedDmiStateItem = ImportedDmiStateItems.FirstOrDefault(item =>
+            string.Equals(item.StateName, SelectedExplorerState, StringComparison.OrdinalIgnoreCase))
+            ?? ImportedDmiStateItems.FirstOrDefault();
+
+        if (ImportedDmiStateItems.Any(static item => item.IsAssignedToAnySurface))
+        {
+            await PreloadImportedStateFramesAsync(cancellationToken);
+        }
+
+        RefreshImportedStateComposition();
+        OnPropertyChanged(nameof(ImportedDmiStateItems));
+    }
+
+    private async Task RestoreImportedStateItemAsync(WorkspaceImportedStateSettings state, CancellationToken cancellationToken)
+    {
+        var placementMode = ParseImportedStatePlacementMode(state.PlacementMode);
+        var sourceFileLabel = string.IsNullOrWhiteSpace(state.SourceFileLabel)
+            ? Path.GetFileName(state.SourcePath)
+            : state.SourceFileLabel!;
+        if (string.IsNullOrWhiteSpace(sourceFileLabel))
+        {
+            sourceFileLabel = "Missing source";
+        }
+
+        if (string.IsNullOrWhiteSpace(state.SourcePath) || !File.Exists(state.SourcePath))
+        {
+            AddRestoredImportedStateItem(
+                state,
+                sourceFileLabel,
+                placementMode,
+                previewBitmap: null,
+                isValid: false,
+                validationMessage: $"Source DMI file was not found: {state.SourcePath}");
+            return;
+        }
+
+        var assetResult = await _inspectDmiFileUseCase.ExecuteAsync(state.SourcePath, cancellationToken);
+        if (assetResult.IsFailure)
+        {
+            AddRestoredImportedStateItem(
+                state,
+                sourceFileLabel,
+                placementMode,
+                previewBitmap: null,
+                isValid: false,
+                validationMessage: assetResult.Error.Message);
+            return;
+        }
+
+        var baseline = ResolveEditorResolution();
+        if (baseline is not null && assetResult.Value.Resolution != baseline.Value)
+        {
+            AddRestoredImportedStateItem(
+                state,
+                sourceFileLabel,
+                placementMode,
+                previewBitmap: null,
+                isValid: false,
+                validationMessage: $"Resolution {assetResult.Value.Resolution} does not match current {baseline.Value}.");
+            return;
+        }
+
+        if (!assetResult.Value.States.Any(candidate => string.Equals(candidate.Name, state.StateName, StringComparison.OrdinalIgnoreCase)))
+        {
+            AddRestoredImportedStateItem(
+                state,
+                sourceFileLabel,
+                placementMode,
+                previewBitmap: null,
+                isValid: false,
+                validationMessage: $"State '{state.StateName}' was not found in '{sourceFileLabel}'.");
+            return;
+        }
+
+        var previewResult = await _readStateFrameUseCase.ExecuteAsync(
+            state.SourcePath,
+            state.StateName,
+            SpriteDirection.South,
+            cancellationToken);
+        _importedStateFrameCache[(state.SourcePath, state.StateName, SpriteDirection.South)] =
+            previewResult.IsSuccess ? previewResult.Value : null;
+
+        AddRestoredImportedStateItem(
+            state,
+            sourceFileLabel,
+            placementMode,
+            previewResult.IsSuccess ? _bitmapSourceFactory.Create(previewResult.Value) : null,
+            previewResult.IsSuccess,
+            previewResult.IsSuccess ? string.Empty : previewResult.Error.Message);
+    }
+
+    private void AddRestoredImportedStateItem(
+        WorkspaceImportedStateSettings state,
+        string sourceFileLabel,
+        ImportedStatePlacementMode placementMode,
+        BitmapSource? previewBitmap,
+        bool isValid,
+        string validationMessage)
+    {
+        var imported = new ImportedDmiStateItemViewModel(
+            state.StateName,
+            state.SourcePath,
+            sourceFileLabel,
+            previewBitmap,
+            state.IsSourceAssigned,
+            state.IsEditableAssigned,
+            placementMode,
+            Math.Max(0, state.Order));
+        imported.IsValid = isValid;
+        imported.ValidationMessage = validationMessage;
+        AttachImportedStateItem(imported);
+        ImportedDmiStateItems.Add(imported);
+    }
+
+    private static ImportedStatePlacementMode ParseImportedStatePlacementMode(string? value)
+    {
+        return Enum.TryParse<ImportedStatePlacementMode>(value, true, out var placementMode) &&
+               Enum.IsDefined(placementMode)
+            ? placementMode
+            : ImportedStatePlacementMode.Overlay;
     }
 
     private void BeginBatchSourceTreeValidation()

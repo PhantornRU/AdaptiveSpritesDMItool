@@ -786,6 +786,10 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public IRelayCommand<ImportedDmiStateItemViewModel> ToggleImportedStateOverlayCommand => Shell.ToggleImportedStateOverlayCommand;
 
+    public IRelayCommand<ImportedDmiStateItemViewModel> ToggleImportedStateSourceCommand => Shell.ToggleImportedStateSourceCommand;
+
+    public IRelayCommand<ImportedDmiStateItemViewModel> ToggleImportedStateEditableCommand => Shell.ToggleImportedStateEditableCommand;
+
     public IRelayCommand<ImportedDmiStateItemViewModel> RemoveImportedStateCommand => Shell.RemoveImportedStateCommand;
 
     public IRelayCommand<EditorLeftDockTab> SelectEditorLeftDockTabCommand => Shell.SelectEditorLeftDockTabCommand;

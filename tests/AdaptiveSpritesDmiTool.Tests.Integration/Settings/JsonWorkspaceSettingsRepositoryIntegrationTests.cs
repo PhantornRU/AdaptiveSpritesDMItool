@@ -36,14 +36,33 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
             "Mappings",
             false,
             false,
-            "Russian");
+            "Russian",
+            ImportedStates:
+            [
+                new WorkspaceImportedStateSettings(
+                    "human32x",
+                    "default.dmi",
+                    "default.dmi",
+                    IsSourceAssigned: true,
+                    IsEditableAssigned: false,
+                    PlacementMode: "Background",
+                    Order: 0),
+                new WorkspaceImportedStateSettings(
+                    "coatDefault",
+                    "clothes.dmi",
+                    "clothes.dmi",
+                    IsSourceAssigned: false,
+                    IsEditableAssigned: true,
+                    PlacementMode: "Overlay",
+                    Order: 3)
+            ]);
 
         (await repository.SaveAsync(settings, CancellationToken.None)).IsSuccess.Should().BeTrue();
 
         var loadResult = await repository.LoadAsync(CancellationToken.None);
 
         loadResult.IsSuccess.Should().BeTrue();
-        loadResult.Value.Should().Be(settings);
+        loadResult.Value.Should().BeEquivalentTo(settings);
     }
 
     [Fact]
@@ -79,6 +98,41 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
         result.Value.LastUiLanguage.Should().BeNull();
         result.Value.IsPreviewInspectorExpanded.Should().BeTrue();
         result.Value.IsBottomWorkspaceExpanded.Should().BeTrue();
+        result.Value.ImportedStates.Should().NotBeNull();
+        result.Value.ImportedStates!.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RepositoryShouldRejectUnsupportedImportedStatePlacementMode()
+    {
+        var path = Path.Combine(_tempDirectory, "invalid-imported-state-placement.json");
+        await File.WriteAllTextAsync(
+            path,
+            """
+            {
+              "version": 5,
+              "lastOverwritePolicy": "SkipExisting",
+              "importedStates": [
+                {
+                  "stateName": "human32x",
+                  "sourcePath": "default.dmi",
+                  "sourceFileLabel": "default.dmi",
+                  "isSourceAssigned": true,
+                  "isEditableAssigned": false,
+                  "placementMode": "Middle",
+                  "order": 0
+                }
+              ]
+            }
+            """);
+
+        var repository = new JsonWorkspaceSettingsRepository(path);
+
+        var result = await repository.LoadAsync(CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("validation");
+        result.Error.Message.Should().Contain("Unsupported imported state placement mode");
     }
 
     [Fact]

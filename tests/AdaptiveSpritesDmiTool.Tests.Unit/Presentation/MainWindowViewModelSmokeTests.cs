@@ -1027,11 +1027,13 @@ public sealed class MainWindowViewModelSmokeTests
         var viewModel = CreateViewModel(
             settingsRepository,
             dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            stateFrameReader: new CoordinateStateFrameReader(),
             previewBuilder: previewBuilder,
             fileDialogService: dialogService);
 
         await viewModel.InitializeAsync();
         await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
         viewModel.CreateConfigCommand.Execute(null);
         viewModel.SelectedExplorerState = "idle";
         viewModel.UseSelectedStateAsBaseCommand.Execute(null);
@@ -1054,6 +1056,208 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task ImportedStateDefaultsShouldAssignFirstToSourceAndSecondToEditableOnly()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "c", "a", "b"),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.ImportedDmiStateItems.Select(item => item.StateName).Should().Equal("c", "a", "b");
+        viewModel.AvailableStates.Should().Equal("c", "a", "b");
+        viewModel.ImportedDmiStateItems[0].IsSourceAssigned.Should().BeTrue();
+        viewModel.ImportedDmiStateItems[0].IsEditableAssigned.Should().BeFalse();
+        viewModel.ImportedDmiStateItems[0].PlacementMode.Should().Be(ImportedStatePlacementMode.Overlay);
+        viewModel.ImportedDmiStateItems[0].Order.Should().Be(0);
+        viewModel.ImportedDmiStateItems[1].IsSourceAssigned.Should().BeFalse();
+        viewModel.ImportedDmiStateItems[1].IsEditableAssigned.Should().BeTrue();
+        viewModel.ImportedDmiStateItems[1].PlacementMode.Should().Be(ImportedStatePlacementMode.Overlay);
+        viewModel.ImportedDmiStateItems[1].Order.Should().Be(1);
+        viewModel.ImportedDmiStateItems[2].IsSourceAssigned.Should().BeFalse();
+        viewModel.ImportedDmiStateItems[2].IsEditableAssigned.Should().BeFalse();
+        viewModel.ImportedDmiStateItems[2].PlacementMode.Should().Be(ImportedStatePlacementMode.Overlay);
+        viewModel.ImportedDmiStateItems[2].Order.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task ImportedStateSurfaceAssignmentsShouldAffectOnlySelectedCanvas()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("a"));
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("b"));
+
+        viewModel.ToggleImportedStateSourceCommand.Execute(viewModel.ImportedDmiStateItems[0]);
+
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(System.Windows.Media.Color.FromRgb(244, 239, 231));
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("b"));
+
+        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
+
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(System.Windows.Media.Color.FromRgb(244, 239, 231));
+    }
+
+    [Fact]
+    public async Task ClearImportedStatesShouldLeaveCanvasesEmpty()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.ImportedDmiStateItems.Should().NotBeEmpty();
+
+        await viewModel.ClearImportedStatesCommand.ExecuteAsync(null);
+
+        viewModel.ImportedDmiStateItems.Should().BeEmpty();
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(NeutralSurfaceColor());
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(NeutralSurfaceColor());
+    }
+
+    [Fact]
+    public async Task SourceBackgroundStateShouldNotCompositeOverPreviewBase()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var previewBuilder = new FixedPreviewBuilder();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SparseStateFrameReader(),
+            previewBuilder: previewBuilder,
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.SelectedExplorerState = "a";
+        viewModel.UseSelectedStateAsBaseCommand.Execute(null);
+        await viewModel.BuildPreviewCommand.ExecuteAsync(null);
+
+        viewModel.ToggleImportedStateBackgroundCommand.Execute(viewModel.ImportedDmiStateItems[0]);
+
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("a"));
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 1, 1).Should().Be(System.Windows.Media.Color.FromArgb(0, 0, 0, 0));
+    }
+
+    [Fact]
+    public async Task ImportedStatePlacementAndOrderShouldControlCompositionWithinAssignedCanvas()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b", "c"),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        var first = viewModel.ImportedDmiStateItems[0];
+        var second = viewModel.ImportedDmiStateItems[1];
+        var third = viewModel.ImportedDmiStateItems[2];
+
+        first.IsEditableAssigned = true;
+        second.IsEditableAssigned = false;
+        third.IsEditableAssigned = true;
+        first.PlacementMode = ImportedStatePlacementMode.Overlay;
+        third.PlacementMode = ImportedStatePlacementMode.Overlay;
+        first.Order = 0;
+        third.Order = 5;
+
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("c"));
+
+        first.Order = 10;
+
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("a"));
+
+        viewModel.ToggleImportedStateBackgroundCommand.Execute(first);
+
+        first.IsSourceAssigned.Should().BeTrue();
+        first.IsEditableAssigned.Should().BeTrue();
+        first.PlacementMode.Should().Be(ImportedStatePlacementMode.Background);
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("c"));
+    }
+
+    [Fact]
+    public async Task InitializeAsyncShouldRestorePersistedImportedStateAssignments()
+    {
+        var tempRoot = CreateTempDirectory();
+        var dmiPath = Path.Combine(tempRoot, "sprite.dmi");
+        var sourcePath = Path.Combine(tempRoot, "states.dmi");
+        await File.WriteAllTextAsync(dmiPath, "placeholder");
+        await File.WriteAllTextAsync(sourcePath, "placeholder");
+        var settingsRepository = new InMemorySettingsRepository(
+            WorkspaceSettings.Empty with
+            {
+                LastOpenedDmiPath = dmiPath,
+                ImportedStates =
+                [
+                    new WorkspaceImportedStateSettings(
+                        "a",
+                        sourcePath,
+                        "states.dmi",
+                        IsSourceAssigned: true,
+                        IsEditableAssigned: false,
+                        PlacementMode: "Background",
+                        Order: 4),
+                    new WorkspaceImportedStateSettings(
+                        "missing",
+                        Path.Combine(tempRoot, "missing.dmi"),
+                        "missing.dmi",
+                        IsSourceAssigned: false,
+                        IsEditableAssigned: true,
+                        PlacementMode: "Overlay",
+                        Order: 5)
+                ]
+            });
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SolidStateFrameReader());
+
+        await viewModel.InitializeAsync();
+
+        viewModel.ImportedDmiStateItems.Should().HaveCount(2);
+        var restored = viewModel.ImportedDmiStateItems[0];
+        restored.StateName.Should().Be("a");
+        restored.SourcePath.Should().Be(sourcePath);
+        restored.IsSourceAssigned.Should().BeTrue();
+        restored.IsEditableAssigned.Should().BeFalse();
+        restored.PlacementMode.Should().Be(ImportedStatePlacementMode.Background);
+        restored.Order.Should().Be(4);
+        restored.IsValid.Should().BeTrue();
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("a"));
+
+        var invalid = viewModel.ImportedDmiStateItems[1];
+        invalid.StateName.Should().Be("missing");
+        invalid.IsValid.Should().BeFalse();
+        invalid.ValidationMessage.Should().Contain("Source DMI file was not found");
+    }
+
+    [Fact]
     public async Task EditableSurfaceShouldNotApplyConfigTwiceWhenCompositePreviewExists()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -1062,11 +1266,13 @@ public sealed class MainWindowViewModelSmokeTests
         var viewModel = CreateViewModel(
             settingsRepository,
             dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            stateFrameReader: new CoordinateStateFrameReader(),
             previewBuilder: previewBuilder,
             fileDialogService: dialogService);
 
         await viewModel.InitializeAsync();
         await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
         viewModel.CreateConfigCommand.Execute(null);
 
         ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 0), new PixelCoordinate(0, 0));
@@ -1396,6 +1602,7 @@ public sealed class MainWindowViewModelSmokeTests
         IConfigRepository? configRepository = null,
         ILegacyCsvConfigImporter? legacyImporter = null,
         IDmiReader? dmiReader = null,
+        IStateFrameReader? stateFrameReader = null,
         IPreviewBuilder? previewBuilder = null,
         IBatchProcessingService? batchProcessingService = null,
         IFileDialogService? fileDialogService = null,
@@ -1412,7 +1619,7 @@ public sealed class MainWindowViewModelSmokeTests
             new ImportLegacyCsvConfigUseCase(legacyImporter ?? new NullLegacyCsvImporter(), session),
             new LoadDmiFileUseCase(dmiReader ?? new NullDmiReader(), session, workspace),
             new InspectDmiFileUseCase(dmiReader ?? new NullDmiReader()),
-            new ReadStateFrameUseCase(new NullStateFrameReader()),
+            new ReadStateFrameUseCase(stateFrameReader ?? new NullStateFrameReader()),
             new BuildPreviewUseCase(previewBuilder ?? new NullPreviewBuilder(), session),
             new ApplyConfigToDmiBatchUseCase(batchProcessingService ?? new NullBatchProcessingService(), session),
             new UndoChangeUseCase(session),
@@ -1576,8 +1783,17 @@ public sealed class MainWindowViewModelSmokeTests
             Task.FromResult(Result.Failure<DmiAssetInfo>(Errors.NotFound(path)));
     }
 
-    private sealed class SuccessfulDmiReader(SupportedDirectionSet directions) : IDmiReader
+    private sealed class SuccessfulDmiReader : IDmiReader
     {
+        private readonly SupportedDirectionSet _directions;
+        private readonly string[] _stateNames;
+
+        public SuccessfulDmiReader(SupportedDirectionSet directions, params string[] stateNames)
+        {
+            _directions = directions;
+            _stateNames = stateNames;
+        }
+
         public Task<Result<DmiAssetInfo>> LoadAsync(string path, CancellationToken cancellationToken) =>
             Task.FromResult(
                 Result.Success(
@@ -1585,8 +1801,16 @@ public sealed class MainWindowViewModelSmokeTests
                         "sprite",
                         path,
                         new SpriteResolution(4, 4),
-                        directions,
-                        [new DmiStateInfo("idle", 1), new DmiStateInfo("blink", 1)])));
+                        _directions,
+                        ResolveStates(_stateNames))));
+
+        private static DmiStateInfo[] ResolveStates(string[] requestedStateNames)
+        {
+            var names = requestedStateNames.Length == 0
+                ? ["idle", "blink"]
+                : requestedStateNames;
+            return names.Select(static name => new DmiStateInfo(name, 1)).ToArray();
+        }
     }
 
     private sealed class NullPreviewBuilder : IPreviewBuilder
@@ -1667,6 +1891,54 @@ public sealed class MainWindowViewModelSmokeTests
     {
         public Task<Result<SpriteImage>> ReadFrameAsync(string dmiPath, string stateName, SpriteDirection direction, CancellationToken cancellationToken) =>
             Task.FromResult(Result.Failure<SpriteImage>(Errors.NotFound(stateName)));
+    }
+
+    private sealed class SolidStateFrameReader : IStateFrameReader
+    {
+        public Task<Result<SpriteImage>> ReadFrameAsync(string dmiPath, string stateName, SpriteDirection direction, CancellationToken cancellationToken)
+        {
+            var color = ColorForState(stateName);
+            var pixels = new byte[4 * 4 * 4];
+            for (var index = 0; index < pixels.Length; index += 4)
+            {
+                pixels[index] = color.R;
+                pixels[index + 1] = color.G;
+                pixels[index + 2] = color.B;
+                pixels[index + 3] = color.A;
+            }
+
+            return Task.FromResult(Result.Success(new SpriteImage(4, 4, pixels)));
+        }
+
+        public static System.Windows.Media.Color ColorForState(string stateName) =>
+            stateName.ToLowerInvariant() switch
+            {
+                "a" => System.Windows.Media.Color.FromArgb(255, 220, 24, 36),
+                "b" => System.Windows.Media.Color.FromArgb(255, 30, 144, 255),
+                "c" => System.Windows.Media.Color.FromArgb(255, 32, 180, 80),
+                _ => System.Windows.Media.Color.FromArgb(255, 180, 180, 180)
+            };
+    }
+
+    private sealed class CoordinateStateFrameReader : IStateFrameReader
+    {
+        public Task<Result<SpriteImage>> ReadFrameAsync(string dmiPath, string stateName, SpriteDirection direction, CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Success(CreateCoordinateImage(4, 4)));
+    }
+
+    private sealed class SparseStateFrameReader : IStateFrameReader
+    {
+        public Task<Result<SpriteImage>> ReadFrameAsync(string dmiPath, string stateName, SpriteDirection direction, CancellationToken cancellationToken)
+        {
+            var color = SolidStateFrameReader.ColorForState(stateName);
+            var pixels = new byte[4 * 4 * 4];
+            pixels[0] = color.R;
+            pixels[1] = color.G;
+            pixels[2] = color.B;
+            pixels[3] = color.A;
+
+            return Task.FromResult(Result.Success(new SpriteImage(4, 4, pixels)));
+        }
     }
 
     private sealed class NullBatchProcessingService : IBatchProcessingService
@@ -1772,4 +2044,7 @@ public sealed class MainWindowViewModelSmokeTests
             surface.RgbaBytes[index + 1],
             surface.RgbaBytes[index]);
     }
+
+    private static System.Windows.Media.Color NeutralSurfaceColor() =>
+        System.Windows.Media.Color.FromRgb(244, 239, 231);
 }

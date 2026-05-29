@@ -8,7 +8,7 @@ namespace AdaptiveSpritesDmiTool.Infrastructure.Settings;
 
 public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettingsRepository
 {
-    private const int CurrentVersion = 4;
+    private const int CurrentVersion = 5;
 
     public async Task<Result<WorkspaceSettings>> LoadAsync(CancellationToken cancellationToken)
     {
@@ -103,7 +103,8 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             document.IsBottomWorkspaceExpanded ?? true,
             Normalize(document.LastUiLanguage),
             document.HideInactiveSourceCanvases ?? true,
-            document.FitMultipleDirectionCanvasesToViewport ?? true);
+            document.FitMultipleDirectionCanvasesToViewport ?? true,
+            ParseImportedStates(document.ImportedStates));
 
     private static WorkspaceSettingsDocument FromDomain(WorkspaceSettings settings) =>
         new()
@@ -127,7 +128,19 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             IsBottomWorkspaceExpanded = settings.IsBottomWorkspaceExpanded,
             LastUiLanguage = settings.LastUiLanguage,
             HideInactiveSourceCanvases = settings.HideInactiveSourceCanvases,
-            FitMultipleDirectionCanvasesToViewport = settings.FitMultipleDirectionCanvasesToViewport
+            FitMultipleDirectionCanvasesToViewport = settings.FitMultipleDirectionCanvasesToViewport,
+            ImportedStates = (settings.ImportedStates ?? Array.Empty<WorkspaceImportedStateSettings>())
+                .Select(static item => new ImportedStateDocument
+                {
+                    StateName = item.StateName,
+                    SourcePath = item.SourcePath,
+                    SourceFileLabel = item.SourceFileLabel,
+                    IsSourceAssigned = item.IsSourceAssigned,
+                    IsEditableAssigned = item.IsEditableAssigned,
+                    PlacementMode = item.PlacementMode,
+                    Order = item.Order
+                })
+                .ToList()
         };
 
     private static string? Normalize(string? value) =>
@@ -165,6 +178,61 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         }
 
         return direction;
+    }
+
+    private static IReadOnlyList<WorkspaceImportedStateSettings> ParseImportedStates(IEnumerable<ImportedStateDocument>? documents)
+    {
+        if (documents is null)
+        {
+            return Array.Empty<WorkspaceImportedStateSettings>();
+        }
+
+        var importedStates = new List<WorkspaceImportedStateSettings>();
+        foreach (var document in documents)
+        {
+            var stateName = Normalize(document.StateName);
+            var sourcePath = Normalize(document.SourcePath);
+            if (stateName is null || sourcePath is null)
+            {
+                throw new JsonException("Imported state entries must include stateName and sourcePath.");
+            }
+
+            var placementMode = ParseImportedStatePlacementMode(document.PlacementMode);
+            importedStates.Add(
+                new WorkspaceImportedStateSettings(
+                    stateName,
+                    sourcePath,
+                    Normalize(document.SourceFileLabel),
+                    document.IsSourceAssigned,
+                    document.IsEditableAssigned,
+                    placementMode,
+                    Math.Max(0, document.Order)));
+        }
+
+        return importedStates;
+    }
+
+    private static string ParseImportedStatePlacementMode(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "Overlay";
+        }
+
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _) ||
+            !Enum.TryParse<ImportedStatePlacementSetting>(value, true, out var placementMode) ||
+            !Enum.IsDefined(placementMode))
+        {
+            throw new JsonException($"Unsupported imported state placement mode '{value}'.");
+        }
+
+        return placementMode.ToString();
+    }
+
+    private enum ImportedStatePlacementSetting
+    {
+        Background = 0,
+        Overlay = 1
     }
 
     private sealed class WorkspaceSettingsDocument
@@ -208,5 +276,24 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         public bool? HideInactiveSourceCanvases { get; set; }
 
         public bool? FitMultipleDirectionCanvasesToViewport { get; set; }
+
+        public List<ImportedStateDocument>? ImportedStates { get; set; }
+    }
+
+    private sealed class ImportedStateDocument
+    {
+        public string? StateName { get; set; }
+
+        public string? SourcePath { get; set; }
+
+        public string? SourceFileLabel { get; set; }
+
+        public bool IsSourceAssigned { get; set; }
+
+        public bool IsEditableAssigned { get; set; }
+
+        public string? PlacementMode { get; set; } = ImportedStatePlacementSetting.Overlay.ToString();
+
+        public int Order { get; set; }
     }
 }

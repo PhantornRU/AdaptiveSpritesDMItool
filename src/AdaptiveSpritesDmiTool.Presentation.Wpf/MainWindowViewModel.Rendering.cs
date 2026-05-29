@@ -102,6 +102,7 @@ public partial class WorkspaceShellViewModel
         IsBottomWorkspaceExpanded = settings.IsBottomWorkspaceExpanded;
         HideInactiveSourceCanvases = settings.HideInactiveSourceCanvases;
         FitMultipleDirectionCanvasesToViewport = settings.FitMultipleDirectionCanvasesToViewport;
+        _restoredImportedStateSettings = settings.ImportedStates ?? Array.Empty<WorkspaceImportedStateSettings>();
         IsFocusMode = false;
     }
 
@@ -149,6 +150,11 @@ public partial class WorkspaceShellViewModel
         {
             await TryBuildPreviewAsync(userInitiated: false, CancellationToken.None);
         }
+
+        if (_restoredImportedStateSettings.Count > 0)
+        {
+            await RestoreImportedStateItemsAsync(CancellationToken.None);
+        }
     }
 
     private WorkspaceSettings BuildWorkspaceSettings() =>
@@ -171,7 +177,20 @@ public partial class WorkspaceShellViewModel
             IsBottomWorkspaceExpanded,
             SelectedLanguage.ToString(),
             HideInactiveSourceCanvases,
-            FitMultipleDirectionCanvasesToViewport);
+            FitMultipleDirectionCanvasesToViewport,
+            BuildImportedStateSettings());
+
+    private IReadOnlyList<WorkspaceImportedStateSettings> BuildImportedStateSettings() =>
+        ImportedDmiStateItems
+            .Select(static item => new WorkspaceImportedStateSettings(
+                item.StateName,
+                item.SourcePath,
+                item.SourceFileLabel,
+                item.IsSourceAssigned,
+                item.IsEditableAssigned,
+                item.PlacementMode.ToString(),
+                item.Order))
+            .ToArray();
 
     private void ResetWorkspaceCore()
     {
@@ -190,6 +209,7 @@ public partial class WorkspaceShellViewModel
         _overlayImage = null;
         _compositeImage = null;
         ClearImportedStateItems();
+        _restoredImportedStateSettings = Array.Empty<WorkspaceImportedStateSettings>();
         DmiPath = string.Empty;
         ConfigPath = string.Empty;
         SaveConfigPath = string.Empty;
@@ -757,8 +777,7 @@ public partial class WorkspaceShellViewModel
         DirectionNavigatorColumns = AvailableDirections.Count > 4 ? 4 : 2;
 
         AvailableStates.Clear();
-        foreach (var state in (_editorSession.LoadedAsset?.States ?? Array.Empty<DmiStateInfo>())
-                     .OrderBy(static state => state.Name, StringComparer.Ordinal))
+        foreach (var state in _editorSession.LoadedAsset?.States ?? Array.Empty<DmiStateInfo>())
         {
             AvailableStates.Add(state.Name);
         }
