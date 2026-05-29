@@ -785,7 +785,7 @@
             </Setter>
         </Style>
         <Style x:Key="StateOrderTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource ThemedTextBoxStyle}">
-            <Setter Property="Width" Value="90" />
+            <Setter Property="Width" Value="42" />
             <Setter Property="Height" Value="28" />
             <Setter Property="Margin" Value="0,4,0,0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -1950,11 +1950,19 @@
                                                                                       AutomationProperties.Name="{DynamicResource Text.StateLayer.OverlayTooltip}"
                                                                                       Content="{DynamicResource Text.StateLayer.OverlayShort}" />
                                                                             <TextBox Grid.Row="2"
-                                                                                     Grid.ColumnSpan="2"
+                                                                                     Grid.Column="0"
                                                                                      Style="{StaticResource StateOrderTextBoxStyle}"
                                                                                      HorizontalAlignment="Right"
                                                                                      ToolTip="{DynamicResource Text.StateLayer.OrderTooltip}"
                                                                                      Text="{Binding OrderText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                                            <TextBox Grid.Row="2"
+                                                                                     Grid.Column="1"
+                                                                                     Style="{StaticResource StateOrderTextBoxStyle}"
+                                                                                     HorizontalAlignment="Right"
+                                                                                     MaxLength="3"
+                                                                                     ToolTip="{DynamicResource Text.StateLayer.OpacityTooltip}"
+                                                                                     AutomationProperties.Name="{DynamicResource Text.StateLayer.OpacityTooltip}"
+                                                                                     Text="{Binding OpacityText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                                                         </Grid>
                                                                     </Grid>
                                                                     <DataTemplate.Triggers>

@@ -316,6 +316,7 @@ public sealed partial class EditorAssetItemViewModel : ObservableObject
 public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
 {
     private string orderText = string.Empty;
+    private string opacityText = string.Empty;
 
     public ImportedDmiStateItemViewModel(
         string stateName,
@@ -325,7 +326,8 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
         bool isSourceAssigned,
         bool isEditableAssigned,
         ImportedStatePlacementMode placementMode,
-        int order)
+        int order,
+        int opacityPercent = 100)
     {
         StateName = stateName;
         this.sourcePath = sourcePath;
@@ -335,7 +337,9 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
         this.isEditableAssigned = isEditableAssigned;
         this.placementMode = placementMode;
         this.order = order;
+        this.opacityPercent = Math.Clamp(opacityPercent, 0, 100);
         orderText = order.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        opacityText = this.opacityPercent.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public string StateName { get; }
@@ -370,6 +374,10 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
     [ObservableProperty]
     private int order;
 
+    [NotifyPropertyChangedFor(nameof(OpacityText))]
+    [ObservableProperty]
+    private int opacityPercent = 100;
+
     public string OrderText
     {
         get => orderText;
@@ -391,6 +399,34 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
         }
     }
 
+    public string OpacityText
+    {
+        get => opacityText;
+        set
+        {
+            value ??= string.Empty;
+            if (!SetProperty(ref opacityText, value))
+            {
+                return;
+            }
+
+            var normalizedInput = value.Trim().TrimEnd('%');
+            if (!int.TryParse(normalizedInput, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+            {
+                return;
+            }
+
+            parsed = Math.Clamp(parsed, 0, 100);
+            if (parsed != OpacityPercent)
+            {
+                OpacityPercent = parsed;
+                return;
+            }
+
+            NormalizeOpacityText(parsed);
+        }
+    }
+
     public bool IsBackgroundAssigned => PlacementMode == ImportedStatePlacementMode.Background;
 
     public bool IsOverlayAssigned => PlacementMode == ImportedStatePlacementMode.Overlay;
@@ -407,10 +443,32 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
         }
     }
 
+    partial void OnOpacityPercentChanged(int value)
+    {
+        var normalizedValue = Math.Clamp(value, 0, 100);
+        if (normalizedValue != value)
+        {
+            OpacityPercent = normalizedValue;
+            return;
+        }
+
+        NormalizeOpacityText(normalizedValue);
+    }
+
     partial void OnPlacementModeChanged(ImportedStatePlacementMode value)
     {
         OnPropertyChanged(nameof(IsBackgroundAssigned));
         OnPropertyChanged(nameof(IsOverlayAssigned));
+    }
+
+    private void NormalizeOpacityText(int value)
+    {
+        var normalized = value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (!string.Equals(opacityText, normalized, StringComparison.Ordinal))
+        {
+            opacityText = normalized;
+            OnPropertyChanged(nameof(OpacityText));
+        }
     }
 }
 

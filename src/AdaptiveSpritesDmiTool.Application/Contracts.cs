@@ -78,7 +78,8 @@ public sealed record WorkspaceImportedStateSettings(
     bool IsSourceAssigned,
     bool IsEditableAssigned,
     string PlacementMode,
-    int Order);
+    int Order,
+    int OpacityPercent = 100);
 
 public sealed record WorkspaceSettings(
     string? LastOpenedDmiPath,

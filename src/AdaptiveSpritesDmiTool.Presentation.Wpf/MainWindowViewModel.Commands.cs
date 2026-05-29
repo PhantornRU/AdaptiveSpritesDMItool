@@ -1330,7 +1330,8 @@ public partial class WorkspaceShellViewModel
                         isSourceAssigned: isFirstImportedState,
                         isEditableAssigned: isFirstImportedState || isSecondImportedState,
                         ImportedStatePlacementMode.Overlay,
-                        order);
+                        order,
+                        opacityPercent: 100);
                     imported.IsValid = isValid;
                     imported.ValidationMessage = validationMessage;
                     AttachImportedStateItem(imported);
@@ -1482,7 +1483,8 @@ public partial class WorkspaceShellViewModel
             state.IsSourceAssigned,
             state.IsEditableAssigned,
             placementMode,
-            Math.Max(0, state.Order));
+            Math.Max(0, state.Order),
+            Math.Clamp(state.OpacityPercent, 0, 100));
         imported.IsValid = isValid;
         imported.ValidationMessage = validationMessage;
         AttachImportedStateItem(imported);

@@ -586,7 +586,7 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
-        if (e.PropertyName is nameof(ImportedDmiStateItemViewModel.Order))
+        if (e.PropertyName is nameof(ImportedDmiStateItemViewModel.Order) or nameof(ImportedDmiStateItemViewModel.OpacityPercent))
         {
             RequestImportedStateCompositionRefresh(item.IsAssignedToAnySurface);
         }
@@ -801,7 +801,7 @@ public partial class WorkspaceShellViewModel
             var image = GetImportedStateFrame(layer, direction);
             if (image is not null)
             {
-                BlendOver(composed, image);
+                BlendOver(composed, image, layer.OpacityPercent / 100f);
             }
         }
 
@@ -815,7 +815,7 @@ public partial class WorkspaceShellViewModel
             var image = GetImportedStateFrame(layer, direction);
             if (image is not null)
             {
-                BlendOver(composed, image);
+                BlendOver(composed, image, layer.OpacityPercent / 100f);
             }
         }
 
@@ -847,9 +847,15 @@ public partial class WorkspaceShellViewModel
         return null;
     }
 
-    private static void BlendOver(SpriteImage canvas, SpriteImage layer)
+    private static void BlendOver(SpriteImage canvas, SpriteImage layer, float opacityMultiplier = 1f)
     {
         if (canvas.Width != layer.Width || canvas.Height != layer.Height)
+        {
+            return;
+        }
+
+        opacityMultiplier = Math.Clamp(opacityMultiplier, 0f, 1f);
+        if (opacityMultiplier <= 0f)
         {
             return;
         }
@@ -866,7 +872,7 @@ public partial class WorkspaceShellViewModel
             var fgB = layer.RgbaBytes[index + 2];
             var fgA = layer.RgbaBytes[index + 3];
 
-            var fgAlpha = fgA / 255f;
+            var fgAlpha = (fgA / 255f) * opacityMultiplier;
             if (fgAlpha <= 0f)
             {
                 continue;

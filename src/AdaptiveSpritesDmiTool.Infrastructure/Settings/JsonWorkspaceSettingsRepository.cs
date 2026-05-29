@@ -8,7 +8,7 @@ namespace AdaptiveSpritesDmiTool.Infrastructure.Settings;
 
 public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettingsRepository
 {
-    private const int CurrentVersion = 5;
+    private const int CurrentVersion = 6;
 
     public async Task<Result<WorkspaceSettings>> LoadAsync(CancellationToken cancellationToken)
     {
@@ -138,7 +138,8 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
                     IsSourceAssigned = item.IsSourceAssigned,
                     IsEditableAssigned = item.IsEditableAssigned,
                     PlacementMode = item.PlacementMode,
-                    Order = item.Order
+                    Order = item.Order,
+                    OpacityPercent = item.OpacityPercent
                 })
                 .ToList()
         };
@@ -198,6 +199,7 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             }
 
             var placementMode = ParseImportedStatePlacementMode(document.PlacementMode);
+            var opacityPercent = ParseImportedStateOpacity(document.OpacityPercent);
             importedStates.Add(
                 new WorkspaceImportedStateSettings(
                     stateName,
@@ -206,10 +208,26 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
                     document.IsSourceAssigned,
                     document.IsEditableAssigned,
                     placementMode,
-                    Math.Max(0, document.Order)));
+                    Math.Max(0, document.Order),
+                    opacityPercent));
         }
 
         return importedStates;
+    }
+
+    private static int ParseImportedStateOpacity(int? value)
+    {
+        if (value is null)
+        {
+            return 100;
+        }
+
+        if (value is < 0 or > 100)
+        {
+            throw new JsonException($"Imported state opacity must be between 0 and 100, but was '{value}'.");
+        }
+
+        return value.Value;
     }
 
     private static string ParseImportedStatePlacementMode(string? value)
@@ -295,5 +313,7 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         public string? PlacementMode { get; set; } = ImportedStatePlacementSetting.Overlay.ToString();
 
         public int Order { get; set; }
+
+        public int? OpacityPercent { get; set; }
     }
 }

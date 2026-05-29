@@ -189,7 +189,8 @@ public partial class WorkspaceShellViewModel
                 item.IsSourceAssigned,
                 item.IsEditableAssigned,
                 item.PlacementMode.ToString(),
-                item.Order))
+                item.Order,
+                item.OpacityPercent))
             .ToArray();
 
     private void ResetWorkspaceCore()
@@ -487,7 +488,8 @@ public partial class WorkspaceShellViewModel
                     .Select(entry =>
                     {
                         var destinationEditableCoordinate = ClampCoordinate(
-                            new PixelCoordinate(entry.Key.X + deltaX, entry.Key.Y + deltaY),
+                            entry.Key.X + deltaX,
+                            entry.Key.Y + deltaY,
                             config.Resolution);
 
                         return (
@@ -653,7 +655,7 @@ public partial class WorkspaceShellViewModel
         }
 
         var mirroredX = (resolution.Width - coordinate.X - 1) + (UseCentralizedPropagation ? -1 : 0);
-        return ClampCoordinate(new PixelCoordinate(mirroredX, coordinate.Y), resolution);
+        return ClampCoordinate(mirroredX, coordinate.Y, resolution);
     }
 
     private static IReadOnlyList<SpriteDirection> ResolveParallelDirections(
@@ -723,7 +725,10 @@ public partial class WorkspaceShellViewModel
         };
 
     private static PixelCoordinate ClampCoordinate(PixelCoordinate coordinate, SpriteResolution resolution) =>
-        new(Math.Clamp(coordinate.X, 0, resolution.Width - 1), Math.Clamp(coordinate.Y, 0, resolution.Height - 1));
+        ClampCoordinate(coordinate.X, coordinate.Y, resolution);
+
+    private static PixelCoordinate ClampCoordinate(int x, int y, SpriteResolution resolution) =>
+        new(Math.Clamp(x, 0, resolution.Width - 1), Math.Clamp(y, 0, resolution.Height - 1));
 
     private void ApplyMutationResult(
         Result<SpriteConfig> result,

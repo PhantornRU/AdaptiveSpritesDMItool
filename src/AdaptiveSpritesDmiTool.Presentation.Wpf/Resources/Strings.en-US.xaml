@@ -73,6 +73,7 @@
     <sys:String x:Key="Text.StateLayer.BackgroundTooltip">Place this state in the background layer</sys:String>
     <sys:String x:Key="Text.StateLayer.OverlayTooltip">Place this state in the overlay layer</sys:String>
     <sys:String x:Key="Text.StateLayer.OrderTooltip">Layer order inside the selected layer group</sys:String>
+    <sys:String x:Key="Text.StateLayer.OpacityTooltip">Layer opacity: 0 hidden, 100 opaque</sys:String>
     <sys:String x:Key="Text.CurrentConfig">Current config</sys:String>
     <sys:String x:Key="Text.SampleConfigs">Sample configs</sys:String>
     <sys:String x:Key="Text.LoadSample">Load sample</sys:String>

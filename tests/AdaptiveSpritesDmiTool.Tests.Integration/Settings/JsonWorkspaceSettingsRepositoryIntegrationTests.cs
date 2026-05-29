@@ -46,7 +46,8 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
                     IsSourceAssigned: true,
                     IsEditableAssigned: false,
                     PlacementMode: "Background",
-                    Order: 0),
+                    Order: 0,
+                    OpacityPercent: 75),
                 new WorkspaceImportedStateSettings(
                     "coatDefault",
                     "clothes.dmi",
@@ -54,7 +55,8 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
                     IsSourceAssigned: false,
                     IsEditableAssigned: true,
                     PlacementMode: "Overlay",
-                    Order: 3)
+                    Order: 3,
+                    OpacityPercent: 20)
             ]);
 
         (await repository.SaveAsync(settings, CancellationToken.None)).IsSuccess.Should().BeTrue();
@@ -133,6 +135,75 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("validation");
         result.Error.Message.Should().Contain("Unsupported imported state placement mode");
+    }
+
+    [Fact]
+    public async Task RepositoryShouldLoadVersionFiveImportedStatesWithDefaultOpacity()
+    {
+        var path = Path.Combine(_tempDirectory, "version5-imported-state.json");
+        await File.WriteAllTextAsync(
+            path,
+            """
+            {
+              "version": 5,
+              "lastOverwritePolicy": "SkipExisting",
+              "importedStates": [
+                {
+                  "stateName": "human32x",
+                  "sourcePath": "default.dmi",
+                  "sourceFileLabel": "default.dmi",
+                  "isSourceAssigned": true,
+                  "isEditableAssigned": false,
+                  "placementMode": "Overlay",
+                  "order": 0
+                }
+              ]
+            }
+            """);
+
+        var repository = new JsonWorkspaceSettingsRepository(path);
+
+        var result = await repository.LoadAsync(CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ImportedStates.Should().ContainSingle();
+        result.Value.ImportedStates![0].OpacityPercent.Should().Be(100);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(101)]
+    public async Task RepositoryShouldRejectOutOfRangeImportedStateOpacity(int opacityPercent)
+    {
+        var path = Path.Combine(_tempDirectory, $"{Guid.NewGuid():N}.json");
+        await File.WriteAllTextAsync(
+            path,
+            $$"""
+            {
+              "version": 6,
+              "lastOverwritePolicy": "SkipExisting",
+              "importedStates": [
+                {
+                  "stateName": "human32x",
+                  "sourcePath": "default.dmi",
+                  "sourceFileLabel": "default.dmi",
+                  "isSourceAssigned": true,
+                  "isEditableAssigned": false,
+                  "placementMode": "Overlay",
+                  "order": 0,
+                  "opacityPercent": {{opacityPercent}}
+                }
+              ]
+            }
+            """);
+
+        var repository = new JsonWorkspaceSettingsRepository(path);
+
+        var result = await repository.LoadAsync(CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("validation");
+        result.Error.Message.Should().Contain("Imported state opacity");
     }
 
     [Fact]

@@ -946,6 +946,81 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task ScopedMoveShouldClampCentralizedMirrorAtRightEdge()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 1), new PixelCoordinate(3, 0));
+        ApplySingleMapping(viewModel, SpriteDirection.North, new PixelCoordinate(2, 1), new PixelCoordinate(0, 0));
+
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.UseCentralizedPropagation = true;
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+        viewModel.SelectedEditorTool = EditorTool.Move;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 3, 0));
+
+        viewModel.TargetViewportSurfaces
+            .Single(surface => surface.Direction == SpriteDirection.North)
+            .TransformedSelectedTargetCoordinate
+            .Should()
+            .Be(new PixelCoordinate(0, 0));
+
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 0));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 0));
+
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 0), new PixelCoordinate(0, 1));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.North, new PixelCoordinate(0, 0), new PixelCoordinate(2, 1));
+    }
+
+    [Fact]
+    public async Task SelectToolShouldClampCentralizedMirrorForRightEdgeSelectionBounds()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.UseCentralizedPropagation = true;
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.All;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 3, 0));
+
+        viewModel.SelectedAreaBounds.Should().Be(new PixelAreaBounds(0, 0, 3, 0));
+        viewModel.TargetViewportSurfaces
+            .Single(surface => surface.Direction == SpriteDirection.North)
+            .TransformedSelectedAreaBounds
+            .Should()
+            .Be(new PixelAreaBounds(0, 0, 2, 0));
+        viewModel.TargetViewportSurfaces
+            .Single(surface => surface.Direction == SpriteDirection.West)
+            .TransformedSelectedAreaBounds
+            .Should()
+            .Be(new PixelAreaBounds(0, 0, 2, 0));
+    }
+
+    [Fact]
     public async Task EightDirectionScopedMoveShouldUseDirectionSpecificPayloadForDiagonalPair()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -1075,14 +1150,17 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.ImportedDmiStateItems[0].IsEditableAssigned.Should().BeFalse();
         viewModel.ImportedDmiStateItems[0].PlacementMode.Should().Be(ImportedStatePlacementMode.Overlay);
         viewModel.ImportedDmiStateItems[0].Order.Should().Be(0);
+        viewModel.ImportedDmiStateItems[0].OpacityPercent.Should().Be(100);
         viewModel.ImportedDmiStateItems[1].IsSourceAssigned.Should().BeFalse();
         viewModel.ImportedDmiStateItems[1].IsEditableAssigned.Should().BeTrue();
         viewModel.ImportedDmiStateItems[1].PlacementMode.Should().Be(ImportedStatePlacementMode.Overlay);
         viewModel.ImportedDmiStateItems[1].Order.Should().Be(1);
+        viewModel.ImportedDmiStateItems[1].OpacityPercent.Should().Be(100);
         viewModel.ImportedDmiStateItems[2].IsSourceAssigned.Should().BeFalse();
         viewModel.ImportedDmiStateItems[2].IsEditableAssigned.Should().BeFalse();
         viewModel.ImportedDmiStateItems[2].PlacementMode.Should().Be(ImportedStatePlacementMode.Overlay);
         viewModel.ImportedDmiStateItems[2].Order.Should().Be(2);
+        viewModel.ImportedDmiStateItems[2].OpacityPercent.Should().Be(100);
     }
 
     [Fact]
@@ -1162,6 +1240,36 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task ImportedStateOpacityShouldScaleOnlyAssignedCanvas()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        var sourceState = viewModel.ImportedDmiStateItems[0];
+        sourceState.OpacityPercent = 50;
+
+        var sourceColor = GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0);
+        sourceColor.A.Should().Be(128);
+        sourceColor.R.Should().Be(SolidStateFrameReader.ColorForState("a").R);
+        sourceColor.G.Should().Be(SolidStateFrameReader.ColorForState("a").G);
+        sourceColor.B.Should().Be(SolidStateFrameReader.ColorForState("a").B);
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("b"));
+
+        sourceState.OpacityPercent = 0;
+
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(System.Windows.Media.Color.FromArgb(0, 0, 0, 0));
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("b"));
+    }
+
+    [Fact]
     public async Task ImportedStatePlacementAndOrderShouldControlCompositionWithinAssignedCanvas()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -1222,7 +1330,8 @@ public sealed class MainWindowViewModelSmokeTests
                         IsSourceAssigned: true,
                         IsEditableAssigned: false,
                         PlacementMode: "Background",
-                        Order: 4),
+                        Order: 4,
+                        OpacityPercent: 65),
                     new WorkspaceImportedStateSettings(
                         "missing",
                         Path.Combine(tempRoot, "missing.dmi"),
@@ -1248,8 +1357,9 @@ public sealed class MainWindowViewModelSmokeTests
         restored.IsEditableAssigned.Should().BeFalse();
         restored.PlacementMode.Should().Be(ImportedStatePlacementMode.Background);
         restored.Order.Should().Be(4);
+        restored.OpacityPercent.Should().Be(65);
         restored.IsValid.Should().BeTrue();
-        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("a"));
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).A.Should().Be(166);
 
         var invalid = viewModel.ImportedDmiStateItems[1];
         invalid.StateName.Should().Be("missing");
