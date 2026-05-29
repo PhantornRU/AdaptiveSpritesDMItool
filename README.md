@@ -1,4 +1,4 @@
-# Adaptive Sprites DMI Tool v2.1
+# Adaptive Sprites DMI Tool v2.2
 
 Adaptive Sprites DMI Tool is a Windows WPF application for authoring, previewing, and applying pixel-mapping configs to BYOND `.dmi` sprite files.
 
@@ -6,7 +6,7 @@ Russian documentation: [README-ru.md](README-ru.md)
 
 ## Current Release
 
-- Application version: `2.1`
+- Application version: `2.2`
 - Target platform: Windows x64
 - UI framework: WPF on .NET 8
 - Release package: self-contained `win-x64` ZIP
@@ -17,18 +17,22 @@ Russian documentation: [README-ru.md](README-ru.md)
 The release ZIP contains the published WPF app. Extract it and run:
 
 ```text
-AdaptiveSpritesDmiTool.Presentation.Wpf.exe
+AdaptiveDMITool-v2.2.exe
 ```
 
-## v2.1 Highlights
+## v2.2 Highlights
 
 - Russian and English UI resources with a persisted language setting.
 - Shell controls for theme, language, editor viewport mode, workspace panel behavior, inactive Source canvas visibility, and multi-direction canvas fitting.
 - Direction editing scopes for `Single`, `Parallel`, and `All` directions, plus larger scoped canvas layouts and a direction display selector.
+- Imported DMI state layers can be assigned to Source and Editable surfaces, ordered explicitly, placed as background or overlay layers, and blended with per-layer opacity.
+- Imported state layer order, placement, opacity, and surface assignment are saved in workspace settings and restored on startup.
+- State loading and state list ordering were tightened so restored workspaces and imported DMI state selections are more predictable.
 - Localized batch workspace with folder/file selection, filtering, status display, run log, output-folder exclusion from input scans, and `One DIR` / `All DIR` preview.
 - Fixes for `Fill`, `Move`, mirrored directions, and parallel direction editing.
 - Rendering and performance improvements for editor updates, drawing, and zoom.
 - More reliable shutdown and workspace state persistence.
+- The release workflow now creates the application ZIP and a separate samples ZIP containing the full `samples/` folder.
 - VS Code debug launch updated to the C# Dev Kit `dotnet` debug type, so the old `coreclr` adapter is no longer required.
 
 ## What It Does
@@ -46,7 +50,7 @@ AdaptiveSpritesDmiTool.Presentation.Wpf.exe
 - runs deterministic batch processing with per-file status results
 - supports batch overwrite policies: `SkipExisting`, `OverwriteExisting`, `FailIfExists`
 - previews batch output direction mode with `One DIR` and `All DIR`
-- persists workspace settings such as recent paths, selected states, direction, viewport, language, theme, panel behavior, source-canvas visibility, and batch folders
+- persists workspace settings such as recent paths, selected states, imported DMI state layers, direction, viewport, language, theme, panel behavior, source-canvas visibility, and batch folders
 
 ## Typical Workflow
 
@@ -61,7 +65,7 @@ AdaptiveSpritesDmiTool.Presentation.Wpf.exe
 
 ## Config Formats
 
-JSON is the primary format in v2.1. The current JSON schema uses:
+JSON is the primary format in v2.2. The current JSON schema uses:
 
 - `version: 1`
 - `supportedDirections: "four"` or `"eight"`
@@ -102,20 +106,22 @@ The launch configuration uses `type: "dotnet"` and `projectPath`; it does not re
 Release package:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.1 -Runtime win-x64
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.2 -Runtime win-x64
 ```
 
 The script creates:
 
-- `artifacts/publish/AdaptiveSpritesDMItool-v2.1-win-x64/`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.1-win-x64.zip`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.1-win-x64.sha256.txt`
+- `artifacts/publish/AdaptiveSpritesDMItool-v2.2-win-x64/`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.2-win-x64.zip`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.2-win-x64.sha256.txt`
+- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.2.zip`
+- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.2.sha256.txt`
 
 `artifacts/` is generated output and is intentionally ignored by git.
 
 ## Architecture
 
-The active v2.1 runtime is a layered solution:
+The active v2.2 runtime is a layered solution:
 
 - `src/AdaptiveSpritesDmiTool.Domain`
   Pure domain model, value objects, validation, direction model, and config invariants.
@@ -132,15 +138,16 @@ The active v2.1 runtime is a layered solution:
 
 ## Testing
 
-The v2.1 release validation passed:
+The v2.2 release validation passed:
 
-- 118 unit tests
-- 41 integration tests
+- 127 unit tests
+- 46 integration tests
 - hidden Unicode scan
 - Release build
 - Release test run
 - self-contained Windows x64 publish
 - ZIP smoke check
+- samples ZIP smoke check
 
 See [docs/TEST_PLAN.md](docs/TEST_PLAN.md).
 
@@ -151,6 +158,8 @@ See [docs/TEST_PLAN.md](docs/TEST_PLAN.md).
 - [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md)
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 - [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
+- [CHANGELOG.md](CHANGELOG.md)
+- [docs/releases/v2.2.md](docs/releases/v2.2.md)
 - [docs/releases/v2.1.md](docs/releases/v2.1.md)
 
 ## License

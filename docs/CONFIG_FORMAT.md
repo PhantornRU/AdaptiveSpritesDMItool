@@ -1,8 +1,8 @@
-# Форматы конфигов v2.1
+# Форматы конфигов v2.2
 
 ## Статус
 
-Основной формат пользовательских конфигов в v2.1 - JSON schema `version: 1`.
+Основной формат пользовательских конфигов в v2.2 - JSON schema `version: 1`.
 
 CSV можно импортировать, но новые конфиги сохраняются как JSON.
 
@@ -179,4 +179,6 @@ Batch artifacts пишутся в output root под `.adaptive-sprites`:
 
 Workspace settings - внутренний JSON приложения. Пользователь обычно не редактирует его вручную.
 
-В settings сохраняются последние пути, выбранные states, selected direction, overwrite policy, theme, viewport и состояние рабочих панелей.
+В settings сохраняются последние пути, выбранные states, imported DMI state layers, selected direction, overwrite policy, language, theme, viewport и состояние рабочих панелей.
+
+Imported DMI state layer settings include source path, state name, Source/Editable assignment, placement mode, order, and opacity percent. These settings are workspace state, not part of the public sprite mapping config schema.

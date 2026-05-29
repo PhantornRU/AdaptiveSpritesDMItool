@@ -1,6 +1,6 @@
-# Архитектура v2.1
+# Архитектура v2.2
 
-AdaptiveSpritesDMItool v2.1 - WPF-приложение для редактирования и применения pixel-mapping конфигов к `.dmi` sprites.
+AdaptiveSpritesDMItool v2.2 - WPF-приложение для редактирования и применения pixel-mapping конфигов к `.dmi` sprites.
 
 ## Проекты
 
@@ -19,11 +19,12 @@ AdaptiveSpritesDMItool v2.1 - WPF-приложение для редактиро
 
 ## Версии
 
-- Application version: `2.1`
+- Application version: `2.2`
 - WPF target framework: `net8.0-windows`
 - Release runtime: `win-x64`
 - Publish mode: self-contained single-file
 - Config schema: JSON `version: 1`
+- Release executable: `AdaptiveDMITool-v2.2.exe`
 
 ## Точки Входа
 
@@ -60,6 +61,16 @@ AdaptiveSpritesDMItool v2.1 - WPF-приложение для редактиро
 4. Preview is built through Infrastructure adapters.
 5. Config is saved as JSON.
 6. Batch processing applies the active config to selected `.dmi` files or an input folder.
+
+## Imported State Layers
+
+v2.2 keeps imported DMI state layers as workspace state. Each imported state can be:
+
+- assigned to Source and/or Editable surfaces;
+- placed as a background or overlay layer;
+- ordered explicitly for deterministic composition;
+- blended with per-layer opacity;
+- restored from workspace settings on startup.
 
 ## Рендеринг и фоновые процессы
 
