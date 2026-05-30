@@ -1617,7 +1617,7 @@
                             <ColumnDefinition Width="5" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="5" />
-                            <ColumnDefinition Width="144" />
+                            <ColumnDefinition Width="156" MinWidth="100" />
                         </Grid.ColumnDefinitions>
 
                         <Border Grid.Row="0"

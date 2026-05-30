@@ -16,7 +16,9 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder, IDisposable
     /// ConcurrentDictionary is used to cache DMIFiles safely across asynchronous preview builds and concurrent UI requests.
     /// IDisposable is implemented to ensure manual release of unmanaged resources held by DMIFile objects.
     /// </summary>
-    private readonly ConcurrentDictionary<string, DMIFile> _dmiCache = new();
+    private readonly ConcurrentDictionary<string, DmiCacheEntry> _dmiCache = new();
+
+    private readonly record struct DmiCacheEntry(DMIFile File, DateTime LastWriteTimeUtc, long Length);
 
     public async Task<Result<PreviewBuildResult>> BuildAsync(PreviewBuildRequest request, CancellationToken cancellationToken)
     {
@@ -50,7 +52,7 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder, IDisposable
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var dmiFile = _dmiCache.GetOrAdd(sourcePath, path => new DMIFile(path));
+                var dmiFile = GetOrOpenFile(sourcePath);
 
                 var baseState = FindState(dmiFile, request.Selection.BaseState);
                 if (baseState is null)
@@ -262,11 +264,51 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder, IDisposable
         return new SpriteImage(image.Width, image.Height, bytes);
     }
 
+    private DMIFile GetOrOpenFile(string path)
+    {
+        var fileInfo = new FileInfo(path);
+        var currentTimestamp = fileInfo.LastWriteTimeUtc;
+        var currentLength = fileInfo.Length;
+
+        // Fast path: cache hit with matching file metadata
+        if (_dmiCache.TryGetValue(path, out var entry) &&
+            entry.LastWriteTimeUtc == currentTimestamp &&
+            entry.Length == currentLength)
+        {
+            return entry.File;
+        }
+
+        // Slow path: stale or missing entry — load fresh and atomically replace
+        var newFile = new DMIFile(path);
+        var newEntry = new DmiCacheEntry(newFile, currentTimestamp, currentLength);
+
+        while (true)
+        {
+            if (_dmiCache.TryGetValue(path, out var existingEntry))
+            {
+                if (_dmiCache.TryUpdate(path, newEntry, existingEntry))
+                {
+                    existingEntry.File.Dispose();
+                    return newEntry.File;
+                }
+                // Another thread changed the entry concurrently; retry
+            }
+            else
+            {
+                if (_dmiCache.TryAdd(path, newEntry))
+                {
+                    return newEntry.File;
+                }
+                // Another thread added an entry concurrently; retry to verify freshness
+            }
+        }
+    }
+
     public void Dispose()
     {
-        foreach (var dmiFile in _dmiCache.Values)
+        foreach (var entry in _dmiCache.Values)
         {
-            dmiFile.Dispose();
+            entry.File.Dispose();
         }
         _dmiCache.Clear();
     }

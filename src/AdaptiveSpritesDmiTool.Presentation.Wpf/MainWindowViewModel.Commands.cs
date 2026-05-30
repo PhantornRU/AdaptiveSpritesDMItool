@@ -1306,6 +1306,15 @@ public partial class WorkspaceShellViewModel
                     cancellationToken);
                 _importedStateFrameCache[(asset.SourcePath ?? string.Empty, state.Name, SpriteDirection.South)] =
                     previewResult.IsSuccess ? previewResult.Value : null;
+
+                // Warm up cache for all supported directions of the asset
+                var warmUpDirections = GetPresentationDirectionOrder(asset.SupportedDirections);
+                await WarmUpImportedStateFrameCacheAsync(
+                    asset.SourcePath ?? string.Empty,
+                    state.Name,
+                    warmUpDirections,
+                    cancellationToken);
+
                 var previewBitmap = previewResult.IsSuccess ? _bitmapSourceFactory.Create(previewResult.Value) : null;
                 var isValid = previewResult.IsSuccess;
                 var validationMessage = previewResult.IsSuccess ? string.Empty : previewResult.Error.Message;
@@ -1316,11 +1325,6 @@ public partial class WorkspaceShellViewModel
                 {
                     var order = ImportedDmiStateItems.Count == 0 ? 0 : ImportedDmiStateItems.Max(static item => item.Order) + 1;
                     var isFirstImportedState = ImportedDmiStateItems.Count == 0;
-                    var isSecondImportedState = ImportedDmiStateItems.Count == 1;
-                    if (isSecondImportedState)
-                    {
-                        ImportedDmiStateItems[0].IsEditableAssigned = false;
-                    }
 
                     var imported = new ImportedDmiStateItemViewModel(
                         state.Name,
@@ -1328,7 +1332,7 @@ public partial class WorkspaceShellViewModel
                         Path.GetFileName(asset.SourcePath ?? asset.DisplayName),
                         previewBitmap,
                         isSourceAssigned: isFirstImportedState,
-                        isEditableAssigned: isFirstImportedState || isSecondImportedState,
+                        isEditableAssigned: false,
                         ImportedStatePlacementMode.Overlay,
                         order,
                         opacityPercent: 100);
@@ -1457,6 +1461,17 @@ public partial class WorkspaceShellViewModel
             cancellationToken);
         _importedStateFrameCache[(state.SourcePath, state.StateName, SpriteDirection.South)] =
             previewResult.IsSuccess ? previewResult.Value : null;
+
+        // Warm up cache for all available directions
+        var supportedDirections = _editorSession.LoadedAsset?.SupportedDirections
+            ?? _editorSession.CurrentConfig?.SupportedDirections
+            ?? SupportedDirectionSet.Four;
+        var warmUpDirections = GetPresentationDirectionOrder(supportedDirections);
+        await WarmUpImportedStateFrameCacheAsync(
+            state.SourcePath,
+            state.StateName,
+            warmUpDirections,
+            cancellationToken);
 
         AddRestoredImportedStateItem(
             state,

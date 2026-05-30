@@ -4,6 +4,7 @@ using AdaptiveSpritesDmiTool.Domain.Configurations;
 using AdaptiveSpritesDmiTool.Presentation.Wpf;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Collections;
 using System.Reflection;
 
 namespace AdaptiveSpritesDmiTool.Tests.Unit.Presentation;
@@ -117,35 +118,54 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.SelectedDirectionScope = DirectionScope.All;
 
+        // Initial state: all 4 directions are display-selected
         viewModel.ShowAllDirectionDisplayPicker.Should().BeTrue();
         viewModel.DirectionDisplaySelectorItems.Select(item => item.Direction).Should()
             .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
+        viewModel.DirectionNavigatorItems.Should().OnlyContain(item => item.IsDisplaySelected);
         viewModel.EditorSurfaceGridRows.Should().Be(2);
         viewModel.EditorSurfaceGridColumns.Should().Be(2);
         viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
             .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
 
+        // Toggle off East → 3 selected → all 4 shown (3+ falls back to all)
         viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.East);
 
-        viewModel.EditorSurfaceGridRows.Should().Be(1);
-        viewModel.EditorSurfaceGridColumns.Should().Be(1);
-        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should().Equal(SpriteDirection.East);
-        viewModel.DirectionNavigatorItems.Single(item => item.Direction == SpriteDirection.East).IsDisplaySelected.Should().BeTrue();
+        viewModel.EditorSurfaceGridRows.Should().Be(2);
+        viewModel.EditorSurfaceGridColumns.Should().Be(2);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
+        viewModel.DirectionNavigatorItems.Single(item => item.Direction == SpriteDirection.East).IsDisplaySelected.Should().BeFalse();
 
+        // Toggle off West → 2 selected → filtered to {South, North}
         viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.West);
 
         viewModel.EditorSurfaceGridRows.Should().Be(2);
         viewModel.EditorSurfaceGridColumns.Should().Be(1);
         viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
-            .Equal(SpriteDirection.East, SpriteDirection.West);
+            .Equal(SpriteDirection.South, SpriteDirection.North);
+        viewModel.DirectionNavigatorItems.Where(item => item.IsDisplaySelected).Select(item => item.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.North);
 
+        // Toggle off South → 1 selected → filtered to {North}
         viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.South);
 
-        viewModel.EditorSurfaceGridRows.Should().Be(2);
-        viewModel.EditorSurfaceGridColumns.Should().Be(2);
+        viewModel.EditorSurfaceGridRows.Should().Be(1);
+        viewModel.EditorSurfaceGridColumns.Should().Be(1);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should().Equal(SpriteDirection.North);
+        viewModel.DirectionNavigatorItems.Single(item => item.Direction == SpriteDirection.North).IsDisplaySelected.Should().BeTrue();
+
+        // Re-add removed directions one by one
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.East);
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.West);
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.South);
+
         viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
             .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
+        viewModel.DirectionNavigatorItems.Should().OnlyContain(item => item.IsDisplaySelected);
 
+        // Toggle all off: remove North, East, West, South → 0 selected → show all but !IsDisplaySelected
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.North);
         viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.East);
         viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.West);
         viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.South);
@@ -1108,7 +1128,6 @@ public sealed class MainWindowViewModelSmokeTests
 
         await viewModel.InitializeAsync();
         await viewModel.OpenDmiCommand.ExecuteAsync(null);
-        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
         viewModel.CreateConfigCommand.Execute(null);
         viewModel.SelectedExplorerState = "idle";
         viewModel.UseSelectedStateAsBaseCommand.Execute(null);
@@ -1152,7 +1171,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.ImportedDmiStateItems[0].Order.Should().Be(0);
         viewModel.ImportedDmiStateItems[0].OpacityPercent.Should().Be(100);
         viewModel.ImportedDmiStateItems[1].IsSourceAssigned.Should().BeFalse();
-        viewModel.ImportedDmiStateItems[1].IsEditableAssigned.Should().BeTrue();
+        viewModel.ImportedDmiStateItems[1].IsEditableAssigned.Should().BeFalse();
         viewModel.ImportedDmiStateItems[1].PlacementMode.Should().Be(ImportedStatePlacementMode.Overlay);
         viewModel.ImportedDmiStateItems[1].Order.Should().Be(1);
         viewModel.ImportedDmiStateItems[1].OpacityPercent.Should().Be(100);
@@ -1176,6 +1195,9 @@ public sealed class MainWindowViewModelSmokeTests
 
         await viewModel.InitializeAsync();
         await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        // По умолчанию Editable выключен; включаем для "b" вручную
+        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
 
         GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("a"));
         GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("b"));
@@ -1253,6 +1275,9 @@ public sealed class MainWindowViewModelSmokeTests
         await viewModel.InitializeAsync();
         await viewModel.OpenDmiCommand.ExecuteAsync(null);
 
+        // По умолчанию Editable выключен; включаем для "b" вручную
+        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
+
         var sourceState = viewModel.ImportedDmiStateItems[0];
         sourceState.OpacityPercent = 50;
 
@@ -1307,6 +1332,45 @@ public sealed class MainWindowViewModelSmokeTests
         first.IsEditableAssigned.Should().BeTrue();
         first.PlacementMode.Should().Be(ImportedStatePlacementMode.Background);
         GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("c"));
+    }
+
+    [Fact]
+    public async Task EditableSurfaceMappingShouldUseSourceLayersAsColorSource()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SparseStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.ImportedDmiStateItems.Should().HaveCount(2);
+        viewModel.ImportedDmiStateItems[0].StateName.Should().Be("a");
+        viewModel.ImportedDmiStateItems[1].StateName.Should().Be("b");
+
+        // По умолчанию Editable выключен; включаем "b" как визуальный оверлей
+        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
+
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.SelectedExplorerState = "idle";
+        viewModel.UseSelectedStateAsBaseCommand.Execute(null);
+        await viewModel.BuildPreviewCommand.ExecuteAsync(null);
+
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+
+        viewModel.ActiveTargetSurface.Should().NotBeNull();
+        var editableSurface = viewModel.ActiveTargetSurface!;
+        var mappedColor = GetSurfaceColor(editableSurface, 2, 2);
+
+        // sourceReferenceImage строится из Source-слоёв (state "a"),
+        // поэтому маппинг читает цвет из state "a", а не из state "b".
+        mappedColor.Should().Be(SolidStateFrameReader.ColorForState("a"));
     }
 
     [Fact]
@@ -1368,6 +1432,44 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task MergeImportedStatesShouldWarmUpCacheForAllSupportedDirections()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        var cacheField = typeof(WorkspaceShellViewModel)
+            .GetField("_importedStateFrameCache", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var cache = (System.Collections.IDictionary)cacheField.GetValue(viewModel)!;
+
+        var sourcePath = "sprite.dmi";
+        var expectedDirections = new[]
+        {
+            SpriteDirection.South,
+            SpriteDirection.North,
+            SpriteDirection.East,
+            SpriteDirection.West
+        };
+
+        foreach (var stateName in new[] { "idle", "blink" })
+        {
+            foreach (var direction in expectedDirections)
+            {
+                var key = (sourcePath, stateName, direction);
+                cache.Contains(key).Should().BeTrue(
+                    $"Cache should contain key for state '{stateName}', direction {direction}");
+            }
+        }
+    }
+
+    [Fact]
     public async Task EditableSurfaceShouldNotApplyConfigTwiceWhenCompositePreviewExists()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -1382,7 +1484,6 @@ public sealed class MainWindowViewModelSmokeTests
 
         await viewModel.InitializeAsync();
         await viewModel.OpenDmiCommand.ExecuteAsync(null);
-        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
         viewModel.CreateConfigCommand.Execute(null);
 
         ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 0), new PixelCoordinate(0, 0));

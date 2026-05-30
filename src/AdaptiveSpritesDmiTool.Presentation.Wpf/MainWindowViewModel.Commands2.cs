@@ -673,6 +673,14 @@ public partial class WorkspaceShellViewModel
     {
         _allDirectionDisplaySelection.Clear();
 
+        if (value == DirectionScope.All && AvailableDirections.Count > 0)
+        {
+            foreach (var direction in AvailableDirections)
+            {
+                _allDirectionDisplaySelection.Add(direction);
+            }
+        }
+
         EditorStatus = value switch
         {
             DirectionScope.Single => "Edits affect only the active direction.",

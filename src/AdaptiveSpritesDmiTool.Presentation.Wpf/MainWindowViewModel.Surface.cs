@@ -475,6 +475,28 @@ public partial class WorkspaceShellViewModel
         }
     }
 
+    private async Task WarmUpImportedStateFrameCacheAsync(
+        string sourcePath,
+        string stateName,
+        IReadOnlyList<SpriteDirection> directions,
+        CancellationToken cancellationToken)
+    {
+        foreach (var direction in directions)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var cacheKey = (sourcePath, stateName, direction);
+            if (_importedStateFrameCache.ContainsKey(cacheKey))
+            {
+                continue;
+            }
+
+            var result = await _readStateFrameUseCase
+                .ExecuteAsync(sourcePath, stateName, direction, cancellationToken);
+            _importedStateFrameCache[cacheKey] = result.IsSuccess ? result.Value : null;
+        }
+    }
+
     private void AttachImportedStateItem(ImportedDmiStateItemViewModel item)
     {
         item.PropertyChanged -= OnImportedStateItemPropertyChanged;
@@ -796,6 +818,7 @@ public partial class WorkspaceShellViewModel
             resolution.Value.Height,
             new byte[resolution.Value.Width * resolution.Value.Height * 4]);
 
+        // Единый порядок для всех полотен: Background -> baseImage -> Overlay
         foreach (var layer in backgroundLayers)
         {
             var image = GetImportedStateFrame(layer, direction);
@@ -1121,6 +1144,12 @@ public partial class WorkspaceShellViewModel
             return null;
         }
 
+        // sourceReferenceImage строится из Source-слоёв — пиксели для маппинга/рисования
+        var hasSourceLayers = HasAssignedImportedLayers(editableSurface: false);
+        var sourceReferenceImage = hasSourceLayers
+            ? ComposeImportedLayers(null, direction, editableSurface: false)!
+            : CreateEmptySpriteImage(resolution.Value);
+
         var hasEditableLayers = HasAssignedImportedLayers(editableSurface: true);
         var hasMappings = _editorSession.CurrentConfig?.GetMappings(direction).Count > 0;
         var hasPreviewDecorations = includePreviewDecorations &&
@@ -1128,18 +1157,26 @@ public partial class WorkspaceShellViewModel
             (_landmarkImage is not null || _overlayImage is not null);
         if (!hasEditableLayers && !hasMappings && !hasPreviewDecorations)
         {
-            return null;
+            return hasSourceLayers
+                ? RenderEditableSurfaceImage(sourceReferenceImage, sourceReferenceImage, direction)
+                : null;
         }
 
-        var editableBaseImage = CreateEmptySpriteImage(resolution.Value);
-        var sourceReferenceImage = ComposeImportedLayers(null, direction, editableSurface: false);
-        var renderedEditableImage = RenderEditableSurfaceImage(editableBaseImage, sourceReferenceImage, direction);
+        var renderedEditableImage = RenderEditableSurfaceImage(sourceReferenceImage, sourceReferenceImage, direction);
+
+        // Накладываем Edit-слои как визуальный оверлей поверх отрендеренного полотна
+        if (renderedEditableImage is not null && HasAssignedImportedLayers(editableSurface: true))
+        {
+            renderedEditableImage = ComposeImportedLayers(renderedEditableImage, direction, editableSurface: true)
+                ?? renderedEditableImage;
+        }
+
         if (includePreviewDecorations && renderedEditableImage is not null)
         {
             renderedEditableImage = ComposePreviewDecorations(renderedEditableImage, direction);
         }
 
-        return ComposeImportedLayers(renderedEditableImage, direction, editableSurface: true);
+        return renderedEditableImage;
     }
 
     private SpriteImage ComposePreviewDecorations(SpriteImage editableBase, SpriteDirection direction)
