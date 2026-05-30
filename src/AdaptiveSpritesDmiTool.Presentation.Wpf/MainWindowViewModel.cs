@@ -47,14 +47,21 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private SpriteImage? _landmarkImage;
     private SpriteImage? _overlayImage;
     private SpriteImage? _compositeImage;
+    private IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?> _editableBackingOrigins = new Dictionary<PixelCoordinate, PixelCoordinate?>();
+    private readonly HashSet<SpriteDirection> _allDirectionDisplaySelection = [];
     private readonly Dictionary<SpriteDirection, SpriteImage?> _navigatorBaseImages = new();
     private readonly Dictionary<SpriteDirection, SpriteImage?> _navigatorCompositeImages = new();
+    private readonly Dictionary<SpriteDirection, IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?>> _navigatorEditableBackingOrigins = new();
     private readonly Dictionary<(string Path, string StateName, SpriteDirection Direction), SpriteImage?> _importedStateFrameCache = new();
+    private IReadOnlyList<WorkspaceImportedStateSettings> _restoredImportedStateSettings = Array.Empty<WorkspaceImportedStateSettings>();
     private CancellationTokenSource? _importedStateRefreshCts;
     private int _importedStateRefreshVersion;
     private readonly HashSet<PixelCoordinate> _pendingRestoreStrokeCoordinates = [];
     private CancellationTokenSource? _restoreStrokeFlushCts;
     private bool _hasPendingRestoreStrokeFinalize;
+    private readonly HashSet<PixelCoordinate> _pendingDrawStrokeCoordinates = [];
+    private CancellationTokenSource? _drawStrokeFlushCts;
+    private bool _hasPendingDrawStrokeFinalize;
     private CancellationTokenSource? _batchQuickPreviewRefreshCts;
     private int _batchQuickPreviewRefreshVersion;
     private CancellationTokenSource? _batchSourceValidationCts;
@@ -62,16 +69,16 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private DmiAssetInfo? _selectedBatchPreviewAsset;
     private Guid? _activeConfigQueueItemId;
     private bool _isSynchronizingSelectedImportedState;
+    private bool _isUpdatingImportedStateItems;
 
     private enum EditableDragAction
     {
         None = 0,
         FillArea = 1,
-        DeleteArea = 2,
-        RestoreArea = 3,
-        SelectArea = 4,
-        MoveSingle = 5,
-        MoveSelection = 6
+        RestoreArea = 2,
+        SelectArea = 3,
+        MoveSingle = 4,
+        MoveSelection = 5
     }
 
     public WorkspaceShellViewModel(
@@ -226,6 +233,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         _importedStateRefreshCts?.Dispose();
         _restoreStrokeFlushCts?.Cancel();
         _restoreStrokeFlushCts?.Dispose();
+        _drawStrokeFlushCts?.Cancel();
+        _drawStrokeFlushCts?.Dispose();
         _batchQuickPreviewRefreshCts?.Cancel();
         _batchQuickPreviewRefreshCts?.Dispose();
         _batchSourceValidationCts?.Cancel();

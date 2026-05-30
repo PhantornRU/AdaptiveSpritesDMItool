@@ -93,11 +93,16 @@ public partial class WorkspaceShellViewModel
         SelectedOverwritePolicy = settings.LastOverwritePolicy;
         SelectedThemeMode = ParseThemeMode(settings.LastThemeMode);
         App.ApplyThemeMode(SelectedThemeMode);
+        SelectedLanguage = ParseLanguage(settings.LastUiLanguage);
+        App.ApplyLanguage(SelectedLanguage);
         SelectedEditorViewportMode = ParseEditorViewportMode(settings.LastEditorViewportMode);
         EditorViewMode = EditorViewMode.CompareSplit;
         SelectedBottomWorkspaceTab = ParseBottomWorkspaceTab(settings.LastBottomWorkspaceTab);
         IsPreviewInspectorExpanded = settings.IsPreviewInspectorExpanded;
         IsBottomWorkspaceExpanded = settings.IsBottomWorkspaceExpanded;
+        HideInactiveSourceCanvases = settings.HideInactiveSourceCanvases;
+        FitMultipleDirectionCanvasesToViewport = settings.FitMultipleDirectionCanvasesToViewport;
+        _restoredImportedStateSettings = settings.ImportedStates ?? Array.Empty<WorkspaceImportedStateSettings>();
         IsFocusMode = false;
     }
 
@@ -145,6 +150,11 @@ public partial class WorkspaceShellViewModel
         {
             await TryBuildPreviewAsync(userInitiated: false, CancellationToken.None);
         }
+
+        if (_restoredImportedStateSettings.Count > 0)
+        {
+            await RestoreImportedStateItemsAsync(CancellationToken.None);
+        }
     }
 
     private WorkspaceSettings BuildWorkspaceSettings() =>
@@ -164,7 +174,24 @@ public partial class WorkspaceShellViewModel
             SelectedEditorViewportMode.ToString(),
             SelectedBottomWorkspaceTab.ToString(),
             IsPreviewInspectorExpanded,
-            IsBottomWorkspaceExpanded);
+            IsBottomWorkspaceExpanded,
+            SelectedLanguage.ToString(),
+            HideInactiveSourceCanvases,
+            FitMultipleDirectionCanvasesToViewport,
+            BuildImportedStateSettings());
+
+    private IReadOnlyList<WorkspaceImportedStateSettings> BuildImportedStateSettings() =>
+        ImportedDmiStateItems
+            .Select(static item => new WorkspaceImportedStateSettings(
+                item.StateName,
+                item.SourcePath,
+                item.SourceFileLabel,
+                item.IsSourceAssigned,
+                item.IsEditableAssigned,
+                item.PlacementMode.ToString(),
+                item.Order,
+                item.OpacityPercent))
+            .ToArray();
 
     private void ResetWorkspaceCore()
     {
@@ -183,6 +210,7 @@ public partial class WorkspaceShellViewModel
         _overlayImage = null;
         _compositeImage = null;
         ClearImportedStateItems();
+        _restoredImportedStateSettings = Array.Empty<WorkspaceImportedStateSettings>();
         DmiPath = string.Empty;
         ConfigPath = string.Empty;
         SaveConfigPath = string.Empty;
@@ -196,7 +224,7 @@ public partial class WorkspaceShellViewModel
         SelectedSourceSummary = "Source: none selected.";
         SelectedAreaSummary = "Area: none selected.";
         HoverSummary = "Hover to inspect coordinates.";
-        BatchSummary = "Batch processing is idle.";
+        BatchSummary = App.Text("Text.Batch.ProcessingIdle", "Batch processing is idle.");
         BatchCurrentFile = string.Empty;
         BatchProcessedFiles = 0;
         BatchTotalFiles = 0;
@@ -211,6 +239,9 @@ public partial class WorkspaceShellViewModel
         SelectedEditorAssetTargetLayer = EditorAssetTargetLayer.Base;
         IsBottomWorkspaceExpanded = true;
         IsPreviewInspectorExpanded = false;
+        HideInactiveSourceCanvases = true;
+        FitMultipleDirectionCanvasesToViewport = true;
+        HasMultipleDirectionViewportSurfaces = false;
         IsFocusMode = false;
         MirrorAcrossDirections = true;
         UseCentralizedPropagation = true;
@@ -230,6 +261,9 @@ public partial class WorkspaceShellViewModel
         SelectedAreaBounds = null;
         ActiveSourceSurface = null;
         ActiveTargetSurface = null;
+        SourceViewportSurfaces.Clear();
+        TargetViewportSurfaces.Clear();
+        _allDirectionDisplaySelection.Clear();
         InvalidateNavigatorSnapshotCache();
         BatchResults.Clear();
         ConfigQueueItems.Clear();
@@ -265,7 +299,7 @@ public partial class WorkspaceShellViewModel
         catch (OperationCanceledException)
         {
             StatusMessage = "Operation cancelled.";
-            BatchSummary = "Batch processing was cancelled.";
+            BatchSummary = App.Text("Text.Batch.ProcessingCancelled", "Batch processing was cancelled.");
         }
         catch (Exception exception)
         {
@@ -353,8 +387,11 @@ public partial class WorkspaceShellViewModel
             _compositeImage = result.Value.CompositeImage;
             _navigatorBaseImages.Clear();
             _navigatorCompositeImages.Clear();
+            _navigatorEditableBackingOrigins.Clear();
+            _editableBackingOrigins = result.Value.EditableBackingOrigins ?? new Dictionary<PixelCoordinate, PixelCoordinate?>();
             _navigatorBaseImages[direction] = result.Value.BaseImage;
             _navigatorCompositeImages[direction] = result.Value.CompositeImage;
+            _navigatorEditableBackingOrigins[direction] = _editableBackingOrigins;
 
             foreach (var previewDirection in AvailableDirections.Where(candidate => candidate != direction))
             {
@@ -367,6 +404,7 @@ public partial class WorkspaceShellViewModel
 
                 _navigatorBaseImages[previewDirection] = previewResult.Value.BaseImage;
                 _navigatorCompositeImages[previewDirection] = previewResult.Value.CompositeImage;
+                _navigatorEditableBackingOrigins[previewDirection] = previewResult.Value.EditableBackingOrigins ?? new Dictionary<PixelCoordinate, PixelCoordinate?>();
             }
 
             InvalidateNavigatorSnapshotCache();
@@ -450,7 +488,8 @@ public partial class WorkspaceShellViewModel
                     .Select(entry =>
                     {
                         var destinationEditableCoordinate = ClampCoordinate(
-                            new PixelCoordinate(entry.Key.X + deltaX, entry.Key.Y + deltaY),
+                            entry.Key.X + deltaX,
+                            entry.Key.Y + deltaY,
                             config.Resolution);
 
                         return (
@@ -460,31 +499,25 @@ public partial class WorkspaceShellViewModel
                     })
                     .ToArray();
 
-                foreach (var move in moves)
+                // Two-phase apply: remove all origins first, then set all destinations.
+                // Сначала удаляем все старые маппинги, затем ставим новые, чтобы избежать cut-out эффекта на пересекающихся координатах.
+                // This prevents overlap cut-out where a destination inside the selection
+                // is later erased by its own RemoveMapping call. Removed origins stay
+                // unmapped, which restores the Source[x,y] backing pixel instead of transparency.
+                var uniqueOrigins = moves
+                    .Select(m => m.Origin)
+                    .Distinct()
+                    .ToArray();
+
+                foreach (var origin in uniqueOrigins)
                 {
-                    next = next.RemoveMapping(direction, move.Origin);
+                    next = next.RemoveMapping(direction, origin);
                 }
 
                 foreach (var move in moves)
                 {
-                    next = next.SetMapping(direction, move.Destination, move.Source);
+                    next = next.SetMappingForced(direction, move.Destination, move.Source);
                 }
-            }
-
-            return next;
-        });
-
-        ApplyMutationResult(result, successMessage);
-    }
-
-    private void ApplyTransparentOperation(PixelAreaSelection area, string successMessage)
-    {
-        var result = _applyConfigTransformUseCase.Execute(config =>
-        {
-            var next = config;
-            foreach (var editableCoordinate in area.Enumerate())
-            {
-                next = ApplyScopedMapping(next, editableCoordinate, null);
             }
 
             return next;
@@ -527,6 +560,38 @@ public partial class WorkspaceShellViewModel
             foreach (var editableCoordinate in editableCoordinates)
             {
                 next = ApplyScopedRestore(next, editableCoordinate);
+            }
+
+            return next;
+        });
+
+        ApplyMutationResult(
+            result,
+            successMessage,
+            refreshWorkspace: refreshWorkspace,
+            rebuildNavigator: rebuildNavigator,
+            refreshPreview: refreshPreview);
+    }
+
+    private void ApplyDrawOperations(
+        IReadOnlyCollection<PixelCoordinate> editableCoordinates,
+        PixelCoordinate sourceCoordinate,
+        string successMessage,
+        bool refreshWorkspace,
+        bool rebuildNavigator,
+        bool refreshPreview)
+    {
+        if (editableCoordinates.Count == 0)
+        {
+            return;
+        }
+
+        var result = _applyConfigTransformUseCase.Execute(config =>
+        {
+            var next = config;
+            foreach (var editableCoordinate in editableCoordinates)
+            {
+                next = ApplyScopedMapping(next, editableCoordinate, sourceCoordinate);
             }
 
             return next;
@@ -590,7 +655,7 @@ public partial class WorkspaceShellViewModel
         }
 
         var mirroredX = (resolution.Width - coordinate.X - 1) + (UseCentralizedPropagation ? -1 : 0);
-        return ClampCoordinate(new PixelCoordinate(mirroredX, coordinate.Y), resolution);
+        return ClampCoordinate(mirroredX, coordinate.Y, resolution);
     }
 
     private static IReadOnlyList<SpriteDirection> ResolveParallelDirections(
@@ -660,7 +725,10 @@ public partial class WorkspaceShellViewModel
         };
 
     private static PixelCoordinate ClampCoordinate(PixelCoordinate coordinate, SpriteResolution resolution) =>
-        new(Math.Clamp(coordinate.X, 0, resolution.Width - 1), Math.Clamp(coordinate.Y, 0, resolution.Height - 1));
+        ClampCoordinate(coordinate.X, coordinate.Y, resolution);
+
+    private static PixelCoordinate ClampCoordinate(int x, int y, SpriteResolution resolution) =>
+        new(Math.Clamp(x, 0, resolution.Width - 1), Math.Clamp(y, 0, resolution.Height - 1));
 
     private void ApplyMutationResult(
         Result<SpriteConfig> result,
@@ -714,8 +782,7 @@ public partial class WorkspaceShellViewModel
         DirectionNavigatorColumns = AvailableDirections.Count > 4 ? 4 : 2;
 
         AvailableStates.Clear();
-        foreach (var state in (_editorSession.LoadedAsset?.States ?? Array.Empty<DmiStateInfo>())
-                     .OrderBy(static state => state.Name, StringComparer.Ordinal))
+        foreach (var state in _editorSession.LoadedAsset?.States ?? Array.Empty<DmiStateInfo>())
         {
             AvailableStates.Add(state.Name);
         }
@@ -813,6 +880,7 @@ public partial class WorkspaceShellViewModel
     {
         DirectionNavigatorItems.Clear();
         var activeDirection = GetSafeSelectedDirection();
+        PruneAllDirectionDisplaySelection(AvailableDirections.ToArray());
         var scopeDirections = SelectedDirectionScope switch
         {
             DirectionScope.Single => new HashSet<SpriteDirection>([activeDirection]),
@@ -827,6 +895,7 @@ public partial class WorkspaceShellViewModel
             {
                 IsActive = direction == activeDirection,
                 IsScopeAffected = scopeDirections.Contains(direction),
+                IsDisplaySelected = SelectedDirectionScope == DirectionScope.All && _allDirectionDisplaySelection.Contains(direction),
                 PreviewImage = BuildNavigatorPreviewImage(direction)
             };
 
@@ -837,6 +906,7 @@ public partial class WorkspaceShellViewModel
         FocusedDirectionTile = null;
 
         OnPropertyChanged(nameof(DirectionNavigatorItems));
+        OnPropertyChanged(nameof(DirectionDisplaySelectorItems));
     }
 
     private BitmapSource? BuildNavigatorPreviewImage(SpriteDirection direction)
@@ -860,21 +930,7 @@ public partial class WorkspaceShellViewModel
             return null;
         }
 
-        var pixels = new byte[surface.Width * surface.Height * 4];
-        for (var y = 0; y < surface.Height; y++)
-        {
-            for (var x = 0; x < surface.Width; x++)
-            {
-                var color = surface.FillColors[surface.GetIndex(x, y)];
-                var offset = ((y * surface.Width) + x) * 4;
-                pixels[offset] = color.B;
-                pixels[offset + 1] = color.G;
-                pixels[offset + 2] = color.R;
-                pixels[offset + 3] = color.A;
-            }
-        }
-
-        var bitmap = BitmapSource.Create(surface.Width, surface.Height, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, pixels, surface.Width * 4);
+        var bitmap = BitmapSource.Create(surface.Width, surface.Height, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, surface.RgbaBytes, surface.Width * 4);
         bitmap.Freeze();
         NavigatorSnapshotCache[cacheKey] = bitmap;
         return bitmap;
@@ -1000,6 +1056,9 @@ public partial class WorkspaceShellViewModel
 
     private static WorkspaceThemeMode ParseThemeMode(string? value) =>
         WorkspaceEnumParsing.ParseDefinedEnumOrDefault(value, WorkspaceThemeMode.Dark);
+
+    private static WorkspaceLanguage ParseLanguage(string? value) =>
+        WorkspaceEnumParsing.ParseDefinedEnumOrDefault(value, WorkspaceLanguage.English);
 
     private static IReadOnlyList<SpriteDirection> GetPresentationDirectionOrder(SupportedDirectionSet supportedDirections)
     {

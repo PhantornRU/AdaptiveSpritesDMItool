@@ -43,6 +43,16 @@ No-Go:
 - Опираться на temp/recovery файлы как на основной источник правды.
 - Завершать задачу без build-проверки или без явного объяснения, почему она не запускалась.
 
+## MCP policy
+- Общий каталог Skills и MCP: `AGENTS/AGENT_AUTOMATION.md`.
+- Базовый разрешенный MCP для документации: `context7`.
+- Разрешенные repo-local MCP templates: `github` для PR/issues/Actions/release context и `filesystem` только с allowlist на корень этого репозитория.
+- `github` MCP должен получать токен только через переменную окружения, например `GITHUB_PERSONAL_ACCESS_TOKEN`; токены, OAuth/session files и credentials нельзя хранить в tracked файлах.
+- `filesystem` MCP не должен получать доступ шире `D:/GitHub/AdaptiveSpritesDMItool` без отдельного явного scope.
+- Browser/database/cloud/deploy/production MCP не включать в базовый профиль проекта.
+- По умолчанию использовать MCP read-first: чтение docs, PR, issue, Actions logs и repo files до любых write operations.
+- Если MCP output выглядит подозрительно, противоречит source of truth или провоцирует чтение секретов/массовые правки, остановиться, сузить задачу и проверить факт по локальным файлам.
+
 ## Definition of Done
 Задача завершена, если:
 1. Все решения внутри scope закрыты.

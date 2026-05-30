@@ -27,7 +27,8 @@ public sealed record PreviewBuildResult(
     SpriteImage? BaseImage,
     SpriteImage? LandmarkImage,
     SpriteImage? OverlayImage,
-    SpriteImage? CompositeImage);
+    SpriteImage? CompositeImage,
+    IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?>? EditableBackingOrigins = null);
 
 public enum OverwritePolicy
 {
@@ -70,6 +71,16 @@ public sealed record BatchJobResult(IReadOnlyList<BatchFileResult> Files)
     public bool WasCancelled => Files.Any(static file => file.Status == BatchFileStatus.Cancelled);
 }
 
+public sealed record WorkspaceImportedStateSettings(
+    string StateName,
+    string SourcePath,
+    string? SourceFileLabel,
+    bool IsSourceAssigned,
+    bool IsEditableAssigned,
+    string PlacementMode,
+    int Order,
+    int OpacityPercent = 100);
+
 public sealed record WorkspaceSettings(
     string? LastOpenedDmiPath,
     string? LastOpenedConfigPath,
@@ -86,7 +97,11 @@ public sealed record WorkspaceSettings(
     string? LastEditorViewportMode,
     string? LastBottomWorkspaceTab,
     bool IsPreviewInspectorExpanded,
-    bool IsBottomWorkspaceExpanded)
+    bool IsBottomWorkspaceExpanded,
+    string? LastUiLanguage = null,
+    bool HideInactiveSourceCanvases = true,
+    bool FitMultipleDirectionCanvasesToViewport = true,
+    IReadOnlyList<WorkspaceImportedStateSettings>? ImportedStates = null)
 {
     public static WorkspaceSettings Empty { get; } = new(
         LastOpenedDmiPath: null,
@@ -104,7 +119,11 @@ public sealed record WorkspaceSettings(
         LastEditorViewportMode: null,
         LastBottomWorkspaceTab: null,
         IsPreviewInspectorExpanded: true,
-        IsBottomWorkspaceExpanded: true);
+        IsBottomWorkspaceExpanded: true,
+        LastUiLanguage: null,
+        HideInactiveSourceCanvases: true,
+        FitMultipleDirectionCanvasesToViewport: true,
+        ImportedStates: Array.Empty<WorkspaceImportedStateSettings>());
 }
 
 public interface IConfigRepository

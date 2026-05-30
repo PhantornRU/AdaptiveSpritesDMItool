@@ -339,6 +339,43 @@
             <Setter Property="Padding" Value="8,3" />
         </Style>
 
+        <Style x:Key="BatchPreviewModeRadioButton" TargetType="{x:Type RadioButton}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinWidth" Value="58" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+            <Setter Property="Padding" Value="9,3" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type RadioButton}">
+                        <Border
+                            x:Name="Root"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{DynamicResource Brush.ControlBackground}"
+                            BorderBrush="{DynamicResource Brush.PanelBorder}"
+                            BorderThickness="1"
+                            CornerRadius="3">
+                            <ContentPresenter
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentMuted}" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="BatchSearchBox" TargetType="{x:Type TextBox}" BasedOn="{StaticResource BatchPathBox}">
             <Setter Property="Height" Value="28" />
             <Setter Property="Padding" Value="8,3" />
@@ -701,11 +738,12 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
                         <TextBlock
                             Grid.Column="0"
-                            Text="Source"
+                            Text="{DynamicResource Text.Batch.Source}"
                             Style="{StaticResource BatchRailLabel}" />
 
                         <TextBox
@@ -721,7 +759,7 @@
                     Content="..."
                     Command="{Binding BrowseBatchInputDirectoryCommand}"
                     Style="{StaticResource BatchRailButton}"
-                    ToolTip="Browse source folder" />
+                    ToolTip="{DynamicResource Text.Batch.BrowseSource}" />
 
                 <Border Grid.Column="3" Style="{StaticResource BatchRailField}">
                     <Grid>
@@ -732,7 +770,7 @@
 
                         <TextBlock
                             Grid.Column="0"
-                            Text="Output"
+                            Text="{DynamicResource Text.Batch.Output}"
                             Style="{StaticResource BatchRailLabel}" />
 
                         <TextBox
@@ -748,7 +786,7 @@
                     Content="..."
                     Command="{Binding BrowseBatchOutputDirectoryCommand}"
                     Style="{StaticResource BatchRailButton}"
-                    ToolTip="Browse output folder" />
+                    ToolTip="{DynamicResource Text.Batch.BrowseOutput}" />
 
                 <Border Grid.Column="6" Style="{StaticResource BatchRailField}">
                     <Grid>
@@ -759,7 +797,7 @@
 
                         <TextBlock
                             Grid.Column="0"
-                            Text="Config"
+                            Text="{DynamicResource Text.Batch.Config}"
                             Style="{StaticResource BatchRailLabel}" />
 
                         <TextBlock
@@ -793,7 +831,7 @@
 
                 <Button
                     Grid.Column="12"
-                    Content="Cancel"
+                    Content="{DynamicResource Text.Cancel}"
                     Command="{Binding CancelCommand}"
                     IsEnabled="{Binding IsBusy}"
                     Style="{StaticResource BatchRailButton}" />
@@ -828,7 +866,7 @@
 
                         <TextBlock
                             Grid.Row="0"
-                            Text="Folders"
+                            Text="{DynamicResource Text.Batch.Folders}"
                             Style="{StaticResource BatchSectionTitle}" />
 
                         <TextBlock
@@ -869,23 +907,23 @@
 
                         <TextBlock
                             Grid.Column="0"
-                            Text="Files to process"
+                            Text="{DynamicResource Text.Batch.FilesToProcess}"
                             Style="{StaticResource BatchSectionTitle}" />
 
                         <CheckBox
                             Grid.Column="2"
-                            Content="Include subfolders"
+                            Content="{DynamicResource Text.Batch.IncludeSubfolders}"
                             IsChecked="{Binding IncludeSubdirectories, Mode=TwoWay}" />
 
                         <Button
                             Grid.Column="4"
-                            Content="Select all"
+                            Content="{DynamicResource Text.Batch.SelectAll}"
                             Command="{Binding SelectAllVisibleCandidatesCommand}"
                             Style="{StaticResource BatchSmallButton}" />
 
                         <Button
                             Grid.Column="6"
-                            Content="Clear"
+                            Content="{DynamicResource Text.Clear}"
                             Command="{Binding ClearCandidateSelectionCommand}"
                             Style="{StaticResource BatchSmallButton}" />
 
@@ -901,7 +939,7 @@
                             Grid.Column="8"
                             Style="{StaticResource BatchSearchBox}"
                             Text="{Binding CandidateFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            ToolTip="Filter files" />
+                            ToolTip="{DynamicResource Text.Batch.FilterFiles}" />
                     </Grid>
 
                     <TextBlock
@@ -952,25 +990,25 @@
                             </DataGridTemplateColumn>
 
                             <DataGridTextColumn
-                                Header="Status"
-                                Binding="{Binding StatusText}"
+                                Header="{DynamicResource Text.Batch.Status}"
+                                Binding="{Binding StatusDisplayText}"
                                 Width="90"
                                 ElementStyle="{StaticResource BatchGridStatusTextBlock}" />
 
                             <DataGridTextColumn
-                                Header="File"
+                                Header="{DynamicResource Text.Batch.File}"
                                 Binding="{Binding FileName}"
                                 Width="1.4*"
                                 ElementStyle="{StaticResource BatchGridTextBlock}" />
 
                             <DataGridTextColumn
-                                Header="Folder"
+                                Header="{DynamicResource Text.Batch.Folder}"
                                 Binding="{Binding FolderPath}"
                                 Width="1.2*"
                                 ElementStyle="{StaticResource BatchGridTextBlock}" />
 
                             <DataGridTextColumn
-                                Header="Message"
+                                Header="{DynamicResource Text.Batch.Message}"
                                 Binding="{Binding Message}"
                                 Width="1.6*"
                                 ElementStyle="{StaticResource BatchGridTextBlock}" />
@@ -995,11 +1033,29 @@
 
                         <TextBlock
                             Grid.Column="0"
-                            Text="Preview"
+                            Text="{DynamicResource Text.Batch.Preview}"
                             Style="{StaticResource BatchSectionTitle}" />
 
-                        <TextBlock
+                        <StackPanel
                             Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal"
+                            Visibility="{Binding ShowPreviewDirectionModeSelector, Converter={StaticResource BoolToVisibility}}">
+                            <RadioButton
+                                GroupName="BatchPreviewDirections"
+                                Style="{StaticResource BatchPreviewModeRadioButton}"
+                                IsChecked="{Binding IsSingleDirectionPreviewSelected, Mode=TwoWay}"
+                                Content="{DynamicResource Text.Batch.Preview.OneDir}" />
+                            <RadioButton
+                                GroupName="BatchPreviewDirections"
+                                Style="{StaticResource BatchPreviewModeRadioButton}"
+                                IsChecked="{Binding IsAllDirectionsPreviewSelected, Mode=TwoWay}"
+                                Content="{DynamicResource Text.Batch.Preview.AllDirs}" />
+                        </StackPanel>
+
+                        <TextBlock
+                            Grid.Column="2"
+                            MaxWidth="120"
                             Text="{Binding SelectedCandidateFile.FileName}"
                             Style="{StaticResource BatchMutedText}"
                             HorizontalAlignment="Right"
@@ -1034,7 +1090,7 @@
 
                                 <TextBlock
                                     Grid.Row="0"
-                                    Text="Original"
+                                    Text="{DynamicResource Text.Batch.Original}"
                                     Style="{StaticResource BatchSectionTitle}"
                                     Margin="0,0,0,6" />
 
@@ -1066,7 +1122,7 @@
 
                                 <TextBlock
                                     Grid.Row="0"
-                                    Text="Edited"
+                                    Text="{DynamicResource Text.Batch.Edited}"
                                     Style="{StaticResource BatchSectionTitle}"
                                     Margin="0,0,0,6" />
 
@@ -1109,7 +1165,7 @@
 
                     <TextBlock
                         Grid.Column="0"
-                        Text="Run log"
+                        Text="{DynamicResource Text.Batch.RunLog}"
                         Style="{StaticResource BatchSectionTitle}"
                         VerticalAlignment="Center" />
 
@@ -1126,13 +1182,13 @@
                         Foreground="{DynamicResource Brush.TextSecondary}"
                         FontSize="12"
                         VerticalAlignment="Center">
-                        <Run Text="Done " />
+                        <Run Text="{DynamicResource Text.Batch.DoneLabel}" />
                         <Run Text="{Binding ProcessedResultCount, Mode=OneWay}" />
-                        <Run Text="  |  Skip " />
+                        <Run Text="{DynamicResource Text.Batch.SkipLabel}" />
                         <Run Text="{Binding SkippedResultCount, Mode=OneWay}" />
-                        <Run Text="  |  Fail " />
+                        <Run Text="{DynamicResource Text.Batch.FailLabel}" />
                         <Run Text="{Binding FailedResultCount, Mode=OneWay}" />
-                        <Run Text="  |  Cancel " />
+                        <Run Text="{DynamicResource Text.Batch.CancelLabel}" />
                         <Run Text="{Binding CancelledResultCount, Mode=OneWay}" />
                     </TextBlock>
                 </Grid>

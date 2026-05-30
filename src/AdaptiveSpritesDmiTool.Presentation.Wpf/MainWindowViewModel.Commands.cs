@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Linq;
+using System.Windows.Media.Imaging;
 
 namespace AdaptiveSpritesDmiTool.Presentation.Wpf;
 
@@ -130,7 +131,10 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
-        TryApplySelectedDirection(direction, refreshUi: false);
+        if (TryApplySelectedDirection(direction, refreshUi: false))
+        {
+            RefreshDirectionViewportActivation();
+        }
     }
 
     public void HandleSourceCellPointerDown(PixelCellViewModel cell)
@@ -171,6 +175,16 @@ public partial class WorkspaceShellViewModel
         ClearHoverState();
     }
 
+    public void HandleTargetSurfacePointerLeave()
+    {
+        if (_isDraggingEditableArea)
+        {
+            return;
+        }
+
+        ClearHoverState();
+    }
+
     public void HandleSourceSurfaceHover(PixelCellViewModel cell)
     {
         ArgumentNullException.ThrowIfNull(cell);
@@ -208,10 +222,17 @@ public partial class WorkspaceShellViewModel
         switch (SelectedEditorTool)
         {
             case EditorTool.Single:
-                EditorStatus = _selectedSourceCoordinate is null
-                    ? "Pick a source pixel first."
-                    : "Release to draw the selected source into Editable.";
-                RefreshInteractionState();
+                if (_selectedSourceCoordinate is null)
+                {
+                    EditorStatus = "Pick a source pixel first.";
+                    RefreshInteractionState();
+                }
+                else
+                {
+                    EditorStatus = "Drawing the selected source into Editable.";
+                    RefreshInteractionState();
+                    QueueDrawStrokeCoordinate(cell.Coordinate);
+                }
                 break;
             case EditorTool.Fill:
                 if (_selectedSourceCoordinate is null)
@@ -260,6 +281,15 @@ public partial class WorkspaceShellViewModel
         EnsureActiveDirection(cell.Direction);
         UpdateEditableHoverState(cell.Coordinate);
 
+        if (SelectedEditorTool == EditorTool.Single)
+        {
+            if (_selectedSourceCoordinate is not null && _hasPendingDrawStrokeFinalize)
+            {
+                QueueDrawStrokeCoordinate(cell.Coordinate);
+            }
+            return;
+        }
+
         if (SelectedEditorTool == EditorTool.Delete)
         {
             QueueRestoreStrokeCoordinate(cell.Coordinate);
@@ -276,7 +306,6 @@ public partial class WorkspaceShellViewModel
         switch (_editableDragAction)
         {
             case EditableDragAction.FillArea:
-            case EditableDragAction.DeleteArea:
             case EditableDragAction.RestoreArea:
             case EditableDragAction.SelectArea:
                 _selectedArea = new PixelAreaSelection(_editableDragAnchor.Value, cell.Coordinate);
@@ -332,7 +361,7 @@ public partial class WorkspaceShellViewModel
                     return;
                 }
 
-                ApplySourcePixelToEditable(cell.Coordinate, source, "Applied source pixel to Editable.");
+                FinalizeDrawStroke();
                 break;
             case EditorTool.Delete:
                 FinalizeRestoreStroke();
@@ -436,6 +465,105 @@ public partial class WorkspaceShellViewModel
         PersistWorkspaceSettingsInBackground();
     }
 
+    /// <summary>
+    /// Queues a coordinate for drawing and schedules an asynchronous flush.
+    /// Batching (timer/queue) is used instead of synchronous updates to prevent blocking the UI thread during continuous drawing.
+    /// </summary>
+    private void QueueDrawStrokeCoordinate(PixelCoordinate coordinate)
+    {
+        _selectedEditableCoordinate = coordinate;
+        _selectedArea = new PixelAreaSelection(coordinate, coordinate);
+        SelectedAreaSummary = DescribeArea(_selectedArea.Value);
+
+        if (_pendingDrawStrokeCoordinates.Add(coordinate))
+        {
+            _hasPendingDrawStrokeFinalize = true;
+        }
+
+        ScheduleDrawStrokeFlush();
+    }
+
+    private void ScheduleDrawStrokeFlush()
+    {
+        _drawStrokeFlushCts?.Cancel();
+        _drawStrokeFlushCts?.Dispose();
+
+        var cancellationSource = new CancellationTokenSource();
+        _drawStrokeFlushCts = cancellationSource;
+        _ = FlushDrawStrokeAsync(cancellationSource.Token);
+    }
+
+    private async Task FlushDrawStrokeAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(16, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        await System.Windows.Application.Current.Dispatcher.InvokeAsync(FlushDrawStrokeIncremental);
+    }
+
+    private void FlushDrawStrokeIncremental()
+    {
+        if (_pendingDrawStrokeCoordinates.Count == 0 || _selectedSourceCoordinate is not { } source)
+        {
+            return;
+        }
+
+        var coordinates = _pendingDrawStrokeCoordinates.ToArray();
+        _pendingDrawStrokeCoordinates.Clear();
+        ApplyDrawOperations(
+            coordinates,
+            source,
+            "Drawing editable pixels...",
+            refreshWorkspace: false,
+            rebuildNavigator: false,
+            refreshPreview: false);
+    }
+
+    private void FinalizeDrawStroke()
+    {
+        _drawStrokeFlushCts?.Cancel();
+        _drawStrokeFlushCts?.Dispose();
+        _drawStrokeFlushCts = null;
+
+        if (_pendingDrawStrokeCoordinates.Count > 0 && _selectedSourceCoordinate is { } source)
+        {
+            var coordinates = _pendingDrawStrokeCoordinates.ToArray();
+            _pendingDrawStrokeCoordinates.Clear();
+            ApplyDrawOperations(
+                coordinates,
+                source,
+                "Applied source pixel to Editable.",
+                refreshWorkspace: true,
+                rebuildNavigator: true,
+                refreshPreview: true);
+            _hasPendingDrawStrokeFinalize = false;
+            return;
+        }
+
+        if (!_hasPendingDrawStrokeFinalize)
+        {
+            return;
+        }
+
+        _hasPendingDrawStrokeFinalize = false;
+        InvalidateNavigatorSnapshotCache();
+        RefreshWorkspaceState();
+        RefreshEditorSurface();
+        RequestAutoPreviewRefresh();
+        PersistWorkspaceSettingsInBackground();
+    }
+
     private void StartEditableAreaDrag(PixelCoordinate anchor, EditableDragAction action, string statusMessage)
     {
         _editableDragAction = action;
@@ -458,7 +586,9 @@ public partial class WorkspaceShellViewModel
         _editableDragAction = action;
         _editableDragAnchor = anchor;
         _editableDragOriginArea = area;
-        _editableDragPayload = CaptureEditablePayload(area);
+        _editableDragPayload = CaptureEditablePayload(
+            area,
+            action is EditableDragAction.MoveSingle or EditableDragAction.MoveSelection);
         _isDraggingEditableArea = true;
         _selectedArea = area;
         _selectedEditableCoordinate = area.Start;
@@ -477,7 +607,6 @@ public partial class WorkspaceShellViewModel
         switch (_editableDragAction)
         {
             case EditableDragAction.FillArea:
-            case EditableDragAction.DeleteArea:
             case EditableDragAction.RestoreArea:
             case EditableDragAction.SelectArea:
                 _selectedArea = new PixelAreaSelection(_editableDragAnchor.Value, releasedCoordinate);
@@ -510,23 +639,14 @@ public partial class WorkspaceShellViewModel
 
                 if (_selectedSourceCoordinate is not { } selectedSource)
                 {
+                    ClearSelectedArea();
                     StatusMessage = "Pick a source pixel first.";
                     RefreshInteractionState();
                     return;
                 }
 
-                SelectedAreaSummary = DescribeArea(fillArea);
+                ClearSelectedArea();
                 ApplySourcePixelToEditableArea(fillArea, selectedSource, "Filled the editable area from the selected source pixel.");
-                break;
-            case EditableDragAction.DeleteArea:
-                if (completedArea is not { } deleteArea)
-                {
-                    RefreshInteractionState();
-                    return;
-                }
-
-                SelectedAreaSummary = DescribeArea(deleteArea);
-                ApplyRestoreOperation(deleteArea, "Restored the editable area to original source pixels.");
                 break;
             case EditableDragAction.RestoreArea:
                 if (completedArea is not { } restoreArea)
@@ -535,7 +655,7 @@ public partial class WorkspaceShellViewModel
                     return;
                 }
 
-                SelectedAreaSummary = DescribeArea(restoreArea);
+                ClearSelectedArea();
                 ApplyRestoreOperation(restoreArea, "Restored the editable area to original source pixels.");
                 break;
             case EditableDragAction.SelectArea:
@@ -559,9 +679,8 @@ public partial class WorkspaceShellViewModel
                     return;
                 }
 
-                _selectedArea = movedArea;
                 _selectedEditableCoordinate = movedArea.Start;
-                SelectedAreaSummary = DescribeArea(movedArea);
+                ClearSelectedArea();
                 ApplyMovedEditableArea(
                     payload,
                     originArea,
@@ -569,6 +688,7 @@ public partial class WorkspaceShellViewModel
                     dragAction == EditableDragAction.MoveSingle
                         ? "Moved the editable pixel mapping."
                         : "Moved the selected editable area.");
+                RefreshInteractionState();
                 break;
             case EditableDragAction.None:
             default:
@@ -589,9 +709,22 @@ public partial class WorkspaceShellViewModel
         _restoreStrokeFlushCts = null;
         _pendingRestoreStrokeCoordinates.Clear();
         _hasPendingRestoreStrokeFinalize = false;
+        _drawStrokeFlushCts?.Cancel();
+        _drawStrokeFlushCts?.Dispose();
+        _drawStrokeFlushCts = null;
+        _pendingDrawStrokeCoordinates.Clear();
+        _hasPendingDrawStrokeFinalize = false;
     }
 
-    private Dictionary<SpriteDirection, Dictionary<PixelCoordinate, PixelCoordinate?>> CaptureEditablePayload(PixelAreaSelection area)
+    private void ClearSelectedArea()
+    {
+        _selectedArea = null;
+        SelectedAreaSummary = "No area selected.";
+    }
+
+    private Dictionary<SpriteDirection, Dictionary<PixelCoordinate, PixelCoordinate?>> CaptureEditablePayload(
+        PixelAreaSelection area,
+        bool includeIdentityFallback)
     {
         if (_editorSession.CurrentConfig is not { } config)
         {
@@ -602,6 +735,7 @@ public partial class WorkspaceShellViewModel
         var selectedDirection = GetSafeSelectedDirection();
         foreach (var direction in ResolveDirections(config.SupportedDirections))
         {
+            var mappingsByEditable = config.GetMappings(direction).ToDictionary(static mapping => mapping.Source);
             var directionPayload = new Dictionary<PixelCoordinate, PixelCoordinate?>();
             foreach (var editableCoordinate in area.Enumerate())
             {
@@ -610,7 +744,26 @@ public partial class WorkspaceShellViewModel
                     selectedDirection,
                     direction,
                     config.Resolution);
-                directionPayload[editableCoordinate] = ResolveSourceCoordinateForEditable(direction, scopedEditableCoordinate);
+
+                if (mappingsByEditable.TryGetValue(scopedEditableCoordinate, out var explicitMapping))
+                {
+                    directionPayload[editableCoordinate] = explicitMapping.Target;
+                    continue;
+                }
+
+                if (!includeIdentityFallback)
+                {
+                    continue;
+                }
+
+                // We use ResolveEffectiveSourceCoordinate to dynamically determine the source
+                // depending on the selection or context (explicit mapping vs identity fallback).
+                var source = ResolveEffectiveSourceCoordinate(
+                    direction,
+                    scopedEditableCoordinate,
+                    includeIdentityFallback: true);
+
+                directionPayload[editableCoordinate] = source;
             }
 
             payload[direction] = directionPayload;
@@ -709,6 +862,38 @@ public partial class WorkspaceShellViewModel
 
     private PixelCoordinate? ResolveSourceCoordinateForEditable(PixelCoordinate editableCoordinate)
         => ResolveSourceCoordinateForEditable(GetSafeSelectedDirection(), editableCoordinate);
+
+    private PixelCoordinate? ResolveEffectiveSourceCoordinate(
+        SpriteDirection direction,
+        PixelCoordinate editableCoordinate,
+        bool includeIdentityFallback)
+    {
+        if (_editorSession.CurrentConfig is null)
+        {
+            return editableCoordinate;
+        }
+
+        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction))
+        {
+            if (mapping.Source == editableCoordinate)
+            {
+                return mapping.Target;
+            }
+        }
+
+        if (!includeIdentityFallback)
+        {
+            return null;
+        }
+
+        var backingOrigins = ResolveEditableBackingOrigins(direction);
+        if (backingOrigins.TryGetValue(editableCoordinate, out var backingOrigin))
+        {
+            return backingOrigin;
+        }
+
+        return editableCoordinate;
+    }
 
     private PixelCoordinate? ResolveSourceCoordinateForEditable(SpriteDirection direction, PixelCoordinate editableCoordinate)
     {
@@ -1108,47 +1293,225 @@ public partial class WorkspaceShellViewModel
 
     private async Task MergeImportedStatesFromAssetAsync(DmiAssetInfo asset, CancellationToken cancellationToken)
     {
-        foreach (var state in asset.States.OrderBy(static item => item.Name, StringComparer.OrdinalIgnoreCase))
+        InvalidateImportedStateFrameCache();
+        _isUpdatingImportedStateItems = true;
+        try
         {
-            var previewResult = await _readStateFrameUseCase.ExecuteAsync(
-                asset.SourcePath ?? string.Empty,
-                state.Name,
-                SpriteDirection.South,
-                cancellationToken);
-            _importedStateFrameCache[(asset.SourcePath ?? string.Empty, state.Name, SpriteDirection.South)] =
-                previewResult.IsSuccess ? previewResult.Value : null;
-            var previewBitmap = previewResult.IsSuccess ? _bitmapSourceFactory.Create(previewResult.Value) : null;
-            var isValid = previewResult.IsSuccess;
-            var validationMessage = previewResult.IsSuccess ? string.Empty : previewResult.Error.Message;
-
-            var existing = ImportedDmiStateItems.FirstOrDefault(item =>
-                string.Equals(item.StateName, state.Name, StringComparison.OrdinalIgnoreCase));
-            if (existing is null)
+            foreach (var state in asset.States)
             {
-                var order = ImportedDmiStateItems.Count == 0 ? 0 : ImportedDmiStateItems.Max(static item => item.Order) + 1;
-                var imported = new ImportedDmiStateItemViewModel(
-                    state.Name,
+                var previewResult = await _readStateFrameUseCase.ExecuteAsync(
                     asset.SourcePath ?? string.Empty,
-                    Path.GetFileName(asset.SourcePath ?? asset.DisplayName),
-                    previewBitmap,
-                    ImportedStatePlacementMode.None,
-                    order);
-                imported.IsValid = isValid;
-                imported.ValidationMessage = validationMessage;
-                AttachImportedStateItem(imported);
-                ImportedDmiStateItems.Add(imported);
-                continue;
-            }
+                    state.Name,
+                    SpriteDirection.South,
+                    cancellationToken);
+                _importedStateFrameCache[(asset.SourcePath ?? string.Empty, state.Name, SpriteDirection.South)] =
+                    previewResult.IsSuccess ? previewResult.Value : null;
 
-            existing.SourceFileLabel = Path.GetFileName(asset.SourcePath ?? asset.DisplayName);
-            existing.PreviewImage = previewBitmap;
-            existing.SourcePath = asset.SourcePath ?? string.Empty;
-            existing.IsValid = isValid;
-            existing.ValidationMessage = validationMessage;
+                // Warm up cache for all supported directions of the asset
+                var warmUpDirections = GetPresentationDirectionOrder(asset.SupportedDirections);
+                await WarmUpImportedStateFrameCacheAsync(
+                    asset.SourcePath ?? string.Empty,
+                    state.Name,
+                    warmUpDirections,
+                    cancellationToken);
+
+                var previewBitmap = previewResult.IsSuccess ? _bitmapSourceFactory.Create(previewResult.Value) : null;
+                var isValid = previewResult.IsSuccess;
+                var validationMessage = previewResult.IsSuccess ? string.Empty : previewResult.Error.Message;
+
+                var existing = ImportedDmiStateItems.FirstOrDefault(item =>
+                    string.Equals(item.StateName, state.Name, StringComparison.OrdinalIgnoreCase));
+                if (existing is null)
+                {
+                    var order = ImportedDmiStateItems.Count == 0 ? 0 : ImportedDmiStateItems.Max(static item => item.Order) + 1;
+                    var isFirstImportedState = ImportedDmiStateItems.Count == 0;
+
+                    var imported = new ImportedDmiStateItemViewModel(
+                        state.Name,
+                        asset.SourcePath ?? string.Empty,
+                        Path.GetFileName(asset.SourcePath ?? asset.DisplayName),
+                        previewBitmap,
+                        isSourceAssigned: isFirstImportedState,
+                        isEditableAssigned: false,
+                        ImportedStatePlacementMode.Overlay,
+                        order,
+                        opacityPercent: 100);
+                    imported.IsValid = isValid;
+                    imported.ValidationMessage = validationMessage;
+                    AttachImportedStateItem(imported);
+                    ImportedDmiStateItems.Add(imported);
+                    continue;
+                }
+
+                existing.SourceFileLabel = Path.GetFileName(asset.SourcePath ?? asset.DisplayName);
+                existing.PreviewImage = previewBitmap;
+                existing.SourcePath = asset.SourcePath ?? string.Empty;
+                existing.IsValid = isValid;
+                existing.ValidationMessage = validationMessage;
+            }
+        }
+        finally
+        {
+            _isUpdatingImportedStateItems = false;
         }
 
         OnPropertyChanged(nameof(ImportedDmiStateItems));
-        InvalidateImportedStateFrameCache();
+    }
+
+    private async Task RestoreImportedStateItemsAsync(CancellationToken cancellationToken)
+    {
+        if (_restoredImportedStateSettings.Count == 0)
+        {
+            return;
+        }
+
+        _isUpdatingImportedStateItems = true;
+        try
+        {
+            ClearImportedStateItems();
+            foreach (var state in _restoredImportedStateSettings.OrderBy(static item => item.Order))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await RestoreImportedStateItemAsync(state, cancellationToken);
+            }
+        }
+        finally
+        {
+            _isUpdatingImportedStateItems = false;
+        }
+
+        SelectedImportedDmiStateItem = ImportedDmiStateItems.FirstOrDefault(item =>
+            string.Equals(item.StateName, SelectedExplorerState, StringComparison.OrdinalIgnoreCase))
+            ?? ImportedDmiStateItems.FirstOrDefault();
+
+        if (ImportedDmiStateItems.Any(static item => item.IsAssignedToAnySurface))
+        {
+            await PreloadImportedStateFramesAsync(cancellationToken);
+        }
+
+        RefreshImportedStateComposition();
+        OnPropertyChanged(nameof(ImportedDmiStateItems));
+    }
+
+    private async Task RestoreImportedStateItemAsync(WorkspaceImportedStateSettings state, CancellationToken cancellationToken)
+    {
+        var placementMode = ParseImportedStatePlacementMode(state.PlacementMode);
+        var sourceFileLabel = string.IsNullOrWhiteSpace(state.SourceFileLabel)
+            ? Path.GetFileName(state.SourcePath)
+            : state.SourceFileLabel!;
+        if (string.IsNullOrWhiteSpace(sourceFileLabel))
+        {
+            sourceFileLabel = "Missing source";
+        }
+
+        if (string.IsNullOrWhiteSpace(state.SourcePath) || !File.Exists(state.SourcePath))
+        {
+            AddRestoredImportedStateItem(
+                state,
+                sourceFileLabel,
+                placementMode,
+                previewBitmap: null,
+                isValid: false,
+                validationMessage: $"Source DMI file was not found: {state.SourcePath}");
+            return;
+        }
+
+        var assetResult = await _inspectDmiFileUseCase.ExecuteAsync(state.SourcePath, cancellationToken);
+        if (assetResult.IsFailure)
+        {
+            AddRestoredImportedStateItem(
+                state,
+                sourceFileLabel,
+                placementMode,
+                previewBitmap: null,
+                isValid: false,
+                validationMessage: assetResult.Error.Message);
+            return;
+        }
+
+        var baseline = ResolveEditorResolution();
+        if (baseline is not null && assetResult.Value.Resolution != baseline.Value)
+        {
+            AddRestoredImportedStateItem(
+                state,
+                sourceFileLabel,
+                placementMode,
+                previewBitmap: null,
+                isValid: false,
+                validationMessage: $"Resolution {assetResult.Value.Resolution} does not match current {baseline.Value}.");
+            return;
+        }
+
+        if (!assetResult.Value.States.Any(candidate => string.Equals(candidate.Name, state.StateName, StringComparison.OrdinalIgnoreCase)))
+        {
+            AddRestoredImportedStateItem(
+                state,
+                sourceFileLabel,
+                placementMode,
+                previewBitmap: null,
+                isValid: false,
+                validationMessage: $"State '{state.StateName}' was not found in '{sourceFileLabel}'.");
+            return;
+        }
+
+        var previewResult = await _readStateFrameUseCase.ExecuteAsync(
+            state.SourcePath,
+            state.StateName,
+            SpriteDirection.South,
+            cancellationToken);
+        _importedStateFrameCache[(state.SourcePath, state.StateName, SpriteDirection.South)] =
+            previewResult.IsSuccess ? previewResult.Value : null;
+
+        // Warm up cache for all available directions
+        var supportedDirections = _editorSession.LoadedAsset?.SupportedDirections
+            ?? _editorSession.CurrentConfig?.SupportedDirections
+            ?? SupportedDirectionSet.Four;
+        var warmUpDirections = GetPresentationDirectionOrder(supportedDirections);
+        await WarmUpImportedStateFrameCacheAsync(
+            state.SourcePath,
+            state.StateName,
+            warmUpDirections,
+            cancellationToken);
+
+        AddRestoredImportedStateItem(
+            state,
+            sourceFileLabel,
+            placementMode,
+            previewResult.IsSuccess ? _bitmapSourceFactory.Create(previewResult.Value) : null,
+            previewResult.IsSuccess,
+            previewResult.IsSuccess ? string.Empty : previewResult.Error.Message);
+    }
+
+    private void AddRestoredImportedStateItem(
+        WorkspaceImportedStateSettings state,
+        string sourceFileLabel,
+        ImportedStatePlacementMode placementMode,
+        BitmapSource? previewBitmap,
+        bool isValid,
+        string validationMessage)
+    {
+        var imported = new ImportedDmiStateItemViewModel(
+            state.StateName,
+            state.SourcePath,
+            sourceFileLabel,
+            previewBitmap,
+            state.IsSourceAssigned,
+            state.IsEditableAssigned,
+            placementMode,
+            Math.Max(0, state.Order),
+            Math.Clamp(state.OpacityPercent, 0, 100));
+        imported.IsValid = isValid;
+        imported.ValidationMessage = validationMessage;
+        AttachImportedStateItem(imported);
+        ImportedDmiStateItems.Add(imported);
+    }
+
+    private static ImportedStatePlacementMode ParseImportedStatePlacementMode(string? value)
+    {
+        return Enum.TryParse<ImportedStatePlacementMode>(value, true, out var placementMode) &&
+               Enum.IsDefined(placementMode)
+            ? placementMode
+            : ImportedStatePlacementMode.Overlay;
     }
 
     private void BeginBatchSourceTreeValidation()

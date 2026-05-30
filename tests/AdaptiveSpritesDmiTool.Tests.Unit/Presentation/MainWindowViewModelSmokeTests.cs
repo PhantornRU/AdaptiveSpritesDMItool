@@ -4,6 +4,7 @@ using AdaptiveSpritesDmiTool.Domain.Configurations;
 using AdaptiveSpritesDmiTool.Presentation.Wpf;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Collections;
 using System.Reflection;
 
 namespace AdaptiveSpritesDmiTool.Tests.Unit.Presentation;
@@ -70,6 +71,202 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task ParallelScopeShouldSplitLargeCanvasesByCanonicalDirectionPair()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.ShowAllDirectionDisplayPicker.Should().BeFalse();
+        viewModel.SelectedDirection = SpriteDirection.North;
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+
+        viewModel.ShowAllDirectionDisplayPicker.Should().BeFalse();
+        viewModel.EditorSurfaceGridRows.Should().Be(2);
+        viewModel.EditorSurfaceGridColumns.Should().Be(1);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.North);
+        viewModel.TargetViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.North);
+        viewModel.TargetViewportSurfaces.Single(surface => surface.Direction == SpriteDirection.North).IsActive.Should().BeTrue();
+
+        viewModel.SelectedDirection = SpriteDirection.West;
+
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.East, SpriteDirection.West);
+        viewModel.TargetViewportSurfaces.Single(surface => surface.Direction == SpriteDirection.West).IsActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task AllScopeShouldToggleDisplayedLargeCanvasDirections()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.SelectedDirectionScope = DirectionScope.All;
+
+        // Initial state: all 4 directions are display-selected
+        viewModel.ShowAllDirectionDisplayPicker.Should().BeTrue();
+        viewModel.DirectionDisplaySelectorItems.Select(item => item.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
+        viewModel.DirectionNavigatorItems.Should().OnlyContain(item => item.IsDisplaySelected);
+        viewModel.EditorSurfaceGridRows.Should().Be(2);
+        viewModel.EditorSurfaceGridColumns.Should().Be(2);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
+
+        // Toggle off East → 3 selected → all 4 shown (3+ falls back to all)
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.East);
+
+        viewModel.EditorSurfaceGridRows.Should().Be(2);
+        viewModel.EditorSurfaceGridColumns.Should().Be(2);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
+        viewModel.DirectionNavigatorItems.Single(item => item.Direction == SpriteDirection.East).IsDisplaySelected.Should().BeFalse();
+
+        // Toggle off West → 2 selected → filtered to {South, North}
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.West);
+
+        viewModel.EditorSurfaceGridRows.Should().Be(2);
+        viewModel.EditorSurfaceGridColumns.Should().Be(1);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.North);
+        viewModel.DirectionNavigatorItems.Where(item => item.IsDisplaySelected).Select(item => item.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.North);
+
+        // Toggle off South → 1 selected → filtered to {North}
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.South);
+
+        viewModel.EditorSurfaceGridRows.Should().Be(1);
+        viewModel.EditorSurfaceGridColumns.Should().Be(1);
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should().Equal(SpriteDirection.North);
+        viewModel.DirectionNavigatorItems.Single(item => item.Direction == SpriteDirection.North).IsDisplaySelected.Should().BeTrue();
+
+        // Re-add removed directions one by one
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.East);
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.West);
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.South);
+
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
+        viewModel.DirectionNavigatorItems.Should().OnlyContain(item => item.IsDisplaySelected);
+
+        // Toggle all off: remove North, East, West, South → 0 selected → show all but !IsDisplaySelected
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.North);
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.East);
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.West);
+        viewModel.ToggleDisplayedDirectionCommand.Execute(SpriteDirection.South);
+
+        viewModel.SourceViewportSurfaces.Select(surface => surface.Direction).Should()
+            .Equal(SpriteDirection.South, SpriteDirection.East, SpriteDirection.North, SpriteDirection.West);
+        viewModel.DirectionNavigatorItems.Should().OnlyContain(item => !item.IsDisplaySelected);
+    }
+
+    [Fact]
+    public async Task MultiDirectionInactiveSourceCanvasesShouldHideByDefault()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+
+        viewModel.HasMultipleDirectionViewportSurfaces.Should().BeTrue();
+        viewModel.ShowSourceViewportPane.Should().BeTrue();
+
+        viewModel.SelectedEditorTool = EditorTool.Move;
+
+        viewModel.IsSourceReferenceDimmed.Should().BeTrue();
+        viewModel.ShowSourceViewportPane.Should().BeFalse();
+
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.ShowSourceViewportPane.Should().BeFalse();
+
+        viewModel.SelectedEditorTool = EditorTool.UndoArea;
+
+        viewModel.ShowSourceViewportPane.Should().BeFalse();
+
+        viewModel.SelectedEditorTool = EditorTool.Fill;
+
+        viewModel.IsSourceReferenceDimmed.Should().BeFalse();
+        viewModel.ShowSourceViewportPane.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HideInactiveSourceCanvasesSettingShouldKeepSourceVisible()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.SelectedDirectionScope = DirectionScope.All;
+        viewModel.SelectedEditorTool = EditorTool.Move;
+
+        viewModel.ShowSourceViewportPane.Should().BeFalse();
+
+        viewModel.HideInactiveSourceCanvases = false;
+
+        viewModel.ShowSourceViewportPane.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task FitMultipleDirectionCanvasesSettingShouldToggleViewportLayout()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.SelectedDirectionScope = DirectionScope.All;
+
+        viewModel.HasMultipleDirectionViewportSurfaces.Should().BeTrue();
+        viewModel.UseFittedDirectionViewportLayout.Should().BeTrue();
+        viewModel.UseScrollableDirectionViewportLayout.Should().BeFalse();
+
+        viewModel.FitMultipleDirectionCanvasesToViewport = false;
+
+        viewModel.UseFittedDirectionViewportLayout.Should().BeFalse();
+        viewModel.UseScrollableDirectionViewportLayout.Should().BeTrue();
+
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+
+        viewModel.HasMultipleDirectionViewportSurfaces.Should().BeFalse();
+        viewModel.UseFittedDirectionViewportLayout.Should().BeFalse();
+        viewModel.UseScrollableDirectionViewportLayout.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task CreateConfigShouldEnableBatchWorkflowAndStayOnEditorSection()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -104,16 +301,22 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.SelectedEditorViewportMode = EditorViewportMode.Focused;
         viewModel.SelectedBottomWorkspaceTab = BottomWorkspaceTab.Mappings;
+        viewModel.SelectedLanguage = WorkspaceLanguage.Russian;
         viewModel.IsPreviewInspectorExpanded = false;
         viewModel.IsBottomWorkspaceExpanded = false;
+        viewModel.HideInactiveSourceCanvases = false;
+        viewModel.FitMultipleDirectionCanvasesToViewport = false;
 
         await viewModel.PersistWorkspaceSettingsAsync();
 
         settingsRepository.Saved.Should().NotBeNull();
         settingsRepository.Saved!.LastEditorViewportMode.Should().Be(nameof(EditorViewportMode.Focused));
         settingsRepository.Saved.LastBottomWorkspaceTab.Should().Be(nameof(BottomWorkspaceTab.Mappings));
+        settingsRepository.Saved.LastUiLanguage.Should().Be(nameof(WorkspaceLanguage.Russian));
         settingsRepository.Saved.IsPreviewInspectorExpanded.Should().BeFalse();
         settingsRepository.Saved.IsBottomWorkspaceExpanded.Should().BeFalse();
+        settingsRepository.Saved.HideInactiveSourceCanvases.Should().BeFalse();
+        settingsRepository.Saved.FitMultipleDirectionCanvasesToViewport.Should().BeFalse();
     }
 
     [Fact]
@@ -166,7 +369,8 @@ public sealed class MainWindowViewModelSmokeTests
                 nameof(EditorViewportMode.Focused),
                 nameof(BottomWorkspaceTab.Mappings),
             false,
-            false));
+            false,
+            nameof(WorkspaceLanguage.Russian)));
 
         var viewModel = CreateViewModel(
             settingsRepository,
@@ -177,6 +381,7 @@ public sealed class MainWindowViewModelSmokeTests
         await viewModel.InitializeAsync();
 
         viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Focused);
+        viewModel.SelectedLanguage.Should().Be(WorkspaceLanguage.Russian);
         viewModel.IsBottomWorkspaceExpanded.Should().BeFalse();
     }
 
@@ -363,6 +568,8 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.MappingRows.Should().HaveCount(4);
         viewModel.MappingRows.Should().OnlyContain(row => row.Source == new PixelCoordinate(0, 1));
+        viewModel.SelectedAreaBounds.Should().BeNull();
+        viewModel.SelectedAreaSummary.Should().Be("No area selected.");
     }
 
     [Fact]
@@ -546,11 +753,38 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.MappingRows.Should().Contain(row => row.Editable == new PixelCoordinate(2, 2) && row.Source == new PixelCoordinate(0, 1));
         viewModel.MappingRows.Should().NotContain(row => row.Editable == new PixelCoordinate(1, 1));
         viewModel.MappingRows.Should().NotContain(row => row.Editable == new PixelCoordinate(1, 2));
-        viewModel.SelectedAreaBounds.Should().Be(new PixelAreaBounds(2, 1, 2, 2));
+        viewModel.SelectedAreaBounds.Should().BeNull();
     }
 
     [Fact]
-    public async Task SelectToolShouldMoveOverlappingEditableSelectionFromCapturedPayload()
+    public async Task SelectToolShouldKeepDragAliveWhenPointerLeavesSurface()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 3, 3));
+        viewModel.HandleTargetSurfacePointerLeave();
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 3, 3));
+
+        viewModel.SelectedAreaBounds.Should().Be(new PixelAreaBounds(0, 0, 3, 3));
+        viewModel.SelectedAreaSummary.Should().Contain("4x4");
+    }
+
+    [Fact]
+    public async Task SelectToolShouldMoveOverlappingEditableSelectionUsingExplicitMappingsOnly()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -585,6 +819,119 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task SelectToolShouldRestoreSourceBackgroundForMovedSelectionOrigins()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 0), new PixelCoordinate(1, 1));
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 2), new PixelCoordinate(3, 2));
+
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 1), new PixelCoordinate(0, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 1), new PixelCoordinate(2, 1));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 2), new PixelCoordinate(1, 2));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 2), new PixelCoordinate(2, 2));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 1));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 2));
+    }
+
+    [Fact]
+    public async Task SelectToolShouldKeepFullOverlappingSelectionMaterialized()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 3), new PixelCoordinate(0, 1));
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 2), new PixelCoordinate(1, 1));
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 3), new PixelCoordinate(2, 1));
+
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.MappingRows.Should().HaveCount(3);
+        viewModel.MappingRows.Should().ContainSingle(row =>
+            row.Editable == new PixelCoordinate(1, 1) &&
+            row.Source == new PixelCoordinate(3, 3));
+        viewModel.MappingRows.Should().ContainSingle(row =>
+            row.Editable == new PixelCoordinate(2, 1) &&
+            row.Source == new PixelCoordinate(2, 2));
+        viewModel.MappingRows.Should().ContainSingle(row =>
+            row.Editable == new PixelCoordinate(3, 1) &&
+            row.Source == new PixelCoordinate(0, 3));
+    }
+
+    [Fact]
+    public async Task SelectToolShouldMoveUnmappedPixelsWithoutTransparentOrigins()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 1, 0));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 1, 0));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 1, 0));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 1, 0));
+
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 0), new PixelCoordinate(0, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 0), new PixelCoordinate(1, 0));
+
+        var sourceSurface = viewModel.ActiveSourceSurface!;
+        var editableSurface = viewModel.ActiveTargetSurface!;
+        GetSurfaceColor(editableSurface, 0, 0).Should()
+            .Be(GetSurfaceColor(sourceSurface, 0, 0));
+    }
+
+    [Fact]
     public async Task ScopedMoveShouldUseDirectionSpecificPayload()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -616,6 +963,81 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionHasMapping(viewModel, SpriteDirection.North, new PixelCoordinate(1, 0), new PixelCoordinate(3, 2));
         AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 0));
         AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.North, new PixelCoordinate(2, 0));
+    }
+
+    [Fact]
+    public async Task ScopedMoveShouldClampCentralizedMirrorAtRightEdge()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 1), new PixelCoordinate(3, 0));
+        ApplySingleMapping(viewModel, SpriteDirection.North, new PixelCoordinate(2, 1), new PixelCoordinate(0, 0));
+
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.UseCentralizedPropagation = true;
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+        viewModel.SelectedEditorTool = EditorTool.Move;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 3, 0));
+
+        viewModel.TargetViewportSurfaces
+            .Single(surface => surface.Direction == SpriteDirection.North)
+            .TransformedSelectedTargetCoordinate
+            .Should()
+            .Be(new PixelCoordinate(0, 0));
+
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 0));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 0));
+
+        AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 0), new PixelCoordinate(0, 1));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.North, new PixelCoordinate(0, 0), new PixelCoordinate(2, 1));
+    }
+
+    [Fact]
+    public async Task SelectToolShouldClampCentralizedMirrorForRightEdgeSelectionBounds()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.UseCentralizedPropagation = true;
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.All;
+        viewModel.SelectedEditorTool = EditorTool.Select;
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 3, 0));
+
+        viewModel.SelectedAreaBounds.Should().Be(new PixelAreaBounds(0, 0, 3, 0));
+        viewModel.TargetViewportSurfaces
+            .Single(surface => surface.Direction == SpriteDirection.North)
+            .TransformedSelectedAreaBounds
+            .Should()
+            .Be(new PixelAreaBounds(0, 0, 2, 0));
+        viewModel.TargetViewportSurfaces
+            .Single(surface => surface.Direction == SpriteDirection.West)
+            .TransformedSelectedAreaBounds
+            .Should()
+            .Be(new PixelAreaBounds(0, 0, 2, 0));
     }
 
     [Fact]
@@ -700,6 +1122,7 @@ public sealed class MainWindowViewModelSmokeTests
         var viewModel = CreateViewModel(
             settingsRepository,
             dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            stateFrameReader: new CoordinateStateFrameReader(),
             previewBuilder: previewBuilder,
             fileDialogService: dialogService);
 
@@ -718,12 +1141,365 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.ActiveTargetSurface.Should().NotBeNull();
         var sourceSurface = viewModel.ActiveSourceSurface!;
         var editableSurface = viewModel.ActiveTargetSurface!;
-        var sourceColor = sourceSurface.FillColors[sourceSurface.GetIndex(0, 0)];
-        var originalEditableColor = sourceSurface.FillColors[sourceSurface.GetIndex(2, 2)];
-        var remappedEditableColor = editableSurface.FillColors[editableSurface.GetIndex(2, 2)];
+        var sourceColor = GetSurfaceColor(sourceSurface, 0, 0);
+        var originalEditableColor = GetSurfaceColor(sourceSurface, 2, 2);
+        var remappedEditableColor = GetSurfaceColor(editableSurface, 2, 2);
 
         remappedEditableColor.Should().Be(sourceColor);
         remappedEditableColor.Should().NotBe(originalEditableColor);
+    }
+
+    [Fact]
+    public async Task ImportedStateDefaultsShouldAssignFirstToSourceAndSecondToEditableOnly()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "c", "a", "b"),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.ImportedDmiStateItems.Select(item => item.StateName).Should().Equal("c", "a", "b");
+        viewModel.AvailableStates.Should().Equal("c", "a", "b");
+        viewModel.ImportedDmiStateItems[0].IsSourceAssigned.Should().BeTrue();
+        viewModel.ImportedDmiStateItems[0].IsEditableAssigned.Should().BeFalse();
+        viewModel.ImportedDmiStateItems[0].PlacementMode.Should().Be(ImportedStatePlacementMode.Overlay);
+        viewModel.ImportedDmiStateItems[0].Order.Should().Be(0);
+        viewModel.ImportedDmiStateItems[0].OpacityPercent.Should().Be(100);
+        viewModel.ImportedDmiStateItems[1].IsSourceAssigned.Should().BeFalse();
+        viewModel.ImportedDmiStateItems[1].IsEditableAssigned.Should().BeFalse();
+        viewModel.ImportedDmiStateItems[1].PlacementMode.Should().Be(ImportedStatePlacementMode.Overlay);
+        viewModel.ImportedDmiStateItems[1].Order.Should().Be(1);
+        viewModel.ImportedDmiStateItems[1].OpacityPercent.Should().Be(100);
+        viewModel.ImportedDmiStateItems[2].IsSourceAssigned.Should().BeFalse();
+        viewModel.ImportedDmiStateItems[2].IsEditableAssigned.Should().BeFalse();
+        viewModel.ImportedDmiStateItems[2].PlacementMode.Should().Be(ImportedStatePlacementMode.Overlay);
+        viewModel.ImportedDmiStateItems[2].Order.Should().Be(2);
+        viewModel.ImportedDmiStateItems[2].OpacityPercent.Should().Be(100);
+    }
+
+    [Fact]
+    public async Task ImportedStateSurfaceAssignmentsShouldAffectOnlySelectedCanvas()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        // По умолчанию Editable выключен; включаем для "b" вручную
+        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
+
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("a"));
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("b"));
+
+        viewModel.ToggleImportedStateSourceCommand.Execute(viewModel.ImportedDmiStateItems[0]);
+
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(System.Windows.Media.Color.FromRgb(244, 239, 231));
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("b"));
+
+        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
+
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(System.Windows.Media.Color.FromRgb(244, 239, 231));
+    }
+
+    [Fact]
+    public async Task ClearImportedStatesShouldLeaveCanvasesEmpty()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.ImportedDmiStateItems.Should().NotBeEmpty();
+
+        await viewModel.ClearImportedStatesCommand.ExecuteAsync(null);
+
+        viewModel.ImportedDmiStateItems.Should().BeEmpty();
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(NeutralSurfaceColor());
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(NeutralSurfaceColor());
+    }
+
+    [Fact]
+    public async Task SourceBackgroundStateShouldNotCompositeOverPreviewBase()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var previewBuilder = new FixedPreviewBuilder();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SparseStateFrameReader(),
+            previewBuilder: previewBuilder,
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.SelectedExplorerState = "a";
+        viewModel.UseSelectedStateAsBaseCommand.Execute(null);
+        await viewModel.BuildPreviewCommand.ExecuteAsync(null);
+
+        viewModel.ToggleImportedStateBackgroundCommand.Execute(viewModel.ImportedDmiStateItems[0]);
+
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("a"));
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 1, 1).Should().Be(System.Windows.Media.Color.FromArgb(0, 0, 0, 0));
+    }
+
+    [Fact]
+    public async Task ImportedStateOpacityShouldScaleOnlyAssignedCanvas()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        // По умолчанию Editable выключен; включаем для "b" вручную
+        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
+
+        var sourceState = viewModel.ImportedDmiStateItems[0];
+        sourceState.OpacityPercent = 50;
+
+        var sourceColor = GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0);
+        sourceColor.A.Should().Be(128);
+        sourceColor.R.Should().Be(SolidStateFrameReader.ColorForState("a").R);
+        sourceColor.G.Should().Be(SolidStateFrameReader.ColorForState("a").G);
+        sourceColor.B.Should().Be(SolidStateFrameReader.ColorForState("a").B);
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("b"));
+
+        sourceState.OpacityPercent = 0;
+
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).Should().Be(System.Windows.Media.Color.FromArgb(0, 0, 0, 0));
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("b"));
+    }
+
+    [Fact]
+    public async Task ImportedStatePlacementAndOrderShouldControlCompositionWithinAssignedCanvas()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b", "c"),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        var first = viewModel.ImportedDmiStateItems[0];
+        var second = viewModel.ImportedDmiStateItems[1];
+        var third = viewModel.ImportedDmiStateItems[2];
+
+        first.IsEditableAssigned = true;
+        second.IsEditableAssigned = false;
+        third.IsEditableAssigned = true;
+        first.PlacementMode = ImportedStatePlacementMode.Overlay;
+        third.PlacementMode = ImportedStatePlacementMode.Overlay;
+        first.Order = 0;
+        third.Order = 5;
+
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("c"));
+
+        first.Order = 10;
+
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("a"));
+
+        viewModel.ToggleImportedStateBackgroundCommand.Execute(first);
+
+        first.IsSourceAssigned.Should().BeTrue();
+        first.IsEditableAssigned.Should().BeTrue();
+        first.PlacementMode.Should().Be(ImportedStatePlacementMode.Background);
+        GetSurfaceColor(viewModel.ActiveTargetSurface!, 0, 0).Should().Be(SolidStateFrameReader.ColorForState("c"));
+    }
+
+    [Fact]
+    public async Task EditableSurfaceMappingShouldUseSourceLayersAsColorSource()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SparseStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        viewModel.ImportedDmiStateItems.Should().HaveCount(2);
+        viewModel.ImportedDmiStateItems[0].StateName.Should().Be("a");
+        viewModel.ImportedDmiStateItems[1].StateName.Should().Be("b");
+
+        // По умолчанию Editable выключен; включаем "b" как визуальный оверлей
+        viewModel.ToggleImportedStateEditableCommand.Execute(viewModel.ImportedDmiStateItems[1]);
+
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.SelectedExplorerState = "idle";
+        viewModel.UseSelectedStateAsBaseCommand.Execute(null);
+        await viewModel.BuildPreviewCommand.ExecuteAsync(null);
+
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+
+        viewModel.ActiveTargetSurface.Should().NotBeNull();
+        var editableSurface = viewModel.ActiveTargetSurface!;
+        var mappedColor = GetSurfaceColor(editableSurface, 2, 2);
+
+        // sourceReferenceImage строится из Source-слоёв (state "a"),
+        // поэтому маппинг читает цвет из state "a", а не из state "b".
+        mappedColor.Should().Be(SolidStateFrameReader.ColorForState("a"));
+    }
+
+    [Fact]
+    public async Task InitializeAsyncShouldRestorePersistedImportedStateAssignments()
+    {
+        var tempRoot = CreateTempDirectory();
+        var dmiPath = Path.Combine(tempRoot, "sprite.dmi");
+        var sourcePath = Path.Combine(tempRoot, "states.dmi");
+        await File.WriteAllTextAsync(dmiPath, "placeholder");
+        await File.WriteAllTextAsync(sourcePath, "placeholder");
+        var settingsRepository = new InMemorySettingsRepository(
+            WorkspaceSettings.Empty with
+            {
+                LastOpenedDmiPath = dmiPath,
+                ImportedStates =
+                [
+                    new WorkspaceImportedStateSettings(
+                        "a",
+                        sourcePath,
+                        "states.dmi",
+                        IsSourceAssigned: true,
+                        IsEditableAssigned: false,
+                        PlacementMode: "Background",
+                        Order: 4,
+                        OpacityPercent: 65),
+                    new WorkspaceImportedStateSettings(
+                        "missing",
+                        Path.Combine(tempRoot, "missing.dmi"),
+                        "missing.dmi",
+                        IsSourceAssigned: false,
+                        IsEditableAssigned: true,
+                        PlacementMode: "Overlay",
+                        Order: 5)
+                ]
+            });
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four, "a", "b"),
+            stateFrameReader: new SolidStateFrameReader());
+
+        await viewModel.InitializeAsync();
+
+        viewModel.ImportedDmiStateItems.Should().HaveCount(2);
+        var restored = viewModel.ImportedDmiStateItems[0];
+        restored.StateName.Should().Be("a");
+        restored.SourcePath.Should().Be(sourcePath);
+        restored.IsSourceAssigned.Should().BeTrue();
+        restored.IsEditableAssigned.Should().BeFalse();
+        restored.PlacementMode.Should().Be(ImportedStatePlacementMode.Background);
+        restored.Order.Should().Be(4);
+        restored.OpacityPercent.Should().Be(65);
+        restored.IsValid.Should().BeTrue();
+        GetSurfaceColor(viewModel.ActiveSourceSurface!, 0, 0).A.Should().Be(166);
+
+        var invalid = viewModel.ImportedDmiStateItems[1];
+        invalid.StateName.Should().Be("missing");
+        invalid.IsValid.Should().BeFalse();
+        invalid.ValidationMessage.Should().Contain("Source DMI file was not found");
+    }
+
+    [Fact]
+    public async Task MergeImportedStatesShouldWarmUpCacheForAllSupportedDirections()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            stateFrameReader: new SolidStateFrameReader(),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+
+        var cacheField = typeof(WorkspaceShellViewModel)
+            .GetField("_importedStateFrameCache", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var cache = (System.Collections.IDictionary)cacheField.GetValue(viewModel)!;
+
+        var sourcePath = "sprite.dmi";
+        var expectedDirections = new[]
+        {
+            SpriteDirection.South,
+            SpriteDirection.North,
+            SpriteDirection.East,
+            SpriteDirection.West
+        };
+
+        foreach (var stateName in new[] { "idle", "blink" })
+        {
+            foreach (var direction in expectedDirections)
+            {
+                var key = (sourcePath, stateName, direction);
+                cache.Contains(key).Should().BeTrue(
+                    $"Cache should contain key for state '{stateName}', direction {direction}");
+            }
+        }
+    }
+
+    [Fact]
+    public async Task EditableSurfaceShouldNotApplyConfigTwiceWhenCompositePreviewExists()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var previewBuilder = new ConfigApplyingPreviewBuilder();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            stateFrameReader: new CoordinateStateFrameReader(),
+            previewBuilder: previewBuilder,
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 0), new PixelCoordinate(0, 0));
+        ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 0), new PixelCoordinate(2, 2));
+
+        viewModel.SelectedExplorerState = "idle";
+        viewModel.UseSelectedStateAsBaseCommand.Execute(null);
+        await viewModel.BuildPreviewCommand.ExecuteAsync(null);
+
+        var sourceSurface = viewModel.ActiveSourceSurface!;
+        var editableSurface = viewModel.ActiveTargetSurface!;
+        var expectedSourceColor = GetSurfaceColor(sourceSurface, 0, 0);
+        var doubleAppliedColor = GetSurfaceColor(sourceSurface, 1, 0);
+
+        GetSurfaceColor(editableSurface, 2, 2).Should().Be(expectedSourceColor);
+        GetSurfaceColor(editableSurface, 2, 2).Should().NotBe(doubleAppliedColor);
     }
 
     [Fact]
@@ -834,6 +1610,30 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.BatchWorkspace.ConfigQueueItems.Should().NotBeEmpty();
         viewModel.BatchResults.Should().NotBeEmpty();
         viewModel.BatchWorkspace.BatchSummary.Should().Contain("processed");
+    }
+
+    [Fact]
+    public async Task BatchWorkspaceShouldTogglePreviewDirectionMode()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: new StubFileDialogService { DmiPath = "sprite.dmi" });
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.BatchWorkspace.ShowPreviewDirectionModeSelector.Should().BeTrue();
+        viewModel.BatchWorkspace.IsSingleDirectionPreviewSelected.Should().BeTrue();
+        viewModel.BatchWorkspace.IsAllDirectionsPreviewSelected.Should().BeFalse();
+
+        viewModel.BatchWorkspace.IsAllDirectionsPreviewSelected = true;
+
+        viewModel.SelectedBatchPreviewDirectionMode.Should().Be(BatchPreviewDirectionMode.All);
+        viewModel.BatchWorkspace.IsSingleDirectionPreviewSelected.Should().BeFalse();
+        viewModel.BatchWorkspace.IsAllDirectionsPreviewSelected.Should().BeTrue();
     }
 
     [Fact]
@@ -1013,6 +1813,7 @@ public sealed class MainWindowViewModelSmokeTests
         IConfigRepository? configRepository = null,
         ILegacyCsvConfigImporter? legacyImporter = null,
         IDmiReader? dmiReader = null,
+        IStateFrameReader? stateFrameReader = null,
         IPreviewBuilder? previewBuilder = null,
         IBatchProcessingService? batchProcessingService = null,
         IFileDialogService? fileDialogService = null,
@@ -1029,7 +1830,7 @@ public sealed class MainWindowViewModelSmokeTests
             new ImportLegacyCsvConfigUseCase(legacyImporter ?? new NullLegacyCsvImporter(), session),
             new LoadDmiFileUseCase(dmiReader ?? new NullDmiReader(), session, workspace),
             new InspectDmiFileUseCase(dmiReader ?? new NullDmiReader()),
-            new ReadStateFrameUseCase(new NullStateFrameReader()),
+            new ReadStateFrameUseCase(stateFrameReader ?? new NullStateFrameReader()),
             new BuildPreviewUseCase(previewBuilder ?? new NullPreviewBuilder(), session),
             new ApplyConfigToDmiBatchUseCase(batchProcessingService ?? new NullBatchProcessingService(), session),
             new UndoChangeUseCase(session),
@@ -1193,8 +1994,17 @@ public sealed class MainWindowViewModelSmokeTests
             Task.FromResult(Result.Failure<DmiAssetInfo>(Errors.NotFound(path)));
     }
 
-    private sealed class SuccessfulDmiReader(SupportedDirectionSet directions) : IDmiReader
+    private sealed class SuccessfulDmiReader : IDmiReader
     {
+        private readonly SupportedDirectionSet _directions;
+        private readonly string[] _stateNames;
+
+        public SuccessfulDmiReader(SupportedDirectionSet directions, params string[] stateNames)
+        {
+            _directions = directions;
+            _stateNames = stateNames;
+        }
+
         public Task<Result<DmiAssetInfo>> LoadAsync(string path, CancellationToken cancellationToken) =>
             Task.FromResult(
                 Result.Success(
@@ -1202,8 +2012,16 @@ public sealed class MainWindowViewModelSmokeTests
                         "sprite",
                         path,
                         new SpriteResolution(4, 4),
-                        directions,
-                        [new DmiStateInfo("idle", 1), new DmiStateInfo("blink", 1)])));
+                        _directions,
+                        ResolveStates(_stateNames))));
+
+        private static DmiStateInfo[] ResolveStates(string[] requestedStateNames)
+        {
+            var names = requestedStateNames.Length == 0
+                ? ["idle", "blink"]
+                : requestedStateNames;
+            return names.Select(static name => new DmiStateInfo(name, 1)).ToArray();
+        }
     }
 
     private sealed class NullPreviewBuilder : IPreviewBuilder
@@ -1223,7 +2041,25 @@ public sealed class MainWindowViewModelSmokeTests
                         BaseImage: image,
                         LandmarkImage: null,
                         OverlayImage: null,
-                        CompositeImage: image)));
+                        CompositeImage: image,
+                        EditableBackingOrigins: BuildBackingOrigins(4, 4))));
+        }
+    }
+
+    private sealed class ConfigApplyingPreviewBuilder : IPreviewBuilder
+    {
+        public Task<Result<PreviewBuildResult>> BuildAsync(PreviewBuildRequest request, CancellationToken cancellationToken)
+        {
+            var image = CreateCoordinateImage(4, 4);
+            var composite = ApplyConfigToImage(image, request.Config, request.Direction);
+            return Task.FromResult(
+                Result.Success(
+                    new PreviewBuildResult(
+                        BaseImage: image,
+                        LandmarkImage: null,
+                        OverlayImage: null,
+                        CompositeImage: composite,
+                        EditableBackingOrigins: BuildBackingOrigins(4, 4))));
         }
     }
 
@@ -1240,16 +2076,80 @@ public sealed class MainWindowViewModelSmokeTests
                         BaseImage: CreateImage(),
                         LandmarkImage: null,
                         OverlayImage: null,
-                        CompositeImage: CreateImage())));
+                        CompositeImage: CreateImage(),
+                        EditableBackingOrigins: BuildBackingOrigins(4, 4))));
         }
 
         private static SpriteImage CreateImage() => new(4, 4, new byte[4 * 4 * 4]);
+    }
+
+    private static Dictionary<PixelCoordinate, PixelCoordinate?> BuildBackingOrigins(int width, int height)
+    {
+        var result = new Dictionary<PixelCoordinate, PixelCoordinate?>(width * height);
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var coordinate = new PixelCoordinate(x, y);
+                result[coordinate] = coordinate;
+            }
+        }
+
+        return result;
     }
 
     private sealed class NullStateFrameReader : IStateFrameReader
     {
         public Task<Result<SpriteImage>> ReadFrameAsync(string dmiPath, string stateName, SpriteDirection direction, CancellationToken cancellationToken) =>
             Task.FromResult(Result.Failure<SpriteImage>(Errors.NotFound(stateName)));
+    }
+
+    private sealed class SolidStateFrameReader : IStateFrameReader
+    {
+        public Task<Result<SpriteImage>> ReadFrameAsync(string dmiPath, string stateName, SpriteDirection direction, CancellationToken cancellationToken)
+        {
+            var color = ColorForState(stateName);
+            var pixels = new byte[4 * 4 * 4];
+            for (var index = 0; index < pixels.Length; index += 4)
+            {
+                pixels[index] = color.R;
+                pixels[index + 1] = color.G;
+                pixels[index + 2] = color.B;
+                pixels[index + 3] = color.A;
+            }
+
+            return Task.FromResult(Result.Success(new SpriteImage(4, 4, pixels)));
+        }
+
+        public static System.Windows.Media.Color ColorForState(string stateName) =>
+            stateName.ToLowerInvariant() switch
+            {
+                "a" => System.Windows.Media.Color.FromArgb(255, 220, 24, 36),
+                "b" => System.Windows.Media.Color.FromArgb(255, 30, 144, 255),
+                "c" => System.Windows.Media.Color.FromArgb(255, 32, 180, 80),
+                _ => System.Windows.Media.Color.FromArgb(255, 180, 180, 180)
+            };
+    }
+
+    private sealed class CoordinateStateFrameReader : IStateFrameReader
+    {
+        public Task<Result<SpriteImage>> ReadFrameAsync(string dmiPath, string stateName, SpriteDirection direction, CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Success(CreateCoordinateImage(4, 4)));
+    }
+
+    private sealed class SparseStateFrameReader : IStateFrameReader
+    {
+        public Task<Result<SpriteImage>> ReadFrameAsync(string dmiPath, string stateName, SpriteDirection direction, CancellationToken cancellationToken)
+        {
+            var color = SolidStateFrameReader.ColorForState(stateName);
+            var pixels = new byte[4 * 4 * 4];
+            pixels[0] = color.R;
+            pixels[1] = color.G;
+            pixels[2] = color.B;
+            pixels[3] = color.A;
+
+            return Task.FromResult(Result.Success(new SpriteImage(4, 4, pixels)));
+        }
     }
 
     private sealed class NullBatchProcessingService : IBatchProcessingService
@@ -1320,4 +2220,42 @@ public sealed class MainWindowViewModelSmokeTests
 
         return new SpriteImage(width, height, pixels);
     }
+
+    private static SpriteImage ApplyConfigToImage(SpriteImage image, SpriteConfig config, SpriteDirection direction)
+    {
+        var pixels = image.RgbaBytes[..];
+        foreach (var mapping in config.GetMappings(direction))
+        {
+            var destinationIndex = ((mapping.Source.Y * image.Width) + mapping.Source.X) * 4;
+            if (mapping.Target is not { } target)
+            {
+                pixels[destinationIndex] = 0;
+                pixels[destinationIndex + 1] = 0;
+                pixels[destinationIndex + 2] = 0;
+                pixels[destinationIndex + 3] = 0;
+                continue;
+            }
+
+            var sourceIndex = ((target.Y * image.Width) + target.X) * 4;
+            pixels[destinationIndex] = image.RgbaBytes[sourceIndex];
+            pixels[destinationIndex + 1] = image.RgbaBytes[sourceIndex + 1];
+            pixels[destinationIndex + 2] = image.RgbaBytes[sourceIndex + 2];
+            pixels[destinationIndex + 3] = image.RgbaBytes[sourceIndex + 3];
+        }
+
+        return new SpriteImage(image.Width, image.Height, pixels);
+    }
+
+    private static System.Windows.Media.Color GetSurfaceColor(EditorSurfaceRenderState surface, int x, int y)
+    {
+        var index = surface.GetIndex(x, y) * 4;
+        return System.Windows.Media.Color.FromArgb(
+            surface.RgbaBytes[index + 3],
+            surface.RgbaBytes[index + 2],
+            surface.RgbaBytes[index + 1],
+            surface.RgbaBytes[index]);
+    }
+
+    private static System.Windows.Media.Color NeutralSurfaceColor() =>
+        System.Windows.Media.Color.FromRgb(244, 239, 231);
 }

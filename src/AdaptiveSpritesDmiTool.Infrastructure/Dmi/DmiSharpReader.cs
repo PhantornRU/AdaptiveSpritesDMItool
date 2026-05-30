@@ -39,7 +39,6 @@ public sealed class DmiSharpReader : IDmiReader
                 var resolution = DmiSharpConversions.InferResolution(dmiFile);
                 var supportedDirections = DmiSharpConversions.InferSupportedDirections(dmiFile.States);
                 var states = dmiFile.States
-                    .OrderBy(static state => state.Name, StringComparer.Ordinal)
                     .Select(static state => new DmiStateInfo(state.Name, state.TotalFrames))
                     .ToArray();
 

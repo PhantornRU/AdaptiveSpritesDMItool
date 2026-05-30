@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Application.Common;
@@ -9,8 +10,16 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace AdaptiveSpritesDmiTool.Infrastructure.Preview;
 
-public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
+public sealed class DmiSharpPreviewBuilder : IPreviewBuilder, IDisposable
 {
+    /// <summary>
+    /// ConcurrentDictionary is used to cache DMIFiles safely across asynchronous preview builds and concurrent UI requests.
+    /// IDisposable is implemented to ensure manual release of unmanaged resources held by DMIFile objects.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, DmiCacheEntry> _dmiCache = new();
+
+    private readonly record struct DmiCacheEntry(DMIFile File, DateTime LastWriteTimeUtc, long Length);
+
     public async Task<Result<PreviewBuildResult>> BuildAsync(PreviewBuildRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -43,7 +52,8 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                using var dmiFile = new DMIFile(sourcePath);
+                var dmiFile = GetOrOpenFile(sourcePath);
+
                 var baseState = FindState(dmiFile, request.Selection.BaseState);
                 if (baseState is null)
                 {
@@ -58,7 +68,11 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
 
                 using var originalBase = baseFrame.Clone();
                 using var transformedBase = baseFrame.Clone();
-                ApplyConfigToFrame(transformedBase, baseFrame, request.Config, ResolveDirection(baseState, request.Direction));
+                var editableBackingOrigins = ApplyConfigToFrame(
+                    transformedBase,
+                    baseFrame,
+                    request.Config,
+                    ResolveDirection(baseState, request.Direction));
 
                 using var landmarkFrame = ReadOptionalFrame(dmiFile, request.Selection.LandmarkState, request.Direction, transformedBase.Width, transformedBase.Height);
                 using var overlayFrame = ReadOptionalFrame(dmiFile, request.Selection.OverlayState, request.Direction, transformedBase.Width, transformedBase.Height);
@@ -68,7 +82,8 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
                     ToSpriteImage(originalBase),
                     landmarkFrame is null ? null : ToSpriteImage(landmarkFrame),
                     overlayFrame is null ? null : ToSpriteImage(overlayFrame),
-                    ToSpriteImage(composite));
+                    ToSpriteImage(composite),
+                    editableBackingOrigins);
 
                 return Result.Success(result);
             }, cancellationToken);
@@ -138,7 +153,7 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
             : availableDirections[0];
     }
 
-    private static void ApplyConfigToFrame(
+    private static Dictionary<PixelCoordinate, PixelCoordinate?> ApplyConfigToFrame(
         Image<Rgba32> targetFrame,
         Image<Rgba32> sourceFrame,
         SpriteConfig config,
@@ -146,6 +161,7 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
     {
         var mappings = config.GetMappings(DmiSharpConversions.ToDomainDirection(direction))
             .ToDictionary(static mapping => mapping.Source, static mapping => mapping.Target);
+        var editableBackingOrigins = new Dictionary<PixelCoordinate, PixelCoordinate?>(targetFrame.Width * targetFrame.Height);
 
         targetFrame.ProcessPixelRows(accessor =>
         {
@@ -157,8 +173,11 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
                     var coordinate = new PixelCoordinate(x, y);
                     if (!mappings.TryGetValue(coordinate, out var mappedCoordinate))
                     {
+                        editableBackingOrigins[coordinate] = coordinate;
                         continue;
                     }
+
+                    editableBackingOrigins[coordinate] = mappedCoordinate;
 
                     row[x] = mappedCoordinate is null
                         ? default
@@ -166,6 +185,8 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
                 }
             }
         });
+
+        return editableBackingOrigins;
     }
 
     private static Image<Rgba32> ComposeLayers(
@@ -241,5 +262,54 @@ public sealed class DmiSharpPreviewBuilder : IPreviewBuilder
         image.CopyPixelDataTo(pixels);
         var bytes = MemoryMarshal.AsBytes(pixels.AsSpan()).ToArray();
         return new SpriteImage(image.Width, image.Height, bytes);
+    }
+
+    private DMIFile GetOrOpenFile(string path)
+    {
+        var fileInfo = new FileInfo(path);
+        var currentTimestamp = fileInfo.LastWriteTimeUtc;
+        var currentLength = fileInfo.Length;
+
+        // Fast path: cache hit with matching file metadata
+        if (_dmiCache.TryGetValue(path, out var entry) &&
+            entry.LastWriteTimeUtc == currentTimestamp &&
+            entry.Length == currentLength)
+        {
+            return entry.File;
+        }
+
+        // Slow path: stale or missing entry — load fresh and atomically replace
+        var newFile = new DMIFile(path);
+        var newEntry = new DmiCacheEntry(newFile, currentTimestamp, currentLength);
+
+        while (true)
+        {
+            if (_dmiCache.TryGetValue(path, out var existingEntry))
+            {
+                if (_dmiCache.TryUpdate(path, newEntry, existingEntry))
+                {
+                    existingEntry.File.Dispose();
+                    return newEntry.File;
+                }
+                // Another thread changed the entry concurrently; retry
+            }
+            else
+            {
+                if (_dmiCache.TryAdd(path, newEntry))
+                {
+                    return newEntry.File;
+                }
+                // Another thread added an entry concurrently; retry to verify freshness
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        foreach (var entry in _dmiCache.Values)
+        {
+            entry.File.Dispose();
+        }
+        _dmiCache.Clear();
     }
 }

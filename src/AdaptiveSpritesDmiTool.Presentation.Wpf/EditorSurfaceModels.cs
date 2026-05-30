@@ -50,9 +50,8 @@ public enum BottomWorkspaceTab
 
 public enum ImportedStatePlacementMode
 {
-    None = 0,
-    Background = 1,
-    Overlay = 2
+    Background = 0,
+    Overlay = 1
 }
 
 public sealed partial class PixelCellViewModel : ObservableObject
@@ -112,6 +111,49 @@ public sealed partial class DirectionTileViewModel : ObservableObject
     private bool isActive;
 }
 
+public sealed partial class EditorDirectionCanvasViewModel : ObservableObject
+{
+    public EditorDirectionCanvasViewModel(
+        SpriteDirection direction,
+        EditorSurfaceRenderState? surface,
+        bool isActive,
+        EditorSurfaceRenderState? overlaySurface = null)
+    {
+        Direction = direction;
+        Surface = surface;
+        OverlaySurface = overlaySurface;
+        this.isActive = isActive;
+    }
+
+    public SpriteDirection Direction { get; }
+
+    public string Label => Direction switch
+    {
+        SpriteDirection.South => "SOUTH",
+        SpriteDirection.North => "NORTH",
+        SpriteDirection.East => "EAST",
+        SpriteDirection.West => "WEST",
+        SpriteDirection.SouthEast => "SOUTH EAST",
+        SpriteDirection.SouthWest => "SOUTH WEST",
+        SpriteDirection.NorthEast => "NORTH EAST",
+        SpriteDirection.NorthWest => "NORTH WEST",
+        _ => Direction.ToString().ToUpperInvariant()
+    };
+
+    public EditorSurfaceRenderState? Surface { get; }
+
+    public EditorSurfaceRenderState? OverlaySurface { get; }
+
+    [ObservableProperty]
+    private bool isActive;
+
+    [ObservableProperty]
+    private PixelAreaBounds? _transformedSelectedAreaBounds;
+
+    [ObservableProperty]
+    private PixelCoordinate? _transformedSelectedTargetCoordinate;
+}
+
 public sealed class MappingRowViewModel(PixelMapping mapping)
 {
     public PixelCoordinate Editable { get; } = mapping.Source;
@@ -152,14 +194,23 @@ public sealed class NavigationRailItemViewModel : ObservableObject
     {
         _shell = shell;
         Section = section;
-        Label = label;
+        LabelFallback = label;
         IconSymbol = iconSymbol;
         _isAvailable = isAvailable;
     }
 
     public ShellSectionKind Section { get; }
 
-    public string Label { get; }
+    public string Label => Section switch
+    {
+        ShellSectionKind.Start => App.Text("Text.Tab.Start", LabelFallback),
+        ShellSectionKind.Editor => App.Text("Text.Tab.Editor", LabelFallback),
+        ShellSectionKind.Batch => App.Text("Text.Tab.Data", LabelFallback),
+        ShellSectionKind.Settings => App.Text("Text.Tab.Settings", LabelFallback),
+        _ => LabelFallback
+    };
+
+    private string LabelFallback { get; }
 
     public string IconSymbol { get; }
 
@@ -171,6 +222,7 @@ public sealed class NavigationRailItemViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsAvailable));
         OnPropertyChanged(nameof(IsSelected));
+        OnPropertyChanged(nameof(Label));
     }
 }
 
@@ -264,22 +316,30 @@ public sealed partial class EditorAssetItemViewModel : ObservableObject
 public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
 {
     private string orderText = string.Empty;
+    private string opacityText = string.Empty;
 
     public ImportedDmiStateItemViewModel(
         string stateName,
         string sourcePath,
         string sourceFileLabel,
         BitmapSource? previewImage,
+        bool isSourceAssigned,
+        bool isEditableAssigned,
         ImportedStatePlacementMode placementMode,
-        int order)
+        int order,
+        int opacityPercent = 100)
     {
         StateName = stateName;
         this.sourcePath = sourcePath;
         this.sourceFileLabel = sourceFileLabel;
         this.previewImage = previewImage;
+        this.isSourceAssigned = isSourceAssigned;
+        this.isEditableAssigned = isEditableAssigned;
         this.placementMode = placementMode;
         this.order = order;
+        this.opacityPercent = Math.Clamp(opacityPercent, 0, 100);
         orderText = order.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        opacityText = this.opacityPercent.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public string StateName { get; }
@@ -300,11 +360,23 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
     private string validationMessage = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAssignedToAnySurface))]
+    private bool isSourceAssigned;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAssignedToAnySurface))]
+    private bool isEditableAssigned;
+
+    [ObservableProperty]
     private ImportedStatePlacementMode placementMode;
 
     [NotifyPropertyChangedFor(nameof(OrderText))]
     [ObservableProperty]
     private int order;
+
+    [NotifyPropertyChangedFor(nameof(OpacityText))]
+    [ObservableProperty]
+    private int opacityPercent = 100;
 
     public string OrderText
     {
@@ -327,9 +399,39 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
         }
     }
 
+    public string OpacityText
+    {
+        get => opacityText;
+        set
+        {
+            value ??= string.Empty;
+            if (!SetProperty(ref opacityText, value))
+            {
+                return;
+            }
+
+            var normalizedInput = value.Trim().TrimEnd('%');
+            if (!int.TryParse(normalizedInput, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+            {
+                return;
+            }
+
+            parsed = Math.Clamp(parsed, 0, 100);
+            if (parsed != OpacityPercent)
+            {
+                OpacityPercent = parsed;
+                return;
+            }
+
+            NormalizeOpacityText(parsed);
+        }
+    }
+
     public bool IsBackgroundAssigned => PlacementMode == ImportedStatePlacementMode.Background;
 
     public bool IsOverlayAssigned => PlacementMode == ImportedStatePlacementMode.Overlay;
+
+    public bool IsAssignedToAnySurface => IsSourceAssigned || IsEditableAssigned;
 
     partial void OnOrderChanged(int value)
     {
@@ -341,10 +443,32 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
         }
     }
 
+    partial void OnOpacityPercentChanged(int value)
+    {
+        var normalizedValue = Math.Clamp(value, 0, 100);
+        if (normalizedValue != value)
+        {
+            OpacityPercent = normalizedValue;
+            return;
+        }
+
+        NormalizeOpacityText(normalizedValue);
+    }
+
     partial void OnPlacementModeChanged(ImportedStatePlacementMode value)
     {
         OnPropertyChanged(nameof(IsBackgroundAssigned));
         OnPropertyChanged(nameof(IsOverlayAssigned));
+    }
+
+    private void NormalizeOpacityText(int value)
+    {
+        var normalized = value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (!string.Equals(opacityText, normalized, StringComparison.Ordinal))
+        {
+            opacityText = normalized;
+            OnPropertyChanged(nameof(OpacityText));
+        }
     }
 }
 

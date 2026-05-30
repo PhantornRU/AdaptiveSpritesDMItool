@@ -46,6 +46,12 @@ public enum WorkspaceThemeMode
     Warm = 2
 }
 
+public enum WorkspaceLanguage
+{
+    English = 0,
+    Russian = 1
+}
+
 public partial class WorkspaceShellViewModel
 {
     private readonly double _minEditorZoom = 1.0;
@@ -105,7 +111,7 @@ public partial class WorkspaceShellViewModel
     private string previewTextGrid = "No config grid is available yet.";
 
     [ObservableProperty]
-    private string batchSummary = "Batch processing is idle.";
+    private string batchSummary = App.Text("Text.Batch.ProcessingIdle", "Batch processing is idle.");
 
     [ObservableProperty]
     private string batchCurrentFile = string.Empty;
@@ -156,7 +162,13 @@ public partial class WorkspaceShellViewModel
     private BatchStateStripItemViewModel? selectedBatchStateStripItem;
 
     [ObservableProperty]
+    private BatchPreviewDirectionMode selectedBatchPreviewDirectionMode = BatchPreviewDirectionMode.Single;
+
+    [ObservableProperty]
     private WorkspaceThemeMode selectedThemeMode = WorkspaceThemeMode.Dark;
+
+    [ObservableProperty]
+    private WorkspaceLanguage selectedLanguage = WorkspaceLanguage.English;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
@@ -224,9 +236,18 @@ public partial class WorkspaceShellViewModel
     private EditorSurfaceRenderState? activeTargetSurface;
 
     [ObservableProperty]
+    private int editorSurfaceGridRows = 1;
+
+    [ObservableProperty]
+    private int editorSurfaceGridColumns = 1;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSourceReferenceDimmed))]
+    [NotifyPropertyChangedFor(nameof(ShowSourceViewportPane))]
     private EditorTool selectedEditorTool = EditorTool.Single;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowAllDirectionDisplayPicker))]
     private DirectionScope selectedDirectionScope = DirectionScope.Single;
 
     [ObservableProperty]
@@ -279,6 +300,7 @@ public partial class WorkspaceShellViewModel
     [NotifyPropertyChangedFor(nameof(ShowCompactCanvasHeader))]
     [NotifyPropertyChangedFor(nameof(ShowStatesRail))]
     [NotifyPropertyChangedFor(nameof(ShowSingleStateStrip))]
+    [NotifyPropertyChangedFor(nameof(ShowAllDirectionDisplayPicker))]
     [NotifyPropertyChangedFor(nameof(UseHorizontalDirectionsStrip))]
     [NotifyPropertyChangedFor(nameof(UseVerticalDirectionsRail))]
     [NotifyPropertyChangedFor(nameof(HasDirectionSelector))]
@@ -305,6 +327,21 @@ public partial class WorkspaceShellViewModel
 
     [ObservableProperty]
     private bool showTextGrid = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowSourceViewportPane))]
+    private bool hideInactiveSourceCanvases = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UseFittedDirectionViewportLayout))]
+    [NotifyPropertyChangedFor(nameof(UseScrollableDirectionViewportLayout))]
+    private bool fitMultipleDirectionCanvasesToViewport = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowSourceViewportPane))]
+    [NotifyPropertyChangedFor(nameof(UseFittedDirectionViewportLayout))]
+    [NotifyPropertyChangedFor(nameof(UseScrollableDirectionViewportLayout))]
+    private bool hasMultipleDirectionViewportSurfaces;
 
     [ObservableProperty]
     private int directionMatrixColumns = 2;
@@ -337,6 +374,15 @@ public partial class WorkspaceShellViewModel
     private int navigatorSnapshotVersion;
 
     public ObservableCollection<DirectionNavigatorItemViewModel> DirectionNavigatorItems { get; } = [];
+
+    public IReadOnlyList<DirectionNavigatorItemViewModel> DirectionDisplaySelectorItems =>
+        OrderViewportDirections(DirectionNavigatorItems.Select(static item => item.Direction))
+            .Select(direction => DirectionNavigatorItems.Single(item => item.Direction == direction))
+            .ToArray();
+
+    public ObservableCollection<EditorDirectionCanvasViewModel> SourceViewportSurfaces { get; } = [];
+
+    public ObservableCollection<EditorDirectionCanvasViewModel> TargetViewportSurfaces { get; } = [];
 
     public ObservableCollection<EditorAssetItemViewModel> EditorAssetItems { get; } = [];
 
@@ -375,6 +421,16 @@ public partial class WorkspaceShellViewModel
 
     public bool ShowOverlayCompareLayer => IsOverlayCompareMode && !IsFocusMode;
 
+    public bool IsSourceReferenceDimmed => SelectedEditorTool is not EditorTool.Single and not EditorTool.Fill;
+
+    public bool ShowSourceViewportPane =>
+        !HideInactiveSourceCanvases || !HasMultipleDirectionViewportSurfaces || !IsSourceReferenceDimmed;
+
+    public bool UseFittedDirectionViewportLayout =>
+        FitMultipleDirectionCanvasesToViewport && HasMultipleDirectionViewportSurfaces;
+
+    public bool UseScrollableDirectionViewportLayout => !UseFittedDirectionViewportLayout;
+
     public bool ShowEditorLeftRail => !IsFocusMode;
 
     public bool ShowStateLayersPanel => !IsFocusMode;
@@ -384,6 +440,8 @@ public partial class WorkspaceShellViewModel
     public bool ShowDirectionsInSidebar => HasDirectionSelector && !IsFocusMode;
 
     public bool ShowRightDirectionStrip => HasDirectionSelector && !IsFocusMode;
+
+    public bool ShowAllDirectionDisplayPicker => SelectedDirectionScope == DirectionScope.All && HasDirectionSelector && !IsFocusMode;
 
     public bool ShowBottomStatusBar => !IsFocusMode;
 

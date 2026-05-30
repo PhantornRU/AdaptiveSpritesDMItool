@@ -2,15 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch AdaptiveSpritesDmiTool WPF",
-      "type": "coreclr",
+      "name": "Launch AdaptiveSpritesDmiTool WPF (.NET)",
+      "type": "dotnet",
       "request": "launch",
-      "preLaunchTask": "prepare-wpf-debug-run",
-      "program": "${workspaceFolder}/.vscode/.debug/current/AdaptiveSpritesDmiTool.Presentation.Wpf.dll",
-      "cwd": "${workspaceFolder}/.vscode/.debug/current",
-      "stopAtEntry": false,
-      "console": "internalConsole",
-      "justMyCode": true
+      "projectPath": "${workspaceFolder}/src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj"
     }
   ]
 }

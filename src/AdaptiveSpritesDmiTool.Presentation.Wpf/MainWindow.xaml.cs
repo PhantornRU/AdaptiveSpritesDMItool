@@ -248,7 +248,7 @@ public partial class MainWindow : Window
 
     private void SourceSurface_MouseLeave(object sender, MouseEventArgs e) => ViewModel.HandleSourceSurfacePointerLeave();
 
-    private void TargetSurface_MouseLeave(object sender, MouseEventArgs e) => ViewModel.HandleSourceSurfacePointerLeave();
+    private void TargetSurface_MouseLeave(object sender, MouseEventArgs e) => ViewModel.HandleTargetSurfacePointerLeave();
 
     private void SourceViewportScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         => SynchronizeViewportScroll(SourceViewportScrollViewer, EditableViewportScrollViewer, e);
@@ -258,10 +258,32 @@ public partial class MainWindow : Window
 
     private void TargetSurface_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (TryCreateSurfaceCell(sender, e.GetPosition((IInputElement)sender), out var cell))
+        if (sender is not EditorSurfaceControl control)
         {
-            ViewModel.HandleTargetCellPointerUp(cell);
-            e.Handled = true;
+            return;
+        }
+
+        try
+        {
+            if (TryCreateSurfaceCell(sender, e.GetPosition(control), out var cell))
+            {
+                ViewModel.HandleTargetCellPointerUp(cell);
+                e.Handled = true;
+                return;
+            }
+
+            // Mouse released outside pixel grid during an active drag.
+            // Complete the drag using the last hovered coordinate from the ViewModel.
+            if (control.Surface is { } surface
+                && ViewModel.EditableHoveredCoordinate is { } lastCoord)
+            {
+                ViewModel.HandleTargetCellPointerUp(new PixelCellViewModel(surface.Direction, lastCoord.X, lastCoord.Y));
+                e.Handled = true;
+            }
+        }
+        finally
+        {
+            control.ReleaseMouseCapture();
         }
     }
 
@@ -270,6 +292,27 @@ public partial class MainWindow : Window
         if (TryCreateSurfaceCell(sender, e.GetPosition((IInputElement)sender), out var cell))
         {
             ViewModel.HandleTargetCellPointerDown(cell);
+            ((EditorSurfaceControl)sender).CaptureMouse();
+            e.Handled = true;
+        }
+    }
+
+    private void TargetSurface_LostMouseCapture(object sender, MouseEventArgs e)
+    {
+        ViewModel.HandleTargetSurfacePointerLeave();
+    }
+
+    private void DirectionNavigatorItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (ViewModel.SelectedDirectionScope != DirectionScope.All)
+        {
+            return;
+        }
+
+        if (sender is FrameworkElement { DataContext: DirectionNavigatorItemViewModel item } &&
+            ViewModel.ToggleDisplayedDirectionCommand.CanExecute(item.Direction))
+        {
+            ViewModel.ToggleDisplayedDirectionCommand.Execute(item.Direction);
             e.Handled = true;
         }
     }

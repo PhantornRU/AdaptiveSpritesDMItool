@@ -18,8 +18,9 @@ public sealed class EditorSurfaceRenderState(
     SpriteDirection direction,
     int width,
     int height,
-    Color[] fillColors,
-    string[] captions)
+    byte[] rgbaBytes,
+    string[] captions,
+    IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?>? editableBackingOrigins = null)
 {
     public const double BaseCellSize = 5d;
 
@@ -29,9 +30,12 @@ public sealed class EditorSurfaceRenderState(
 
     public int Height { get; } = height;
 
-    public IReadOnlyList<Color> FillColors { get; } = fillColors;
+    public byte[] RgbaBytes { get; } = rgbaBytes;
 
     public IReadOnlyList<string> Captions { get; } = captions;
+
+    public IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?> EditableBackingOrigins { get; } =
+        editableBackingOrigins ?? new Dictionary<PixelCoordinate, PixelCoordinate?>();
 
     public int GetIndex(int x, int y) => (y * Width) + x;
 }

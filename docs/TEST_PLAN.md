@@ -1,8 +1,8 @@
-# Test Plan v2.0
+# Test Plan v2.2
 
 ## Strategy
 
-Проверка v2.0 строится на трех уровнях:
+Проверка v2.2 строится на трех уровнях:
 
 - unit tests для Domain invariants, Application use cases и WPF shell view models;
 - integration tests для JSON persistence, CSV import, DMI adapters, preview, settings и batch behavior;
@@ -23,6 +23,7 @@
 - mapping operations
 - undo/redo и grouped editor mutations
 - workspace-settings load/save use cases
+- imported DMI state layer assignment, order, opacity, and restore behavior
 - WPF shell smoke checks
 - editor tools and viewport state
 - config queue behavior
@@ -44,21 +45,24 @@
 - overwrite/skip behavior
 - stable input/output reporting
 - workspace settings repository roundtrip and version validation
+- imported state workspace settings validation
 - batch manifest validation and artifacts behavior
 
-## v2.0 Release Validation
+## v2.2 Release Validation
 
-Последняя release-проверка v2.0 прошла:
+Последняя release-проверка v2.2 прошла:
 
 - hidden Unicode scan
 - `dotnet restore`
 - `dotnet build` in Release configuration
 - `dotnet test` in Release configuration
-- 102 unit tests
-- 41 integration tests
+- 127 unit tests
+- 46 integration tests
 - self-contained Windows x64 publish
 - ZIP packaging
+- samples ZIP packaging
 - ZIP smoke expand
+- samples ZIP smoke expand
 - executable existence check
 
 ## Regression Matrix
@@ -90,6 +94,8 @@
 23. deterministic batch ordering
 24. output folder excluded from input enumeration when nested
 25. workspace settings persist across restart
+26. imported DMI states restore across restart
+27. imported DMI layer order and opacity affect Source/Editable composition
 
 ## Manual Smoke
 
@@ -108,13 +114,14 @@ Run after large presentation, release, or packaging changes:
 11. Run batch processing on a small copied input folder.
 12. Verify processed/skipped/failed counts and output files.
 13. Restart the app and verify recent settings were restored.
+14. Add imported DMI state layers, adjust order and opacity, restart, and verify layer settings were restored.
 
 ## Validation Commands
 
 Developer validation:
 
 ```powershell
-dotnet restore AdaptiveSpritesDMItool.sln
+dotnet restore AdaptiveSpritesDMItool.sln -m:1
 dotnet build AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-restore
 dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 ```
@@ -122,7 +129,7 @@ dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 Release validation:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.0 -Runtime win-x64
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.2 -Runtime win-x64
 ```
 
 Docs-only validation:

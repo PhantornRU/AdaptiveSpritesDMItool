@@ -60,6 +60,11 @@ public partial class WorkspaceShellViewModel
                     await ImportLegacyConfigFromPathAsync(recentLegacyCsvPath, navigateToEditor: false, persistSettings: false, cancellationToken);
                 }
 
+                if (HasEditorWorkflow && _restoredImportedStateSettings.Count > 0)
+                {
+                    await RestoreImportedStateItemsAsync(cancellationToken);
+                }
+
                 NavigateToSection(HasEditorWorkflow ? ShellSectionKind.Editor : ShellSectionKind.Start);
                 StatusMessage = HasEditorWorkflow
                     ? "Last workspace restored."
@@ -191,7 +196,7 @@ public partial class WorkspaceShellViewModel
                 if (result.IsFailure)
                 {
                     StatusMessage = result.Error.Message;
-                    BatchSummary = "Batch processing failed.";
+                    BatchSummary = App.Text("Text.Batch.ProcessingFailed", "Batch processing failed.");
                     return;
                 }
 
@@ -204,12 +209,15 @@ public partial class WorkspaceShellViewModel
                 var skippedCount = result.Value.Files.Count(file => file.Status == BatchFileStatus.Skipped);
                 var failedCount = result.Value.Files.Count(file => file.Status == BatchFileStatus.Failed);
                 var cancelledCount = result.Value.Files.Count(file => file.Status == BatchFileStatus.Cancelled);
-                var summaryPrefix = result.Value.WasCancelled ? "Batch cancelled with" : "Batch finished with";
-                BatchSummary =
-                    $"{summaryPrefix} {processedCount} processed, " +
-                    $"{skippedCount} skipped, " +
-                    $"{failedCount} failed, " +
-                    $"{cancelledCount} cancelled.";
+                BatchSummary = PresentationText.Format(
+                    result.Value.WasCancelled ? "Text.Batch.SummaryCancelledFormat" : "Text.Batch.SummaryFinishedFormat",
+                    result.Value.WasCancelled
+                        ? "Batch cancelled with {0} processed, {1} skipped, {2} failed, {3} cancelled."
+                        : "Batch finished with {0} processed, {1} skipped, {2} failed, {3} cancelled.",
+                    processedCount,
+                    skippedCount,
+                    failedCount,
+                    cancelledCount);
                 StatusMessage = BatchSummary;
                 NavigateToSection(ShellSectionKind.Batch);
                 await PersistWorkspaceSettingsAsync(cancellationToken);
@@ -367,55 +375,61 @@ public partial class WorkspaceShellViewModel
     private async Task ClearImportedStatesAsync()
     {
         await RunBusyOperationAsync(
-            async cancellationToken =>
+            cancellationToken =>
             {
-                var loadedAsset = _editorSession.LoadedAsset;
                 ClearImportedStateItems();
-
-                if (loadedAsset is not null)
-                {
-                    await MergeImportedStatesFromAssetAsync(loadedAsset, cancellationToken);
-                    SelectedImportedDmiStateItem = ImportedDmiStateItems
-                        .FirstOrDefault(item => string.Equals(item.StateName, SelectedExplorerState, StringComparison.OrdinalIgnoreCase))
-                        ?? ImportedDmiStateItems.FirstOrDefault(item => string.Equals(item.StateName, "human32x", StringComparison.OrdinalIgnoreCase))
-                        ?? ImportedDmiStateItems.FirstOrDefault();
-                }
-
                 RefreshImportedStateComposition();
-                StatusMessage = loadedAsset is null
-                    ? "Cleared imported states."
-                    : "Cleared added states and restored the primary DMI state pool.";
+                StatusMessage = "Cleared imported states.";
+                return Task.CompletedTask;
             });
     }
 
     [RelayCommand]
-    private Task ToggleImportedStateBackgroundAsync(ImportedDmiStateItemViewModel? item)
+    private void ToggleImportedStateSource(ImportedDmiStateItemViewModel? item)
     {
         if (item is null)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        item.PlacementMode = item.PlacementMode == ImportedStatePlacementMode.Background
-            ? ImportedStatePlacementMode.None
-            : ImportedStatePlacementMode.Background;
-        RequestImportedStateCompositionRefresh(item.PlacementMode != ImportedStatePlacementMode.None);
-        return Task.CompletedTask;
+        item.IsSourceAssigned = !item.IsSourceAssigned;
+        RequestImportedStateCompositionRefresh(item.IsAssignedToAnySurface);
     }
 
     [RelayCommand]
-    private Task ToggleImportedStateOverlayAsync(ImportedDmiStateItemViewModel? item)
+    private void ToggleImportedStateEditable(ImportedDmiStateItemViewModel? item)
     {
         if (item is null)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        item.PlacementMode = item.PlacementMode == ImportedStatePlacementMode.Overlay
-            ? ImportedStatePlacementMode.None
-            : ImportedStatePlacementMode.Overlay;
-        RequestImportedStateCompositionRefresh(item.PlacementMode != ImportedStatePlacementMode.None);
-        return Task.CompletedTask;
+        item.IsEditableAssigned = !item.IsEditableAssigned;
+        RequestImportedStateCompositionRefresh(item.IsAssignedToAnySurface);
+    }
+
+    [RelayCommand]
+    private void ToggleImportedStateBackground(ImportedDmiStateItemViewModel? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        item.PlacementMode = ImportedStatePlacementMode.Background;
+        RequestImportedStateCompositionRefresh(item.IsAssignedToAnySurface);
+    }
+
+    [RelayCommand]
+    private void ToggleImportedStateOverlay(ImportedDmiStateItemViewModel? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        item.PlacementMode = ImportedStatePlacementMode.Overlay;
+        RequestImportedStateCompositionRefresh(item.IsAssignedToAnySurface);
     }
 
     [RelayCommand]
@@ -486,6 +500,31 @@ public partial class WorkspaceShellViewModel
         }
 
         SelectedDirection = direction;
+    }
+
+    [RelayCommand]
+    private void ToggleDisplayedDirection(SpriteDirection direction)
+    {
+        if (SelectedDirectionScope != DirectionScope.All)
+        {
+            SelectedDirection = direction;
+            return;
+        }
+
+        if (!_allDirectionDisplaySelection.Add(direction))
+        {
+            _allDirectionDisplaySelection.Remove(direction);
+        }
+
+        SelectedDirection = direction;
+        RefreshEditorSurface();
+        StatusMessage = _allDirectionDisplaySelection.Count switch
+        {
+            0 => "All directions are displayed.",
+            1 => $"Only {direction} is displayed in the large editor canvas.",
+            2 => "Two selected directions are displayed in the large editor canvas.",
+            _ => "All directions are displayed because three or more directions are selected."
+        };
     }
 
     [RelayCommand]
@@ -632,6 +671,16 @@ public partial class WorkspaceShellViewModel
 
     partial void OnSelectedDirectionScopeChanged(DirectionScope value)
     {
+        _allDirectionDisplaySelection.Clear();
+
+        if (value == DirectionScope.All && AvailableDirections.Count > 0)
+        {
+            foreach (var direction in AvailableDirections)
+            {
+                _allDirectionDisplaySelection.Add(direction);
+            }
+        }
+
         EditorStatus = value switch
         {
             DirectionScope.Single => "Edits affect only the active direction.",
@@ -686,6 +735,18 @@ public partial class WorkspaceShellViewModel
 
     partial void OnShowTextGridChanged(bool value) => RefreshActivePreviewPresentation();
 
+    partial void OnHideInactiveSourceCanvasesChanged(bool value)
+    {
+        RefreshEditorSurface();
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    partial void OnFitMultipleDirectionCanvasesToViewportChanged(bool value)
+    {
+        RefreshEditorSurface();
+        PersistWorkspaceSettingsInBackground();
+    }
+
     partial void OnSelectedEditorViewportModeChanged(EditorViewportMode value)
     {
         RefreshEditorSurface();
@@ -699,6 +760,12 @@ public partial class WorkspaceShellViewModel
     partial void OnSelectedThemeModeChanged(WorkspaceThemeMode value)
     {
         App.ApplyThemeMode(value);
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    partial void OnSelectedLanguageChanged(WorkspaceLanguage value)
+    {
+        App.ApplyLanguage(value);
         PersistWorkspaceSettingsInBackground();
     }
 
@@ -757,6 +824,11 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        RequestBatchQuickPreviewRefresh();
+    }
+
+    partial void OnSelectedBatchPreviewDirectionModeChanged(BatchPreviewDirectionMode value)
+    {
         RequestBatchQuickPreviewRefresh();
     }
 
