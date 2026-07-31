@@ -133,6 +133,108 @@ public sealed class SpriteDocumentInfrastructureTests : IDisposable
             .Should().Equal((1, 2), (3, 4));
     }
 
+    [Fact]
+    public async Task DmiImportShouldPreserveOrderedAnimationGraphAndEnforceStateAndFrameLimits()
+    {
+        var sourcePath = Path.Combine(_tempDirectory, "animated-source.dmi");
+        using var idle = TestDmiFactory.CreateState(
+            "idle",
+            DirectionDepth.One,
+            2,
+            2,
+            static _ => TestDmiFactory.CreateImage(2, 2, static (_, _) => new Rgba32(1, 2, 3, 255)));
+        using var walk = TestDmiFactory.CreateState(
+            "walk",
+            DirectionDepth.Four,
+            2,
+            2,
+            2,
+            static (direction, frameIndex) => TestDmiFactory.CreateImage(
+                2,
+                2,
+                (_, _) => new Rgba32((byte)direction, (byte)frameIndex, 9, 255)));
+        walk.SetDelay([1.5, 2.5], 0, 1);
+        walk.SetLoop(3);
+        walk.SetRewind(true);
+        walk.SetMovement(true);
+        TestDmiFactory.CreateDmi(sourcePath, idle, walk);
+
+        using (var reopenedSource = new DMIFile(sourcePath))
+        {
+            reopenedSource.States.Select(static state => state.Name).Should().Equal("idle", "walk");
+            var reopenedWalk = reopenedSource.States.ElementAt(1);
+            reopenedWalk.Data.Frames.Should().Be(2);
+            reopenedWalk.Data.Delay.Should().Equal(1.5, 2.5);
+        }
+
+        var probe = new AssetProbeService();
+        var importer = new SpriteDocumentImporter(probe);
+        var result = await importer.ImportAsync(
+            new SpriteDocumentImportRequest(
+                [sourcePath],
+                "animated",
+                SpriteDocumentImportKind.NativeDmi),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue(result.IsFailure ? result.Error.Message : string.Empty);
+        result.Value.States.Select(static state => state.Name).Should().Equal("idle", "walk");
+        var importedWalk = result.Value.States[1];
+        importedWalk.DirectionDepth.Should().Be(SpriteDirectionDepth.Four);
+        importedWalk.FramesPerDirection.Should().Be(2);
+        importedWalk.Frames.Should().HaveCount(8);
+        importedWalk.Animation.Delays.Should().Equal(1.5, 2.5);
+        importedWalk.Animation.Loop.Should().Be(3);
+        importedWalk.Animation.Rewind.Should().BeTrue();
+        importedWalk.Animation.Movement.Should().BeTrue();
+
+        var outputPath = Path.Combine(_tempDirectory, "animated-export.dmi");
+        var repository = new SpriteDocumentSidecarRepository(probe);
+        var exportResult = await new SpriteDocumentExporter(
+                new SpriteFrameSource(probe),
+                probe,
+                repository)
+            .ExportAsync(
+                new SpriteDocumentExportRequest(
+                    result.Value,
+                    outputPath,
+                    SpriteDocumentExportFormat.Dmi,
+                    OverwritePolicy.OverwriteExisting),
+                CancellationToken.None);
+
+        exportResult.IsSuccess.Should().BeTrue(exportResult.IsFailure ? exportResult.Error.Message : string.Empty);
+        using (var reopenedExport = new DMIFile(outputPath))
+        {
+            reopenedExport.States.Select(static state => state.Name).Should().Equal("idle", "walk");
+            var exportedWalk = reopenedExport.States.ElementAt(1);
+            exportedWalk.Dirs.Should().Be(4);
+            exportedWalk.Frames.Should().Be(2);
+            exportedWalk.Data.Delay.Should().Equal(1.5, 2.5);
+            exportedWalk.Data.Loop.Should().Be(3);
+            exportedWalk.Data.Rewind.Should().BeTrue();
+            exportedWalk.Data.Movement.Should().BeTrue();
+        }
+
+        var stateLimitResult = await importer.ImportAsync(
+            new SpriteDocumentImportRequest(
+                [sourcePath],
+                "state-limit",
+                SpriteDocumentImportKind.NativeDmi,
+                Limits: AssetImportLimits.Default with { MaximumStates = 1 }),
+            CancellationToken.None);
+        stateLimitResult.IsFailure.Should().BeTrue();
+        stateLimitResult.Error.Message.Should().Contain("state limit");
+
+        var frameLimitResult = await importer.ImportAsync(
+            new SpriteDocumentImportRequest(
+                [sourcePath],
+                "frame-limit",
+                SpriteDocumentImportKind.NativeDmi,
+                Limits: AssetImportLimits.Default with { MaximumFramesOrCells = 8 }),
+            CancellationToken.None);
+        frameLimitResult.IsFailure.Should().BeTrue();
+        frameLimitResult.Error.Message.Should().Contain("frame limit");
+    }
+
     private readonly string _tempDirectory = Path.Combine(
         Path.GetTempPath(),
         "AdaptiveSpritesDmiTool.DocumentTests",
@@ -186,15 +288,167 @@ public sealed class SpriteDocumentInfrastructureTests : IDisposable
     }
 
     [Fact]
-    public async Task SpriteSheetImportShouldSliceInRowsAndReadFramesLazily()
+    public async Task ProbeShouldRejectCorruptAndOversizedEncodedContentBeforeImport()
+    {
+        var corruptPath = Path.Combine(_tempDirectory, "corrupt.png");
+        await File.WriteAllBytesAsync(corruptPath, [137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3, 4]);
+        var probe = new AssetProbeService();
+
+        var corruptResult = await probe.ProbeAsync(
+            corruptPath,
+            AssetImportLimits.Default,
+            CancellationToken.None);
+
+        corruptResult.IsFailure.Should().BeTrue();
+        corruptResult.Error.Code.Should().Be("validation");
+
+        var validPath = Path.Combine(_tempDirectory, "encoded-limit.png");
+        await SaveSolidPngAsync(validPath, new Rgba32(1, 2, 3, 255));
+        var encodedLength = new FileInfo(validPath).Length;
+        var oversizedResult = await probe.ProbeAsync(
+            validPath,
+            AssetImportLimits.Default with { MaximumEncodedBytes = encodedLength - 1 },
+            CancellationToken.None);
+
+        oversizedResult.IsFailure.Should().BeTrue();
+        oversizedResult.Error.Code.Should().Be("validation");
+        oversizedResult.Error.Message.Should().Contain("encoded-size limit");
+    }
+
+    [Fact]
+    public async Task RasterSequenceShouldPreserveDirectionAndFrameOrderThroughManagedExport()
+    {
+        SpriteDirection[] directionOrder =
+            [SpriteDirection.East, SpriteDirection.South, SpriteDirection.West, SpriteDirection.North];
+        var colors = Enumerable.Range(0, 8)
+            .Select(index => new Rgba32((byte)(10 + index), (byte)(30 + index), (byte)(50 + index), 255))
+            .ToArray();
+        var sourcePaths = new List<string>(colors.Length);
+        for (var index = 0; index < colors.Length; index++)
+        {
+            var sourcePath = Path.Combine(_tempDirectory, $"sequence-{index:D2}.png");
+            await SaveSolidPngAsync(sourcePath, colors[index]);
+            sourcePaths.Add(sourcePath);
+        }
+
+        var probe = new AssetProbeService();
+        var importer = new SpriteDocumentImporter(probe);
+        var importResult = await importer.ImportAsync(
+            new SpriteDocumentImportRequest(
+                sourcePaths,
+                "sequence",
+                SpriteDocumentImportKind.RasterSequence,
+                StateName: "walk",
+                DirectionDepth: SpriteDirectionDepth.Four,
+                DirectionOrder: directionOrder),
+            CancellationToken.None);
+
+        importResult.IsSuccess.Should().BeTrue();
+        importResult.Value.States.Single().FramesPerDirection.Should().Be(2);
+        var combinedBudgetResult = await importer.ImportAsync(
+            new SpriteDocumentImportRequest(
+                sourcePaths,
+                "sequence-budget",
+                SpriteDocumentImportKind.RasterSequence,
+                StateName: "walk",
+                DirectionDepth: SpriteDirectionDepth.Four,
+                DirectionOrder: directionOrder,
+                Limits: AssetImportLimits.Default with { MaximumDecodedPixels = 4 }),
+            CancellationToken.None);
+        combinedBudgetResult.IsFailure.Should().BeTrue();
+        combinedBudgetResult.Error.Message.Should().Contain("Combined decoded sources exceed");
+
+        var frameSource = new SpriteFrameSource(probe);
+        for (var directionIndex = 0; directionIndex < directionOrder.Length; directionIndex++)
+        {
+            for (var frameIndex = 0; frameIndex < 2; frameIndex++)
+            {
+                var frame = await frameSource.ReadAsync(
+                    new SpriteFrameReadRequest(
+                        importResult.Value,
+                        "walk",
+                        directionOrder[directionIndex],
+                        frameIndex),
+                    CancellationToken.None);
+                frame.IsSuccess.Should().BeTrue();
+                ReadPixel(frame.Value, 0, 0).Should().Be(colors[directionIndex * 2 + frameIndex]);
+            }
+        }
+
+        var outputDirectory = Path.Combine(_tempDirectory, "sequence-export");
+        var repository = new SpriteDocumentSidecarRepository(probe);
+        var exporter = new SpriteDocumentExporter(frameSource, probe, repository);
+        var exportResult = await exporter.ExportAsync(
+            new SpriteDocumentExportRequest(
+                importResult.Value,
+                outputDirectory,
+                SpriteDocumentExportFormat.PngSequence,
+                OverwritePolicy.OverwriteExisting),
+            CancellationToken.None);
+
+        exportResult.IsSuccess.Should().BeTrue();
+        Directory.GetFiles(outputDirectory, "*.png", SearchOption.AllDirectories).Should().HaveCount(8);
+        var firstExport = await SnapshotDirectoryAsync(outputDirectory);
+        var repeatedExport = await exporter.ExportAsync(
+            new SpriteDocumentExportRequest(
+                importResult.Value,
+                outputDirectory,
+                SpriteDocumentExportFormat.PngSequence,
+                OverwritePolicy.OverwriteExisting),
+            CancellationToken.None);
+        repeatedExport.IsSuccess.Should().BeTrue();
+        var secondExport = await SnapshotDirectoryAsync(outputDirectory);
+        secondExport.Keys.Should().Equal(firstExport.Keys);
+        foreach (var relativePath in firstExport.Keys)
+        {
+            secondExport[relativePath].Should().Equal(firstExport[relativePath]);
+        }
+
+        var reloadResult = await repository.LoadAsync(
+            new SpriteDocumentLoadRequest(exportResult.Value.SidecarPath!),
+            CancellationToken.None);
+        reloadResult.IsSuccess.Should().BeTrue();
+        for (var directionIndex = 0; directionIndex < directionOrder.Length; directionIndex++)
+        {
+            for (var frameIndex = 0; frameIndex < 2; frameIndex++)
+            {
+                var frame = await frameSource.ReadAsync(
+                    new SpriteFrameReadRequest(
+                        reloadResult.Value,
+                        "walk",
+                        directionOrder[directionIndex],
+                        frameIndex),
+                    CancellationToken.None);
+                frame.IsSuccess.Should().BeTrue();
+                ReadPixel(frame.Value, 0, 0).Should().Be(colors[directionIndex * 2 + frameIndex]);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task SpriteSheetImportShouldHonorMarginsSpacingAndReadingOrderWhenReadingFramesLazily()
     {
         var sourcePath = Path.Combine(_tempDirectory, "sheet.png");
-        using (var image = TestDmiFactory.CreateImage(4, 2, static (x, _) => x switch
+        using (var image = TestDmiFactory.CreateImage(7, 7, static (x, y) =>
         {
-            0 => new Rgba32(255, 0, 0, 255),
-            1 => new Rgba32(0, 255, 0, 255),
-            2 => new Rgba32(0, 0, 255, 255),
-            _ => new Rgba32(255, 255, 0, 255)
+            if (x is >= 1 and <= 2 && y is >= 1 and <= 2)
+            {
+                return new Rgba32(255, 0, 0, 255);
+            }
+
+            if (x is >= 4 and <= 5 && y is >= 1 and <= 2)
+            {
+                return new Rgba32(0, 255, 0, 255);
+            }
+
+            if (x is >= 1 and <= 2 && y is >= 4 and <= 5)
+            {
+                return new Rgba32(0, 0, 255, 255);
+            }
+
+            return x is >= 4 and <= 5 && y is >= 4 and <= 5
+                ? new Rgba32(255, 255, 0, 255)
+                : new Rgba32(0, 0, 0, 0);
         }))
         {
             await image.SaveAsPngAsync(sourcePath);
@@ -205,15 +459,15 @@ public sealed class SpriteDocumentInfrastructureTests : IDisposable
         var recipe = new SpriteSheetSlicingRecipe(
             CellWidth: 2,
             CellHeight: 2,
-            MarginLeft: 0,
-            MarginTop: 0,
-            HorizontalSpacing: 0,
-            VerticalSpacing: 0,
+            MarginLeft: 1,
+            MarginTop: 1,
+            HorizontalSpacing: 1,
+            VerticalSpacing: 1,
             Columns: 2,
-            Rows: 1,
+            Rows: 2,
             ReadingOrder: SpriteSheetReadingOrder.RowsFirst,
             DirectionOrder: [SpriteDirection.South],
-            FramesPerDirection: 2);
+            FramesPerDirection: 4);
 
         var importResult = await importer.ImportAsync(
             new SpriteDocumentImportRequest(
@@ -228,19 +482,46 @@ public sealed class SpriteDocumentInfrastructureTests : IDisposable
         importResult.IsSuccess.Should().BeTrue();
         importResult.Value.Resolution.Should().Be(new SpriteResolution(2, 2));
         importResult.Value.States.Should().ContainSingle();
-        importResult.Value.States[0].Frames.Should().HaveCount(2);
+        importResult.Value.States[0].Frames.Should().HaveCount(4);
 
         var frameResult = await new SpriteFrameSource(probeService).ReadAsync(
             new SpriteFrameReadRequest(importResult.Value, "walk", SpriteDirection.South, 1),
             CancellationToken.None);
 
         frameResult.IsSuccess.Should().BeTrue();
-        ReadPixel(frameResult.Value, 0, 0).Should().Be(new Rgba32(0, 0, 255, 255));
-        ReadPixel(frameResult.Value, 1, 0).Should().Be(new Rgba32(255, 255, 0, 255));
+        ReadPixel(frameResult.Value, 0, 0).Should().Be(new Rgba32(0, 255, 0, 255));
+        ReadPixel(frameResult.Value, 1, 1).Should().Be(new Rgba32(0, 255, 0, 255));
+
+        var columnsFirstResult = await importer.ImportAsync(
+            new SpriteDocumentImportRequest(
+                [sourcePath],
+                "sheet-columns",
+                SpriteDocumentImportKind.SpriteSheet,
+                StateName: "walk",
+                SlicingRecipe: recipe with { ReadingOrder = SpriteSheetReadingOrder.ColumnsFirst }),
+            CancellationToken.None);
+        columnsFirstResult.IsSuccess.Should().BeTrue();
+        var columnsFirstFrame = await new SpriteFrameSource(probeService).ReadAsync(
+            new SpriteFrameReadRequest(columnsFirstResult.Value, "walk", SpriteDirection.South, 1),
+            CancellationToken.None);
+        columnsFirstFrame.IsSuccess.Should().BeTrue();
+        ReadPixel(columnsFirstFrame.Value, 0, 0).Should().Be(new Rgba32(0, 0, 255, 255));
+
+        var limitedResult = await importer.ImportAsync(
+            new SpriteDocumentImportRequest(
+                [sourcePath],
+                "sheet-limit",
+                SpriteDocumentImportKind.SpriteSheet,
+                StateName: "walk",
+                SlicingRecipe: recipe,
+                Limits: AssetImportLimits.Default with { MaximumFramesOrCells = 1 }),
+            CancellationToken.None);
+        limitedResult.IsFailure.Should().BeTrue();
+        limitedResult.Error.Message.Should().Contain("cell limit");
     }
 
     [Fact]
-    public async Task SidecarShouldRoundTripAndRejectChangedSource()
+    public async Task SidecarShouldRequireExplicitChangedSourceAcceptanceAndRelinkMissingSource()
     {
         var sourcePath = Path.Combine(_tempDirectory, "source.png");
         var projectPath = Path.Combine(_tempDirectory, "source.adaptive-dmi.json");
@@ -265,13 +546,80 @@ public sealed class SpriteDocumentInfrastructureTests : IDisposable
         loadResult.Value.Id.Should().Be(importResult.Value.Id);
         loadResult.Value.Sources.Should().ContainSingle();
         loadResult.Value.Sources[0].RelativePath.Should().Be("source.png");
+        var firstSidecarBytes = await File.ReadAllBytesAsync(projectPath);
+        (await repository.SaveAsync(projectPath, loadResult.Value, CancellationToken.None)).IsSuccess.Should().BeTrue();
+        (await File.ReadAllBytesAsync(projectPath)).Should().Equal(firstSidecarBytes);
 
         await SaveSolidPngAsync(sourcePath, new Rgba32(30, 20, 10, 255));
         var changedResult = await repository.LoadAsync(new SpriteDocumentLoadRequest(projectPath), CancellationToken.None);
 
         changedResult.IsFailure.Should().BeTrue();
-        changedResult.Error.Code.Should().Be("conflict");
+        changedResult.Error.Code.Should().Be(SpriteDocumentSourceErrors.ChangedSourceCode);
         changedResult.Error.Message.Should().Contain("changed after the project was saved");
+        SpriteDocumentSourceErrors.TryGetIssue(changedResult.Error, out var changedIssue).Should().BeTrue();
+        changedIssue.Should().NotBeNull();
+        changedIssue!.Kind.Should().Be(SpriteDocumentSourceIssueKind.Changed);
+        changedIssue.SourceId.Should().Be(importResult.Value.Sources.Single().Id);
+
+        var frameSource = new SpriteFrameSource(probeService);
+        var session = new SpriteDocumentSession();
+        var workflow = new SpriteDocumentWorkflow(
+            probeService,
+            importer,
+            repository,
+            frameSource,
+            new SpriteDocumentExporter(frameSource, probeService, repository),
+            session);
+        var acceptedResult = await workflow.LoadProjectAsync(
+            new SpriteDocumentLoadRequest(
+                projectPath,
+                AcceptedChangedSources: new HashSet<Guid> { changedIssue.SourceId }),
+            CancellationToken.None);
+
+        acceptedResult.IsSuccess.Should().BeTrue();
+        session.IsDirty.Should().BeTrue();
+        (await workflow.SaveProjectAsync(projectPath, CancellationToken.None)).IsSuccess.Should().BeTrue();
+        session.IsDirty.Should().BeFalse();
+
+        var replacementDirectory = Path.Combine(_tempDirectory, "replacement");
+        Directory.CreateDirectory(replacementDirectory);
+        var replacementPath = Path.Combine(replacementDirectory, "source.png");
+        File.Move(sourcePath, replacementPath);
+        var missingResult = await repository.LoadAsync(
+            new SpriteDocumentLoadRequest(projectPath),
+            CancellationToken.None);
+
+        missingResult.IsFailure.Should().BeTrue();
+        missingResult.Error.Code.Should().Be(SpriteDocumentSourceErrors.MissingSourceCode);
+        SpriteDocumentSourceErrors.TryGetIssue(missingResult.Error, out var missingIssue).Should().BeTrue();
+        missingIssue.Should().NotBeNull();
+        missingIssue!.Kind.Should().Be(SpriteDocumentSourceIssueKind.Missing);
+        missingIssue.SourceId.Should().Be(changedIssue.SourceId);
+
+        var relinkedResult = await workflow.LoadProjectAsync(
+            new SpriteDocumentLoadRequest(
+                projectPath,
+                RelinkedSources: new Dictionary<Guid, string> { [missingIssue.SourceId] = replacementPath }),
+            CancellationToken.None);
+
+        relinkedResult.IsSuccess.Should().BeTrue();
+        session.IsDirty.Should().BeTrue();
+        relinkedResult.Value.Sources.Single().AbsolutePathFallback.Should().Be(Path.GetFullPath(replacementPath));
+        (await workflow.SaveProjectAsync(projectPath, CancellationToken.None)).IsSuccess.Should().BeTrue();
+
+        var relocatedDirectory = Path.Combine(_tempDirectory, "relocated");
+        Directory.CreateDirectory(relocatedDirectory);
+        var relocatedProjectPath = Path.Combine(relocatedDirectory, Path.GetFileName(projectPath));
+        var relocatedReplacementDirectory = Path.Combine(relocatedDirectory, "replacement");
+        File.Move(projectPath, relocatedProjectPath);
+        Directory.Move(replacementDirectory, relocatedReplacementDirectory);
+        var relocatedResult = await repository.LoadAsync(
+            new SpriteDocumentLoadRequest(relocatedProjectPath),
+            CancellationToken.None);
+
+        relocatedResult.IsSuccess.Should().BeTrue();
+        relocatedResult.Value.Sources.Single().AbsolutePathFallback.Should().Be(
+            Path.Combine(relocatedReplacementDirectory, "source.png"));
     }
 
     [Fact]
@@ -384,6 +732,17 @@ public sealed class SpriteDocumentInfrastructureTests : IDisposable
         File.Exists(Path.Combine(outputDirectory, "managed.png")).Should().BeTrue();
         File.Exists(Path.Combine(outputDirectory, ".adaptive-dmi-export.json")).Should().BeTrue();
         result.Value.SidecarPath.Should().NotBeNull();
+        var firstExport = await SnapshotDirectoryAsync(outputDirectory);
+        var repeatedExport = await exporter.ExportAsync(
+            new SpriteDocumentExportRequest(document, outputDirectory, SpriteDocumentExportFormat.PngSheet, OverwritePolicy.OverwriteExisting),
+            CancellationToken.None);
+        repeatedExport.IsSuccess.Should().BeTrue();
+        var secondExport = await SnapshotDirectoryAsync(outputDirectory);
+        secondExport.Keys.Should().Equal(firstExport.Keys);
+        foreach (var relativePath in firstExport.Keys)
+        {
+            secondExport[relativePath].Should().Equal(firstExport[relativePath]);
+        }
 
         var reloaded = await repository.LoadAsync(
             new SpriteDocumentLoadRequest(result.Value.SidecarPath!),
@@ -436,6 +795,17 @@ public sealed class SpriteDocumentInfrastructureTests : IDisposable
             image.RgbaBytes[index + 1],
             image.RgbaBytes[index + 2],
             image.RgbaBytes[index + 3]);
+    }
+
+    private static async Task<SortedDictionary<string, byte[]>> SnapshotDirectoryAsync(string directory)
+    {
+        var result = new SortedDictionary<string, byte[]>(StringComparer.Ordinal);
+        foreach (var path in Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories))
+        {
+            result[Path.GetRelativePath(directory, path)] = await File.ReadAllBytesAsync(path);
+        }
+
+        return result;
     }
 
     public void Dispose()

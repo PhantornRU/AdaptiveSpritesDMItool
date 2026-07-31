@@ -141,10 +141,7 @@ public sealed class SpriteDocumentExporter(
 
                 expected = DmiArtifactFingerprintFactory.Create(dmiFile, cancellationToken);
                 dmiFile.Save(temporaryPath);
-                if (dmiFile.States.Any(static state => state.Data.Hotspots is { Count: > 0 }))
-                {
-                    await RewriteDmiMetadataAsync(temporaryPath, dmiFile, cancellationToken).ConfigureAwait(false);
-                }
+                await RewriteDmiMetadataAsync(temporaryPath, dmiFile, cancellationToken).ConfigureAwait(false);
             }
 
             cancellationToken.ThrowIfCancellationRequested();

@@ -56,11 +56,83 @@ public enum SourceChangeResolution
     AcceptNewFingerprint = 1
 }
 
+public enum SpriteDocumentSourceIssueKind
+{
+    Missing = 0,
+    Changed = 1
+}
+
+public sealed record SpriteDocumentSourceIssue(
+    Guid SourceId,
+    string RelativePath,
+    SpriteDocumentSourceIssueKind Kind,
+    string Message);
+
+public static class SpriteDocumentSourceErrors
+{
+    public const string MissingSourceCode = "sprite-source-missing";
+    public const string ChangedSourceCode = "sprite-source-changed";
+    private const string SourceIdKey = "sourceId";
+    private const string RelativePathKey = "relativePath";
+
+    public static Error Missing(Guid sourceId, string relativePath) =>
+        Create(
+            MissingSourceCode,
+            sourceId,
+            relativePath,
+            $"Source '{relativePath}' is missing. Relink the source or cancel loading.");
+
+    public static Error Changed(Guid sourceId, string relativePath) =>
+        Create(
+            ChangedSourceCode,
+            sourceId,
+            relativePath,
+            $"Source '{relativePath}' changed after the project was saved. Relink it, accept the new fingerprint, or cancel.");
+
+    public static bool TryGetIssue(Error error, out SpriteDocumentSourceIssue? issue)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        issue = null;
+        var kind = error.Code switch
+        {
+            MissingSourceCode => SpriteDocumentSourceIssueKind.Missing,
+            ChangedSourceCode => SpriteDocumentSourceIssueKind.Changed,
+            _ => (SpriteDocumentSourceIssueKind?)null
+        };
+        if (kind is null ||
+            error.Metadata is null ||
+            !error.Metadata.TryGetValue(SourceIdKey, out var sourceIdText) ||
+            !Guid.TryParse(sourceIdText, out var sourceId) ||
+            !error.Metadata.TryGetValue(RelativePathKey, out var relativePath))
+        {
+            return false;
+        }
+
+        issue = new SpriteDocumentSourceIssue(sourceId, relativePath, kind.Value, error.Message);
+        return true;
+    }
+
+    private static Error Create(
+        string code,
+        Guid sourceId,
+        string relativePath,
+        string message) =>
+        new(
+            code,
+            message,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [SourceIdKey] = sourceId.ToString("D"),
+                [RelativePathKey] = relativePath
+            });
+}
+
 public sealed record SpriteDocumentLoadRequest(
     string ProjectPath,
     SourceChangeResolution SourceChangeResolution = SourceChangeResolution.Reject,
     IReadOnlyDictionary<Guid, string>? RelinkedSources = null,
-    AssetImportLimits? Limits = null);
+    AssetImportLimits? Limits = null,
+    IReadOnlySet<Guid>? AcceptedChangedSources = null);
 
 public sealed record SpriteFrameReadRequest(
     SpriteDocument Document,

@@ -8,7 +8,7 @@ Workspace v7 открывается автоматически. DMI-specific imp
 
 ## PNG projects
 
-Импорт PNG создает source-referenced document. Сохраните рядом sidecar `<name>.adaptive-dmi.json`, если проект нужно открыть повторно без повторной настройки нарезки. Переносите sidecar вместе с относительными source-файлами. При изменении или отсутствии source приложение потребует явного relink/accept/cancel.
+Импорт PNG создает source-referenced document. Сохраните рядом sidecar `<name>.adaptive-dmi.json`, если проект нужно открыть повторно без повторной настройки нарезки. Переносите sidecar вместе с относительными source-файлами. При изменении или отсутствии source приложение потребует явного relink/accept/cancel для каждого проблемного файла. После accept или relink сохраните sidecar, чтобы записать новый fingerprint/path; до этого проект остается измененным.
 
 ## JSON v1 -> v2
 

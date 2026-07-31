@@ -14,6 +14,11 @@
     <sys:String x:Key="Text.Documents.SaveProject">Save project</sys:String>
     <sys:String x:Key="Text.Documents.ImportPng">Import PNG / sequence</sys:String>
     <sys:String x:Key="Text.Documents.ImportSheet">Import sprite sheet</sys:String>
+    <sys:String x:Key="Text.Documents.SourceChangedTitle">Sprite source changed</sys:String>
+    <sys:String x:Key="Text.Documents.SourceChangedPrompt">The source '{0}' changed after this project was saved.&#10;&#10;Yes: accept its new fingerprint.&#10;No: choose a replacement file.&#10;Cancel: leave the current document unchanged.</sys:String>
+    <sys:String x:Key="Text.Documents.RelinkSourceTitleFormat">Relink sprite source: {0}</sys:String>
+    <sys:String x:Key="Text.Documents.OpenedDirtyFormat">Opened '{0}'. Save the project to persist resolved source fingerprints.</sys:String>
+    <sys:String x:Key="Text.Documents.LoadCancelled">Sprite document loading was cancelled without changing the active document.</sys:String>
 
     <sys:String x:Key="Text.OpenDmi">Open DMI</sys:String>
     <sys:String x:Key="Text.SaveConfig">Save Config</sys:String>

@@ -71,7 +71,7 @@ The source-reference approach and alternatives are recorded in [ADR 0001](adr/00
 
 ## Runtime Flow
 
-1. User opens a native DMI or imports PNG graphics after content probing.
+1. User opens a native DMI or imports PNG graphics after content probing. Sidecar source mismatches are resolved per source through Accept/Relink/Cancel; accepted or relinked provenance is committed only by a later sidecar save.
 2. User creates a config, loads JSON, or imports CSV.
 3. Editor gestures build and validate an `EditorMutationPlan`, then commit once through Application use cases.
 4. Preview is built through Infrastructure adapters.

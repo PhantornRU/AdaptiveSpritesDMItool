@@ -14,6 +14,11 @@
     <sys:String x:Key="Text.Documents.SaveProject">Сохранить проект</sys:String>
     <sys:String x:Key="Text.Documents.ImportPng">Импорт PNG / последовательности</sys:String>
     <sys:String x:Key="Text.Documents.ImportSheet">Импорт sprite sheet</sys:String>
+    <sys:String x:Key="Text.Documents.SourceChangedTitle">Источник спрайта изменен</sys:String>
+    <sys:String x:Key="Text.Documents.SourceChangedPrompt">Источник '{0}' изменился после сохранения проекта.&#10;&#10;Да: принять новый fingerprint.&#10;Нет: выбрать файл-замену.&#10;Отмена: оставить текущий документ без изменений.</sys:String>
+    <sys:String x:Key="Text.Documents.RelinkSourceTitleFormat">Перепривязать источник спрайта: {0}</sys:String>
+    <sys:String x:Key="Text.Documents.OpenedDirtyFormat">Открыт '{0}'. Сохраните проект, чтобы записать обновленные fingerprints источников.</sys:String>
+    <sys:String x:Key="Text.Documents.LoadCancelled">Загрузка документа отменена; текущий документ не изменен.</sys:String>
 
     <sys:String x:Key="Text.OpenDmi">Открыть DMI</sys:String>
     <sys:String x:Key="Text.SaveConfig">Сохранить конфиг</sys:String>

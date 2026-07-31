@@ -27,7 +27,7 @@ AdaptiveDMITool-v2.4.0.exe
 - Added a source-referenced `SpriteDocument` model with ordered states, 1/4/8 directions, animation metadata, crops, transforms, and lazy frame reads.
 - Added content-aware DMI/PNG detection, including DMI files carrying a `.png` extension and ordinary PNG files renamed to `.dmi`.
 - Added a Documents workspace for native DMI, PNG single/sequence/sprite-sheet import, sidecar projects, preview, and DMI/PNG export.
-- Added sidecar schema v1 with source fingerprints, relative-path relocation, explicit relink/accept behavior, and bounded import validation.
+- Added sidecar schema v1 with source fingerprints, relative-path relocation, per-source Accept/Relink/Cancel recovery, and bounded import validation. Accepted or relinked sources keep the project dirty until the updated provenance is saved.
 - Added managed PNG sheet/sequence exports through sibling staging and ownership manifests; unmanaged directories are never replaced.
 - Added Workspace schema v8 and mixed DMI/PNG batch with independent outputs and 1/4/8 raster profiles.
 - Preserved DMI hotspot metadata through normalization followed by the existing reopen/metadata/RGBA verification.
@@ -152,8 +152,8 @@ The active v2.4.0 runtime is a layered solution:
 
 The v2.4.0 automated validation covers:
 
-- 241 unit tests
-- 74 integration tests
+- 242 unit tests
+- 77 integration tests
 - hidden Unicode scan
 - Release build
 - Release test run

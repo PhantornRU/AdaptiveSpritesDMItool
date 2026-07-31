@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Media.Imaging;
 using AdaptiveSpritesDmiTool.Application;
+using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using AdaptiveSpritesDmiTool.Domain.Documents;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -135,7 +136,7 @@ public sealed partial class DocumentWorkspaceViewModel : ShellSectionViewModel, 
         await RunAsync(async cancellationToken =>
         {
             var result = path.EndsWith(".adaptive-dmi.json", StringComparison.OrdinalIgnoreCase)
-                ? await _workflow!.LoadProjectAsync(new SpriteDocumentLoadRequest(path), cancellationToken)
+                ? await LoadProjectResolvingSourcesAsync(path, cancellationToken)
                 : await _workflow!.OpenNativeDmiAsync(path, cancellationToken);
             if (result.IsFailure)
             {
@@ -148,8 +149,75 @@ public sealed partial class DocumentWorkspaceViewModel : ShellSectionViewModel, 
             }
 
             RefreshDocument(result.Value);
-            return $"Opened '{result.Value.Name}'.";
+            return _workflow!.Session.IsDirty
+                ? PresentationText.Format(
+                    "Text.Documents.OpenedDirtyFormat",
+                    "Opened '{0}'. Save the project to persist resolved source fingerprints.",
+                    result.Value.Name)
+                : $"Opened '{result.Value.Name}'.";
         });
+    }
+
+    private async Task<Result<SpriteDocument>> LoadProjectResolvingSourcesAsync(
+        string projectPath,
+        CancellationToken cancellationToken)
+    {
+        var relinkedSources = new Dictionary<Guid, string>();
+        var acceptedChangedSources = new HashSet<Guid>();
+        var handledIssues = new HashSet<Guid>();
+        while (true)
+        {
+            var result = await _workflow!.LoadProjectAsync(
+                new SpriteDocumentLoadRequest(
+                    projectPath,
+                    RelinkedSources: relinkedSources.Count == 0 ? null : relinkedSources,
+                    AcceptedChangedSources: acceptedChangedSources.Count == 0 ? null : acceptedChangedSources),
+                cancellationToken);
+            if (result.IsSuccess ||
+                !SpriteDocumentSourceErrors.TryGetIssue(result.Error, out var issue) ||
+                issue is null)
+            {
+                return result;
+            }
+
+            if (!handledIssues.Add(issue.SourceId))
+            {
+                return Result.Failure<SpriteDocument>(Errors.Conflict(
+                    $"Source resolution for '{issue.RelativePath}' did not produce a loadable project."));
+            }
+
+            if (issue.Kind == SpriteDocumentSourceIssueKind.Changed)
+            {
+                var choice = _fileDialogs.ResolveSpriteSourceChange(issue);
+                if (choice == SpriteSourceChangeChoice.AcceptNewFingerprint)
+                {
+                    acceptedChangedSources.Add(issue.SourceId);
+                    continue;
+                }
+
+                if (choice == SpriteSourceChangeChoice.Cancel)
+                {
+                    return Result.Failure<SpriteDocument>(Errors.Cancelled(
+                        App.Text(
+                            "Text.Documents.LoadCancelled",
+                            "Sprite document loading was cancelled without changing the active document.")));
+                }
+            }
+
+            var initialPath = Path.GetFullPath(Path.Combine(
+                Path.GetDirectoryName(Path.GetFullPath(projectPath))!,
+                issue.RelativePath));
+            var replacementPath = _fileDialogs.RelinkSpriteSource(issue, initialPath);
+            if (string.IsNullOrWhiteSpace(replacementPath))
+            {
+                return Result.Failure<SpriteDocument>(Errors.Cancelled(
+                    App.Text(
+                        "Text.Documents.LoadCancelled",
+                        "Sprite document loading was cancelled without changing the active document.")));
+            }
+
+            relinkedSources[issue.SourceId] = replacementPath;
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanStartOperation))]

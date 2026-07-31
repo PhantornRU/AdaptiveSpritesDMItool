@@ -192,7 +192,7 @@ Batch artifacts пишутся в output root под `.adaptive-sprites`:
 - crop, nearest-neighbor transform flags и slicing recipe;
 - manifest ownership для managed raster exports.
 
-При несовпадении fingerprint пользователь должен выбрать relink, принять новый fingerprint или отменить загрузку. Автоматическое принятие измененного источника запрещено.
+При несовпадении fingerprint пользователь должен выбрать relink, принять новый fingerprint или отменить загрузку. Отсутствующий source допускает только relink или отмену. Решение принимается отдельно для каждого source; автоматическое принятие запрещено. Успешная загрузка после Accept или Relink помечает проект измененным, пока обновленные fingerprint/path не будут сохранены в sidecar.
 
 ## Workspace Settings
 

@@ -2196,6 +2196,85 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.PreviewSummary.Should().Contain("missing or not selected");
     }
 
+    [Fact]
+    public async Task DocumentWorkspaceShouldResolveChangedAndMissingSourcesBeforeOpeningAtomically()
+    {
+        var changedSourceId = Guid.NewGuid();
+        var missingSourceId = Guid.NewGuid();
+        var document = new SpriteDocument(
+            Guid.NewGuid(),
+            "resolved-project",
+            new SpriteResolution(1, 1),
+            [
+                new SpriteSourceReference(
+                    changedSourceId,
+                    "changed.png",
+                    @"C:\assets\changed.png",
+                    SpriteSourceFormat.Png,
+                    1,
+                    1,
+                    1,
+                    new string('a', 64)),
+                new SpriteSourceReference(
+                    missingSourceId,
+                    "missing.png",
+                    @"C:\assets\missing.png",
+                    SpriteSourceFormat.Png,
+                    1,
+                    1,
+                    1,
+                    new string('b', 64))
+            ],
+            [
+                new SpriteDocumentState(
+                    "idle",
+                    SpriteDirectionDepth.One,
+                    1,
+                    SpriteAnimationMetadata.Static,
+                    [
+                        new SpriteDocumentFrame(
+                            SpriteDirection.South,
+                            0,
+                            new SpriteFrameReference(
+                                changedSourceId,
+                                new SpriteSourceRectangle(0, 0, 1, 1)))
+                    ])
+            ]);
+        var repository = new SourceResolutionDocumentRepository(document, changedSourceId, missingSourceId);
+        var unusedServices = new UnusedSpriteDocumentServices();
+        var documentSession = new SpriteDocumentSession();
+        var workflow = new SpriteDocumentWorkflow(
+            unusedServices,
+            unusedServices,
+            repository,
+            unusedServices,
+            unusedServices,
+            documentSession);
+        var dialogs = new StubFileDialogService
+        {
+            SpriteDocumentPath = @"C:\projects\sprite.adaptive-dmi.json",
+            SourceChangeChoice = SpriteSourceChangeChoice.AcceptNewFingerprint,
+            RelinkSourcePath = @"C:\replacement\missing.png"
+        };
+        var viewModel = CreateViewModel(
+            new InMemorySettingsRepository(WorkspaceSettings.Empty),
+            fileDialogService: dialogs,
+            spriteDocumentWorkflow: workflow);
+
+        await viewModel.DocumentWorkspace.OpenDocumentCommand.ExecuteAsync(null);
+
+        repository.Requests.Should().HaveCount(3);
+        repository.Requests[1].AcceptedChangedSources.Should().Contain(changedSourceId);
+        repository.Requests[2].AcceptedChangedSources.Should().Contain(changedSourceId);
+        repository.Requests[2].RelinkedSources.Should().ContainKey(missingSourceId)
+            .WhoseValue.Should().Be(dialogs.RelinkSourcePath);
+        dialogs.SourceChangePromptCount.Should().Be(1);
+        dialogs.RelinkPromptCount.Should().Be(1);
+        documentSession.CurrentDocument.Should().BeSameAs(document);
+        documentSession.IsDirty.Should().BeTrue();
+        viewModel.DocumentWorkspace.IsDocumentDirty.Should().BeTrue();
+    }
+
     private static MainWindowViewModel CreateViewModel(
         InMemorySettingsRepository settingsRepository,
         IConfigRepository? configRepository = null,
@@ -2206,7 +2285,8 @@ public sealed class MainWindowViewModelSmokeTests
         IBatchProcessingService? batchProcessingService = null,
         IFileDialogService? fileDialogService = null,
         EditorSession? editorSession = null,
-        ILogger<WorkspaceShellViewModel>? logger = null)
+        ILogger<WorkspaceShellViewModel>? logger = null,
+        SpriteDocumentWorkflow? spriteDocumentWorkflow = null)
     {
         var session = editorSession ?? new EditorSession();
         var workspace = new EditorWorkspaceService();
@@ -2232,7 +2312,8 @@ public sealed class MainWindowViewModelSmokeTests
             new SpriteImageBitmapSourceFactory(),
             fileDialogService ?? new StubFileDialogService(),
             session,
-            logger ?? NullLogger<WorkspaceShellViewModel>.Instance);
+            logger ?? NullLogger<WorkspaceShellViewModel>.Instance,
+            spriteDocumentWorkflow);
     }
 
     private static BatchSourceTreeItemViewModel[] BuildBatchSourceTreeItemsForTest(
@@ -2602,6 +2683,63 @@ public sealed class MainWindowViewModelSmokeTests
         }
     }
 
+    private sealed class SourceResolutionDocumentRepository(
+        SpriteDocument document,
+        Guid changedSourceId,
+        Guid missingSourceId) : ISpriteDocumentRepository
+    {
+        public List<SpriteDocumentLoadRequest> Requests { get; } = [];
+
+        public Task<Result<SpriteDocument>> LoadAsync(
+            SpriteDocumentLoadRequest request,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Requests.Add(request);
+            var result = Requests.Count switch
+            {
+                1 => Result.Failure<SpriteDocument>(SpriteDocumentSourceErrors.Changed(changedSourceId, "changed.png")),
+                2 => Result.Failure<SpriteDocument>(SpriteDocumentSourceErrors.Missing(missingSourceId, "missing.png")),
+                _ => Result.Success(document)
+            };
+            return Task.FromResult(result);
+        }
+
+        public Task<Result> SaveAsync(
+            string projectPath,
+            SpriteDocument savedDocument,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Success());
+    }
+
+    private sealed class UnusedSpriteDocumentServices :
+        IAssetProbeService,
+        ISpriteDocumentImporter,
+        ISpriteFrameSource,
+        ISpriteDocumentExporter
+    {
+        public Task<Result<AssetProbe>> ProbeAsync(
+            string path,
+            AssetImportLimits limits,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Failure<AssetProbe>(Errors.Unexpected("Probe should not be called.")));
+
+        public Task<Result<SpriteDocument>> ImportAsync(
+            SpriteDocumentImportRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Failure<SpriteDocument>(Errors.Unexpected("Import should not be called.")));
+
+        public Task<Result<SpriteImage>> ReadAsync(
+            SpriteFrameReadRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Failure<SpriteImage>(Errors.Unexpected("Frame read should not be called.")));
+
+        public Task<Result<SpriteDocumentExportResult>> ExportAsync(
+            SpriteDocumentExportRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Failure<SpriteDocumentExportResult>(Errors.Unexpected("Export should not be called.")));
+    }
+
     private sealed class StubFileDialogService : IFileDialogService
     {
         public string? DmiPath { get; init; }
@@ -2612,6 +2750,16 @@ public sealed class MainWindowViewModelSmokeTests
 
         public string? BatchDirectory { get; init; }
 
+        public string? SpriteDocumentPath { get; init; }
+
+        public SpriteSourceChangeChoice SourceChangeChoice { get; init; } = SpriteSourceChangeChoice.Cancel;
+
+        public string? RelinkSourcePath { get; init; }
+
+        public int SourceChangePromptCount { get; private set; }
+
+        public int RelinkPromptCount { get; private set; }
+
         public string? OpenDmiFile(string? initialPath) => DmiPath ?? initialPath;
 
         public string? OpenConfigFile(string? initialPath) => ConfigPath ?? initialPath;
@@ -2621,6 +2769,20 @@ public sealed class MainWindowViewModelSmokeTests
         public string? OpenLegacyCsvFile(string? initialPath) => LegacyCsvPath ?? initialPath;
 
         public string? SelectDirectory(string description, string? initialPath) => BatchDirectory ?? initialPath;
+
+        public string? OpenSpriteDocumentFile(string? initialPath) => SpriteDocumentPath ?? initialPath;
+
+        public SpriteSourceChangeChoice ResolveSpriteSourceChange(SpriteDocumentSourceIssue issue)
+        {
+            SourceChangePromptCount++;
+            return SourceChangeChoice;
+        }
+
+        public string? RelinkSpriteSource(SpriteDocumentSourceIssue issue, string? initialPath)
+        {
+            RelinkPromptCount++;
+            return RelinkSourcePath;
+        }
     }
 
     private static SpriteImage CreateCoordinateImage(int width, int height)

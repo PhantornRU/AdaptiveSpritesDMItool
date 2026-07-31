@@ -30,6 +30,7 @@
 - interpolated atomic strokes, conflict rejection and semantic no-op history
 - config queue behavior
 - batch workspace view-model state
+- Documents source-resolution UI retries changed/missing sources atomically and keeps accepted/relinked projects dirty
 
 ### Integration
 
@@ -55,9 +56,10 @@
 - batch manifest validation and artifacts behavior
 - DMI/PNG content probing independent of extension
 - DMI and PNG import into `SpriteDocument`
-- sidecar v1 roundtrip, relative-path relocation and changed-source detection
-- single PNG, PNG sequence and sprite-sheet slicing
+- deterministic sidecar v1 roundtrip, relative-path relocation, structured missing/changed-source detection, explicit accept/relink and dirty-until-save behavior
+- single PNG, ordered PNG sequence and sprite-sheet slicing with non-zero margins/spacing plus row/column reading order
 - deterministic PNG sheet/sequence export and managed-directory ownership checks
+- ordered multi-state/multi-direction DMI animation import/export with fractional delay, loop, rewind and movement metadata
 - Workspace v7 to v8 migration
 - mixed DMI/PNG batch with per-output failure isolation
 
@@ -73,8 +75,8 @@ Release-проверка v2.4.0 включает:
 - locked `dotnet restore`
 - `dotnet build` in Release configuration
 - `dotnet test` in Release configuration
-- 241 unit tests
-- 74 integration tests
+- 242 unit tests
+- 77 integration tests
 - NuGet vulnerability audit
 - self-contained Windows x64 publish
 - ZIP packaging
@@ -116,7 +118,7 @@ Release-проверка v2.4.0 включает:
 27. imported DMI layer order and opacity affect Source/Editable composition
 28. content probe routes DMI and PNG by signature/metadata rather than extension
 29. static PNG, ordered sequence and sprite-sheet import create the expected 1/4/8 frame graph
-30. sidecar v1 roundtrip, source relocation, explicit source-change acceptance and safety-limit rejection
+30. sidecar v1 roundtrip, source relocation, per-source accept/relink, dirty-until-save provenance and safety-limit rejection
 31. DMI document export preserves state order, animation metadata, hotspots and RGBA through reopen verification
 32. PNG sheet and sequence exports replace only tool-owned managed folders
 33. mixed DMI/PNG batch isolates DMI and PNG output failures

@@ -4,11 +4,11 @@
 
 - Added the source-referenced `SpriteDocument` model with ordered states, 1/4/8 directions, animation metadata, transforms, and lazy frame reads.
 - Added content-aware DMI/PNG probing, PNG single/sequence/sprite-sheet import, and a dedicated Documents workspace.
-- Added deterministic sidecar projects (`*.adaptive-dmi.json`, schema v1) with relative paths, source fingerprints, relink/accept handling, and safety limits.
+- Added deterministic sidecar projects (`*.adaptive-dmi.json`, schema v1) with relative paths, source fingerprints, per-source Accept/Relink/Cancel handling, dirty-until-save provenance, and safety limits.
 - Added verified DMI document export plus managed PNG sheet/sequence exports with sibling staging and ownership manifests.
 - Migrated Workspace settings to schema v8 for the last document, generic auxiliary layers, selected batch formats, and raster profiles.
 - Extended batch processing to independent DMI and PNG outputs with per-output failure isolation and 1/4/8 raster profiles.
-- Preserved DMI hotspot metadata through a normalized metadata rewrite before reopen verification.
+- Preserved fractional DMI animation delays and hotspot metadata through an invariant metadata rewrite before reopen verification.
 
 Release notes: [docs/releases/v2.4.0.md](docs/releases/v2.4.0.md)
 

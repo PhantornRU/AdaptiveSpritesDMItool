@@ -66,7 +66,8 @@ public sealed class SpriteDocumentSidecarRepository(IAssetProbeService probeServ
                 var sourcePathResult = ResolveSourcePath(projectDirectory, sourceDto, request.RelinkedSources);
                 if (sourcePathResult.IsFailure)
                 {
-                    return Result.Failure<SpriteDocument>(sourcePathResult.Error);
+                    return Result.Failure<SpriteDocument>(
+                        SpriteDocumentSourceErrors.Missing(sourceDto.Id, sourceDto.RelativePath));
                 }
 
                 var probeResult = await probeService
@@ -91,10 +92,14 @@ public sealed class SpriteDocumentSidecarRepository(IAssetProbeService probeServ
                     sourceDto.Height == probe.Height &&
                     sourceDto.EncodedLength == probe.EncodedLength &&
                     string.Equals(sourceDto.Sha256, probe.Sha256, StringComparison.OrdinalIgnoreCase);
-                if (!fingerprintMatches && request.SourceChangeResolution == SourceChangeResolution.Reject)
+                var sourceWasExplicitlyResolved =
+                    request.SourceChangeResolution == SourceChangeResolution.AcceptNewFingerprint ||
+                    request.AcceptedChangedSources?.Contains(sourceDto.Id) == true ||
+                    request.RelinkedSources?.ContainsKey(sourceDto.Id) == true;
+                if (!fingerprintMatches && !sourceWasExplicitlyResolved)
                 {
-                    return Result.Failure<SpriteDocument>(Errors.Conflict(
-                        $"Source '{sourceDto.RelativePath}' changed after the project was saved. Relink it, accept the new fingerprint, or cancel."));
+                    return Result.Failure<SpriteDocument>(
+                        SpriteDocumentSourceErrors.Changed(sourceDto.Id, sourceDto.RelativePath));
                 }
 
                 sources.Add(new SpriteSourceReference(

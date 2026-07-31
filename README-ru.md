@@ -27,7 +27,7 @@ AdaptiveDMITool-v2.4.0.exe
 - Добавлена source-referenced модель `SpriteDocument`: упорядоченные states, 1/4/8 направлений, animation metadata, crop/transform и ленивое чтение кадров.
 - DMI и PNG определяются по содержимому, включая DMI с расширением `.png` и обычный PNG, переименованный в `.dmi`.
 - Добавлен раздел Documents для DMI, одиночных PNG, последовательностей, sprite sheets, sidecar-проектов, preview и DMI/PNG export.
-- Sidecar schema v1 хранит относительные пути и fingerprints источников, поддерживает явный relink/accept и проверяет лимиты до массового декодирования.
+- Sidecar schema v1 хранит относительные пути и fingerprints источников, предлагает для каждого проблемного source явные Accept/Relink/Cancel и проверяет лимиты до массового декодирования. После Accept или Relink проект остается измененным до сохранения обновленного provenance.
 - PNG sheet/sequence записываются в управляемую папку через sibling staging и ownership manifest; чужая папка не перезаписывается.
 - Workspace schema v8 сохраняет документ, generic auxiliary layers, форматы batch и raster profile.
 - Batch обрабатывает DMI и PNG независимо; ошибка одного output не блокирует другой.
@@ -162,8 +162,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Ver
 
 Автоматизированная проверка v2.4.0 покрывает:
 
-- 241 unit tests
-- 74 integration tests
+- 242 unit tests
+- 77 integration tests
 - hidden Unicode scan
 - Release build
 - Release test run

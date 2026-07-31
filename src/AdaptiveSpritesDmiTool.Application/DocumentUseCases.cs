@@ -88,7 +88,7 @@ public sealed class LoadSpriteDocumentUseCase(
         var result = await repository.LoadAsync(request, cancellationToken).ConfigureAwait(false);
         return result.IsFailure
             ? result
-            : session.Open(result.Value, request.ProjectPath, isDirty: false);
+            : session.Open(result.Value, request.ProjectPath, SpriteDocumentLoadRequestPolicy.HasResolvedSources(request));
     }
 }
 
@@ -250,7 +250,7 @@ public sealed class SpriteDocumentWorkflow(
         var result = await repository.LoadAsync(request, cancellationToken).ConfigureAwait(false);
         if (result.IsSuccess)
         {
-            session.Open(result.Value, request.ProjectPath, isDirty: false);
+            session.Open(result.Value, request.ProjectPath, SpriteDocumentLoadRequestPolicy.HasResolvedSources(request));
         }
 
         return result;
@@ -359,4 +359,12 @@ public sealed class SpriteDocumentWorkflow(
             return Result.Failure<SpriteDocument>(Errors.Validation(exception.Message));
         }
     }
+}
+
+internal static class SpriteDocumentLoadRequestPolicy
+{
+    public static bool HasResolvedSources(SpriteDocumentLoadRequest request) =>
+        request.SourceChangeResolution == SourceChangeResolution.AcceptNewFingerprint ||
+        request.RelinkedSources is { Count: > 0 } ||
+        request.AcceptedChangedSources is { Count: > 0 };
 }
