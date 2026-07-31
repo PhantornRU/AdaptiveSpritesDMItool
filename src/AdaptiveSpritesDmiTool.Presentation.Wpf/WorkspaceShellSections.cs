@@ -308,9 +308,9 @@ public sealed class EditorCommandBarViewModel(WorkspaceShellViewModel shell) : S
 {
     public IReadOnlyList<EditorTool> PaintTools { get; } = [EditorTool.Single, EditorTool.Fill];
 
-    public IReadOnlyList<EditorTool> EditTools { get; } = [EditorTool.Move, EditorTool.Select, EditorTool.Delete, EditorTool.Undo, EditorTool.UndoArea];
+    public IReadOnlyList<EditorTool> EditTools { get; } = [EditorTool.Move, EditorTool.Select, EditorTool.Erase, EditorTool.Restore, EditorTool.RestoreArea];
 
-    public IReadOnlyList<EditorTool> EditorTools { get; } = [EditorTool.Single, EditorTool.Fill, EditorTool.Delete, EditorTool.Undo, EditorTool.UndoArea, EditorTool.Select, EditorTool.Move];
+    public IReadOnlyList<EditorTool> EditorTools { get; } = [EditorTool.Single, EditorTool.Fill, EditorTool.Erase, EditorTool.Restore, EditorTool.RestoreArea, EditorTool.Select, EditorTool.Move];
 
     public IReadOnlyList<EditorViewportMode> ViewportModes { get; } = [EditorViewportMode.Matrix, EditorViewportMode.Focused];
 
@@ -348,10 +348,16 @@ public sealed class EditorCommandBarViewModel(WorkspaceShellViewModel shell) : S
         set => Shell.MirrorAcrossDirections = value;
     }
 
-    public bool UseCentralizedPropagation
+    public int MirrorAxisOffsetPixels
     {
-        get => Shell.UseCentralizedPropagation;
-        set => Shell.UseCentralizedPropagation = value;
+        get => Shell.MirrorAxisOffsetPixels;
+        set => Shell.MirrorAxisOffsetPixels = value;
+    }
+
+    public bool ShowMirrorAxisGuide
+    {
+        get => Shell.ShowMirrorAxisGuide;
+        set => Shell.ShowMirrorAxisGuide = value;
     }
 
     public bool ShowGrid
@@ -412,11 +418,11 @@ public sealed class EditorCommandBarViewModel(WorkspaceShellViewModel shell) : S
 
     public bool IsSelectToolSelected => SelectedEditorTool == EditorTool.Select;
 
-    public bool IsDeleteToolSelected => SelectedEditorTool == EditorTool.Delete;
+    public bool IsEraseToolSelected => SelectedEditorTool == EditorTool.Erase;
 
-    public bool IsUndoToolSelected => SelectedEditorTool == EditorTool.Undo;
+    public bool IsRestoreToolSelected => SelectedEditorTool == EditorTool.Restore;
 
-    public bool IsUndoAreaToolSelected => SelectedEditorTool == EditorTool.UndoArea;
+    public bool IsRestoreAreaToolSelected => SelectedEditorTool == EditorTool.RestoreArea;
 
     public bool IsSingleScopeSelected => SelectedDirectionScope == DirectionScope.Single;
 
@@ -435,6 +441,8 @@ public sealed class EditorCommandBarViewModel(WorkspaceShellViewModel shell) : S
     public IRelayCommand<DirectionScope> SelectDirectionScopeCommand => Shell.SelectDirectionScopeCommand;
 
     public IRelayCommand<EditorViewportMode> SelectViewportModeCommand => Shell.SelectViewportModeCommand;
+
+    public IRelayCommand ConfigureMirrorAxisCommand => Shell.ConfigureMirrorAxisCommand;
 
     public IRelayCommand ClearSelectionCommand => Shell.ClearSelectionCommand;
 
@@ -609,6 +617,10 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
     }
 
     public bool ShowGridCaptions => Shell.GridAboveImage || Shell.ShowSourceCoordinateCaptions;
+
+    public bool ShowMirrorAxisGuide => Shell.ShowMirrorAxisGuide;
+
+    public int MirrorAxisOffsetPixels => Shell.MirrorAxisOffsetPixels;
 
     public bool ShowGridCaptionsToggle
     {

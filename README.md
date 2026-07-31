@@ -1,4 +1,4 @@
-# Adaptive Sprites DMI Tool v2.2
+# Adaptive Sprites DMI Tool v2.3.0
 
 Adaptive Sprites DMI Tool is a Windows WPF application for authoring, previewing, and applying pixel-mapping configs to BYOND `.dmi` sprite files.
 
@@ -6,34 +6,30 @@ Russian documentation: [README-ru.md](README-ru.md)
 
 ## Current Release
 
-- Application version: `2.2`
+- Application version: `2.3.0`
 - Target platform: Windows x64
-- UI framework: WPF on .NET 8
+- UI framework: WPF on .NET 10 LTS
 - Release package: self-contained `win-x64` ZIP
-- Config schema version: `1`
+- Config schema version: `2` (reads v1 and v2)
 - Primary config format: versioned JSON
 - CSV compatibility: import only
 
 The release ZIP contains the published WPF app. Extract it and run:
 
 ```text
-AdaptiveDMITool-v2.2.exe
+AdaptiveDMITool-v2.3.0.exe
 ```
 
-## v2.2 Highlights
+## v2.3.0 Highlights
 
-- Russian and English UI resources with a persisted language setting.
-- Shell controls for theme, language, editor viewport mode, workspace panel behavior, inactive Source canvas visibility, and multi-direction canvas fitting.
-- Direction editing scopes for `Single`, `Parallel`, and `All` directions, plus larger scoped canvas layouts and a direction display selector.
-- Imported DMI state layers can be assigned to Source and Editable surfaces, ordered explicitly, placed as background or overlay layers, and blended with per-layer opacity.
-- Imported state layer order, placement, opacity, and surface assignment are saved in workspace settings and restored on startup.
-- State loading and state list ordering were tightened so restored workspaces and imported DMI state selections are more predictable.
-- Localized batch workspace with folder/file selection, filtering, status display, run log, output-folder exclusion from input scans, and `One DIR` / `All DIR` preview.
-- Fixes for `Fill`, `Move`, mirrored directions, and parallel direction editing.
-- Rendering and performance improvements for editor updates, drawing, and zoom.
-- More reliable shutdown and workspace state persistence.
-- The release workflow now creates the application ZIP and a separate samples ZIP containing the full `samples/` folder.
-- VS Code debug launch updated to the C# Dev Kit `dotnet` debug type, so the old `coreclr` adapter is no longer required.
+- Atomic editor gestures: Paint, Erase, Restore, Fill, Move, and Select/Move either commit once or leave config and history unchanged.
+- Fast Paint, Erase, and Restore strokes interpolate skipped pointer samples; one gesture creates one Undo entry.
+- Erase writes transparent RGBA while Restore removes mappings and returns the original pixel.
+- Exact direction mirroring uses `x' = width - 1 - x + 2 * offsetPixels`; out-of-bounds projections are skipped instead of clamped.
+- The mirror-axis offset is saved in config schema v2 and workspace schema v7, with an independent on-canvas guide.
+- DMI output preserves state order, is reopened and verified by metadata and RGBA SHA-256, then committed with same-volume atomic replacement.
+- Updated to .NET 10 LTS, WPF-UI 4.3.0, CommunityToolkit.Mvvm 8.4.2, and ImageSharp 3.1.12.
+- NuGet lock files, locked CI restore, package vulnerability audit, and a win-x64 release artifact are part of CI.
 
 ## What It Does
 
@@ -42,7 +38,7 @@ AdaptiveDMITool-v2.2.exe
 - supports optional landmark and overlay state sources for preview work
 - edits per-pixel mappings for `4-dir` and `8-dir` sprites
 - edits a single direction, parallel directions, or all directions from one workspace
-- supports editor tools such as `Paint`, `Fill`, `Move`, `Erase`, undo, area undo, and selection
+- supports editor tools such as `Paint`, `Fill`, `Move`, `Erase`, `Restore`, area restore, undo, and selection
 - previews base, landmark, overlay, composite, grid, and text-grid views
 - saves and loads schema-versioned JSON configs
 - imports CSV configs from older workflows
@@ -65,9 +61,10 @@ AdaptiveDMITool-v2.2.exe
 
 ## Config Formats
 
-JSON is the primary format in v2.2. The current JSON schema uses:
+JSON is the primary format in v2.3.0. The current JSON schema uses:
 
-- `version: 1`
+- `version: 2`
+- `editorSettings.mirrorAxisOffsetPixels`
 - `supportedDirections: "four"` or `"eight"`
 - `mappings` grouped by direction name
 - `target: null` for transparent output pixels
@@ -84,12 +81,12 @@ See:
 Requirements:
 
 - Windows
-- .NET 8 SDK
+- .NET 10 SDK
 
 Developer build:
 
 ```powershell
-dotnet restore AdaptiveSpritesDMItool.sln -m:1
+dotnet restore AdaptiveSpritesDMItool.sln --locked-mode -m:1
 dotnet build AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-restore
 dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj -c Release
@@ -106,22 +103,22 @@ The launch configuration uses `type: "dotnet"` and `projectPath`; it does not re
 Release package:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.2 -Runtime win-x64
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.3.0 -Runtime win-x64
 ```
 
 The script creates:
 
-- `artifacts/publish/AdaptiveSpritesDMItool-v2.2-win-x64/`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.2-win-x64.zip`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.2-win-x64.sha256.txt`
-- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.2.zip`
-- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.2.sha256.txt`
+- `artifacts/publish/AdaptiveSpritesDMItool-v2.3.0-win-x64/`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.3.0-win-x64.zip`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.3.0-win-x64.sha256.txt`
+- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.3.0.zip`
+- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.3.0.sha256.txt`
 
 `artifacts/` is generated output and is intentionally ignored by git.
 
 ## Architecture
 
-The active v2.2 runtime is a layered solution:
+The active v2.3.0 runtime is a layered solution:
 
 - `src/AdaptiveSpritesDmiTool.Domain`
   Pure domain model, value objects, validation, direction model, and config invariants.
@@ -138,10 +135,10 @@ The active v2.2 runtime is a layered solution:
 
 ## Testing
 
-The v2.2 release validation passed:
+The v2.3.0 automated validation covers:
 
-- 127 unit tests
-- 46 integration tests
+- 230 unit tests
+- 56 integration tests
 - hidden Unicode scan
 - Release build
 - Release test run
@@ -159,6 +156,7 @@ See [docs/TEST_PLAN.md](docs/TEST_PLAN.md).
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 - [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
 - [CHANGELOG.md](CHANGELOG.md)
+- [docs/releases/v2.3.0.md](docs/releases/v2.3.0.md)
 - [docs/releases/v2.2.md](docs/releases/v2.2.md)
 - [docs/releases/v2.1.md](docs/releases/v2.1.md)
 

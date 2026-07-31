@@ -57,7 +57,10 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
                     PlacementMode: "Overlay",
                     Order: 3,
                     OpacityPercent: 20)
-            ]);
+            ],
+            MirrorAxisOffsetPixels: -4,
+            ShowMirrorAxisGuide: true,
+            MirrorAcrossDirections: false);
 
         (await repository.SaveAsync(settings, CancellationToken.None)).IsSuccess.Should().BeTrue();
 
@@ -65,6 +68,27 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
 
         loadResult.IsSuccess.Should().BeTrue();
         loadResult.Value.Should().BeEquivalentTo(settings);
+    }
+
+    [Fact]
+    public async Task RepositoryShouldMigrateVersionSixWithVersionSevenEditorDefaults()
+    {
+        var path = Path.Combine(_tempDirectory, "version6.json");
+        await File.WriteAllTextAsync(
+            path,
+            """
+            {
+              "version": 6,
+              "lastOverwritePolicy": "OverwriteExisting"
+            }
+            """);
+
+        var result = await new JsonWorkspaceSettingsRepository(path).LoadAsync(CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.MirrorAxisOffsetPixels.Should().Be(0);
+        result.Value.ShowMirrorAxisGuide.Should().BeFalse();
+        result.Value.MirrorAcrossDirections.Should().BeTrue();
     }
 
     [Fact]

@@ -28,7 +28,7 @@ public sealed class JsonSpriteConfigRepository : IConfigRepository
                 return Result.Failure<SpriteConfig>(Errors.Validation("Config file is empty or malformed."));
             }
 
-            if (model.Version != 1)
+            if (model.Version is not 1 and not 2)
             {
                 return Result.Failure<SpriteConfig>(Errors.Validation($"Unsupported config version '{model.Version}'."));
             }
@@ -85,7 +85,7 @@ public sealed class JsonSpriteConfigRepository : IConfigRepository
     private static ConfigDocument FromDomain(SpriteConfig config) =>
         new()
         {
-            Version = 1,
+            Version = 2,
             Name = config.Name,
             Resolution = new ResolutionDocument
             {
@@ -100,6 +100,10 @@ public sealed class JsonSpriteConfigRepository : IConfigRepository
                 Source = config.Metadata.Source.ToString(),
                 SourceIdentifier = config.Metadata.SourceIdentifier,
                 ImportedFromLegacy = config.Metadata.ImportedFromLegacy
+            },
+            EditorSettings = new EditorSettingsDocument
+            {
+                MirrorAxisOffsetPixels = config.EditorSettings.MirrorAxisOffsetPixels
             },
             Mappings = config.Directions.ToDictionary(
                 static direction => direction.ToString(),
@@ -127,7 +131,11 @@ public sealed class JsonSpriteConfigRepository : IConfigRepository
             model.Name,
             new SpriteResolution(model.Resolution.Width, model.Resolution.Height),
             supportedDirections,
-            metadata);
+            metadata,
+            new SpriteEditorSettings(
+                model.Version >= 2
+                    ? model.EditorSettings?.MirrorAxisOffsetPixels ?? 0
+                    : 0));
 
         foreach (var pair in model.Mappings)
         {
@@ -138,7 +146,9 @@ public sealed class JsonSpriteConfigRepository : IConfigRepository
                 PixelCoordinate? target = mapping.Target is null
                     ? null
                     : new PixelCoordinate(mapping.Target.X, mapping.Target.Y);
-                config = config.SetMapping(direction, source, target, metadata.UpdatedUtc);
+                // An explicitly serialized identity mapping is meaningful after Move/Select:
+                // it masks an older mapping at the destination and must survive round-trip.
+                config = config.SetMappingForced(direction, source, target, metadata.UpdatedUtc);
             }
         }
 
@@ -165,7 +175,16 @@ public sealed class JsonSpriteConfigRepository : IConfigRepository
 
         public MetadataDocument Metadata { get; set; } = new();
 
+        [JsonProperty("editorSettings")]
+        public EditorSettingsDocument? EditorSettings { get; set; }
+
         public Dictionary<string, MappingDocument[]> Mappings { get; set; } = [];
+    }
+
+    private sealed class EditorSettingsDocument
+    {
+        [JsonProperty("mirrorAxisOffsetPixels")]
+        public int MirrorAxisOffsetPixels { get; set; }
     }
 
     private sealed class ResolutionDocument

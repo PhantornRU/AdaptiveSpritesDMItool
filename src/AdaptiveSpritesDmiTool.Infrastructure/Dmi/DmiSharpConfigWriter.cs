@@ -2,136 +2,417 @@ using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using DMISharp;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace AdaptiveSpritesDmiTool.Infrastructure.Dmi;
 
-public sealed class DmiSharpConfigWriter : IDmiWriter
+public sealed partial class DmiSharpConfigWriter : IDmiWriter
 {
+    [LoggerMessage(
+        EventId = 2301,
+        Level = LogLevel.Information,
+        Message = "dmi_write operation_id={OperationId} tool={Tool} state={State} direction={Direction} frame={Frame} " +
+                  "scope={Scope} mappings={Mappings} applied={Applied} skipped={Skipped} input={InputPath} output={OutputPath} result=processed")]
+    private static partial void LogProcessed(
+        ILogger logger,
+        string operationId,
+        string tool,
+        string state,
+        string direction,
+        string frame,
+        string scope,
+        int mappings,
+        int applied,
+        int skipped,
+        string inputPath,
+        string outputPath);
+
+    [LoggerMessage(
+        EventId = 2302,
+        Level = LogLevel.Warning,
+        Message = "dmi_write operation_id={OperationId} tool={Tool} state={State} direction={Direction} frame={Frame} " +
+                  "scope={Scope} mappings={Mappings} applied={Applied} skipped={Skipped} input={InputPath} output={OutputPath} " +
+                  "result=cancelled message={Message}")]
+    private static partial void LogCancelled(
+        ILogger logger,
+        string operationId,
+        string tool,
+        string state,
+        string direction,
+        string frame,
+        string scope,
+        int mappings,
+        int applied,
+        int skipped,
+        string inputPath,
+        string outputPath,
+        string message);
+
+    [LoggerMessage(
+        EventId = 2303,
+        Level = LogLevel.Warning,
+        Message = "dmi_write operation_id={OperationId} tool={Tool} state={State} direction={Direction} frame={Frame} " +
+                  "scope={Scope} mappings={Mappings} applied={Applied} skipped={Skipped} input={InputPath} output={OutputPath} " +
+                  "result=validation_failed message={Message}")]
+    private static partial void LogValidationFailed(
+        ILogger logger,
+        string operationId,
+        string tool,
+        string state,
+        string direction,
+        string frame,
+        string scope,
+        int mappings,
+        int applied,
+        int skipped,
+        string inputPath,
+        string outputPath,
+        string message,
+        Exception? exception);
+
+    [LoggerMessage(
+        EventId = 2304,
+        Level = LogLevel.Error,
+        Message = "dmi_write operation_id={OperationId} tool={Tool} state={State} direction={Direction} frame={Frame} " +
+                  "scope={Scope} mappings={Mappings} applied={Applied} skipped={Skipped} input={InputPath} output={OutputPath} " +
+                  "result=failed message={Message}")]
+    private static partial void LogFailed(
+        ILogger logger,
+        string operationId,
+        string tool,
+        string state,
+        string direction,
+        string frame,
+        string scope,
+        int mappings,
+        int applied,
+        int skipped,
+        string inputPath,
+        string outputPath,
+        string message,
+        Exception? exception);
+
+    private static void LogDmiProcessed(
+        ILogger logger,
+        string operationId,
+        string inputPath,
+        string outputPath,
+        int mappings,
+        int applied) =>
+        LogProcessed(logger, operationId, "DmiWriter", "all", "all", "all", "Batch", mappings, applied, 0, inputPath, outputPath);
+
+    private static void LogDmiCancelled(
+        ILogger logger,
+        string operationId,
+        string inputPath,
+        string outputPath,
+        int mappings,
+        int applied,
+        string message) =>
+        LogCancelled(logger, operationId, "DmiWriter", "all", "all", "all", "Batch", mappings, applied, 0, inputPath, outputPath, message);
+
+    private static void LogDmiValidationFailed(
+        ILogger logger,
+        string operationId,
+        string inputPath,
+        string outputPath,
+        int mappings,
+        int applied,
+        string message,
+        Exception? exception) =>
+        LogValidationFailed(
+            logger,
+            operationId,
+            "DmiWriter",
+            "all",
+            "all",
+            "all",
+            "Batch",
+            mappings,
+            applied,
+            0,
+            inputPath,
+            outputPath,
+            message,
+            exception);
+
+    private static void LogDmiFailed(
+        ILogger logger,
+        string operationId,
+        string inputPath,
+        string outputPath,
+        int mappings,
+        int applied,
+        string message,
+        Exception? exception) =>
+        LogFailed(
+            logger,
+            operationId,
+            "DmiWriter",
+            "all",
+            "all",
+            "all",
+            "Batch",
+            mappings,
+            applied,
+            0,
+            inputPath,
+            outputPath,
+            message,
+            exception);
+
+    private readonly IDmiArtifactValidator _artifactValidator;
+    private readonly IDmiAtomicCommitter _atomicCommitter;
+    private readonly ILogger<DmiSharpConfigWriter> _logger;
+
+    public DmiSharpConfigWriter(ILogger<DmiSharpConfigWriter>? logger = null)
+        : this(new DmiArtifactValidator(), new DmiAtomicCommitter(), logger ?? NullLogger<DmiSharpConfigWriter>.Instance)
+    {
+    }
+
+    internal DmiSharpConfigWriter(
+        IDmiArtifactValidator artifactValidator,
+        IDmiAtomicCommitter atomicCommitter,
+        ILogger<DmiSharpConfigWriter>? logger = null)
+    {
+        _artifactValidator = artifactValidator ?? throw new ArgumentNullException(nameof(artifactValidator));
+        _atomicCommitter = atomicCommitter ?? throw new ArgumentNullException(nameof(atomicCommitter));
+        _logger = logger ?? NullLogger<DmiSharpConfigWriter>.Instance;
+    }
+
     public async Task<Result<BatchFileResult>> ApplyAsync(ApplyConfigToFileRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        var operationId = Guid.NewGuid().ToString("N");
+        var rawInputPath = request.InputPath ?? string.Empty;
+        var rawOutputPath = request.OutputPath ?? string.Empty;
+        var mappingCount = request.Config?.Directions.Sum(direction => request.Config.GetMappings(direction).Count) ?? 0;
 
         if (string.IsNullOrWhiteSpace(request.InputPath))
         {
+            LogDmiValidationFailed(_logger, operationId, rawInputPath, rawOutputPath, mappingCount, 0, "Input DMI path is required.", null);
             return Result.Failure<BatchFileResult>(Errors.Validation("Input DMI path is required."));
         }
 
         if (string.IsNullOrWhiteSpace(request.OutputPath))
         {
+            LogDmiValidationFailed(_logger, operationId, rawInputPath, rawOutputPath, mappingCount, 0, "Output DMI path is required.", null);
             return Result.Failure<BatchFileResult>(Errors.Validation("Output DMI path is required."));
         }
 
-        var inputPath = Path.GetFullPath(request.InputPath);
-        var outputPath = Path.GetFullPath(request.OutputPath);
+        string inputPath;
+        string outputPath;
+        try
+        {
+            inputPath = Path.GetFullPath(request.InputPath);
+            outputPath = Path.GetFullPath(request.OutputPath);
+        }
+        catch (Exception exception)
+        {
+            LogDmiValidationFailed(_logger, operationId, rawInputPath, rawOutputPath, mappingCount, 0, exception.Message, exception);
+            return Result.Failure<BatchFileResult>(Errors.Validation($"DMI path is invalid: {exception.Message}"));
+        }
 
         if (!File.Exists(inputPath))
         {
+            LogDmiValidationFailed(
+                _logger,
+                operationId,
+                inputPath,
+                outputPath,
+                mappingCount,
+                0,
+                $"DMI file '{inputPath}' was not found.",
+                null);
             return Result.Failure<BatchFileResult>(Errors.NotFound($"DMI file '{inputPath}' was not found."));
         }
 
         if (File.Exists(outputPath))
         {
-            return request.OverwritePolicy switch
+            if (request.OverwritePolicy == OverwritePolicy.SkipExisting)
             {
-                OverwritePolicy.SkipExisting => Result.Success(
-                    new BatchFileResult(inputPath, outputPath, BatchFileStatus.Skipped, "Skipped because output file already exists.")),
-                OverwritePolicy.FailIfExists => Result.Success(
-                    new BatchFileResult(inputPath, outputPath, BatchFileStatus.Failed, "Output file already exists.")),
-                _ => await ProcessAsync(inputPath, outputPath, request.Config, cancellationToken)
-            };
+                return Result.Success(
+                    new BatchFileResult(inputPath, outputPath, BatchFileStatus.Skipped, "Skipped because output file already exists."));
+            }
+
+            if (request.OverwritePolicy == OverwritePolicy.FailIfExists)
+            {
+                LogDmiValidationFailed(
+                    _logger,
+                    operationId,
+                    inputPath,
+                    outputPath,
+                    mappingCount,
+                    0,
+                    "Output file already exists.",
+                    null);
+                return Result.Success(
+                    new BatchFileResult(inputPath, outputPath, BatchFileStatus.Failed, "Output file already exists."));
+            }
         }
 
-        return await ProcessAsync(inputPath, outputPath, request.Config, cancellationToken);
+        return await ProcessAsync(inputPath, outputPath, request.Config, operationId, mappingCount, cancellationToken);
     }
 
-    private static async Task<Result<BatchFileResult>> ProcessAsync(
+    private async Task<Result<BatchFileResult>> ProcessAsync(
         string inputPath,
         string outputPath,
-        SpriteConfig config,
+        SpriteConfig? config,
+        string operationId,
+        int mappingCount,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        if (config is null)
+        {
+            const string message = "A sprite config is required.";
+            LogDmiValidationFailed(_logger, operationId, inputPath, outputPath, mappingCount, 0, message, null);
+            return Result.Failure<BatchFileResult>(Errors.Validation(message));
+        }
 
         var configValidation = config.Validate();
         if (!configValidation.IsValid)
         {
+            LogDmiValidationFailed(
+                _logger,
+                operationId,
+                inputPath,
+                outputPath,
+                mappingCount,
+                0,
+                configValidation.Errors[0].Message,
+                null);
             return Result.Failure<BatchFileResult>(Errors.Validation(configValidation.Errors[0].Message));
         }
 
-        var directory = Path.GetDirectoryName(outputPath);
-        if (!string.IsNullOrWhiteSpace(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        var tempPath = Path.Combine(
-            string.IsNullOrWhiteSpace(directory) ? Path.GetDirectoryName(inputPath) ?? Path.GetTempPath() : directory,
-            $"{Path.GetFileNameWithoutExtension(outputPath)}.{Guid.NewGuid():N}.tmp.dmi");
-
+        string? tempPath = null;
         try
         {
+            var directory = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var workingTempPath = Path.Combine(
+                string.IsNullOrWhiteSpace(directory) ? Path.GetDirectoryName(inputPath) ?? Path.GetTempPath() : directory,
+                $"{Path.GetFileNameWithoutExtension(outputPath)}.{Guid.NewGuid():N}.tmp.dmi");
+            tempPath = workingTempPath;
+
             return await Task.Run(() =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 if (new FileInfo(inputPath).Length == 0)
                 {
-                    return Result.Failure<BatchFileResult>(Errors.Validation("DMI file is empty."));
+                    return ValidationFailure(Errors.Validation("DMI file is empty."));
                 }
 
-                using var dmiFile = new DMIFile(inputPath);
-                if (dmiFile.States.Count == 0)
+                DmiArtifactFingerprint expectedFingerprint;
+                int appliedPixelCount;
+                using (var dmiFile = new DMIFile(inputPath))
                 {
-                    return Result.Failure<BatchFileResult>(Errors.Validation("DMI file does not contain any states."));
+                    if (dmiFile.States.Count == 0)
+                    {
+                        return ValidationFailure(Errors.Validation("DMI file does not contain any states."));
+                    }
+
+                    var compatibility = config.ValidateCompatibility(
+                        DmiSharpConversions.InferResolution(dmiFile),
+                        DmiSharpConversions.InferSupportedDirections(dmiFile.States));
+                    if (!compatibility.IsValid)
+                    {
+                        return ValidationFailure(Errors.Validation(compatibility.Errors[0].Message));
+                    }
+
+                    appliedPixelCount = TransformStates(dmiFile, config, cancellationToken);
+                    expectedFingerprint = DmiArtifactFingerprintFactory.Create(dmiFile, cancellationToken);
+
+                    dmiFile.Save(workingTempPath);
                 }
 
-                var compatibility = config.ValidateCompatibility(
-                    DmiSharpConversions.InferResolution(dmiFile),
-                    DmiSharpConversions.InferSupportedDirections(dmiFile.States));
-                if (!compatibility.IsValid)
+                if (!File.Exists(workingTempPath))
                 {
-                    return Result.Failure<BatchFileResult>(Errors.Validation(compatibility.Errors[0].Message));
+                    const string message = "Failed to save transformed DMI file.";
+                    LogDmiFailed(_logger, operationId, inputPath, outputPath, mappingCount, 0, message, null);
+                    return Result.Failure<BatchFileResult>(Errors.Unexpected(message));
                 }
 
-                dmiFile.SortStates(StateComparer);
-                TransformStates(dmiFile, config, cancellationToken);
-
-                dmiFile.Save(tempPath);
-                if (!File.Exists(tempPath))
+                cancellationToken.ThrowIfCancellationRequested();
+                var verification = _artifactValidator.Validate(workingTempPath, expectedFingerprint, cancellationToken);
+                if (verification.IsFailure)
                 {
-                    return Result.Failure<BatchFileResult>(Errors.Unexpected("Failed to save transformed DMI file."));
+                    return ValidationFailure(verification.Error);
                 }
 
-                File.Move(tempPath, outputPath, true);
+                cancellationToken.ThrowIfCancellationRequested();
+                _atomicCommitter.Commit(workingTempPath, outputPath);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    LogDmiProcessed(_logger, operationId, inputPath, outputPath, mappingCount, appliedPixelCount);
+                }
+
                 return Result.Success(
                     new BatchFileResult(inputPath, outputPath, BatchFileStatus.Processed, "Config applied successfully."));
+
+                Result<BatchFileResult> ValidationFailure(Error error)
+                {
+                    LogDmiValidationFailed(_logger, operationId, inputPath, outputPath, mappingCount, 0, error.Message, null);
+                    return Result.Failure<BatchFileResult>(error);
+                }
             }, cancellationToken);
         }
         catch (OperationCanceledException)
         {
+            LogDmiCancelled(
+                _logger,
+                operationId,
+                inputPath,
+                outputPath,
+                mappingCount,
+                0,
+                "DMI processing was cancelled.");
             return Result.Failure<BatchFileResult>(Errors.Cancelled("DMI processing was cancelled."));
         }
         catch (ArgumentException exception)
         {
+            LogDmiValidationFailed(_logger, operationId, inputPath, outputPath, mappingCount, 0, exception.Message, exception);
             return Result.Failure<BatchFileResult>(Errors.Validation($"Failed to process DMI file: {exception.Message}"));
         }
         catch (Exception exception)
         {
+            LogDmiFailed(_logger, operationId, inputPath, outputPath, mappingCount, 0, exception.Message, exception);
             return Result.Failure<BatchFileResult>(Errors.Unexpected($"Failed to process DMI file: {exception.Message}"));
         }
         finally
         {
-            if (File.Exists(tempPath))
+            if (!string.IsNullOrWhiteSpace(tempPath) && File.Exists(tempPath))
             {
-                File.Delete(tempPath);
+                try
+                {
+                    File.Delete(tempPath);
+                }
+                catch (Exception exception)
+                {
+                    LogDmiFailed(
+                        _logger,
+                        operationId,
+                        inputPath,
+                        outputPath,
+                        mappingCount,
+                        0,
+                        $"Failed to delete temporary file '{tempPath}': {exception.Message}",
+                        exception);
+                }
             }
         }
     }
 
-    private static void TransformStates(DMIFile dmiFile, SpriteConfig config, CancellationToken cancellationToken)
+    private static int TransformStates(DMIFile dmiFile, SpriteConfig config, CancellationToken cancellationToken)
     {
+        var appliedPixelCount = 0;
         foreach (var state in dmiFile.States)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -154,10 +435,13 @@ public sealed class DmiSharpConfigWriter : IDmiWriter
 
                     var transformedFrame = sourceFrame.Clone();
                     ApplyMappings(transformedFrame, sourceFrame, config, DmiSharpConversions.ToDomainDirection(direction));
+                    appliedPixelCount += config.GetMappings(DmiSharpConversions.ToDomainDirection(direction)).Count;
                     state.SetFrame(transformedFrame, direction, frameIndex);
                 }
             }
         }
+
+        return appliedPixelCount;
     }
 
     private static int GetFrameCount(DMIState state, int directionCount)
@@ -200,33 +484,4 @@ public sealed class DmiSharpConfigWriter : IDmiWriter
         });
     }
 
-    private static IComparer<DMIState> StateComparer { get; } =
-        Comparer<DMIState>.Create((left, right) =>
-        {
-            var result = StringComparer.Ordinal.Compare(left.Name, right.Name);
-            if (result != 0)
-            {
-                return result;
-            }
-
-            result = left.DirectionDepth.CompareTo(right.DirectionDepth);
-            if (result != 0)
-            {
-                return result;
-            }
-
-            result = left.TotalFrames.CompareTo(right.TotalFrames);
-            if (result != 0)
-            {
-                return result;
-            }
-
-            result = left.Width.CompareTo(right.Width);
-            if (result != 0)
-            {
-                return result;
-            }
-
-            return left.Height.CompareTo(right.Height);
-        });
 }

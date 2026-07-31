@@ -1,8 +1,8 @@
-# Test Plan v2.2
+# Test Plan v2.3.0
 
 ## Strategy
 
-Проверка v2.2 строится на трех уровнях:
+Проверка v2.3.0 строится на трех уровнях:
 
 - unit tests для Domain invariants, Application use cases и WPF shell view models;
 - integration tests для JSON persistence, CSV import, DMI adapters, preview, settings и batch behavior;
@@ -26,6 +26,8 @@
 - imported DMI state layer assignment, order, opacity, and restore behavior
 - WPF shell smoke checks
 - editor tools and viewport state
+- exact 4/8-direction projection matrix, mirror parity, offsets and OOB skips
+- interpolated atomic strokes, conflict rejection and semantic no-op history
 - config queue behavior
 - batch workspace view-model state
 
@@ -41,6 +43,10 @@
 - empty or invalid DMI rejection
 - preview extraction with optional landmark/overlay
 - DMI writer apply/save for `4-dir` and `8-dir`
+- DMI state order, metadata/RGBA verification, in-place save and atomic failure safety
+- asymmetric `3x3`/`4x4` fixtures with unique corners, multiple states, frames and directions
+- independent mapping/preview/reopened-DMI RGBA SHA-256 comparison
+- verification, cancellation and replacement failures preserve the original output hash and remove temporary files
 - deterministic batch end-to-end
 - overwrite/skip behavior
 - stable input/output reporting
@@ -48,16 +54,17 @@
 - imported state workspace settings validation
 - batch manifest validation and artifacts behavior
 
-## v2.2 Release Validation
+## v2.3.0 Release Validation
 
-Последняя release-проверка v2.2 прошла:
+Release-проверка v2.3.0 включает:
 
 - hidden Unicode scan
-- `dotnet restore`
+- locked `dotnet restore`
 - `dotnet build` in Release configuration
 - `dotnet test` in Release configuration
-- 127 unit tests
-- 46 integration tests
+- 230 unit tests
+- 56 integration tests
+- NuGet vulnerability audit
 - self-contained Windows x64 publish
 - ZIP packaging
 - samples ZIP packaging
@@ -85,7 +92,7 @@
 14. preview composite/grid/text-grid modes
 15. edit mapping with paint/fill/move/erase tools
 16. undo and redo sequence
-17. area undo behavior
+17. Restore Pixel/Area behavior
 18. transparent output pixel behavior
 19. batch processing with `SkipExisting`
 20. batch processing with `OverwriteExisting`
@@ -115,13 +122,22 @@ Run after large presentation, release, or packaging changes:
 12. Verify processed/skipped/failed counts and output files.
 13. Restart the app and verify recent settings were restored.
 14. Add imported DMI state layers, adjust order and opacity, restart, and verify layer settings were restored.
+15. Repeat the editor checks at multiple zoom levels and at Windows display scaling values of 100%, 125%, and 150%.
+16. Enable the mirror-axis guide independently of the grid; verify the centered axis and positive/negative offsets on every Source and Editable canvas.
+17. Exercise Single, Parallel, and All scopes with Mirror both enabled and disabled, including an offset that produces out-of-bounds projections; verify skipped targets are reported and never clamped to an edge.
+18. Draw fast sparse Paint, Erase, and Restore strokes; verify continuity and exactly one Undo step per completed gesture.
+19. Verify inclusive Fill bounds, overlapping Move and Select/Move, transparent Erase, and original-pixel Restore.
+20. During a gesture, test Escape, tool/state/direction changes, lost mouse capture, and mouse release outside the canvas; verify cancellation or completion at the last valid coordinate as appropriate.
+21. Save the same asymmetric synthetic DMI both to a new path and in place, then compare preview pixels with the reopened DMI.
+22. Open the saved DMI in a third-party BYOND/DMI tool and verify state order, animation frames, directions, metadata, transparency, and unique corner pixels.
+23. After any WPF-UI dependency update, repeat the full toolbar, dialogs, themes, DPI, canvas input, and window-resize smoke before accepting the package.
 
 ## Validation Commands
 
 Developer validation:
 
 ```powershell
-dotnet restore AdaptiveSpritesDMItool.sln -m:1
+dotnet restore AdaptiveSpritesDMItool.sln --locked-mode -m:1
 dotnet build AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-restore
 dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 ```
@@ -129,7 +145,7 @@ dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 Release validation:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.2 -Runtime win-x64
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.3.0 -Runtime win-x64
 ```
 
 Docs-only validation:

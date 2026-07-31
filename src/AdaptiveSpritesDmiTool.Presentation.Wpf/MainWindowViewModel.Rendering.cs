@@ -43,6 +43,8 @@ public partial class WorkspaceShellViewModel
 
     private SpriteResolution? ResolveEditorResolution() => _editorSession.CurrentConfig?.Resolution ?? _editorSession.LoadedAsset?.Resolution;
 
+    private SpriteConfig? ResolveRenderedConfig() => _gesturePreviewConfig ?? _editorSession.CurrentConfig;
+
     private double DetermineEditorZoomBaseline(SpriteResolution? resolution = null)
     {
         var resolved = resolution ?? ResolveEditorResolution();
@@ -102,6 +104,9 @@ public partial class WorkspaceShellViewModel
         IsBottomWorkspaceExpanded = settings.IsBottomWorkspaceExpanded;
         HideInactiveSourceCanvases = settings.HideInactiveSourceCanvases;
         FitMultipleDirectionCanvasesToViewport = settings.FitMultipleDirectionCanvasesToViewport;
+        MirrorAxisOffsetPixels = settings.MirrorAxisOffsetPixels;
+        ShowMirrorAxisGuide = settings.ShowMirrorAxisGuide;
+        MirrorAcrossDirections = settings.MirrorAcrossDirections;
         _restoredImportedStateSettings = settings.ImportedStates ?? Array.Empty<WorkspaceImportedStateSettings>();
         IsFocusMode = false;
     }
@@ -130,6 +135,10 @@ public partial class WorkspaceShellViewModel
             if (configResult.IsFailure)
             {
                 _logger.LogWarning("Startup config restore failed: {Message}", configResult.Error.Message);
+            }
+            else
+            {
+                SynchronizeMirrorAxisFromConfig(configResult.Value);
             }
         }
         else if (!string.IsNullOrWhiteSpace(LegacyCsvPath) && File.Exists(LegacyCsvPath))
@@ -178,7 +187,10 @@ public partial class WorkspaceShellViewModel
             SelectedLanguage.ToString(),
             HideInactiveSourceCanvases,
             FitMultipleDirectionCanvasesToViewport,
-            BuildImportedStateSettings());
+            BuildImportedStateSettings(),
+            MirrorAxisOffsetPixels,
+            ShowMirrorAxisGuide,
+            MirrorAcrossDirections);
 
     private IReadOnlyList<WorkspaceImportedStateSettings> BuildImportedStateSettings() =>
         ImportedDmiStateItems
@@ -243,8 +255,6 @@ public partial class WorkspaceShellViewModel
         FitMultipleDirectionCanvasesToViewport = true;
         HasMultipleDirectionViewportSurfaces = false;
         IsFocusMode = false;
-        MirrorAcrossDirections = true;
-        UseCentralizedPropagation = true;
         SelectedBatchSourceItem = null;
         _selectedBatchPreviewAsset = null;
         FocusedDirectionTile = null;
@@ -278,6 +288,27 @@ public partial class WorkspaceShellViewModel
         SelectedShellSection = ShellSectionKind.Start;
     }
 
+    private void SynchronizeMirrorAxisFromConfig(SpriteConfig config)
+    {
+        _isSynchronizingMirrorAxis = true;
+        try
+        {
+            MirrorAxisOffsetPixels = config.EditorSettings.MirrorAxisOffsetPixels;
+        }
+        finally
+        {
+            _isSynchronizingMirrorAxis = false;
+        }
+
+        PersistWorkspaceSettingsInBackground();
+    }
+
+    private int ResolveWorkspaceMirrorAxisOffset(SpriteResolution resolution)
+    {
+        var candidate = new SpriteEditorSettings(MirrorAxisOffsetPixels);
+        return candidate.IsValidFor(resolution) ? MirrorAxisOffsetPixels : 0;
+    }
+
     private async Task RunBusyOperationAsync(Func<CancellationToken, Task> operation)
     {
         if (IsBusy)
@@ -286,6 +317,8 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        CancelActiveEditorGesture();
+        ResetEditableDragState();
         using var cancellationSource = new CancellationTokenSource();
         _previewRefreshCoordinator.Cancel();
         _activeOperationCts = cancellationSource;
@@ -442,26 +475,20 @@ public partial class WorkspaceShellViewModel
         }
     }
 
-    private void ApplySourcePixelToEditable(PixelCoordinate editableCoordinate, PixelCoordinate sourceCoordinate, string successMessage)
-    {
-        var result = _applyConfigTransformUseCase.Execute(config => ApplyScopedMapping(config, editableCoordinate, sourceCoordinate));
-        ApplyMutationResult(result, successMessage);
-    }
-
     private void ApplySourcePixelToEditableArea(PixelAreaSelection editableArea, PixelCoordinate sourceCoordinate, string successMessage)
     {
-        var result = _applyConfigTransformUseCase.Execute(config =>
+        if (_editorSession.CurrentConfig is not { } config)
         {
-            var next = config;
-            foreach (var editableCoordinate in editableArea.Enumerate())
-            {
-                next = ApplyScopedMapping(next, editableCoordinate, sourceCoordinate);
-            }
+            StatusMessage = "There is no active config to edit.";
+            return;
+        }
 
-            return next;
-        });
-
-        ApplyMutationResult(result, successMessage);
+        var plan = EditorMutationPlanFactory.CreateStroke(
+            editableArea.Enumerate(),
+            EditorMappingMutationKind.SetSource,
+            sourceCoordinate,
+            CreateDirectionProjectionOptions(config));
+        ApplyEditorPlan(plan, successMessage, "Fill");
     }
 
     private void ApplyMovedEditableArea(
@@ -473,189 +500,195 @@ public partial class WorkspaceShellViewModel
         var deltaX = destinationArea.Left - originArea.Left;
         var deltaY = destinationArea.Top - originArea.Top;
 
-        var result = _applyConfigTransformUseCase.Execute(config =>
+        if (_editorSession.CurrentConfig is not { } config)
         {
-            var next = config;
-            var selectedDirection = GetSafeSelectedDirection();
-            foreach (var (direction, directionPayload) in payload)
+            StatusMessage = "There is no active config to edit.";
+            return;
+        }
+
+        var operations = new List<EditorMappingMutation>();
+        var skipped = 0;
+        foreach (var (direction, directionPayload) in payload)
+        {
+            if (!config.SupportedDirections.Supports(direction))
             {
-                if (!config.SupportedDirections.Supports(direction))
+                continue;
+            }
+
+            foreach (var entry in directionPayload)
+            {
+                var destinationLogicalX = entry.Key.X + deltaX;
+                var destinationLogicalY = entry.Key.Y + deltaY;
+                if (destinationLogicalX < 0 ||
+                    destinationLogicalY < 0 ||
+                    destinationLogicalX >= config.Resolution.Width ||
+                    destinationLogicalY >= config.Resolution.Height)
                 {
+                    skipped++;
                     continue;
                 }
 
-                var moves = directionPayload
-                    .Select(entry =>
-                    {
-                        var destinationEditableCoordinate = ClampCoordinate(
-                            entry.Key.X + deltaX,
-                            entry.Key.Y + deltaY,
-                            config.Resolution);
-
-                        return (
-                            Origin: TransformEditableCoordinate(entry.Key, selectedDirection, direction, config.Resolution),
-                            Destination: TransformEditableCoordinate(destinationEditableCoordinate, selectedDirection, direction, config.Resolution),
-                            Source: entry.Value);
-                    })
-                    .ToArray();
-
-                // Two-phase apply: remove all origins first, then set all destinations.
-                // Сначала удаляем все старые маппинги, затем ставим новые, чтобы избежать cut-out эффекта на пересекающихся координатах.
-                // This prevents overlap cut-out where a destination inside the selection
-                // is later erased by its own RemoveMapping call. Removed origins stay
-                // unmapped, which restores the Source[x,y] backing pixel instead of transparency.
-                var uniqueOrigins = moves
-                    .Select(m => m.Origin)
-                    .Distinct()
-                    .ToArray();
-
-                foreach (var origin in uniqueOrigins)
+                var destinationLogical = new PixelCoordinate(destinationLogicalX, destinationLogicalY);
+                var origin = TryTransformEditableCoordinate(entry.Key, GetSafeSelectedDirection(), direction, config);
+                var destination = TryTransformEditableCoordinate(destinationLogical, GetSafeSelectedDirection(), direction, config);
+                if (origin is null || destination is null)
                 {
-                    next = next.RemoveMapping(direction, origin);
+                    skipped++;
+                    continue;
                 }
 
-                foreach (var move in moves)
-                {
-                    next = next.SetMappingForced(direction, move.Destination, move.Source);
-                }
+                operations.Add(
+                    new EditorMappingMutation(
+                        EditorMappingMutationKind.Restore,
+                        direction,
+                        origin.Value));
+                operations.Add(
+                    new EditorMappingMutation(
+                        EditorMappingMutationKind.SetSourceForced,
+                        direction,
+                        destination.Value,
+                        entry.Value));
             }
+        }
 
-            return next;
-        });
-
-        ApplyMutationResult(result, successMessage);
+        ApplyEditorPlan(
+            EditorMutationEngine.Normalize(new EditorMutationPlan(operations, skipped)),
+            successMessage,
+            "Move");
     }
 
     private void ApplyRestoreOperation(PixelAreaSelection area, string successMessage)
     {
-        var result = _applyConfigTransformUseCase.Execute(config =>
+        if (_editorSession.CurrentConfig is not { } config)
         {
-            var next = config;
-            foreach (var editableCoordinate in area.Enumerate())
-            {
-                next = ApplyScopedRestore(next, editableCoordinate);
-            }
-
-            return next;
-        });
-
-        ApplyMutationResult(result, successMessage);
-    }
-
-    private void ApplyRestoreOperations(
-        IReadOnlyCollection<PixelCoordinate> editableCoordinates,
-        string successMessage,
-        bool refreshWorkspace,
-        bool rebuildNavigator,
-        bool refreshPreview)
-    {
-        if (editableCoordinates.Count == 0)
-        {
+            StatusMessage = "There is no active config to edit.";
             return;
         }
 
-        var result = _applyConfigTransformUseCase.Execute(config =>
-        {
-            var next = config;
-            foreach (var editableCoordinate in editableCoordinates)
-            {
-                next = ApplyScopedRestore(next, editableCoordinate);
-            }
-
-            return next;
-        });
-
-        ApplyMutationResult(
-            result,
-            successMessage,
-            refreshWorkspace: refreshWorkspace,
-            rebuildNavigator: rebuildNavigator,
-            refreshPreview: refreshPreview);
+        var plan = EditorMutationPlanFactory.CreateStroke(
+            area.Enumerate(),
+            EditorMappingMutationKind.Restore,
+            null,
+            CreateDirectionProjectionOptions(config));
+        ApplyEditorPlan(plan, successMessage, "RestoreArea");
     }
 
-    private void ApplyDrawOperations(
-        IReadOnlyCollection<PixelCoordinate> editableCoordinates,
-        PixelCoordinate sourceCoordinate,
-        string successMessage,
-        bool refreshWorkspace,
-        bool rebuildNavigator,
-        bool refreshPreview)
+    private void ApplyEditorPlan(Result<EditorMutationPlan> plan, string successMessage, string tool)
     {
-        if (editableCoordinates.Count == 0)
+        var operationId = Guid.NewGuid();
+        if (plan.IsFailure)
         {
+            StatusMessage = plan.Error.Message;
+            LogEditorMutationFailure(operationId, tool, plan.Error.Message);
             return;
         }
 
-        var result = _applyConfigTransformUseCase.Execute(config =>
+        var result = _applyEditorMutationUseCase.Execute(plan.Value);
+        if (result.IsFailure)
         {
-            var next = config;
-            foreach (var editableCoordinate in editableCoordinates)
+            StatusMessage = result.Error.Message;
+            LogEditorMutationFailure(
+                operationId,
+                tool,
+                result.Error.Message,
+                plan.Value.SkippedProjectionCount);
+            return;
+        }
+
+        if (result.Value.SkippedProjectionCount > 0)
+        {
+            successMessage += $" Skipped {result.Value.SkippedProjectionCount} out-of-bounds projection(s).";
+        }
+
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            var activeDirection = GetSafeSelectedDirection();
+            var directionScope = SelectedDirectionScope;
+            var stateName = BaseStateName;
+            var appliedOperationCount = result.Value.AppliedOperationCount;
+            var skippedProjectionCount = result.Value.SkippedProjectionCount;
+            _logger.LogInformation(
+                "editor_mutation operation_id={OperationId} tool={Tool} state={State} direction={Direction} frame={Frame} scope={Scope} applied={Applied} skipped={Skipped}",
+                operationId,
+                tool,
+                stateName,
+                activeDirection,
+                0,
+                directionScope,
+                appliedOperationCount,
+                skippedProjectionCount);
+        }
+        ApplyEditorMutationResult(result, successMessage);
+    }
+
+    private void LogEditorMutationFailure(
+        Guid operationId,
+        object tool,
+        string message,
+        int skippedProjectionCount = 0)
+    {
+        _logger.LogWarning(
+            "editor_mutation operation_id={OperationId} tool={Tool} state={State} direction={Direction} frame={Frame} " +
+            "scope={Scope} applied={Applied} skipped={Skipped} result=failed message={Message}",
+            operationId,
+            tool,
+            BaseStateName,
+            GetSafeSelectedDirection(),
+            0,
+            SelectedDirectionScope,
+            0,
+            skippedProjectionCount,
+            message);
+    }
+
+    private DirectionProjectionOptions CreateDirectionProjectionOptions(SpriteConfig config) =>
+        new(
+            config.Resolution,
+            config.SupportedDirections,
+            GetSafeSelectedDirection(),
+            SelectedDirectionScope switch
             {
-                next = ApplyScopedMapping(next, editableCoordinate, sourceCoordinate);
-            }
-
-            return next;
-        });
-
-        ApplyMutationResult(
-            result,
-            successMessage,
-            refreshWorkspace: refreshWorkspace,
-            rebuildNavigator: rebuildNavigator,
-            refreshPreview: refreshPreview);
-    }
-
-    private SpriteConfig ApplyScopedMapping(SpriteConfig config, PixelCoordinate editableCoordinate, PixelCoordinate? sourceCoordinate)
-    {
-        var next = config;
-        var selectedDirection = GetSafeSelectedDirection();
-        foreach (var direction in ResolveDirections(config.SupportedDirections))
-        {
-            var transformedEditable = TransformEditableCoordinate(editableCoordinate, selectedDirection, direction, config.Resolution);
-            next = next.SetMapping(direction, transformedEditable, sourceCoordinate);
-        }
-
-        return next;
-    }
-
-    private SpriteConfig ApplyScopedRestore(SpriteConfig config, PixelCoordinate editableCoordinate)
-    {
-        var next = config;
-        var selectedDirection = GetSafeSelectedDirection();
-        foreach (var direction in ResolveDirections(config.SupportedDirections))
-        {
-            next = next.RemoveMapping(direction, TransformEditableCoordinate(editableCoordinate, selectedDirection, direction, config.Resolution));
-        }
-
-        return next;
-    }
+                DirectionScope.Single => DirectionPropagationScope.ActiveOnly,
+                DirectionScope.Parallel => DirectionPropagationScope.Parallel,
+                DirectionScope.All => DirectionPropagationScope.All,
+                _ => DirectionPropagationScope.ActiveOnly
+            },
+            MirrorAcrossDirections,
+            config.EditorSettings.MirrorAxisOffsetPixels);
 
     private IReadOnlyList<SpriteDirection> ResolveDirections(SupportedDirectionSet supportedDirections)
     {
-        var available = supportedDirections.GetDirections().ToArray();
-        var selectedDirection = GetSafeSelectedDirection();
-        return SelectedDirectionScope switch
+        var config = _editorSession.CurrentConfig;
+        if (config is null)
         {
-            DirectionScope.Single => [selectedDirection],
-            DirectionScope.Parallel => ResolveParallelDirections(available, selectedDirection),
-            DirectionScope.All => available,
-            _ => [selectedDirection]
-        };
+            return [GetSafeSelectedDirection()];
+        }
+
+        return DirectionProjectionPolicy.ResolveDirections(
+            CreateDirectionProjectionOptions(config) with { SupportedDirections = supportedDirections });
     }
 
-    private PixelCoordinate TransformEditableCoordinate(
+    private PixelCoordinate? TryTransformEditableCoordinate(
         PixelCoordinate coordinate,
         SpriteDirection selectedDirection,
         SpriteDirection targetDirection,
-        SpriteResolution resolution)
+        SpriteConfig config)
     {
-        if (!ShouldMirrorAcrossDirections(selectedDirection, targetDirection))
+        var options = CreateDirectionProjectionOptions(config) with
         {
-            return coordinate;
+            ActiveDirection = selectedDirection,
+            Scope = DirectionPropagationScope.All
+        };
+        var projection = DirectionProjectionPolicy.Project(coordinate, options);
+        if (projection.IsFailure)
+        {
+            return null;
         }
 
-        var mirroredX = (resolution.Width - coordinate.X - 1) + (UseCentralizedPropagation ? -1 : 0);
-        return ClampCoordinate(mirroredX, coordinate.Y, resolution);
+        return projection.Value.Pixels
+            .Where(pixel => pixel.Direction == targetDirection)
+            .Select(static pixel => (PixelCoordinate?)pixel.Coordinate)
+            .FirstOrDefault();
     }
 
     private static IReadOnlyList<SpriteDirection> ResolveParallelDirections(
@@ -663,7 +696,7 @@ public partial class WorkspaceShellViewModel
         SpriteDirection selectedDirection)
     {
         var resolved = new List<SpriteDirection> { selectedDirection };
-        var opposite = GetHorizontalOppositeDirection(selectedDirection);
+        var opposite = DirectionProjectionPolicy.GetParallelDirection(selectedDirection);
         if (opposite is { } horizontalOpposite && available.Contains(horizontalOpposite))
         {
             resolved.Add(horizontalOpposite);
@@ -672,63 +705,18 @@ public partial class WorkspaceShellViewModel
         return resolved;
     }
 
-    private bool ShouldMirrorAcrossDirections(SpriteDirection selectedDirection, SpriteDirection targetDirection)
+    private void ApplyEditorMutationResult(
+        Result<EditorMutationApplyResult> result,
+        string successMessage)
     {
-        if (!MirrorAcrossDirections || selectedDirection == targetDirection)
+        if (result.IsFailure)
         {
-            return false;
+            StatusMessage = result.Error.Message;
+            return;
         }
 
-        if (!BelongsToSameDirectionFamily(selectedDirection, targetDirection))
-        {
-            return false;
-        }
-
-        return !IsVerticalOppositeDirection(selectedDirection, targetDirection);
+        ApplyMutationResult(Result.Success(result.Value.Config), successMessage);
     }
-
-    private static bool BelongsToSameDirectionFamily(SpriteDirection left, SpriteDirection right) =>
-        IsCardinalDirection(left) == IsCardinalDirection(right);
-
-    private static bool IsCardinalDirection(SpriteDirection direction) =>
-        direction is SpriteDirection.South or SpriteDirection.North or SpriteDirection.East or SpriteDirection.West;
-
-    private static bool IsVerticalOppositeDirection(SpriteDirection selectedDirection, SpriteDirection targetDirection) =>
-        GetVerticalOppositeDirection(selectedDirection) is { } opposite && opposite == targetDirection;
-
-    private static SpriteDirection? GetHorizontalOppositeDirection(SpriteDirection direction) =>
-        direction switch
-        {
-            SpriteDirection.South => SpriteDirection.North,
-            SpriteDirection.North => SpriteDirection.South,
-            SpriteDirection.East => SpriteDirection.West,
-            SpriteDirection.West => SpriteDirection.East,
-            SpriteDirection.SouthEast => SpriteDirection.NorthWest,
-            SpriteDirection.NorthWest => SpriteDirection.SouthEast,
-            SpriteDirection.SouthWest => SpriteDirection.NorthEast,
-            SpriteDirection.NorthEast => SpriteDirection.SouthWest,
-            _ => null
-        };
-
-    private static SpriteDirection? GetVerticalOppositeDirection(SpriteDirection direction) =>
-        direction switch
-        {
-            SpriteDirection.South => SpriteDirection.East,
-            SpriteDirection.North => SpriteDirection.West,
-            SpriteDirection.East => SpriteDirection.South,
-            SpriteDirection.West => SpriteDirection.North,
-            SpriteDirection.SouthEast => SpriteDirection.SouthWest,
-            SpriteDirection.NorthWest => SpriteDirection.NorthEast,
-            SpriteDirection.SouthWest => SpriteDirection.SouthEast,
-            SpriteDirection.NorthEast => SpriteDirection.NorthWest,
-            _ => null
-        };
-
-    private static PixelCoordinate ClampCoordinate(PixelCoordinate coordinate, SpriteResolution resolution) =>
-        ClampCoordinate(coordinate.X, coordinate.Y, resolution);
-
-    private static PixelCoordinate ClampCoordinate(int x, int y, SpriteResolution resolution) =>
-        new(Math.Clamp(x, 0, resolution.Width - 1), Math.Clamp(y, 0, resolution.Height - 1));
 
     private void ApplyMutationResult(
         Result<SpriteConfig> result,
@@ -821,7 +809,8 @@ public partial class WorkspaceShellViewModel
             var storageLabel = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath)
                 ? "unsaved draft"
                 : Path.GetFileName(_editorSession.CurrentConfigPath);
-            ConfigSummary = $"{config.Name} | {mappingCount} mappings | {storageLabel}";
+            var dirtyLabel = _editorSession.IsDirty ? " | modified" : string.Empty;
+            ConfigSummary = $"{config.Name} | {mappingCount} mappings | {storageLabel}{dirtyLabel}";
             WorkspaceNotes = "Editor workflow is active. Edit one direction in the center and use the right navigator to switch directions.";
         }
         else
@@ -948,6 +937,12 @@ public partial class WorkspaceShellViewModel
 
     public void NavigateToSection(ShellSectionKind section)
     {
+        if (section != SelectedShellSection)
+        {
+            CancelActiveEditorGesture();
+            ResetEditableDragState();
+        }
+
         if (section == ShellSectionKind.Editor && !EditorWorkspace.IsAvailable)
         {
             SelectedShellSection = ShellSectionKind.Start;

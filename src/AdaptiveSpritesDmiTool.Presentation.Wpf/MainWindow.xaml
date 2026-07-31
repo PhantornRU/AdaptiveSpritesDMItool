@@ -23,9 +23,10 @@
         <KeyBinding Key="D2" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" />
         <KeyBinding Key="D3" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" />
         <KeyBinding Key="D4" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" />
-        <KeyBinding Key="F1" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" />
-        <KeyBinding Key="F2" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Undo}" />
-        <KeyBinding Key="F3" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.UndoArea}" />
+        <KeyBinding Key="F1" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Erase}" />
+        <KeyBinding Key="F2" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Restore}" />
+        <KeyBinding Key="F3" Modifiers="Control" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.RestoreArea}" />
+        <KeyBinding Key="Escape" Command="{Binding CancelEditorGestureCommand}" />
         <KeyBinding Key="D1" Modifiers="Alt" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" />
         <KeyBinding Key="D2" Modifiers="Alt" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Parallel}" />
         <KeyBinding Key="D3" Modifiers="Alt" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.All}" />
@@ -1243,6 +1244,8 @@
                                                 Zoom="{Binding DataContext.EditorWorkspace.ActiveEditorZoom, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 ShowGrid="{Binding DataContext.EditorWorkspace.ShowGrid, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 ShowCaptions="{Binding DataContext.EditorWorkspace.ShowGridCaptions, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                ShowMirrorAxisGuide="{Binding DataContext.EditorWorkspace.ShowMirrorAxisGuide, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                MirrorAxisOffsetPixels="{Binding DataContext.EditorWorkspace.MirrorAxisOffsetPixels, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 SelectedSourceCoordinate="{Binding DataContext.EditorWorkspace.SelectedSourceCoordinate, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 HoveredCoordinate="{Binding DataContext.EditorWorkspace.SourceHoveredCoordinate, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 HighlightedCoordinates="{Binding DataContext.EditorWorkspace.SourceLinkedHoverCoordinates, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -1289,6 +1292,8 @@
                                                     Zoom="{Binding DataContext.EditorWorkspace.ActiveEditorZoom, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     ShowGrid="{Binding DataContext.EditorWorkspace.ShowGrid, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     ShowCaptions="{Binding DataContext.EditorWorkspace.ShowGridCaptions, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    ShowMirrorAxisGuide="{Binding DataContext.EditorWorkspace.ShowMirrorAxisGuide, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    MirrorAxisOffsetPixels="{Binding DataContext.EditorWorkspace.MirrorAxisOffsetPixels, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     SelectedTargetCoordinate="{Binding TransformedSelectedTargetCoordinate}"
                                                     SelectedAreaBounds="{Binding TransformedSelectedAreaBounds}"
                                                     HoveredCoordinate="{Binding DataContext.EditorWorkspace.EditableHoveredCoordinate, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -1664,7 +1669,8 @@
                                             <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" Content="Fill" />
                                             <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" Content="Move" />
                                             <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" Content="Select" />
-                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" Content="Erase" />
+                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Erase}" IsChecked="{Binding IsEraseToolSelected, Mode=OneWay}" Content="Erase" />
+                                            <RadioButton GroupName="EditorTools" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Restore}" IsChecked="{Binding IsRestoreToolSelected, Mode=OneWay}" Content="Restore" />
 
                                             <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="{DynamicResource Text.Toolbar.Scope}" />
                                             <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorPrimaryToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" Content="Single" />
@@ -1684,10 +1690,14 @@
                                                       IsChecked="{Binding MirrorAcrossDirections, Mode=TwoWay}"
                                                       ToolTip="Mirror editable coordinates across opposite directions"
                                                       Content="Mirror" />
+                                            <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}"
+                                                    Command="{Binding ConfigureMirrorAxisCommand}"
+                                                    ToolTip="Configure mirror axis offset"
+                                                    Content="Axis" />
                                             <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
-                                                      IsChecked="{Binding UseCentralizedPropagation, Mode=TwoWay}"
-                                                      ToolTip="Use centralized offset when mirroring propagated edits"
-                                                      Content="Center" />
+                                                      IsChecked="{Binding ShowMirrorAxisGuide, Mode=TwoWay}"
+                                                      ToolTip="Show mirror axis guide on every canvas"
+                                                      Content="Axis guide" />
                                             <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
                                                       IsChecked="{Binding GridAboveImage, Mode=TwoWay}"
                                                       ToolTip="Show grid captions over pixels"
@@ -1739,7 +1749,8 @@
                                                 <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Fill}" IsChecked="{Binding IsFillToolSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.Fill}" AutomationProperties.Name="Fill tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="PaintBucket20" /></RadioButton>
                                                 <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Move}" IsChecked="{Binding IsMoveToolSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.Move}" AutomationProperties.Name="Move tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ArrowMove20" /></RadioButton>
                                                 <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Select}" IsChecked="{Binding IsSelectToolSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.Select}" AutomationProperties.Name="Select tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="SquareHintApps20" /></RadioButton>
-                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Delete}" IsChecked="{Binding IsDeleteToolSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.Delete}" AutomationProperties.Name="Delete tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Eraser20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Erase}" IsChecked="{Binding IsEraseToolSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.Erase}" AutomationProperties.Name="Erase tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Eraser20" /></RadioButton>
+                                                <RadioButton GroupName="EditorTools" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectEditorToolCommand}" CommandParameter="{x:Static local:EditorTool.Restore}" IsChecked="{Binding IsRestoreToolSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.Restore}" AutomationProperties.Name="Restore tool"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="ArrowReset20" /></RadioButton>
 
                                             <TextBlock Margin="12,0,8,0" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.TextPrimary}" Text="{DynamicResource Text.Toolbar.Scope}" />
                                                 <RadioButton GroupName="DirectionScope" Style="{StaticResource EditorIconToolbarToggleStyle}" Command="{Binding SelectDirectionScopeCommand}" CommandParameter="{x:Static local:DirectionScope.Single}" IsChecked="{Binding IsSingleScopeSelected, Mode=OneWay}" ToolTip="{DynamicResource Text.Tooltip.SingleDirection}" AutomationProperties.Name="Single direction scope"><ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Square20" /></RadioButton>
@@ -1767,11 +1778,17 @@
                                                           AutomationProperties.Name="Mirror directions">
                                                     <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="DualScreenMirror20" />
                                                 </CheckBox>
-                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
-                                                          IsChecked="{Binding UseCentralizedPropagation, Mode=TwoWay}"
-                                                           ToolTip="{DynamicResource Text.Tooltip.CentralizedPropagation}"
-                                                          AutomationProperties.Name="Centralized propagation">
+                                                <Button Style="{StaticResource EditorIconToolbarButtonStyle}"
+                                                        Command="{Binding ConfigureMirrorAxisCommand}"
+                                                        ToolTip="{DynamicResource Text.Tooltip.ConfigureMirrorAxis}"
+                                                        AutomationProperties.Name="Configure mirror axis">
                                                     <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="TableCellsMerge20" />
+                                                </Button>
+                                                <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
+                                                          IsChecked="{Binding ShowMirrorAxisGuide, Mode=TwoWay}"
+                                                          ToolTip="{DynamicResource Text.Tooltip.ShowMirrorAxisGuide}"
+                                                          AutomationProperties.Name="Show mirror axis guide">
+                                                    <ui:SymbolIcon Style="{StaticResource ToolbarSymbolIconStyle}" Symbol="Eye20" />
                                                 </CheckBox>
                                                 <CheckBox Style="{StaticResource EditorIconToolbarCheckBoxStyle}"
                                                           IsChecked="{Binding GridAboveImage, Mode=TwoWay}"

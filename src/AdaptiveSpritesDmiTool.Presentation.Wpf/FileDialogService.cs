@@ -14,6 +14,8 @@ public interface IFileDialogService
     string? OpenLegacyCsvFile(string? initialPath);
 
     string? SelectDirectory(string description, string? initialPath);
+
+    int? ConfigureMirrorAxisOffset(int currentOffset, int maximumOffset) => null;
 }
 
 public sealed class FileDialogService : IFileDialogService
@@ -67,6 +69,16 @@ public sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK
             ? dialog.SelectedPath
             : null;
+    }
+
+    public int? ConfigureMirrorAxisOffset(int currentOffset, int maximumOffset)
+    {
+        var dialog = new MirrorAxisOffsetDialog(currentOffset, maximumOffset)
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+
+        return dialog.ShowDialog() == true ? dialog.SelectedOffset : null;
     }
 
     private static string? ShowOpenFileDialog(string filter, string? initialPath)

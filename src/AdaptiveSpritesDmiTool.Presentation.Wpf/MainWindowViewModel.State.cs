@@ -311,7 +311,10 @@ public partial class WorkspaceShellViewModel
     private bool mirrorAcrossDirections = true;
 
     [ObservableProperty]
-    private bool useCentralizedPropagation = true;
+    private int mirrorAxisOffsetPixels;
+
+    [ObservableProperty]
+    private bool showMirrorAxisGuide;
 
     [ObservableProperty]
     private bool showGrid = true;

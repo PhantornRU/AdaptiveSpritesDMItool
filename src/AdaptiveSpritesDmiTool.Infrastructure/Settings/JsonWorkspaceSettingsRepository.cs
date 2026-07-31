@@ -8,7 +8,7 @@ namespace AdaptiveSpritesDmiTool.Infrastructure.Settings;
 
 public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettingsRepository
 {
-    private const int CurrentVersion = 6;
+    private const int CurrentVersion = 7;
 
     public async Task<Result<WorkspaceSettings>> LoadAsync(CancellationToken cancellationToken)
     {
@@ -104,7 +104,10 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             Normalize(document.LastUiLanguage),
             document.HideInactiveSourceCanvases ?? true,
             document.FitMultipleDirectionCanvasesToViewport ?? true,
-            ParseImportedStates(document.ImportedStates));
+            ParseImportedStates(document.ImportedStates),
+            document.MirrorAxisOffsetPixels ?? 0,
+            document.ShowMirrorAxisGuide ?? false,
+            document.MirrorAcrossDirections ?? true);
 
     private static WorkspaceSettingsDocument FromDomain(WorkspaceSettings settings) =>
         new()
@@ -129,6 +132,9 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             LastUiLanguage = settings.LastUiLanguage,
             HideInactiveSourceCanvases = settings.HideInactiveSourceCanvases,
             FitMultipleDirectionCanvasesToViewport = settings.FitMultipleDirectionCanvasesToViewport,
+            MirrorAxisOffsetPixels = settings.MirrorAxisOffsetPixels,
+            ShowMirrorAxisGuide = settings.ShowMirrorAxisGuide,
+            MirrorAcrossDirections = settings.MirrorAcrossDirections,
             ImportedStates = (settings.ImportedStates ?? Array.Empty<WorkspaceImportedStateSettings>())
                 .Select(static item => new ImportedStateDocument
                 {
@@ -294,6 +300,12 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         public bool? HideInactiveSourceCanvases { get; set; }
 
         public bool? FitMultipleDirectionCanvasesToViewport { get; set; }
+
+        public int? MirrorAxisOffsetPixels { get; set; }
+
+        public bool? ShowMirrorAxisGuide { get; set; }
+
+        public bool? MirrorAcrossDirections { get; set; }
 
         public List<ImportedStateDocument>? ImportedStates { get; set; }
     }

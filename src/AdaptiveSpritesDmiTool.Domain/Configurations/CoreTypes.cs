@@ -208,3 +208,14 @@ public readonly record struct PixelMapping(PixelCoordinate Source, PixelCoordina
 {
     public bool IsTransparent => Target is null;
 }
+
+public sealed record SpriteEditorSettings(int MirrorAxisOffsetPixels)
+{
+    public static SpriteEditorSettings Default { get; } = new(0);
+
+    public static int GetMaximumMirrorAxisOffset(SpriteResolution resolution) =>
+        (resolution.Width - 1) / 2;
+
+    public bool IsValidFor(SpriteResolution resolution) =>
+        Math.Abs((long)MirrorAxisOffsetPixels) <= GetMaximumMirrorAxisOffset(resolution);
+}

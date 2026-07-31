@@ -101,7 +101,10 @@ public sealed record WorkspaceSettings(
     string? LastUiLanguage = null,
     bool HideInactiveSourceCanvases = true,
     bool FitMultipleDirectionCanvasesToViewport = true,
-    IReadOnlyList<WorkspaceImportedStateSettings>? ImportedStates = null)
+    IReadOnlyList<WorkspaceImportedStateSettings>? ImportedStates = null,
+    int MirrorAxisOffsetPixels = 0,
+    bool ShowMirrorAxisGuide = false,
+    bool MirrorAcrossDirections = true)
 {
     public static WorkspaceSettings Empty { get; } = new(
         LastOpenedDmiPath: null,
@@ -123,7 +126,10 @@ public sealed record WorkspaceSettings(
         LastUiLanguage: null,
         HideInactiveSourceCanvases: true,
         FitMultipleDirectionCanvasesToViewport: true,
-        ImportedStates: Array.Empty<WorkspaceImportedStateSettings>());
+        ImportedStates: Array.Empty<WorkspaceImportedStateSettings>(),
+        MirrorAxisOffsetPixels: 0,
+        ShowMirrorAxisGuide: false,
+        MirrorAcrossDirections: true);
 }
 
 public interface IConfigRepository

@@ -29,6 +29,7 @@ public sealed class EditorSurfaceControl : FrameworkElement
     private static readonly Pen LinkedHighlightPen = CreatePen(Color.FromRgb(64, 128, 196), 1.1d);
     private static readonly Pen HoverPen = CreatePen(Color.FromRgb(196, 137, 16), 1d);
     private static readonly Pen GridPen = CreatePen(Color.FromRgb(217, 207, 192), 0.5d);
+    private static readonly Pen MirrorAxisPen = CreatePen(Color.FromRgb(214, 74, 99), 1.4d);
     private static readonly Typeface CaptionTypeface = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
     private static readonly Dictionary<(string Text, double FontSize), FormattedText> _captionCache = new();
     private DrawingGroup? _contentDrawing;
@@ -68,6 +69,18 @@ public sealed class EditorSurfaceControl : FrameworkElement
         typeof(bool),
         typeof(EditorSurfaceControl),
         new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender, OnContentInputChanged));
+
+    public static readonly DependencyProperty ShowMirrorAxisGuideProperty = DependencyProperty.Register(
+        nameof(ShowMirrorAxisGuide),
+        typeof(bool),
+        typeof(EditorSurfaceControl),
+        new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty MirrorAxisOffsetPixelsProperty = DependencyProperty.Register(
+        nameof(MirrorAxisOffsetPixels),
+        typeof(int),
+        typeof(EditorSurfaceControl),
+        new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.AffectsRender));
 
     public static readonly DependencyProperty SelectedSourceCoordinateProperty = DependencyProperty.Register(
         nameof(SelectedSourceCoordinate),
@@ -121,6 +134,18 @@ public sealed class EditorSurfaceControl : FrameworkElement
     {
         get => (bool)GetValue(ShowCaptionsProperty);
         set => SetValue(ShowCaptionsProperty, value);
+    }
+
+    public bool ShowMirrorAxisGuide
+    {
+        get => (bool)GetValue(ShowMirrorAxisGuideProperty);
+        set => SetValue(ShowMirrorAxisGuideProperty, value);
+    }
+
+    public int MirrorAxisOffsetPixels
+    {
+        get => (int)GetValue(MirrorAxisOffsetPixelsProperty);
+        set => SetValue(MirrorAxisOffsetPixelsProperty, value);
     }
 
     public PixelCoordinate? SelectedSourceCoordinate
@@ -197,6 +222,15 @@ public sealed class EditorSurfaceControl : FrameworkElement
         EnsureContentDrawing();
         var cellSize = GetCellSize();
         drawingContext.DrawDrawing(_contentDrawing);
+
+        if (ShowMirrorAxisGuide)
+        {
+            var axis = ((Surface.Width / 2d) + MirrorAxisOffsetPixels) * cellSize;
+            var guidelines = new GuidelineSet([axis], []);
+            drawingContext.PushGuidelineSet(guidelines);
+            drawingContext.DrawLine(MirrorAxisPen, new Point(axis, 0), new Point(axis, Surface.Height * cellSize));
+            drawingContext.Pop();
+        }
 
 #if DEBUG
         var overlayRenderCount = Interlocked.Increment(ref _overlayRenderCount);

@@ -20,14 +20,14 @@ public partial class WorkspaceShellViewModel
     private void RefreshMappingRows()
     {
         MappingRows.Clear();
-        if (_editorSession.CurrentConfig is null)
+        if (ResolveRenderedConfig() is not { } config)
         {
             return;
         }
 
         var direction = GetSafeSelectedDirection();
 
-        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction)
+        foreach (var mapping in config.GetMappings(direction)
                      .OrderBy(static mapping => mapping.Source.Y)
                      .ThenBy(static mapping => mapping.Source.X))
         {
@@ -55,8 +55,7 @@ public partial class WorkspaceShellViewModel
         OppositeHighlightedCoordinate = SelectedTargetCoordinate;
 
         var activeDirection = GetSafeSelectedDirection();
-        var resolution = ResolveEditorResolution();
-        if (resolution is null)
+        if (_editorSession.CurrentConfig is not { } config)
         {
             return;
         }
@@ -65,7 +64,11 @@ public partial class WorkspaceShellViewModel
         {
             if (_selectedEditableCoordinate.HasValue)
             {
-                surface.TransformedSelectedTargetCoordinate = TransformEditableCoordinate(_selectedEditableCoordinate.Value, activeDirection, surface.Direction, resolution.Value);
+                surface.TransformedSelectedTargetCoordinate = TryTransformEditableCoordinate(
+                    _selectedEditableCoordinate.Value,
+                    activeDirection,
+                    surface.Direction,
+                    config);
             }
             else
             {
@@ -74,9 +77,23 @@ public partial class WorkspaceShellViewModel
 
             if (_selectedArea is { } selectedArea)
             {
-                var p1 = TransformEditableCoordinate(new PixelCoordinate(selectedArea.Left, selectedArea.Top), activeDirection, surface.Direction, resolution.Value);
-                var p2 = TransformEditableCoordinate(new PixelCoordinate(selectedArea.Right, selectedArea.Bottom), activeDirection, surface.Direction, resolution.Value);
-                surface.TransformedSelectedAreaBounds = new PixelAreaBounds(Math.Min(p1.X, p2.X), Math.Min(p1.Y, p2.Y), Math.Max(p1.X, p2.X), Math.Max(p1.Y, p2.Y));
+                var p1 = TryTransformEditableCoordinate(
+                    new PixelCoordinate(selectedArea.Left, selectedArea.Top),
+                    activeDirection,
+                    surface.Direction,
+                    config);
+                var p2 = TryTransformEditableCoordinate(
+                    new PixelCoordinate(selectedArea.Right, selectedArea.Bottom),
+                    activeDirection,
+                    surface.Direction,
+                    config);
+                surface.TransformedSelectedAreaBounds = p1 is { } first && p2 is { } second
+                    ? new PixelAreaBounds(
+                        Math.Min(first.X, second.X),
+                        Math.Min(first.Y, second.Y),
+                        Math.Max(first.X, second.X),
+                        Math.Max(first.Y, second.Y))
+                    : null;
             }
             else
             {
@@ -632,10 +649,16 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        var snapshotResult = _editorSession.CaptureCurrentConfigSnapshot();
+        if (snapshotResult.IsFailure)
+        {
+            StatusMessage = snapshotResult.Error.Message;
+            return;
+        }
+
         activeItem.Name = _editorSession.CurrentConfig.Name;
-        activeItem.ConfigPath = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath) ? null : _editorSession.CurrentConfigPath;
-        activeItem.PathSummary = BuildConfigPathSummary(activeItem.ConfigPath);
-        activeItem.ConfigSnapshot = _editorSession.CurrentConfig.Clone();
+        activeItem.PathSummary = BuildConfigPathSummary(snapshotResult.Value.ConfigPath);
+        activeItem.SessionSnapshot = snapshotResult.Value;
         activeItem.IsActive = true;
     }
 
@@ -646,18 +669,23 @@ public partial class WorkspaceShellViewModel
             throw new InvalidOperationException("Cannot create a config queue item without an active config.");
         }
 
+        var snapshotResult = _editorSession.CaptureCurrentConfigSnapshot();
+        if (snapshotResult.IsFailure)
+        {
+            throw new InvalidOperationException(snapshotResult.Error.Message);
+        }
+
         foreach (var existingItem in ConfigQueueItems)
         {
             existingItem.IsActive = false;
         }
 
-        var configPath = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath) ? null : _editorSession.CurrentConfigPath;
+        var sessionSnapshot = snapshotResult.Value;
         var item = new ConfigQueueItemViewModel(
             Guid.NewGuid(),
             _editorSession.CurrentConfig.Name,
-            BuildConfigPathSummary(configPath),
-            configPath,
-            _editorSession.CurrentConfig.Clone(),
+            BuildConfigPathSummary(sessionSnapshot.ConfigPath),
+            sessionSnapshot,
             isActive: true);
         ConfigQueueItems.Add(item);
         _activeConfigQueueItemId = item.Id;
@@ -686,12 +714,20 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
-        var configPath = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath) ? null : _editorSession.CurrentConfigPath;
+        var snapshotResult = _editorSession.CaptureCurrentConfigSnapshot();
+        if (snapshotResult.IsFailure)
+        {
+            StatusMessage = snapshotResult.Error.Message;
+            return;
+        }
+
+        var sessionSnapshot = snapshotResult.Value;
+        var configPath = sessionSnapshot.ConfigPath;
         ConfigQueueItemViewModel? matchedItem = null;
         if (!string.IsNullOrWhiteSpace(configPath))
         {
             matchedItem = ConfigQueueItems.FirstOrDefault(item =>
-                string.Equals(item.ConfigPath, configPath, StringComparison.OrdinalIgnoreCase));
+                string.Equals(item.SessionSnapshot.ConfigPath, configPath, StringComparison.OrdinalIgnoreCase));
         }
 
         if (matchedItem is null)
@@ -707,9 +743,8 @@ public partial class WorkspaceShellViewModel
 
         _activeConfigQueueItemId = matchedItem.Id;
         matchedItem.Name = _editorSession.CurrentConfig.Name;
-        matchedItem.ConfigPath = configPath;
         matchedItem.PathSummary = BuildConfigPathSummary(configPath);
-        matchedItem.ConfigSnapshot = _editorSession.CurrentConfig.Clone();
+        matchedItem.SessionSnapshot = sessionSnapshot;
         matchedItem.IsActive = true;
     }
 
@@ -722,12 +757,14 @@ public partial class WorkspaceShellViewModel
 
         SyncCurrentConfigIntoActiveQueueItem();
 
-        var result = _editorSession.SetCurrentConfig(item.ConfigSnapshot.Clone(), item.ConfigPath);
+        var result = _editorSession.RestoreCurrentConfigSnapshot(item.SessionSnapshot);
         if (result.IsFailure)
         {
             StatusMessage = result.Error.Message;
             return;
         }
+
+        SynchronizeMirrorAxisFromConfig(_editorSession.CurrentConfig!);
 
         foreach (var existingItem in ConfigQueueItems)
         {
@@ -735,8 +772,8 @@ public partial class WorkspaceShellViewModel
         }
 
         _activeConfigQueueItemId = item.Id;
-        ConfigPath = item.ConfigPath ?? string.Empty;
-        SaveConfigPath = item.ConfigPath ?? string.Empty;
+        ConfigPath = item.SessionSnapshot.ConfigPath ?? string.Empty;
+        SaveConfigPath = item.SessionSnapshot.ConfigPath ?? string.Empty;
         DraftConfigName = item.Name;
         StatusMessage = $"Activated config '{item.Name}'.";
         RefreshWorkspaceState();
@@ -1421,7 +1458,7 @@ public partial class WorkspaceShellViewModel
     // The persisted config keeps legacy semantics: mapping.Source is the editable cell,
     // mapping.Target is the source/palette coordinate used to draw that editable cell.
     private Dictionary<PixelCoordinate, PixelMapping> GetEditableMappings(SpriteDirection direction) =>
-        _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
+        ResolveRenderedConfig()?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
 
     private SpriteImage? RenderEditableSurfaceImage(SpriteImage? editableBaseImage, SpriteImage? sourceReferenceImage, SpriteDirection direction)
     {
@@ -1431,12 +1468,12 @@ public partial class WorkspaceShellViewModel
         }
 
         var rendered = new SpriteImage(editableBaseImage.Width, editableBaseImage.Height, editableBaseImage.RgbaBytes[..]);
-        if (_editorSession.CurrentConfig is null)
+        if (ResolveRenderedConfig() is not { } config)
         {
             return rendered;
         }
 
-        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction))
+        foreach (var mapping in config.GetMappings(direction))
         {
             var destCoordinate = mapping.Source;
             var destinationOffset = ((destCoordinate.Y * rendered.Width) + destCoordinate.X) * 4;

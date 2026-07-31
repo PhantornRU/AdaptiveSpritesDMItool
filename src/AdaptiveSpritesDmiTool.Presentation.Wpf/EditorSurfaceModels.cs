@@ -12,9 +12,9 @@ public enum EditorTool
 {
     Single = 0,
     Fill = 1,
-    Delete = 2,
-    Undo = 3,
-    UndoArea = 4,
+    Erase = 2,
+    Restore = 3,
+    RestoreArea = 4,
     Select = 5,
     Move = 6
 }
@@ -239,15 +239,13 @@ public sealed partial class ConfigQueueItemViewModel : ObservableObject
         Guid id,
         string name,
         string pathSummary,
-        string? configPath,
-        SpriteConfig configSnapshot,
+        EditorConfigSessionSnapshot sessionSnapshot,
         bool isActive)
     {
         Id = id;
         this.name = name;
         this.pathSummary = pathSummary;
-        this.configPath = configPath;
-        this.configSnapshot = configSnapshot;
+        this.sessionSnapshot = sessionSnapshot;
         this.isActive = isActive;
     }
 
@@ -260,10 +258,7 @@ public sealed partial class ConfigQueueItemViewModel : ObservableObject
     private string pathSummary;
 
     [ObservableProperty]
-    private string? configPath;
-
-    [ObservableProperty]
-    private SpriteConfig configSnapshot;
+    private EditorConfigSessionSnapshot sessionSnapshot;
 
     [ObservableProperty]
     private bool isActive;

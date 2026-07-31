@@ -3,6 +3,7 @@ using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using AdaptiveSpritesDmiTool.Presentation.Wpf;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections;
 using System.Reflection;
@@ -30,6 +31,169 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.StartTab.ShowCreateConfigAction.Should().BeFalse();
         viewModel.StartTab.WelcomeTitle.Should().Contain("Open or import");
         viewModel.PreviewPanel.IsAutoPreviewEnabled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task LoadedJsonMirrorAxisShouldOverrideWorkspaceAndBecomeNewWorkspaceValue()
+    {
+        var tempRoot = CreateTempDirectory();
+        var dmiPath = Path.Combine(tempRoot, "sprite.dmi");
+        var configPath = Path.Combine(tempRoot, "config.json");
+        await File.WriteAllTextAsync(dmiPath, "placeholder");
+        await File.WriteAllTextAsync(configPath, "placeholder");
+        var settingsRepository = new InMemorySettingsRepository(
+            WorkspaceSettings.Empty with
+            {
+                LastOpenedDmiPath = dmiPath,
+                LastOpenedConfigPath = configPath,
+                MirrorAxisOffsetPixels = -1
+            });
+        var config = SpriteConfig.CreateEmpty(
+            "json-wins",
+            new SpriteResolution(4, 4),
+            SupportedDirectionSet.Four,
+            ConfigMetadata.CreateNew(ConfigSource.Json, configPath),
+            new SpriteEditorSettings(1));
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            configRepository: new SuccessfulConfigRepository(config),
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.PersistWorkspaceSettingsAsync();
+
+        viewModel.MirrorAxisOffsetPixels.Should().Be(1);
+        session.CurrentConfig!.EditorSettings.MirrorAxisOffsetPixels.Should().Be(1);
+        settingsRepository.Saved!.MirrorAxisOffsetPixels.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task NewConfigShouldInheritWorkspaceMirrorAxisUntilUserChangesIt()
+    {
+        var settingsRepository = new InMemorySettingsRepository(
+            WorkspaceSettings.Empty with { MirrorAxisOffsetPixels = -1 });
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService,
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        session.CurrentConfig!.EditorSettings.MirrorAxisOffsetPixels.Should().Be(-1);
+        session.IsDirty.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ManualMirrorAxisChangeShouldUpdateConfigDirtyStateAndWorkspace()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: new StubFileDialogService { DmiPath = "sprite.dmi" },
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+        session.SetCurrentConfigPath("saved.json").IsSuccess.Should().BeTrue();
+
+        viewModel.MirrorAxisOffsetPixels = 1;
+        await viewModel.PersistWorkspaceSettingsAsync();
+
+        session.CurrentConfig!.EditorSettings.MirrorAxisOffsetPixels.Should().Be(1);
+        session.IsDirty.Should().BeTrue();
+        settingsRepository.Saved!.MirrorAxisOffsetPixels.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task EditorWorkspaceShouldExposeMirrorGuideValuesForCanvasBindings()
+    {
+        var settingsRepository = new InMemorySettingsRepository(
+            WorkspaceSettings.Empty with
+            {
+                MirrorAxisOffsetPixels = -1,
+                ShowMirrorAxisGuide = true
+            });
+        var viewModel = CreateViewModel(settingsRepository);
+
+        await viewModel.InitializeAsync();
+
+        viewModel.EditorWorkspace.MirrorAxisOffsetPixels.Should().Be(-1);
+        viewModel.EditorWorkspace.ShowMirrorAxisGuide.Should().BeTrue();
+
+        viewModel.MirrorAxisOffsetPixels = 1;
+        viewModel.ShowMirrorAxisGuide = false;
+
+        viewModel.EditorWorkspace.MirrorAxisOffsetPixels.Should().Be(1);
+        viewModel.EditorWorkspace.ShowMirrorAxisGuide.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task UndoRedoShouldSynchronizeMirrorAxisWithConfigAndWorkspace()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: new StubFileDialogService { DmiPath = "sprite.dmi" },
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.MirrorAxisOffsetPixels = 1;
+
+        viewModel.UndoCommand.Execute(null);
+        await viewModel.PersistWorkspaceSettingsAsync();
+
+        viewModel.MirrorAxisOffsetPixels.Should().Be(0);
+        session.CurrentConfig!.EditorSettings.MirrorAxisOffsetPixels.Should().Be(0);
+        settingsRepository.Saved!.MirrorAxisOffsetPixels.Should().Be(0);
+
+        viewModel.RedoCommand.Execute(null);
+        await viewModel.PersistWorkspaceSettingsAsync();
+
+        viewModel.MirrorAxisOffsetPixels.Should().Be(1);
+        session.CurrentConfig.EditorSettings.MirrorAxisOffsetPixels.Should().Be(1);
+        settingsRepository.Saved!.MirrorAxisOffsetPixels.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ResetActiveConfigShouldClearMappingsWithoutResettingMirrorAxis()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: new StubFileDialogService { DmiPath = "sprite.dmi" },
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.MirrorAxisOffsetPixels = 1;
+        ApplySingleMapping(
+            viewModel,
+            SpriteDirection.South,
+            new PixelCoordinate(2, 2),
+            new PixelCoordinate(1, 1));
+
+        viewModel.ResetActiveConfigCommand.Execute(null);
+        await viewModel.PersistWorkspaceSettingsAsync();
+
+        session.CurrentConfig!.GetMappings(SpriteDirection.South).Should().BeEmpty();
+        session.CurrentConfig.EditorSettings.MirrorAxisOffsetPixels.Should().Be(1);
+        viewModel.MirrorAxisOffsetPixels.Should().Be(1);
+        settingsRepository.Saved!.MirrorAxisOffsetPixels.Should().Be(1);
     }
 
     [Fact]
@@ -202,7 +366,7 @@ public sealed class MainWindowViewModelSmokeTests
 
         viewModel.ShowSourceViewportPane.Should().BeFalse();
 
-        viewModel.SelectedEditorTool = EditorTool.UndoArea;
+        viewModel.SelectedEditorTool = EditorTool.RestoreArea;
 
         viewModel.ShowSourceViewportPane.Should().BeFalse();
 
@@ -573,7 +737,189 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
-    public async Task ParallelScopeShouldMirrorEditableCoordinatesUsingLegacyGeometry()
+    public async Task PaintStrokeShouldInterpolateSparsePointerSamplesAndCommitOneUndoStep()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService,
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Single;
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 3, 0));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 3, 0));
+
+        session.CurrentConfig!.GetMappings(SpriteDirection.South).Should().HaveCount(4);
+        session.CanUndo.Should().BeTrue();
+        session.Undo().IsSuccess.Should().BeTrue();
+        session.CurrentConfig.GetMappings(SpriteDirection.South).Should().BeEmpty();
+        session.CanUndo.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CancelledPaintStrokeShouldNotChangeConfigOrHistory()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService,
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Single;
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 3, 0));
+        viewModel.CancelActiveEditorGesture();
+
+        session.CurrentConfig!.GetMappings(SpriteDirection.South).Should().BeEmpty();
+        session.CanUndo.Should().BeFalse();
+        session.CanRedo.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ChangingStateDuringPaintStrokeShouldCancelGestureWithoutHistory()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: new StubFileDialogService { DmiPath = "sprite.dmi" },
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Single;
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 3, 0));
+
+        viewModel.BaseStateName = "replacement-state";
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 3, 0));
+
+        session.CurrentConfig!.GetMappings(SpriteDirection.South).Should().BeEmpty();
+        session.CanUndo.Should().BeFalse();
+        session.CanRedo.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ChangingToolDuringPaintStrokeShouldCancelGestureWithoutHistory()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: new StubFileDialogService { DmiPath = "sprite.dmi" },
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Single;
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 0));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 3, 0));
+
+        viewModel.SelectedEditorTool = EditorTool.Erase;
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 3, 0));
+
+        session.CurrentConfig!.GetMappings(SpriteDirection.South).Should().BeEmpty();
+        session.CanUndo.Should().BeFalse();
+        session.CanRedo.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task FailedEditorGestureShouldLogCompleteOperationContext()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var logger = new RecordingLogger<WorkspaceShellViewModel>();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: new StubFileDialogService { DmiPath = "sprite.dmi" },
+            editorSession: session,
+            logger: logger);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        viewModel.SelectedEditorTool = EditorTool.Erase;
+        var invalidCell = new PixelCellViewModel(SpriteDirection.South, 99, 99);
+
+        viewModel.HandleTargetCellPointerDown(invalidCell);
+        viewModel.HandleTargetCellPointerUp(invalidCell);
+
+        session.CurrentConfig!.GetMappings(SpriteDirection.South).Should().BeEmpty();
+        session.CanUndo.Should().BeFalse();
+        var entry = logger.Entries.Should().ContainSingle(item => item.Message.Contains("result=failed", StringComparison.Ordinal)).Subject;
+        entry.Properties.Should().ContainKey("OperationId");
+        entry.Properties.Should().ContainKey("Tool");
+        entry.Properties.Should().ContainKey("State");
+        entry.Properties.Should().ContainKey("Direction");
+        entry.Properties.Should().Contain("Frame", 0);
+        entry.Properties.Should().Contain("Scope", DirectionScope.Single);
+        entry.Properties.Should().Contain("Applied", 0);
+        entry.Properties.Should().ContainKey("Skipped");
+        entry.Properties.Should().ContainKey("Message");
+    }
+
+    [Fact]
+    public async Task EraseAndRestoreShouldHaveSeparateTransparentAndOriginalPixelSemantics()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService,
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.SelectedDirectionScope = DirectionScope.Single;
+        var cell = new PixelCellViewModel(SpriteDirection.South, 1, 1);
+
+        viewModel.SelectedEditorTool = EditorTool.Erase;
+        viewModel.HandleTargetCellPointerDown(cell);
+        viewModel.HandleTargetCellPointerUp(cell);
+        session.CurrentConfig!.IsTransparent(SpriteDirection.South, cell.Coordinate).Should().BeTrue();
+
+        viewModel.SelectedEditorTool = EditorTool.Restore;
+        viewModel.HandleTargetCellPointerDown(cell);
+        viewModel.HandleTargetCellPointerUp(cell);
+        session.CurrentConfig.GetMappings(SpriteDirection.South).Should().NotContain(
+            mapping => mapping.Source == cell.Coordinate);
+        session.CurrentConfig.GetEffectiveTarget(SpriteDirection.South, cell.Coordinate).Should().Be(cell.Coordinate);
+    }
+
+    [Fact]
+    public async Task ParallelScopeShouldMirrorEditableCoordinatesUsingExactCenter()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -587,7 +933,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.CreateConfigCommand.Execute(null);
 
         viewModel.MirrorAcrossDirections = true;
-        viewModel.UseCentralizedPropagation = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
         viewModel.SelectedDirection = SpriteDirection.South;
         viewModel.SelectedDirectionScope = DirectionScope.Parallel;
 
@@ -602,13 +948,13 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.North,
-            (new PixelCoordinate(2, 1), new PixelCoordinate(2, 2)));
+            (new PixelCoordinate(3, 1), new PixelCoordinate(2, 2)));
         AssertDirectionMappings(viewModel, SpriteDirection.East);
         AssertDirectionMappings(viewModel, SpriteDirection.West);
     }
 
     [Fact]
-    public async Task AllScopeShouldMatchLegacySouthPropagation()
+    public async Task AllScopeShouldUseOrientationParity()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -622,7 +968,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.CreateConfigCommand.Execute(null);
 
         viewModel.MirrorAcrossDirections = true;
-        viewModel.UseCentralizedPropagation = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
         viewModel.SelectedDirection = SpriteDirection.South;
         viewModel.SelectedDirectionScope = DirectionScope.All;
 
@@ -637,7 +983,7 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.North,
-            (new PixelCoordinate(2, 1), new PixelCoordinate(2, 2)));
+            (new PixelCoordinate(3, 1), new PixelCoordinate(2, 2)));
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.East,
@@ -645,7 +991,7 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.West,
-            (new PixelCoordinate(2, 1), new PixelCoordinate(2, 2)));
+            (new PixelCoordinate(3, 1), new PixelCoordinate(2, 2)));
     }
 
     [Fact]
@@ -663,7 +1009,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.CreateConfigCommand.Execute(null);
 
         viewModel.MirrorAcrossDirections = true;
-        viewModel.UseCentralizedPropagation = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
         viewModel.SelectedDirection = SpriteDirection.SouthEast;
         viewModel.SelectedDirectionScope = DirectionScope.Parallel;
 
@@ -678,7 +1024,7 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.NorthWest,
-            (new PixelCoordinate(2, 2), new PixelCoordinate(3, 1)));
+            (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.SouthWest);
         AssertDirectionMappings(viewModel, SpriteDirection.NorthEast);
         AssertDirectionMappings(viewModel, SpriteDirection.South);
@@ -688,7 +1034,7 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
-    public async Task EightDirectionAllScopeShouldPreserveCardinalCoordinatesAndMirrorDiagonalFamily()
+    public async Task EightDirectionAllScopeShouldUseOrientationParityAcrossFamilies()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -702,7 +1048,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.CreateConfigCommand.Execute(null);
 
         viewModel.MirrorAcrossDirections = true;
-        viewModel.UseCentralizedPropagation = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
         viewModel.SelectedDirection = SpriteDirection.SouthEast;
         viewModel.SelectedDirectionScope = DirectionScope.All;
 
@@ -711,13 +1057,13 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 2));
 
         AssertDirectionMappings(viewModel, SpriteDirection.SouthEast, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.NorthWest, (new PixelCoordinate(2, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.NorthWest, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.SouthWest, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.NorthEast, (new PixelCoordinate(2, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.NorthEast, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.South, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.North, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.North, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.East, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.West, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.West, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
     }
 
     [Fact]
@@ -946,10 +1292,10 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.CreateConfigCommand.Execute(null);
 
         viewModel.MirrorAcrossDirections = true;
-        viewModel.UseCentralizedPropagation = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
 
         ApplySingleMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 1), new PixelCoordinate(0, 0));
-        ApplySingleMapping(viewModel, SpriteDirection.North, new PixelCoordinate(3, 2), new PixelCoordinate(2, 0));
+        ApplySingleMapping(viewModel, SpriteDirection.North, new PixelCoordinate(3, 2), new PixelCoordinate(3, 0));
 
         viewModel.SelectedDirection = SpriteDirection.South;
         viewModel.SelectedDirectionScope = DirectionScope.Parallel;
@@ -960,13 +1306,13 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 1, 0));
 
         AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(1, 0), new PixelCoordinate(0, 1));
-        AssertDirectionHasMapping(viewModel, SpriteDirection.North, new PixelCoordinate(1, 0), new PixelCoordinate(3, 2));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.North, new PixelCoordinate(2, 0), new PixelCoordinate(3, 2));
         AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(0, 0));
-        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.North, new PixelCoordinate(2, 0));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.North, new PixelCoordinate(3, 0));
     }
 
     [Fact]
-    public async Task ScopedMoveShouldClampCentralizedMirrorAtRightEdge()
+    public async Task ScopedMoveShouldProjectExactMirrorAtRightEdge()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -983,7 +1329,7 @@ public sealed class MainWindowViewModelSmokeTests
         ApplySingleMapping(viewModel, SpriteDirection.North, new PixelCoordinate(2, 1), new PixelCoordinate(0, 0));
 
         viewModel.MirrorAcrossDirections = true;
-        viewModel.UseCentralizedPropagation = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
         viewModel.SelectedDirection = SpriteDirection.South;
         viewModel.SelectedDirectionScope = DirectionScope.Parallel;
         viewModel.SelectedEditorTool = EditorTool.Move;
@@ -1001,11 +1347,11 @@ public sealed class MainWindowViewModelSmokeTests
 
         AssertDirectionHasMapping(viewModel, SpriteDirection.South, new PixelCoordinate(2, 0), new PixelCoordinate(0, 1));
         AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.South, new PixelCoordinate(3, 0));
-        AssertDirectionHasMapping(viewModel, SpriteDirection.North, new PixelCoordinate(0, 0), new PixelCoordinate(2, 1));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.North, new PixelCoordinate(1, 0), new PixelCoordinate(2, 1));
     }
 
     [Fact]
-    public async Task SelectToolShouldClampCentralizedMirrorForRightEdgeSelectionBounds()
+    public async Task SelectToolShouldProjectCompleteRightEdgeSelectionBounds()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -1019,7 +1365,7 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.CreateConfigCommand.Execute(null);
 
         viewModel.MirrorAcrossDirections = true;
-        viewModel.UseCentralizedPropagation = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
         viewModel.SelectedDirection = SpriteDirection.South;
         viewModel.SelectedDirectionScope = DirectionScope.All;
         viewModel.SelectedEditorTool = EditorTool.Select;
@@ -1032,12 +1378,12 @@ public sealed class MainWindowViewModelSmokeTests
             .Single(surface => surface.Direction == SpriteDirection.North)
             .TransformedSelectedAreaBounds
             .Should()
-            .Be(new PixelAreaBounds(0, 0, 2, 0));
+            .Be(new PixelAreaBounds(0, 0, 3, 0));
         viewModel.TargetViewportSurfaces
             .Single(surface => surface.Direction == SpriteDirection.West)
             .TransformedSelectedAreaBounds
             .Should()
-            .Be(new PixelAreaBounds(0, 0, 2, 0));
+            .Be(new PixelAreaBounds(0, 0, 3, 0));
     }
 
     [Fact]
@@ -1055,10 +1401,10 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.CreateConfigCommand.Execute(null);
 
         viewModel.MirrorAcrossDirections = true;
-        viewModel.UseCentralizedPropagation = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
 
         ApplySingleMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(0, 1), new PixelCoordinate(0, 0));
-        ApplySingleMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(3, 2), new PixelCoordinate(2, 0));
+        ApplySingleMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(3, 2), new PixelCoordinate(3, 0));
 
         viewModel.SelectedDirection = SpriteDirection.SouthEast;
         viewModel.SelectedDirectionScope = DirectionScope.Parallel;
@@ -1069,9 +1415,9 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.SouthEast, 1, 0));
 
         AssertDirectionHasMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(1, 0), new PixelCoordinate(0, 1));
-        AssertDirectionHasMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(1, 0), new PixelCoordinate(3, 2));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(2, 0), new PixelCoordinate(3, 2));
         AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(0, 0));
-        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(2, 0));
+        AssertDirectionDoesNotHaveMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(3, 0));
     }
 
     [Fact]
@@ -1089,12 +1435,12 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.CreateConfigCommand.Execute(null);
 
         viewModel.MirrorAcrossDirections = true;
-        viewModel.UseCentralizedPropagation = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
 
         ApplySingleMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(0, 0), new PixelCoordinate(0, 1));
         ApplySingleMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(1, 0), new PixelCoordinate(0, 2));
-        ApplySingleMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(3, 0), new PixelCoordinate(2, 1));
-        ApplySingleMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(2, 0), new PixelCoordinate(2, 2));
+        ApplySingleMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(3, 0), new PixelCoordinate(3, 1));
+        ApplySingleMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(2, 0), new PixelCoordinate(3, 2));
 
         viewModel.SelectedDirection = SpriteDirection.SouthEast;
         viewModel.SelectedDirectionScope = DirectionScope.Parallel;
@@ -1109,8 +1455,8 @@ public sealed class MainWindowViewModelSmokeTests
 
         AssertDirectionHasMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(1, 1), new PixelCoordinate(0, 0));
         AssertDirectionHasMapping(viewModel, SpriteDirection.SouthEast, new PixelCoordinate(1, 2), new PixelCoordinate(1, 0));
-        AssertDirectionHasMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(1, 1), new PixelCoordinate(3, 0));
-        AssertDirectionHasMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(1, 2), new PixelCoordinate(2, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(2, 1), new PixelCoordinate(3, 0));
+        AssertDirectionHasMapping(viewModel, SpriteDirection.NorthWest, new PixelCoordinate(2, 2), new PixelCoordinate(2, 0));
     }
 
     [Fact]
@@ -1737,6 +2083,46 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task ReactivatingModifiedSavedConfigQueueItemShouldPreserveDirtyBaselineUntilSave()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var dialogService = new StubFileDialogService
+        {
+            DmiPath = "sprite.dmi",
+            ConfigPath = "saved.json"
+        };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            configRepository: new SuccessfulConfigRepository(CreateConfig("saved")),
+            fileDialogService: dialogService,
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        await viewModel.LoadConfigCommand.ExecuteAsync(null);
+        var savedItem = viewModel.ConfigQueueItems.Single(item =>
+            item.SessionSnapshot.ConfigPath == "saved.json");
+        var editable = new PixelCoordinate(1, 1);
+        var target = new PixelCoordinate(2, 2);
+        ApplySingleMapping(viewModel, SpriteDirection.South, target, editable);
+
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.ActivateConfigQueueItemCommand.Execute(savedItem);
+
+        session.CurrentConfigPath.Should().Be("saved.json");
+        session.CurrentConfig!.GetEffectiveTarget(SpriteDirection.South, editable).Should().Be(target);
+        session.IsDirty.Should().BeTrue();
+        viewModel.ConfigSummary.Should().Contain("modified");
+
+        await viewModel.SaveConfigCommand.ExecuteAsync(null);
+
+        session.IsDirty.Should().BeFalse();
+        viewModel.ConfigSummary.Should().NotContain("modified");
+    }
+
+    [Fact]
     public void BuildBatchSourceTreeItemsShouldSkipChildDirectoriesWithEnumerationErrors()
     {
         var root = Path.Combine("batch", "root");
@@ -1817,7 +2203,8 @@ public sealed class MainWindowViewModelSmokeTests
         IPreviewBuilder? previewBuilder = null,
         IBatchProcessingService? batchProcessingService = null,
         IFileDialogService? fileDialogService = null,
-        EditorSession? editorSession = null)
+        EditorSession? editorSession = null,
+        ILogger<WorkspaceShellViewModel>? logger = null)
     {
         var session = editorSession ?? new EditorSession();
         var workspace = new EditorWorkspaceService();
@@ -1843,7 +2230,7 @@ public sealed class MainWindowViewModelSmokeTests
             new SpriteImageBitmapSourceFactory(),
             fileDialogService ?? new StubFileDialogService(),
             session,
-            NullLogger<WorkspaceShellViewModel>.Instance);
+            logger ?? NullLogger<WorkspaceShellViewModel>.Instance);
     }
 
     private static BatchSourceTreeItemViewModel[] BuildBatchSourceTreeItemsForTest(
@@ -1938,6 +2325,37 @@ public sealed class MainWindowViewModelSmokeTests
     {
         viewModel.SelectedDirection = direction;
         viewModel.MappingRows.Should().NotContain(row => row.Editable == editable);
+    }
+
+    private sealed record RecordedLogEntry(
+        LogLevel Level,
+        EventId EventId,
+        string Message,
+        IReadOnlyDictionary<string, object?> Properties);
+
+    private sealed class RecordingLogger<T> : ILogger<T>
+    {
+        public List<RecordedLogEntry> Entries { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            var properties = state is IEnumerable<KeyValuePair<string, object?>> values
+                ? values
+                    .Where(static pair => pair.Key != "{OriginalFormat}")
+                    .ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal)
+                : new Dictionary<string, object?>(StringComparer.Ordinal);
+            Entries.Add(new RecordedLogEntry(logLevel, eventId, formatter(state, exception), properties));
+        }
     }
 
     private sealed class InMemorySettingsRepository(WorkspaceSettings settings) : ISettingsRepository

@@ -24,6 +24,7 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private readonly SetPreviewSelectionUseCase _setPreviewSelectionUseCase;
     private readonly SetSelectedDirectionUseCase _setSelectedDirectionUseCase;
     private readonly ApplyConfigTransformUseCase _applyConfigTransformUseCase;
+    private readonly ApplyEditorMutationUseCase _applyEditorMutationUseCase;
     private readonly LoadWorkspaceSettingsUseCase _loadWorkspaceSettingsUseCase;
     private readonly SaveWorkspaceSettingsUseCase _saveWorkspaceSettingsUseCase;
     private readonly SpriteImageBitmapSourceFactory _bitmapSourceFactory;
@@ -43,6 +44,7 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private EditableDragAction _editableDragAction;
     private bool _isDraggingEditableArea;
     private bool _isSynchronizingSelectedDirection;
+    private bool _isSynchronizingMirrorAxis;
     private SpriteImage? _baseImage;
     private SpriteImage? _landmarkImage;
     private SpriteImage? _overlayImage;
@@ -56,12 +58,13 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private IReadOnlyList<WorkspaceImportedStateSettings> _restoredImportedStateSettings = Array.Empty<WorkspaceImportedStateSettings>();
     private CancellationTokenSource? _importedStateRefreshCts;
     private int _importedStateRefreshVersion;
-    private readonly HashSet<PixelCoordinate> _pendingRestoreStrokeCoordinates = [];
-    private CancellationTokenSource? _restoreStrokeFlushCts;
-    private bool _hasPendingRestoreStrokeFinalize;
-    private readonly HashSet<PixelCoordinate> _pendingDrawStrokeCoordinates = [];
-    private CancellationTokenSource? _drawStrokeFlushCts;
-    private bool _hasPendingDrawStrokeFinalize;
+    private readonly List<PixelCoordinate> _pendingStrokeCoordinates = [];
+    private readonly HashSet<PixelCoordinate> _pendingStrokeCoordinateSet = [];
+    private CancellationTokenSource? _strokePreviewCts;
+    private PixelCoordinate? _lastStrokeCoordinate;
+    private PixelCoordinate? _activeStrokeSourceCoordinate;
+    private EditorStrokeKind _activeStrokeKind;
+    private SpriteConfig? _gesturePreviewConfig;
     private CancellationTokenSource? _batchQuickPreviewRefreshCts;
     private int _batchQuickPreviewRefreshVersion;
     private CancellationTokenSource? _batchSourceValidationCts;
@@ -79,6 +82,14 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         SelectArea = 3,
         MoveSingle = 4,
         MoveSelection = 5
+    }
+
+    private enum EditorStrokeKind
+    {
+        None = 0,
+        Paint = 1,
+        Erase = 2,
+        Restore = 3
     }
 
     public WorkspaceShellViewModel(
@@ -119,6 +130,7 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         _setPreviewSelectionUseCase = setPreviewSelectionUseCase;
         _setSelectedDirectionUseCase = setSelectedDirectionUseCase;
         _applyConfigTransformUseCase = applyConfigTransformUseCase;
+        _applyEditorMutationUseCase = new ApplyEditorMutationUseCase(editorSession);
         _loadWorkspaceSettingsUseCase = loadWorkspaceSettingsUseCase;
         _saveWorkspaceSettingsUseCase = saveWorkspaceSettingsUseCase;
         _bitmapSourceFactory = bitmapSourceFactory;
@@ -231,10 +243,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         _activeOperationCts?.Dispose();
         _importedStateRefreshCts?.Cancel();
         _importedStateRefreshCts?.Dispose();
-        _restoreStrokeFlushCts?.Cancel();
-        _restoreStrokeFlushCts?.Dispose();
-        _drawStrokeFlushCts?.Cancel();
-        _drawStrokeFlushCts?.Dispose();
+        _strokePreviewCts?.Cancel();
+        _strokePreviewCts?.Dispose();
         _batchQuickPreviewRefreshCts?.Cancel();
         _batchQuickPreviewRefreshCts?.Dispose();
         _batchSourceValidationCts?.Cancel();

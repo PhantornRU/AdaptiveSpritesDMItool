@@ -9,6 +9,7 @@ public sealed class SpriteConfig
         SpriteResolution resolution,
         SupportedDirectionSet supportedDirections,
         ConfigMetadata metadata,
+        SpriteEditorSettings editorSettings,
         Dictionary<SpriteDirection, Dictionary<PixelCoordinate, PixelMapping>> mappings)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -20,6 +21,7 @@ public sealed class SpriteConfig
         Resolution = resolution;
         SupportedDirections = supportedDirections ?? throw new ArgumentNullException(nameof(supportedDirections));
         Metadata = metadata ?? throw new ArgumentNullException(nameof(metadata));
+        EditorSettings = editorSettings ?? throw new ArgumentNullException(nameof(editorSettings));
         _mappings = mappings;
     }
 
@@ -31,14 +33,23 @@ public sealed class SpriteConfig
 
     public ConfigMetadata Metadata { get; }
 
+    public SpriteEditorSettings EditorSettings { get; }
+
     public IReadOnlyCollection<SpriteDirection> Directions => SupportedDirections.SupportedDirections;
 
     public static SpriteConfig CreateEmpty(
         string name,
         SpriteResolution resolution,
         SupportedDirectionSet supportedDirections,
-        ConfigMetadata metadata) =>
-        new(name, resolution, supportedDirections, metadata, CreateDirectionBuckets(supportedDirections));
+        ConfigMetadata metadata,
+        SpriteEditorSettings? editorSettings = null) =>
+        new(
+            name,
+            resolution,
+            supportedDirections,
+            metadata,
+            editorSettings ?? SpriteEditorSettings.Default,
+            CreateDirectionBuckets(supportedDirections));
 
     public ConfigValidationResult Validate()
     {
@@ -57,6 +68,15 @@ public sealed class SpriteConfig
         if (Metadata.UpdatedUtc < Metadata.CreatedUtc)
         {
             issues.Add(new ConfigValidationIssue("config.metadata.invalid", "Updated time must not be earlier than created time."));
+        }
+
+        if (!EditorSettings.IsValidFor(Resolution))
+        {
+            issues.Add(new ConfigValidationIssue(
+                "config.editor.mirror_axis_offset.invalid",
+                $"Mirror axis offset '{EditorSettings.MirrorAxisOffsetPixels}' is outside the valid range " +
+                $"'{-SpriteEditorSettings.GetMaximumMirrorAxisOffset(Resolution)}..{SpriteEditorSettings.GetMaximumMirrorAxisOffset(Resolution)}' " +
+                $"for resolution '{Resolution}'."));
         }
 
         foreach (var (direction, mappings) in _mappings)
@@ -222,7 +242,7 @@ public sealed class SpriteConfig
             bucket[source] = new PixelMapping(source, target);
         }
 
-        return new SpriteConfig(Name, Resolution, SupportedDirections, Metadata.Touch(updatedUtc), next);
+        return new SpriteConfig(Name, Resolution, SupportedDirections, Metadata.Touch(updatedUtc), EditorSettings, next);
     }
 
     /// <summary>
@@ -250,7 +270,7 @@ public sealed class SpriteConfig
 
         var next = CloneMappings(_mappings);
         next[direction][source] = new PixelMapping(source, target);
-        return new SpriteConfig(Name, Resolution, SupportedDirections, Metadata.Touch(updatedUtc), next);
+        return new SpriteConfig(Name, Resolution, SupportedDirections, Metadata.Touch(updatedUtc), EditorSettings, next);
     }
 
     public SpriteConfig RemoveMapping(SpriteDirection direction, PixelCoordinate source)
@@ -260,17 +280,63 @@ public sealed class SpriteConfig
 
         var next = CloneMappings(_mappings);
         next[direction].Remove(source);
-        return new SpriteConfig(Name, Resolution, SupportedDirections, Metadata.Touch(DateTimeOffset.UtcNow), next);
+        return new SpriteConfig(Name, Resolution, SupportedDirections, Metadata.Touch(DateTimeOffset.UtcNow), EditorSettings, next);
     }
 
     public SpriteConfig WithMetadata(ConfigMetadata metadata) =>
-        new(Name, Resolution, SupportedDirections, metadata, CloneMappings(_mappings));
+        new(Name, Resolution, SupportedDirections, metadata, EditorSettings, CloneMappings(_mappings));
+
+    public SpriteConfig WithEditorSettings(SpriteEditorSettings editorSettings)
+    {
+        ArgumentNullException.ThrowIfNull(editorSettings);
+        if (!editorSettings.IsValidFor(Resolution))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(editorSettings),
+                editorSettings.MirrorAxisOffsetPixels,
+                "Mirror axis offset is outside of the configured resolution.");
+        }
+
+        return editorSettings == EditorSettings
+            ? this
+            : new SpriteConfig(
+                Name,
+                Resolution,
+                SupportedDirections,
+                Metadata.Touch(DateTimeOffset.UtcNow),
+                editorSettings,
+                CloneMappings(_mappings));
+    }
 
     public SpriteConfig WithName(string name) =>
-        new(name, Resolution, SupportedDirections, Metadata.Touch(DateTimeOffset.UtcNow), CloneMappings(_mappings));
+        new(name, Resolution, SupportedDirections, Metadata.Touch(DateTimeOffset.UtcNow), EditorSettings, CloneMappings(_mappings));
 
     public SpriteConfig Clone() =>
-        new(Name, Resolution, SupportedDirections, Metadata, CloneMappings(_mappings));
+        new(Name, Resolution, SupportedDirections, Metadata, EditorSettings, CloneMappings(_mappings));
+
+    public bool HasSameMappingContent(SpriteConfig? other)
+    {
+        if (other is null ||
+            !string.Equals(Name, other.Name, StringComparison.Ordinal) ||
+            Resolution != other.Resolution ||
+            !Equals(SupportedDirections, other.SupportedDirections) ||
+            EditorSettings != other.EditorSettings)
+        {
+            return false;
+        }
+
+        foreach (var direction in SupportedDirections.GetDirections())
+        {
+            var left = _mappings[direction];
+            var right = other._mappings[direction];
+            if (left.Count != right.Count || left.Any(entry => !right.TryGetValue(entry.Key, out var value) || value != entry.Value))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     private static Dictionary<SpriteDirection, Dictionary<PixelCoordinate, PixelMapping>> CreateDirectionBuckets(SupportedDirectionSet supportedDirections)
     {

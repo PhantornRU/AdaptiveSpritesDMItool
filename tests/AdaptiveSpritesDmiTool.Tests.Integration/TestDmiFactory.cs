@@ -33,13 +33,44 @@ internal static class TestDmiFactory
         int height,
         Func<StateDirection, Image<Rgba32>> frameFactory)
     {
+        ArgumentNullException.ThrowIfNull(frameFactory);
+        return CreateState(name, depth, width, height, 1, (direction, _) => frameFactory(direction));
+    }
+
+    public static DMIState CreateState(
+        string name,
+        DirectionDepth depth,
+        int width,
+        int height,
+        int frameCount,
+        Func<StateDirection, int, Image<Rgba32>> frameFactory)
+    {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentNullException.ThrowIfNull(frameFactory);
-
-        var state = new DMIState(name, depth, 1, width, height);
-        foreach (var direction in GetDirections(depth))
+        if (frameCount <= 0)
         {
-            state.SetFrame(frameFactory(direction), direction, 0);
+            throw new ArgumentOutOfRangeException(nameof(frameCount), frameCount, "Frame count must be positive.");
+        }
+
+        var state = new DMIState(name, depth, frameCount, width, height);
+        for (var frameIndex = 0; frameIndex < frameCount; frameIndex++)
+        {
+            foreach (var direction in GetDirections(depth))
+            {
+                var frame = frameFactory(direction, frameIndex);
+                if (frame.Width != width || frame.Height != height)
+                {
+                    var actualWidth = frame.Width;
+                    var actualHeight = frame.Height;
+                    frame.Dispose();
+                    state.Dispose();
+                    throw new ArgumentException(
+                        $"Frame '{direction}:{frameIndex}' is {actualWidth}x{actualHeight}, expected {width}x{height}.",
+                        nameof(frameFactory));
+                }
+
+                state.SetFrame(frame, direction, frameIndex);
+            }
         }
 
         return state;
@@ -72,6 +103,31 @@ internal static class TestDmiFactory
         for (var index = 0; index < pixels.Length; index++)
         {
             image[index, 0] = pixels[index];
+        }
+
+        return image;
+    }
+
+    public static Image<Rgba32> CreateImage(int width, int height, Func<int, int, Rgba32> pixelFactory)
+    {
+        ArgumentNullException.ThrowIfNull(pixelFactory);
+        if (width <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(width), width, "Image width must be positive.");
+        }
+
+        if (height <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(height), height, "Image height must be positive.");
+        }
+
+        var image = new Image<Rgba32>(width, height);
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                image[x, y] = pixelFactory(x, y);
+            }
         }
 
         return image;

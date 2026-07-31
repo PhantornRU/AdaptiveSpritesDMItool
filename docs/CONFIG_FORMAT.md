@@ -1,12 +1,12 @@
-# Форматы конфигов v2.2
+# Форматы конфигов v2.3.0
 
 ## Статус
 
-Основной формат пользовательских конфигов в v2.2 - JSON schema `version: 1`.
+Основной формат пользовательских конфигов в v2.3.0 - JSON schema `version: 2`.
 
 CSV можно импортировать, но новые конфиги сохраняются как JSON.
 
-## JSON Config Schema Version 1
+## JSON Config Schema Version 2
 
 Файл JSON сохраняется и загружается через `JsonSpriteConfigRepository`.
 
@@ -14,7 +14,7 @@ CSV можно импортировать, но новые конфиги сох
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "name": "jumpsuit-default",
   "resolution": {
     "width": 32,
@@ -27,6 +27,9 @@ CSV можно импортировать, но новые конфиги сох
     "source": "UserCreated",
     "sourceIdentifier": null,
     "importedFromLegacy": null
+  },
+  "editorSettings": {
+    "mirrorAxisOffsetPixels": 0
   },
   "mappings": {
     "South": [
@@ -56,7 +59,7 @@ CSV можно импортировать, но новые конфиги сох
 
 ## Field Semantics
 
-- `version`: текущая поддерживаемая версия схемы, сейчас только `1`.
+- `version`: поддерживаются `1` и `2`; новые сохранения всегда используют `2`.
 - `name`: непустое имя конфига.
 - `resolution`: размер sprite frame в пикселях.
 - `supportedDirections`: строка `"four"` или `"eight"`.
@@ -65,6 +68,7 @@ CSV можно импортировать, но новые конфиги сох
 - `metadata.source`: `UserCreated`, `Json` или `ImportedLegacyCsv`.
 - `metadata.sourceIdentifier`: краткий идентификатор источника, например имя импортированного файла.
 - `metadata.importedFromLegacy`: исходный CSV path, если конфиг импортирован.
+- `editorSettings.mirrorAxisOffsetPixels`: целочисленное смещение вертикальной оси; допустимо `abs(offset) <= floor((width-1)/2)`.
 - `mappings`: объект, где ключ - имя направления, а значение - массив mappings.
 - `source`: координата исходного пикселя.
 - `target`: координата целевого пикселя или `null`.
@@ -104,6 +108,7 @@ CSV можно импортировать, но новые конфиги сох
 - каждый direction key в `mappings` должен входить в `supportedDirections`.
 - координаты `source` и `target` должны находиться внутри `resolution`.
 - `metadata.updatedUtc` не должен быть раньше `metadata.createdUtc`.
+- `editorSettings.mirrorAxisOffsetPixels` должен попадать в диапазон разрешения.
 - при применении конфига к `.dmi` resolution и direction set должны совпадать с целевым sprite asset.
 
 ## CSV Import
@@ -177,8 +182,10 @@ Batch artifacts пишутся в output root под `.adaptive-sprites`:
 
 ## Workspace Settings
 
-Workspace settings - внутренний JSON приложения. Пользователь обычно не редактирует его вручную.
+Workspace settings schema v7 - внутренний JSON приложения. Пользователь обычно не редактирует его вручную.
 
-В settings сохраняются последние пути, выбранные states, imported DMI state layers, selected direction, overwrite policy, language, theme, viewport и состояние рабочих панелей.
+В settings сохраняются последние пути, выбранные states, imported DMI state layers, selected direction, overwrite policy, language, theme, viewport, `mirrorAxisOffsetPixels`, `showMirrorAxisGuide`, `mirrorAcrossDirections` и состояние рабочих панелей.
+
+При загрузке JSON значение оси из конфига главнее Workspace. JSON v1, CSV и старые Workspace получают нулевое смещение; новый конфиг наследует последнее допустимое значение Workspace.
 
 Imported DMI state layer settings include source path, state name, Source/Editable assignment, placement mode, order, and opacity percent. These settings are workspace state, not part of the public sprite mapping config schema.
