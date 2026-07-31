@@ -2024,7 +2024,7 @@ public sealed class MainWindowViewModelSmokeTests
             item.SessionSnapshot.ConfigPath == "saved.json");
         var editable = new PixelCoordinate(1, 1);
         var target = new PixelCoordinate(2, 2);
-        ApplySingleMapping(viewModel, SpriteDirection.South, editable, target);
+        ApplySingleMapping(viewModel, SpriteDirection.South, target, editable);
 
         viewModel.CreateConfigCommand.Execute(null);
         viewModel.ActivateConfigQueueItemCommand.Execute(savedItem);
