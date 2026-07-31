@@ -618,6 +618,10 @@ public sealed class EditorWorkspaceViewModel(WorkspaceShellViewModel shell) : Sh
 
     public bool ShowGridCaptions => Shell.GridAboveImage || Shell.ShowSourceCoordinateCaptions;
 
+    public bool ShowMirrorAxisGuide => Shell.ShowMirrorAxisGuide;
+
+    public int MirrorAxisOffsetPixels => Shell.MirrorAxisOffsetPixels;
+
     public bool ShowGridCaptionsToggle
     {
         get => Shell.GridAboveImage;

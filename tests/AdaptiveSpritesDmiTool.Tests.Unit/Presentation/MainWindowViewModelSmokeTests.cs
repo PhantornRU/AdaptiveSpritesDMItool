@@ -115,6 +115,29 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task EditorWorkspaceShouldExposeMirrorGuideValuesForCanvasBindings()
+    {
+        var settingsRepository = new InMemorySettingsRepository(
+            WorkspaceSettings.Empty with
+            {
+                MirrorAxisOffsetPixels = -1,
+                ShowMirrorAxisGuide = true
+            });
+        var viewModel = CreateViewModel(settingsRepository);
+
+        await viewModel.InitializeAsync();
+
+        viewModel.EditorWorkspace.MirrorAxisOffsetPixels.Should().Be(-1);
+        viewModel.EditorWorkspace.ShowMirrorAxisGuide.Should().BeTrue();
+
+        viewModel.MirrorAxisOffsetPixels = 1;
+        viewModel.ShowMirrorAxisGuide = false;
+
+        viewModel.EditorWorkspace.MirrorAxisOffsetPixels.Should().Be(1);
+        viewModel.EditorWorkspace.ShowMirrorAxisGuide.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task UndoRedoShouldSynchronizeMirrorAxisWithConfigAndWorkspace()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
