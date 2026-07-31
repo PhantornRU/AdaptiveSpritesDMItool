@@ -17,38 +17,6 @@ $extensions = @(
     '.yaml'
 )
 
-$excludedSegments = @(
-    '.git',
-    'bin',
-    'obj'
-)
-
-function Test-IsExcludedPath {
-    param([string] $Path)
-
-    $relativePath = Get-RelativePath -Path $Path
-    $segments = $relativePath -split '[\\/]+'
-
-    foreach ($segment in $segments) {
-        if ($excludedSegments -contains $segment) {
-            return $true
-        }
-    }
-
-    return $false
-}
-
-function Get-RelativePath {
-    param([string] $Path)
-
-    $fullPath = [System.IO.Path]::GetFullPath($Path)
-    if (-not $fullPath.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) {
-        return $fullPath
-    }
-
-    return $fullPath.Substring($root.Length).TrimStart([char[]]@('\', '/'))
-}
-
 function Get-LineColumn {
     param(
         [string] $Text,
@@ -75,14 +43,21 @@ function Get-LineColumn {
 }
 
 $findings = New-Object System.Collections.Generic.List[object]
+$repositoryFiles = @(& git -C $root ls-files --cached --others --exclude-standard)
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to enumerate repository files for the hidden Unicode scan."
+}
 
-Get-ChildItem -Path $root -Recurse -File |
-    Where-Object { $extensions -contains $_.Extension.ToLowerInvariant() } |
-    Where-Object { -not (Test-IsExcludedPath $_.FullName) } |
+$repositoryFiles |
+    Where-Object { $extensions -contains [System.IO.Path]::GetExtension($_).ToLowerInvariant() } |
     ForEach-Object {
-        $file = $_
-        $relativePath = Get-RelativePath -Path $file.FullName
-        $text = [System.IO.File]::ReadAllText($file.FullName, $utf8Strict)
+        $relativePath = $_
+        $fullPath = Join-Path $root $relativePath
+        if (-not [System.IO.File]::Exists($fullPath)) {
+            return
+        }
+
+        $text = [System.IO.File]::ReadAllText($fullPath, $utf8Strict)
 
         for ($i = 0; $i -lt $text.Length; $i++) {
             if ([System.Char]::IsLowSurrogate($text[$i])) {
