@@ -85,8 +85,7 @@ public sealed class SessionWorkflowTests
 
         var batchService = new RecordingBatchProcessingService();
         var useCase = new ApplyConfigToDmiBatchUseCase(batchService, session);
-        BatchProgress? lastProgress = null;
-        var progress = new Progress<BatchProgress>(value => lastProgress = value);
+        var progress = new RecordingBatchProgress();
 
         var result = await useCase.ExecuteAsync(
             "input",
@@ -101,7 +100,7 @@ public sealed class SessionWorkflowTests
         batchService.Request!.OverwritePolicy.Should().Be(OverwritePolicy.FailIfExists);
         batchService.Request.InputDirectory.Should().Be("input");
         batchService.Request.OutputDirectory.Should().Be("output");
-        lastProgress.Should().Be(new BatchProgress(1, 1, "file1.dmi"));
+        progress.LastValue.Should().Be(new BatchProgress(1, 1, "file1.dmi"));
     }
 
     [Fact]
@@ -163,5 +162,12 @@ public sealed class SessionWorkflowTests
                         new BatchFileResult("file1.dmi", "output\\file1.dmi", BatchFileStatus.Processed, "ok")
                     ])));
         }
+    }
+
+    private sealed class RecordingBatchProgress : IProgress<BatchProgress>
+    {
+        public BatchProgress? LastValue { get; private set; }
+
+        public void Report(BatchProgress value) => LastValue = value;
     }
 }
