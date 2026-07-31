@@ -136,7 +136,8 @@ if (-not $SkipBuildVerification) {
     Invoke-External -Name "Test" -FilePath "dotnet" -Arguments @("test", $solutionPath, "-c", $Configuration, "-m:1", "-v", "minimal", "--no-build")
 }
 
-Invoke-External -Name "Restore publish runtime" -FilePath "dotnet" -Arguments @("restore", $projectPath, "-r", $Runtime, "--locked-mode", "-m:1")
+# Restore the RID-specific executable graph without applying that RID to portable project-reference lock files.
+Invoke-External -Name "Restore publish runtime" -FilePath "dotnet" -Arguments @("restore", $projectPath, "-r", $Runtime, "--locked-mode", "--no-dependencies", "-m:1")
 Invoke-External -Name "Publish" -FilePath "dotnet" -Arguments @(
     "publish",
     $projectPath,
