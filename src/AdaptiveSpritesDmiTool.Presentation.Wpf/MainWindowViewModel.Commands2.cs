@@ -234,6 +234,7 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        SynchronizeMirrorAxisFromConfig(result.Value);
         StatusMessage = "Undo applied.";
         RefreshWorkspaceState();
         RefreshEditorSurface();
@@ -250,6 +251,7 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        SynchronizeMirrorAxisFromConfig(result.Value);
         StatusMessage = "Redo applied.";
         RefreshWorkspaceState();
         RefreshEditorSurface();

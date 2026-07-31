@@ -115,6 +115,36 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task UndoRedoShouldSynchronizeMirrorAxisWithConfigAndWorkspace()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: new StubFileDialogService { DmiPath = "sprite.dmi" },
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.MirrorAxisOffsetPixels = 1;
+
+        viewModel.UndoCommand.Execute(null);
+        await viewModel.PersistWorkspaceSettingsAsync();
+
+        viewModel.MirrorAxisOffsetPixels.Should().Be(0);
+        session.CurrentConfig!.EditorSettings.MirrorAxisOffsetPixels.Should().Be(0);
+        settingsRepository.Saved!.MirrorAxisOffsetPixels.Should().Be(0);
+
+        viewModel.RedoCommand.Execute(null);
+        await viewModel.PersistWorkspaceSettingsAsync();
+
+        viewModel.MirrorAxisOffsetPixels.Should().Be(1);
+        session.CurrentConfig.EditorSettings.MirrorAxisOffsetPixels.Should().Be(1);
+        settingsRepository.Saved!.MirrorAxisOffsetPixels.Should().Be(1);
+    }
+
+    [Fact]
     public async Task NavigationRailShouldSwitchTheSelectedSection()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
