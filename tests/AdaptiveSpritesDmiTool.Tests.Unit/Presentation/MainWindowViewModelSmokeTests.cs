@@ -145,6 +145,35 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task ResetActiveConfigShouldClearMappingsWithoutResettingMirrorAxis()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: new StubFileDialogService { DmiPath = "sprite.dmi" },
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.MirrorAxisOffsetPixels = 1;
+        ApplySingleMapping(
+            viewModel,
+            SpriteDirection.South,
+            new PixelCoordinate(2, 2),
+            new PixelCoordinate(1, 1));
+
+        viewModel.ResetActiveConfigCommand.Execute(null);
+        await viewModel.PersistWorkspaceSettingsAsync();
+
+        session.CurrentConfig!.GetMappings(SpriteDirection.South).Should().BeEmpty();
+        session.CurrentConfig.EditorSettings.MirrorAxisOffsetPixels.Should().Be(1);
+        viewModel.MirrorAxisOffsetPixels.Should().Be(1);
+        settingsRepository.Saved!.MirrorAxisOffsetPixels.Should().Be(1);
+    }
+
+    [Fact]
     public async Task NavigationRailShouldSwitchTheSelectedSection()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);

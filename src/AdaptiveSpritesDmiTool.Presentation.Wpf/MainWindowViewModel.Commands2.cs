@@ -286,7 +286,8 @@ public partial class WorkspaceShellViewModel
                 config.Name,
                 config.Resolution,
                 config.SupportedDirections,
-                config.Metadata.Touch(DateTimeOffset.UtcNow)));
+                config.Metadata.Touch(DateTimeOffset.UtcNow),
+                config.EditorSettings));
 
         ApplyMutationResult(result, "Active config reset to an empty mapping workspace.");
     }
