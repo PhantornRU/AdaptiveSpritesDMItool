@@ -1,8 +1,8 @@
-# Test Plan v2.3.0
+# Test Plan v2.4.0
 
 ## Strategy
 
-Проверка v2.3.0 строится на трех уровнях:
+Проверка v2.4.0 сохраняет три уровня V2.3 и добавляет document/codec regression matrix:
 
 - unit tests для Domain invariants, Application use cases и WPF shell view models;
 - integration tests для JSON persistence, CSV import, DMI adapters, preview, settings и batch behavior;
@@ -53,17 +53,28 @@
 - workspace settings repository roundtrip and version validation
 - imported state workspace settings validation
 - batch manifest validation and artifacts behavior
+- DMI/PNG content probing independent of extension
+- DMI and PNG import into `SpriteDocument`
+- sidecar v1 roundtrip, relative-path relocation and changed-source detection
+- single PNG, PNG sequence and sprite-sheet slicing
+- deterministic PNG sheet/sequence export and managed-directory ownership checks
+- Workspace v7 to v8 migration
+- mixed DMI/PNG batch with per-output failure isolation
 
-## v2.3.0 Release Validation
+### Security limits
 
-Release-проверка v2.3.0 включает:
+Покрываются граничные и превышенные значения encoded size, width/height, checked decoded-pixel arithmetic, frame/cell count and state count. Invalid input must fail before bulk decode or destination mutation.
+
+## v2.4.0 Release Validation
+
+Release-проверка v2.4.0 включает:
 
 - hidden Unicode scan
 - locked `dotnet restore`
 - `dotnet build` in Release configuration
 - `dotnet test` in Release configuration
-- 230 unit tests
-- 56 integration tests
+- 241 unit tests
+- 74 integration tests
 - NuGet vulnerability audit
 - self-contained Windows x64 publish
 - ZIP packaging
@@ -103,6 +114,13 @@ Release-проверка v2.3.0 включает:
 25. workspace settings persist across restart
 26. imported DMI states restore across restart
 27. imported DMI layer order and opacity affect Source/Editable composition
+28. content probe routes DMI and PNG by signature/metadata rather than extension
+29. static PNG, ordered sequence and sprite-sheet import create the expected 1/4/8 frame graph
+30. sidecar v1 roundtrip, source relocation, explicit source-change acceptance and safety-limit rejection
+31. DMI document export preserves state order, animation metadata, hotspots and RGBA through reopen verification
+32. PNG sheet and sequence exports replace only tool-owned managed folders
+33. mixed DMI/PNG batch isolates DMI and PNG output failures
+34. raster profiles accept config/profile 4/8 combinations only according to the documented matrix
 
 ## Manual Smoke
 
@@ -131,6 +149,11 @@ Run after large presentation, release, or packaging changes:
 21. Save the same asymmetric synthetic DMI both to a new path and in place, then compare preview pixels with the reopened DMI.
 22. Open the saved DMI in a third-party BYOND/DMI tool and verify state order, animation frames, directions, metadata, transparency, and unique corner pixels.
 23. After any WPF-UI dependency update, repeat the full toolbar, dialogs, themes, DPI, canvas input, and window-resize smoke before accepting the package.
+24. In Documents, import one static PNG, an ordered multi-file sequence, and a sheet with non-zero margins/spacing; compare the grid overlay with the imported frames.
+25. Save and reopen the `*.adaptive-dmi.json` sidecar, then move the project with its relative sources and verify it relinks without changing fingerprints.
+26. Modify one source after saving and verify that load requires explicit reject/accept/relink instead of silently using the new file.
+27. Export PNG sheet and sequence twice, verify managed replacement, then point export at an unmanaged non-empty directory and verify its contents remain unchanged.
+28. Run mixed DMI+PNG batch for 1/4/8 profiles; verify separate result rows and that a PNG profile mismatch does not suppress a valid DMI output.
 
 ## Validation Commands
 
@@ -145,7 +168,7 @@ dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 Release validation:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.3.0 -Runtime win-x64
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.4.0 -Runtime win-x64
 ```
 
 Docs-only validation:

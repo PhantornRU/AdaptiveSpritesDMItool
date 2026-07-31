@@ -1,5 +1,6 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
@@ -30,6 +31,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private readonly SpriteImageBitmapSourceFactory _bitmapSourceFactory;
     private readonly IFileDialogService _fileDialogService;
     private readonly EditorSession _editorSession;
+    private readonly IAuxiliaryLayerFrameReader? _auxiliaryLayerFrameReader;
+    private readonly SpriteDocumentWorkflow? _spriteDocumentWorkflow;
     private readonly ILogger<WorkspaceShellViewModel> _logger;
     private readonly SemaphoreSlim _workspaceSettingsPersistenceGate = new(1, 1);
     private readonly PreviewRefreshCoordinator _previewRefreshCoordinator = new(TimeSpan.FromMilliseconds(250));
@@ -54,8 +57,13 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
     private readonly Dictionary<SpriteDirection, SpriteImage?> _navigatorBaseImages = new();
     private readonly Dictionary<SpriteDirection, SpriteImage?> _navigatorCompositeImages = new();
     private readonly Dictionary<SpriteDirection, IReadOnlyDictionary<PixelCoordinate, PixelCoordinate?>> _navigatorEditableBackingOrigins = new();
-    private readonly Dictionary<(string Path, string StateName, SpriteDirection Direction), SpriteImage?> _importedStateFrameCache = new();
+    private readonly Dictionary<(string Path, string StateName, SpriteDirection Direction, int FrameIndex, SpriteSourceFormat Format), SpriteImage?> _importedStateFrameCache = new();
     private IReadOnlyList<WorkspaceImportedStateSettings> _restoredImportedStateSettings = Array.Empty<WorkspaceImportedStateSettings>();
+    private IReadOnlyList<WorkspaceAuxiliaryLayerSettings> _restoredAuxiliaryLayerSettings = Array.Empty<WorkspaceAuxiliaryLayerSettings>();
+    private string? _restoredDocumentPath;
+    private IReadOnlyList<WorkspaceBatchOutputFormat> _selectedBatchOutputFormats =
+        [WorkspaceBatchOutputFormat.Dmi, WorkspaceBatchOutputFormat.Png];
+    private WorkspaceRasterExportSettings _rasterExportSettings = WorkspaceRasterExportSettings.Default;
     private CancellationTokenSource? _importedStateRefreshCts;
     private int _importedStateRefreshVersion;
     private readonly List<PixelCoordinate> _pendingStrokeCoordinates = [];
@@ -113,7 +121,9 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         SpriteImageBitmapSourceFactory bitmapSourceFactory,
         IFileDialogService fileDialogService,
         EditorSession editorSession,
-        ILogger<WorkspaceShellViewModel> logger)
+        ILogger<WorkspaceShellViewModel> logger,
+        SpriteDocumentWorkflow? spriteDocumentWorkflow = null,
+        IAuxiliaryLayerFrameReader? auxiliaryLayerFrameReader = null)
     {
         _startEmptyWorkspaceUseCase = startEmptyWorkspaceUseCase;
         _createConfigUseCase = createConfigUseCase;
@@ -137,6 +147,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         _fileDialogService = fileDialogService;
         _editorSession = editorSession;
         _logger = logger;
+        _spriteDocumentWorkflow = spriteDocumentWorkflow;
+        _auxiliaryLayerFrameReader = auxiliaryLayerFrameReader;
 
         AvailableDirections = [];
         AvailableStates = [];
@@ -161,6 +173,11 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         BottomWorkspace = new BottomWorkspaceViewModel(this);
         PreviewPanel = new PreviewPanelViewModel(this);
         BatchWorkspace = new BatchWorkspaceViewModel(this);
+        DocumentWorkspace = new DocumentWorkspaceViewModel(
+            this,
+            spriteDocumentWorkflow,
+            fileDialogService,
+            bitmapSourceFactory);
         SettingsTab = new SettingsTabViewModel(this);
         OperationalStatusBar = new OperationalStatusBarViewModel(this);
 
@@ -171,6 +188,7 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         BottomWorkspace.Attach();
         PreviewPanel.Attach();
         BatchWorkspace.Attach();
+        DocumentWorkspace.Attach();
         SettingsTab.Attach();
         OperationalStatusBar.Attach();
     }
@@ -223,6 +241,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
 
     public BatchWorkspaceViewModel BatchWorkspace { get; }
 
+    public DocumentWorkspaceViewModel DocumentWorkspace { get; }
+
     public SettingsTabViewModel SettingsTab { get; }
 
     public OperationalStatusBarViewModel OperationalStatusBar { get; }
@@ -237,6 +257,8 @@ public partial class WorkspaceShellViewModel : ObservableObject, IDisposable
         BottomWorkspace.Detach();
         PreviewPanel.Detach();
         BatchWorkspace.Detach();
+        DocumentWorkspace.Detach();
+        DocumentWorkspace.Dispose();
         SettingsTab.Detach();
         OperationalStatusBar.Detach();
         _activeOperationCts?.Cancel();

@@ -1,26 +1,39 @@
-# Adaptive Sprites DMI Tool v2.3.0
+# Adaptive Sprites DMI Tool v2.4.0
 
-Adaptive Sprites DMI Tool - Windows WPF-приложение для создания, предпросмотра и применения конфигов пиксельных преобразований к BYOND `.dmi` спрайтам.
+Adaptive Sprites DMI Tool — Windows WPF-приложение для импорта, организации, предпросмотра, экспорта и применения конфигов пиксельных преобразований к DMI- и PNG-спрайтам.
 
 English documentation: [README.md](README.md)
 
 ## Текущая версия
 
-- Версия приложения: `2.3.0`
+- Версия приложения: `2.4.0`
 - Целевая платформа: Windows x64
 - UI: WPF на .NET 10 LTS
 - Релизный пакет: self-contained `win-x64` ZIP
 - Версия схемы JSON-конфига: `2` (чтение v1 и v2)
+- Версия схемы Workspace: `8` (миграция v6 и v7)
+- Версия sidecar-проекта SpriteDocument: `1`
 - Основной формат конфигов: versioned JSON
 - Совместимость со старым форматом: только импорт CSV
 
 Релизный ZIP содержит опубликованное WPF-приложение. Распакуйте архив и запустите:
 
 ```text
-AdaptiveDMITool-v2.3.0.exe
+AdaptiveDMITool-v2.4.0.exe
 ```
 
-## Главное в v2.3.0
+## Главное в v2.4.0
+
+- Добавлена source-referenced модель `SpriteDocument`: упорядоченные states, 1/4/8 направлений, animation metadata, crop/transform и ленивое чтение кадров.
+- DMI и PNG определяются по содержимому, включая DMI с расширением `.png` и обычный PNG, переименованный в `.dmi`.
+- Добавлен раздел Documents для DMI, одиночных PNG, последовательностей, sprite sheets, sidecar-проектов, preview и DMI/PNG export.
+- Sidecar schema v1 хранит относительные пути и fingerprints источников, поддерживает явный relink/accept и проверяет лимиты до массового декодирования.
+- PNG sheet/sequence записываются в управляемую папку через sibling staging и ownership manifest; чужая папка не перезаписывается.
+- Workspace schema v8 сохраняет документ, generic auxiliary layers, форматы batch и raster profile.
+- Batch обрабатывает DMI и PNG независимо; ошибка одного output не блокирует другой.
+- Hotspot metadata DMI нормализуется и проверяется повторным открытием вместе с остальными metadata и RGBA hash.
+
+V2.4 сохраняет все исправления редактора и writer из V2.3:
 
 - Добавлены русские и английские ресурсы интерфейса с сохраняемой настройкой языка.
 - Добавлены настройки оболочки: тема, язык, режим viewport редактора, поведение панелей workspace, видимость неактивных Source-полотен и вписывание нескольких direction-полотен.
@@ -44,6 +57,9 @@ AdaptiveDMITool-v2.3.0.exe
 
 - старт с пустой рабочей областью
 - ручное открытие базового `.dmi`
+- открытие DMI и sidecar-проектов `*.adaptive-dmi.json`
+- импорт одиночного PNG, последовательности PNG и sprite sheet с настраиваемой сеткой
+- экспорт проверенного DMI и управляемых PNG sheet/sequence
 - подключение дополнительных landmark и overlay state-источников для предпросмотра
 - редактирование pixel mappings для `4-dir` и `8-dir` спрайтов
 - редактирование одного направления, параллельных направлений или всех направлений из одного workspace
@@ -52,7 +68,7 @@ AdaptiveDMITool-v2.3.0.exe
 - сохранение и загрузка JSON-конфигов со схемной версией
 - импорт CSV-конфигов из старых рабочих процессов
 - проверка совместимости конфига по разрешению и набору направлений перед применением
-- детерминированная пакетная обработка с результатом по каждому файлу
+- детерминированная DMI/PNG batch-обработка с результатом по каждому output
 - политики перезаписи для batch: `SkipExisting`, `OverwriteExisting`, `FailIfExists`
 - предпросмотр batch output direction mode через `One DIR` и `All DIR`
 - сохранение пользовательских настроек: последние пути, выбранные states, импортированные DMI state-слои, направление, viewport, язык, тема, поведение панелей, видимость Source-полотен и batch-папки
@@ -60,17 +76,17 @@ AdaptiveDMITool-v2.3.0.exe
 ## Основной сценарий
 
 1. Запустите приложение. Откроется пустая рабочая область.
-2. Откройте базовый `.dmi`.
+2. Откройте базовый `.dmi`, sidecar-проект или импортируйте PNG в разделе Documents.
 3. Создайте новый конфиг, загрузите JSON или импортируйте CSV.
 4. Выберите base, landmark и overlay states через state explorer.
 5. Отредактируйте mappings в source/editable панелях.
 6. Проверьте результат в composite, grid или text-grid предпросмотре.
 7. Сохраните конфиг как JSON.
-8. Запустите batch processing по входной папке и проверьте результаты по файлам.
+8. Запустите DMI/PNG batch processing по входной папке и проверьте результаты каждого output.
 
 ## Форматы конфигов
 
-В v2.3.0 основной формат - JSON. Текущая схема использует:
+В v2.4.0 основной формат mapping-конфигов — JSON. Текущая схема использует:
 
 - `version: 2`
 - `editorSettings.mirrorAxisOffsetPixels`
@@ -112,22 +128,22 @@ Launch-конфигурация использует `type: "dotnet"` и `projec
 Релизный пакет:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.3.0 -Runtime win-x64
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.4.0 -Runtime win-x64
 ```
 
 Скрипт создает:
 
-- `artifacts/publish/AdaptiveSpritesDMItool-v2.3.0-win-x64/`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.3.0-win-x64.zip`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.3.0-win-x64.sha256.txt`
-- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.3.0.zip`
-- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.3.0.sha256.txt`
+- `artifacts/publish/AdaptiveSpritesDMItool-v2.4.0-win-x64/`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.4.0-win-x64.zip`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.4.0-win-x64.sha256.txt`
+- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.4.0.zip`
+- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.4.0.sha256.txt`
 
 `artifacts/` - сгенерированный вывод сборки, он намеренно исключен из git.
 
 ## Архитектура
 
-Активная runtime-архитектура v2.3.0 разделена на слои:
+Активная runtime-архитектура v2.4.0 разделена на слои:
 
 - `src/AdaptiveSpritesDmiTool.Domain`
   Чистая доменная модель, value objects, валидация, модель направлений и инварианты конфигов.
@@ -144,10 +160,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Ver
 
 ## Тестирование
 
-Автоматизированная проверка v2.3.0 покрывает:
+Автоматизированная проверка v2.4.0 покрывает:
 
-- 230 unit tests
-- 56 integration tests
+- 241 unit tests
+- 74 integration tests
 - hidden Unicode scan
 - Release build
 - Release test run
@@ -165,6 +181,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Ver
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 - [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
 - [CHANGELOG.md](CHANGELOG.md)
+- [docs/releases/v2.4.0.md](docs/releases/v2.4.0.md)
 - [docs/releases/v2.3.0.md](docs/releases/v2.3.0.md)
 - [docs/releases/v2.2.md](docs/releases/v2.2.md)
 - [docs/releases/v2.1.md](docs/releases/v2.1.md)

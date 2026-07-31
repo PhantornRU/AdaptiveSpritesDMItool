@@ -1,6 +1,7 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using Newtonsoft.Json;
 using System.Globalization;
 
@@ -8,7 +9,7 @@ namespace AdaptiveSpritesDmiTool.Infrastructure.Settings;
 
 public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettingsRepository
 {
-    private const int CurrentVersion = 7;
+    private const int CurrentVersion = 8;
 
     public async Task<Result<WorkspaceSettings>> LoadAsync(CancellationToken cancellationToken)
     {
@@ -83,8 +84,10 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         }
     }
 
-    private static WorkspaceSettings ToDomain(WorkspaceSettingsDocument document) =>
-        new(
+    private static WorkspaceSettings ToDomain(WorkspaceSettingsDocument document)
+    {
+        var importedStates = ParseImportedStates(document.ImportedStates);
+        return new WorkspaceSettings(
             Normalize(document.LastOpenedDmiPath),
             Normalize(document.LastOpenedConfigPath),
             Normalize(document.LastImportedLegacyCsvPath),
@@ -104,10 +107,15 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             Normalize(document.LastUiLanguage),
             document.HideInactiveSourceCanvases ?? true,
             document.FitMultipleDirectionCanvasesToViewport ?? true,
-            ParseImportedStates(document.ImportedStates),
+            importedStates,
             document.MirrorAxisOffsetPixels ?? 0,
             document.ShowMirrorAxisGuide ?? false,
-            document.MirrorAcrossDirections ?? true);
+            document.MirrorAcrossDirections ?? true,
+            Normalize(document.LastOpenedDocumentPath),
+            ParseAuxiliaryLayers(document.AuxiliaryLayers, importedStates),
+            ParseBatchOutputFormats(document.SelectedBatchOutputFormats),
+            ParseRasterExportSettings(document.RasterExportSettings));
+    }
 
     private static WorkspaceSettingsDocument FromDomain(WorkspaceSettings settings) =>
         new()
@@ -135,12 +143,34 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
             MirrorAxisOffsetPixels = settings.MirrorAxisOffsetPixels,
             ShowMirrorAxisGuide = settings.ShowMirrorAxisGuide,
             MirrorAcrossDirections = settings.MirrorAcrossDirections,
+            LastOpenedDocumentPath = settings.LastOpenedDocumentPath,
+            SelectedBatchOutputFormats = (settings.SelectedBatchOutputFormats ??
+                    [WorkspaceBatchOutputFormat.Dmi, WorkspaceBatchOutputFormat.Png])
+                .Select(static format => format.ToString())
+                .ToList(),
+            RasterExportSettings = ToRasterExportDocument(settings.RasterExportSettings),
             ImportedStates = (settings.ImportedStates ?? Array.Empty<WorkspaceImportedStateSettings>())
                 .Select(static item => new ImportedStateDocument
                 {
                     StateName = item.StateName,
                     SourcePath = item.SourcePath,
                     SourceFileLabel = item.SourceFileLabel,
+                    IsSourceAssigned = item.IsSourceAssigned,
+                    IsEditableAssigned = item.IsEditableAssigned,
+                    PlacementMode = item.PlacementMode,
+                    Order = item.Order,
+                    OpacityPercent = item.OpacityPercent
+                })
+                .ToList(),
+            AuxiliaryLayers = (settings.AuxiliaryLayers ?? Array.Empty<WorkspaceAuxiliaryLayerSettings>())
+                .Select(static item => new AuxiliaryLayerDocument
+                {
+                    SourceId = item.SourceId,
+                    StateName = item.StateName,
+                    SourcePath = item.SourcePath,
+                    SourceFileLabel = item.SourceFileLabel,
+                    Format = item.Format.ToString(),
+                    FrameIndex = item.FrameIndex,
                     IsSourceAssigned = item.IsSourceAssigned,
                     IsEditableAssigned = item.IsEditableAssigned,
                     PlacementMode = item.PlacementMode,
@@ -221,6 +251,120 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         return importedStates;
     }
 
+    private static IReadOnlyList<WorkspaceAuxiliaryLayerSettings> ParseAuxiliaryLayers(
+        IEnumerable<AuxiliaryLayerDocument>? documents,
+        IReadOnlyList<WorkspaceImportedStateSettings> importedStates)
+    {
+        if (documents is null)
+        {
+            return importedStates
+                .Select(static item => new WorkspaceAuxiliaryLayerSettings(
+                    SourceId: null,
+                    item.StateName,
+                    item.SourcePath,
+                    item.SourceFileLabel,
+                    SpriteSourceFormat.Dmi,
+                    FrameIndex: 0,
+                    item.IsSourceAssigned,
+                    item.IsEditableAssigned,
+                    item.PlacementMode,
+                    item.Order,
+                    item.OpacityPercent))
+                .ToArray();
+        }
+
+        var layers = new List<WorkspaceAuxiliaryLayerSettings>();
+        foreach (var document in documents)
+        {
+            var stateName = Normalize(document.StateName);
+            var sourcePath = Normalize(document.SourcePath);
+            if (stateName is null || sourcePath is null)
+            {
+                throw new JsonException("Auxiliary layer entries must include stateName and sourcePath.");
+            }
+
+            if (document.FrameIndex < 0)
+            {
+                throw new JsonException($"Auxiliary layer frame index must be non-negative, but was '{document.FrameIndex}'.");
+            }
+
+            layers.Add(new WorkspaceAuxiliaryLayerSettings(
+                document.SourceId,
+                stateName,
+                sourcePath,
+                Normalize(document.SourceFileLabel),
+                ParseNamedEnum<SpriteSourceFormat>(document.Format, "auxiliary layer format"),
+                document.FrameIndex,
+                document.IsSourceAssigned,
+                document.IsEditableAssigned,
+                ParseImportedStatePlacementMode(document.PlacementMode),
+                Math.Max(0, document.Order),
+                ParseImportedStateOpacity(document.OpacityPercent)));
+        }
+
+        return layers;
+    }
+
+    private static WorkspaceBatchOutputFormat[] ParseBatchOutputFormats(IEnumerable<string>? values)
+    {
+        if (values is null)
+        {
+            return [WorkspaceBatchOutputFormat.Dmi, WorkspaceBatchOutputFormat.Png];
+        }
+
+        var formats = values
+            .Select(value => ParseNamedEnum<WorkspaceBatchOutputFormat>(value, "batch output format"))
+            .Distinct()
+            .ToArray();
+        if (formats.Length == 0)
+        {
+            throw new JsonException("At least one batch output format must be selected.");
+        }
+
+        return formats;
+    }
+
+    private static WorkspaceRasterExportSettings ParseRasterExportSettings(RasterExportSettingsDocument? document)
+    {
+        if (document is null)
+        {
+            return WorkspaceRasterExportSettings.Default;
+        }
+
+        var depth = ParseNamedEnum<SpriteDirectionDepth>(document.DirectionDepth, "raster direction depth");
+        var layout = ParseNamedEnum<SpriteDocumentExportFormat>(document.Layout, "raster export layout");
+        if (layout is not SpriteDocumentExportFormat.PngSheet and not SpriteDocumentExportFormat.PngSequence)
+        {
+            throw new JsonException($"Unsupported raster export layout '{document.Layout}'.");
+        }
+
+        return new WorkspaceRasterExportSettings(depth, layout);
+    }
+
+    private static RasterExportSettingsDocument ToRasterExportDocument(WorkspaceRasterExportSettings? settings)
+    {
+        var value = settings ?? WorkspaceRasterExportSettings.Default;
+        return new RasterExportSettingsDocument
+        {
+            DirectionDepth = value.DirectionDepth.ToString(),
+            Layout = value.Layout.ToString()
+        };
+    }
+
+    private static TEnum ParseNamedEnum<TEnum>(string? value, string description)
+        where TEnum : struct, Enum
+    {
+        if (string.IsNullOrWhiteSpace(value) ||
+            int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _) ||
+            !Enum.TryParse<TEnum>(value, true, out var parsed) ||
+            !Enum.IsDefined(parsed))
+        {
+            throw new JsonException($"Unsupported {description} '{value}'.");
+        }
+
+        return parsed;
+    }
+
     private static int ParseImportedStateOpacity(int? value)
     {
         if (value is null)
@@ -265,6 +409,8 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
 
         public string? LastOpenedDmiPath { get; set; }
 
+        public string? LastOpenedDocumentPath { get; set; }
+
         public string? LastOpenedConfigPath { get; set; }
 
         public string? LastImportedLegacyCsvPath { get; set; }
@@ -308,6 +454,12 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         public bool? MirrorAcrossDirections { get; set; }
 
         public List<ImportedStateDocument>? ImportedStates { get; set; }
+
+        public List<AuxiliaryLayerDocument>? AuxiliaryLayers { get; set; }
+
+        public List<string>? SelectedBatchOutputFormats { get; set; }
+
+        public RasterExportSettingsDocument? RasterExportSettings { get; set; }
     }
 
     private sealed class ImportedStateDocument
@@ -327,5 +479,37 @@ public sealed class JsonWorkspaceSettingsRepository(string filePath) : ISettings
         public int Order { get; set; }
 
         public int? OpacityPercent { get; set; }
+    }
+
+    private sealed class AuxiliaryLayerDocument
+    {
+        public Guid? SourceId { get; set; }
+
+        public string? StateName { get; set; }
+
+        public string? SourcePath { get; set; }
+
+        public string? SourceFileLabel { get; set; }
+
+        public string? Format { get; set; }
+
+        public int FrameIndex { get; set; }
+
+        public bool IsSourceAssigned { get; set; }
+
+        public bool IsEditableAssigned { get; set; }
+
+        public string? PlacementMode { get; set; } = ImportedStatePlacementSetting.Overlay.ToString();
+
+        public int Order { get; set; }
+
+        public int? OpacityPercent { get; set; }
+    }
+
+    private sealed class RasterExportSettingsDocument
+    {
+        public string? DirectionDepth { get; set; } = SpriteDirectionDepth.Four.ToString();
+
+        public string? Layout { get; set; } = SpriteDocumentExportFormat.PngSheet.ToString();
     }
 }

@@ -1,8 +1,8 @@
-# Форматы конфигов v2.3.0
+# Форматы конфигов v2.4.0
 
 ## Статус
 
-Основной формат пользовательских конфигов в v2.3.0 - JSON schema `version: 2`.
+Основной формат pixel-mapping конфигов в v2.4.0 остается JSON schema `version: 2`.
 
 CSV можно импортировать, но новые конфиги сохраняются как JSON.
 
@@ -109,7 +109,8 @@ CSV можно импортировать, но новые конфиги сох
 - координаты `source` и `target` должны находиться внутри `resolution`.
 - `metadata.updatedUtc` не должен быть раньше `metadata.createdUtc`.
 - `editorSettings.mirrorAxisOffsetPixels` должен попадать в диапазон разрешения.
-- при применении конфига к `.dmi` resolution и direction set должны совпадать с целевым sprite asset.
+- legacy direct-DMI pipeline требует совпадения resolution и direction set с целевым sprite asset;
+- V2.4 document batch проверяет resolution и выбранный raster profile: one-direction source реплицируется, 4-dir profile принимает 4-dir или 8-dir config, а 8-dir profile требует 8-dir config.
 
 ## CSV Import
 
@@ -180,12 +181,27 @@ Batch artifacts пишутся в output root под `.adaptive-sprites`:
 - `runs/<runId>.json`
 - `runs/<runId>.summary.txt`
 
+## Import Project Sidecar Version 1
+
+Файл `<name>.adaptive-dmi.json` описывает `SpriteDocument` и не заменяет mapping config. Sidecar содержит:
+
+- `version: 1`, canvas и ordered states;
+- direction depth `1`, `4` или `8`, animation metadata и frame placement;
+- source-relative path и absolute fallback;
+- фактически обнаруженный формат, размеры, encoded length и SHA-256;
+- crop, nearest-neighbor transform flags и slicing recipe;
+- manifest ownership для managed raster exports.
+
+При несовпадении fingerprint пользователь должен выбрать relink, принять новый fingerprint или отменить загрузку. Автоматическое принятие измененного источника запрещено.
+
 ## Workspace Settings
 
-Workspace settings schema v7 - внутренний JSON приложения. Пользователь обычно не редактирует его вручную.
+Workspace settings schema v8 - внутренний JSON приложения. Пользователь обычно не редактирует его вручную.
 
-В settings сохраняются последние пути, выбранные states, imported DMI state layers, selected direction, overwrite policy, language, theme, viewport, `mirrorAxisOffsetPixels`, `showMirrorAxisGuide`, `mirrorAcrossDirections` и состояние рабочих панелей.
+В settings сохраняются последние пути, выбранные states, auxiliary DMI/PNG layers, selected direction, overwrite policy, language, theme, viewport, `mirrorAxisOffsetPixels`, `showMirrorAxisGuide`, `mirrorAcrossDirections`, batch formats, raster export profile и состояние рабочих панелей.
 
 При загрузке JSON значение оси из конфига главнее Workspace. JSON v1, CSV и старые Workspace получают нулевое смещение; новый конфиг наследует последнее допустимое значение Workspace.
 
-Imported DMI state layer settings include source path, state name, Source/Editable assignment, placement mode, order, and opacity percent. These settings are workspace state, not part of the public sprite mapping config schema.
+Auxiliary layer settings include source path and format, state name, frame index, Source/Editable assignment, placement mode, order, and opacity percent. These settings are workspace state, not part of the public sprite mapping config schema.
+
+V8 обобщает imported state settings до auxiliary sprite layers и сохраняет последние выбранные batch formats (`Dmi`, `Png`) и raster export profile. Миграция V7 сохраняет все редакторские поля и выбирает DMI + PNG по умолчанию.

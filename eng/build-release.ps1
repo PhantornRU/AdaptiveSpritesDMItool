@@ -1,5 +1,5 @@
 param(
-    [string]$Version = "v2.3.0",
+    [string]$Version = "v2.4.0",
     [string]$Runtime = "win-x64",
     [string]$Configuration = "Release",
     [switch]$SkipBuildVerification
@@ -12,7 +12,7 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $versionLabel = $Version.Trim()
 
 if (-not [string]::Equals($Runtime, "win-x64", [System.StringComparison]::OrdinalIgnoreCase)) {
-    throw "V2.3 release packaging supports only the locked win-x64 runtime. Actual: $Runtime"
+    throw "V2.4 release packaging supports only the locked win-x64 runtime. Actual: $Runtime"
 }
 
 if ([string]::IsNullOrWhiteSpace($versionLabel)) {
@@ -26,7 +26,7 @@ if (-not $versionLabel.StartsWith("v", [System.StringComparison]::OrdinalIgnoreC
 $semanticVersion = $versionLabel.Substring(1)
 
 if (-not ($semanticVersion -match '^\d+\.\d+(\.\d+)?$')) {
-    throw "Version must look like v2.3 or v2.3.0. Actual: $Version"
+    throw "Version must look like v2.4 or v2.4.0. Actual: $Version"
 }
 
 $versionPartCount = $semanticVersion.Split('.').Count

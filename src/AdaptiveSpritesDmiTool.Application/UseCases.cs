@@ -216,14 +216,23 @@ public sealed class ApplyConfigToDmiBatchUseCase(IBatchProcessingService batchPr
         OverwritePolicy overwritePolicy,
         IProgress<BatchProgress>? progress,
         IReadOnlyList<string>? explicitFiles,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyList<WorkspaceBatchOutputFormat>? outputFormats = null,
+        WorkspaceRasterExportSettings? rasterExportSettings = null)
     {
         if (session.CurrentConfig is null)
         {
             return Result.Failure<BatchJobResult>(Errors.Conflict("There is no active config to apply."));
         }
 
-        var request = new BatchJobRequest(inputDirectory, outputDirectory, session.CurrentConfig, overwritePolicy, explicitFiles);
+        var request = new BatchJobRequest(
+            inputDirectory,
+            outputDirectory,
+            session.CurrentConfig,
+            overwritePolicy,
+            explicitFiles,
+            outputFormats,
+            rasterExportSettings);
         return await batchProcessingService.RunAsync(request, progress, cancellationToken);
     }
 }

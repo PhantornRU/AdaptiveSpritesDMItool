@@ -1,6 +1,7 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -108,11 +109,33 @@ public partial class WorkspaceShellViewModel
         ShowMirrorAxisGuide = settings.ShowMirrorAxisGuide;
         MirrorAcrossDirections = settings.MirrorAcrossDirections;
         _restoredImportedStateSettings = settings.ImportedStates ?? Array.Empty<WorkspaceImportedStateSettings>();
+        _restoredAuxiliaryLayerSettings = settings.AuxiliaryLayers ?? Array.Empty<WorkspaceAuxiliaryLayerSettings>();
+        _restoredDocumentPath = settings.LastOpenedDocumentPath;
+        _selectedBatchOutputFormats = settings.SelectedBatchOutputFormats ??
+            [WorkspaceBatchOutputFormat.Dmi, WorkspaceBatchOutputFormat.Png];
+        _rasterExportSettings = settings.RasterExportSettings ?? WorkspaceRasterExportSettings.Default;
         IsFocusMode = false;
     }
 
     private async Task RestoreWorkspaceAsync()
     {
+        if (_spriteDocumentWorkflow is not null &&
+            !string.IsNullOrWhiteSpace(_restoredDocumentPath) &&
+            File.Exists(_restoredDocumentPath))
+        {
+            var documentResult = await _spriteDocumentWorkflow.LoadProjectAsync(
+                new SpriteDocumentLoadRequest(_restoredDocumentPath),
+                CancellationToken.None);
+            if (documentResult.IsSuccess)
+            {
+                DocumentWorkspace.RestoreDocument(documentResult.Value);
+            }
+            else
+            {
+                _logger.LogWarning("Startup sprite document restore failed: {Message}", documentResult.Error.Message);
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(DmiPath) && File.Exists(DmiPath))
         {
             var dmiResult = await _loadDmiFileUseCase.ExecuteAsync(DmiPath, CancellationToken.None);
@@ -160,7 +183,11 @@ public partial class WorkspaceShellViewModel
             await TryBuildPreviewAsync(userInitiated: false, CancellationToken.None);
         }
 
-        if (_restoredImportedStateSettings.Count > 0)
+        if (_restoredAuxiliaryLayerSettings.Count > 0)
+        {
+            await RestoreAuxiliaryLayerItemsAsync(_restoredAuxiliaryLayerSettings, CancellationToken.None);
+        }
+        else if (_restoredImportedStateSettings.Count > 0)
         {
             await RestoreImportedStateItemsAsync(CancellationToken.None);
         }
@@ -190,14 +217,35 @@ public partial class WorkspaceShellViewModel
             BuildImportedStateSettings(),
             MirrorAxisOffsetPixels,
             ShowMirrorAxisGuide,
-            MirrorAcrossDirections);
+            MirrorAcrossDirections,
+            _spriteDocumentWorkflow?.Session.ProjectPath,
+            BuildAuxiliaryLayerSettings(),
+            _selectedBatchOutputFormats,
+            _rasterExportSettings);
 
     private IReadOnlyList<WorkspaceImportedStateSettings> BuildImportedStateSettings() =>
         ImportedDmiStateItems
+            .Where(static item => item.SourceFormat == SpriteSourceFormat.Dmi)
             .Select(static item => new WorkspaceImportedStateSettings(
                 item.StateName,
                 item.SourcePath,
                 item.SourceFileLabel,
+                item.IsSourceAssigned,
+                item.IsEditableAssigned,
+                item.PlacementMode.ToString(),
+                item.Order,
+                item.OpacityPercent))
+            .ToArray();
+
+    private IReadOnlyList<WorkspaceAuxiliaryLayerSettings> BuildAuxiliaryLayerSettings() =>
+        ImportedDmiStateItems
+            .Select(static item => new WorkspaceAuxiliaryLayerSettings(
+                item.SourceId,
+                item.StateName,
+                item.SourcePath,
+                item.SourceFileLabel,
+                item.SourceFormat,
+                item.FrameIndex,
                 item.IsSourceAssigned,
                 item.IsEditableAssigned,
                 item.PlacementMode.ToString(),
@@ -223,6 +271,10 @@ public partial class WorkspaceShellViewModel
         _compositeImage = null;
         ClearImportedStateItems();
         _restoredImportedStateSettings = Array.Empty<WorkspaceImportedStateSettings>();
+        _restoredAuxiliaryLayerSettings = Array.Empty<WorkspaceAuxiliaryLayerSettings>();
+        _restoredDocumentPath = null;
+        _spriteDocumentWorkflow?.Session.Clear();
+        DocumentWorkspace.ResetDocument();
         DmiPath = string.Empty;
         ConfigPath = string.Empty;
         SaveConfigPath = string.Empty;

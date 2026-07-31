@@ -5,6 +5,15 @@
     <sys:String x:Key="Text.Tab.Editor">Editor</sys:String>
     <sys:String x:Key="Text.Tab.Data">Data</sys:String>
     <sys:String x:Key="Text.Tab.Settings">Settings</sys:String>
+    <sys:String x:Key="Text.Tab.Documents">Documents</sys:String>
+    <sys:String x:Key="Text.Documents.Title">Sprite documents</sys:String>
+    <sys:String x:Key="Text.Documents.NoDocument">No document open</sys:String>
+    <sys:String x:Key="Text.Documents.EmptySummary">Open a native DMI or import PNG graphics.</sys:String>
+    <sys:String x:Key="Text.Documents.Unsaved">Unsaved project</sys:String>
+    <sys:String x:Key="Text.Documents.Open">Open DMI / project</sys:String>
+    <sys:String x:Key="Text.Documents.SaveProject">Save project</sys:String>
+    <sys:String x:Key="Text.Documents.ImportPng">Import PNG / sequence</sys:String>
+    <sys:String x:Key="Text.Documents.ImportSheet">Import sprite sheet</sys:String>
 
     <sys:String x:Key="Text.OpenDmi">Open DMI</sys:String>
     <sys:String x:Key="Text.SaveConfig">Save Config</sys:String>
@@ -164,11 +173,11 @@
     <sys:String x:Key="Text.Batch.ProcessingFailed">Batch processing failed.</sys:String>
     <sys:String x:Key="Text.Batch.SummaryFinishedFormat">Batch finished with {0} processed, {1} skipped, {2} failed, {3} cancelled.</sys:String>
     <sys:String x:Key="Text.Batch.SummaryCancelledFormat">Batch cancelled with {0} processed, {1} skipped, {2} failed, {3} cancelled.</sys:String>
-    <sys:String x:Key="Text.Batch.AllDmiFiles">All DMI files</sys:String>
+    <sys:String x:Key="Text.Batch.AllDmiFiles">All DMI and PNG files</sys:String>
     <sys:String x:Key="Text.Batch.WholeSourceFolder">Whole source folder</sys:String>
     <sys:String x:Key="Text.Batch.SelectedFolder">Selected folder</sys:String>
     <sys:String x:Key="Text.Batch.SelectedFile">Selected file</sys:String>
-    <sys:String x:Key="Text.Batch.SelectValidDmi">Select at least one valid DMI file to run batch.</sys:String>
+    <sys:String x:Key="Text.Batch.SelectValidDmi">Select at least one valid DMI or PNG file to run batch.</sys:String>
     <sys:String x:Key="Text.Batch.NoConfig">No config</sys:String>
     <sys:String x:Key="Text.Batch.LoadConfig">Load a config</sys:String>
     <sys:String x:Key="Text.Batch.NoState">No state</sys:String>
@@ -177,4 +186,7 @@
     <sys:String x:Key="Text.Batch.SelectStatePreview">Select a state to compare original and edited output.</sys:String>
     <sys:String x:Key="Text.Batch.SelectedStateFormat">Selected state: {0}</sys:String>
     <sys:String x:Key="Text.Batch.NoPreviewSelection">No preview selection.</sys:String>
+    <sys:String x:Key="Text.Batch.Formats">Output formats</sys:String>
+    <sys:String x:Key="Text.Batch.RasterDirections">PNG directions</sys:String>
+    <sys:String x:Key="Text.Batch.PngLayout">PNG layout</sys:String>
 </ResourceDictionary>

@@ -1,5 +1,6 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -479,14 +480,13 @@ public partial class WorkspaceShellViewModel
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var cacheKey = (layer.SourcePath, layer.StateName, direction);
+                var cacheKey = (layer.SourcePath, layer.StateName, direction, layer.FrameIndex, layer.SourceFormat);
                 if (_importedStateFrameCache.ContainsKey(cacheKey))
                 {
                     continue;
                 }
 
-                var result = await _readStateFrameUseCase
-                    .ExecuteAsync(layer.SourcePath, layer.StateName, direction, cancellationToken);
+                var result = await ReadImportedLayerFrameAsync(layer, direction, cancellationToken);
                 _importedStateFrameCache[cacheKey] = result.IsSuccess ? result.Value : null;
             }
         }
@@ -502,7 +502,7 @@ public partial class WorkspaceShellViewModel
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var cacheKey = (sourcePath, stateName, direction);
+            var cacheKey = (sourcePath, stateName, direction, 0, SpriteSourceFormat.Dmi);
             if (_importedStateFrameCache.ContainsKey(cacheKey))
             {
                 continue;
@@ -898,13 +898,39 @@ public partial class WorkspaceShellViewModel
             return null;
         }
 
-        var cacheKey = (item.SourcePath, item.StateName, direction);
+        var cacheKey = (item.SourcePath, item.StateName, direction, item.FrameIndex, item.SourceFormat);
         if (_importedStateFrameCache.TryGetValue(cacheKey, out var cached))
         {
             return cached;
         }
 
         return null;
+    }
+
+    private Task<AdaptiveSpritesDmiTool.Application.Common.Result<SpriteImage>> ReadImportedLayerFrameAsync(
+        ImportedDmiStateItemViewModel item,
+        SpriteDirection direction,
+        CancellationToken cancellationToken)
+    {
+        var resolution = ResolveEditorResolution();
+        if (_auxiliaryLayerFrameReader is not null && resolution is not null)
+        {
+            return _auxiliaryLayerFrameReader.ReadAsync(
+                new AuxiliaryLayerFrameRequest(
+                    item.SourcePath,
+                    item.SourceFormat,
+                    item.StateName,
+                    direction,
+                    item.FrameIndex,
+                    resolution.Value),
+                cancellationToken);
+        }
+
+        return _readStateFrameUseCase.ExecuteAsync(
+            item.SourcePath,
+            item.StateName,
+            direction,
+            cancellationToken);
     }
 
     private static void BlendOver(SpriteImage canvas, SpriteImage layer, float opacityMultiplier = 1f)
@@ -1688,7 +1714,9 @@ public partial class WorkspaceShellViewModel
         BuildBatchSourceTreeItems(
             rootDirectory,
             Directory.EnumerateDirectories,
-            static directory => Directory.EnumerateFiles(directory, "*.dmi"));
+            static directory => Directory
+                .EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly)
+                .Where(static path => IsNativeAssetPath(path)));
 
     private static IEnumerable<BatchSourceTreeItemViewModel> BuildBatchSourceTreeItems(
         string rootDirectory,
@@ -1762,6 +1790,13 @@ public partial class WorkspaceShellViewModel
             paths = [];
             return false;
         }
+    }
+
+    private static bool IsNativeAssetPath(string path)
+    {
+        var extension = Path.GetExtension(path);
+        return extension.Equals(".dmi", StringComparison.OrdinalIgnoreCase) ||
+               extension.Equals(".png", StringComparison.OrdinalIgnoreCase);
     }
 
     private readonly record struct PixelAreaSelection(PixelCoordinate Start, PixelCoordinate End)

@@ -42,10 +42,10 @@ jobs:
 
       - name: Package win-x64
         shell: pwsh
-        run: ./eng/build-release.ps1 -Version v2.3.0 -Runtime win-x64 -SkipBuildVerification
+        run: ./eng/build-release.ps1 -Version v2.4.0 -Runtime win-x64 -SkipBuildVerification
 
       - name: Upload win-x64 ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: AdaptiveSpritesDMItool-v2.3.0-win-x64
-          path: artifacts/release/AdaptiveSpritesDMItool-v2.3.0-win-x64.zip
+          name: AdaptiveSpritesDMItool-v2.4.0-win-x64
+          path: artifacts/release/AdaptiveSpritesDMItool-v2.4.0-win-x64.zip

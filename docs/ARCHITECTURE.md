@@ -1,6 +1,6 @@
-# Архитектура v2.3.0
+# Архитектура v2.4.0
 
-AdaptiveSpritesDMItool v2.3.0 - WPF-приложение для редактирования и применения pixel-mapping конфигов к `.dmi` sprites.
+AdaptiveSpritesDMItool v2.4.0 развивает проверенный V2.3 DMI pipeline до документной модели с нативным DMI и импортом/экспортом PNG.
 
 ## Проекты
 
@@ -19,13 +19,14 @@ AdaptiveSpritesDMItool v2.3.0 - WPF-приложение для редактир
 
 ## Версии
 
-- Application version: `2.3.0`
+- Application version: `2.4.0` (target for this branch)
 - WPF target framework: `net10.0-windows`
 - Release runtime: `win-x64`
 - Publish mode: self-contained single-file
 - Config schema: JSON `version: 2`
-- Workspace schema: JSON `version: 7`
-- Release executable: `AdaptiveDMITool-v2.3.0.exe`
+- Workspace schema: JSON `version: 8`
+- Import project sidecar: JSON `version: 1`
+- Release executable: `AdaptiveDMITool-v2.4.0.exe`
 
 ## Точки Входа
 
@@ -34,7 +35,7 @@ AdaptiveSpritesDMItool v2.3.0 - WPF-приложение для редактир
 - Shell state: `src/AdaptiveSpritesDmiTool.Presentation.Wpf/MainWindowViewModel*.cs`
 - Shell sections: `src/AdaptiveSpritesDmiTool.Presentation.Wpf/WorkspaceShellSections.cs`
 - Application use cases: `src/AdaptiveSpritesDmiTool.Application/UseCases.cs`
-- Batch contracts: `src/AdaptiveSpritesDmiTool.Application/BatchContracts.cs`
+- Batch/document contracts: `src/AdaptiveSpritesDmiTool.Application/Contracts.cs` and `DocumentContracts.cs`
 
 ## Зависимости
 
@@ -54,25 +55,39 @@ AdaptiveSpritesDMItool v2.3.0 - WPF-приложение для редактир
 - `Application -> WPF controls`
 - `Presentation.Wpf -> DMISharp`
 
+## Document model
+
+`SpriteDocument` is the format-independent in-memory project graph. It stores ordered states, direction depth, animation metadata and source-referenced frames. Pixel buffers are read lazily through Application contracts.
+
+Content flow:
+
+```text
+file -> probe -> DMI/PNG importer -> SpriteDocument -> frame source -> editor/preview/exporter
+                                      |
+                                      +-> <name>.adaptive-dmi.json
+```
+
+The source-reference approach and alternatives are recorded in [ADR 0001](adr/0001-source-referenced-sprite-document.md). The staged implementation is tracked in [REFACTOR_PLAN.md](REFACTOR_PLAN.md).
+
 ## Runtime Flow
 
-1. User opens a `.dmi`.
+1. User opens a native DMI or imports PNG graphics after content probing.
 2. User creates a config, loads JSON, or imports CSV.
 3. Editor gestures build and validate an `EditorMutationPlan`, then commit once through Application use cases.
 4. Preview is built through Infrastructure adapters.
 5. Config is saved as JSON.
 6. DMI output is saved beside the destination, reopened, fingerprint-verified, and atomically committed.
-7. Batch processing applies the active config to selected `.dmi` files or an input folder.
+7. Batch processing applies the active config to DMI and/or PNG outputs using saved output profiles.
 
-## Imported State Layers
+## Auxiliary Layers
 
-v2.3.0 keeps imported DMI state layers as workspace state. Each imported state can be:
+V2.4 keeps DMI or PNG frame references as generic auxiliary workspace layers. Each layer can be:
 
 - assigned to Source and/or Editable surfaces;
 - placed as a background or overlay layer;
 - ordered explicitly for deterministic composition;
 - blended with per-layer opacity;
-- restored from workspace settings on startup.
+- restored from Workspace v8 settings on startup with its source format and frame index.
 
 ## Рендеринг и фоновые процессы
 
@@ -83,7 +98,7 @@ v2.3.0 keeps imported DMI state layers as workspace state. Each imported state c
 
 ## Batch Outputs
 
-Batch processing writes output `.dmi` files to the selected output directory.
+Batch processing writes selected DMI and PNG outputs. Raster outputs live in tool-managed directories with an ownership manifest and are staged in a sibling directory before commit.
 
 For tracked runs it can also write internal run artifacts under:
 

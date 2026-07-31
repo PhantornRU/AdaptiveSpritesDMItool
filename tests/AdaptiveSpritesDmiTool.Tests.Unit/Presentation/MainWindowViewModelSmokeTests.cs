@@ -1,6 +1,7 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using AdaptiveSpritesDmiTool.Presentation.Wpf;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -25,7 +26,8 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
         viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Mappings);
         viewModel.StatusMessage.Should().Be("Ready.");
-        viewModel.NavigationRail.Items.Should().HaveCount(4);
+        viewModel.NavigationRail.Items.Should().HaveCount(5);
+        viewModel.NavigationRail.Items.Should().ContainSingle(item => item.Section == ShellSectionKind.Documents);
         viewModel.EditorWorkspace.IsAvailable.Should().BeFalse();
         viewModel.BatchWorkspace.IsAvailable.Should().BeFalse();
         viewModel.StartTab.ShowCreateConfigAction.Should().BeFalse();
@@ -1808,7 +1810,7 @@ public sealed class MainWindowViewModelSmokeTests
         {
             foreach (var direction in expectedDirections)
             {
-                var key = (sourcePath, stateName, direction);
+                var key = (sourcePath, stateName, direction, 0, SpriteSourceFormat.Dmi);
                 cache.Contains(key).Should().BeTrue(
                     $"Cache should contain key for state '{stateName}', direction {direction}");
             }

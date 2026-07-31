@@ -1,0 +1,167 @@
+<UserControl
+    x:Class="AdaptiveSpritesDmiTool.Presentation.Wpf.Views.DocumentWorkspaceView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="720"
+    d:DesignWidth="1180"
+    mc:Ignorable="d">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Padding="14"
+                Background="{DynamicResource Brush.PanelBackground}"
+                BorderBrush="{DynamicResource Brush.PanelBorder}"
+                BorderThickness="1"
+                CornerRadius="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock FontSize="20" FontWeight="SemiBold" Text="{DynamicResource Text.Documents.Title}" />
+                    <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding DocumentTitle}" />
+                    <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding DocumentSummary}" />
+                    <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding ProjectPathSummary}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                    <Button Margin="4" Padding="10,6" Command="{Binding OpenDocumentCommand}" Content="{DynamicResource Text.Documents.Open}" />
+                    <Button Margin="4" Padding="10,6" Command="{Binding SaveProjectCommand}" Content="{DynamicResource Text.Documents.SaveProject}" />
+                    <Button Margin="4" Padding="10,6" Command="{Binding CancelCommand}" Content="{DynamicResource Text.Cancel}" />
+                </WrapPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1"
+                Margin="0,8,0,8"
+                Padding="12"
+                Background="{DynamicResource Brush.CardBackground}"
+                BorderBrush="{DynamicResource Brush.PanelBorder}"
+                BorderThickness="1"
+                CornerRadius="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="145" />
+                    <ColumnDefinition Width="130" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,8,0">
+                    <TextBlock Foreground="{DynamicResource Brush.TextSecondary}" Text="Document name" />
+                    <TextBox Margin="0,4,0,0" Text="{Binding DocumentName, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                    <TextBlock Foreground="{DynamicResource Brush.TextSecondary}" Text="State name" />
+                    <TextBox Margin="0,4,0,0" Text="{Binding StateName, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                    <TextBlock Foreground="{DynamicResource Brush.TextSecondary}" Text="Import target" />
+                    <ComboBox Margin="0,4,0,0" ItemsSource="{Binding ImportTargets}" SelectedItem="{Binding SelectedImportTarget}" />
+                </StackPanel>
+                <StackPanel Grid.Column="3" Margin="0,0,8,0">
+                    <TextBlock Foreground="{DynamicResource Brush.TextSecondary}" Text="Sequence dirs" />
+                    <ComboBox Margin="0,4,0,0" ItemsSource="{Binding DirectionDepths}" SelectedItem="{Binding SelectedDirectionDepth}" />
+                </StackPanel>
+                <WrapPanel Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                    <Button Margin="4" Padding="10,6" Command="{Binding ImportPngCommand}" Content="{DynamicResource Text.Documents.ImportPng}" />
+                    <Button Margin="4" Padding="10,6" Command="{Binding ImportSpriteSheetCommand}" Content="{DynamicResource Text.Documents.ImportSheet}" />
+                </WrapPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="340" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Padding="10"
+                    Background="{DynamicResource Brush.PanelBackground}"
+                    BorderBrush="{DynamicResource Brush.PanelBorder}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Margin="2,0,2,8" FontWeight="SemiBold" Text="States" />
+                    <ListBox ItemsSource="{Binding States}" SelectedItem="{Binding SelectedState}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                        <TextBlock Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding AnimationSummary}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.TextSecondary}">
+                                        <Run Text="{Binding DirectionDepth}" /><Run Text=" / " /><Run Text="{Binding FramesPerDirection}" />
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Padding="10"
+                    Background="{DynamicResource Brush.PanelBackground}"
+                    BorderBrush="{DynamicResource Brush.PanelBorder}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <WrapPanel Margin="0,0,0,8">
+                        <TextBlock Margin="4,0" VerticalAlignment="Center" Text="Direction" />
+                        <ComboBox Width="130" Margin="4,0" SelectedItem="{Binding SelectedPreviewDirection}" ItemsSource="{Binding PreviewDirections}" />
+                        <TextBlock Margin="12,0,4,0" VerticalAlignment="Center" Text="Frame" />
+                        <TextBox Width="60" Margin="4,0" Text="{Binding SelectedFrameIndex, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button Margin="8,0" Padding="10,5" Command="{Binding RefreshPreviewCommand}" Content="Refresh preview" />
+                    </WrapPanel>
+                    <Border Grid.Row="1" Background="{DynamicResource Brush.SurfaceSubtle}" CornerRadius="8">
+                        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" Margin="12">
+                            <Image Width="512"
+                                   Height="512"
+                                   RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                   SnapsToDevicePixels="True"
+                                   Source="{Binding PreviewImage}" />
+                        </Viewbox>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="3"
+                Margin="0,8,0,0"
+                Padding="10"
+                Background="{DynamicResource Brush.CardBackground}"
+                BorderBrush="{DynamicResource Brush.PanelBorder}"
+                BorderThickness="1"
+                CornerRadius="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Brush.TextSecondary}" Text="{Binding StatusMessage}" />
+                <WrapPanel Grid.Column="1">
+                    <Button Margin="4,0" Padding="10,5" Command="{Binding ExportDmiCommand}" Content="Export DMI" />
+                    <Button Margin="4,0" Padding="10,5" Command="{Binding ExportPngSheetCommand}" Content="Export PNG sheet" />
+                    <Button Margin="4,0" Padding="10,5" Command="{Binding ExportPngSequenceCommand}" Content="Export PNG sequence" />
+                </WrapPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
