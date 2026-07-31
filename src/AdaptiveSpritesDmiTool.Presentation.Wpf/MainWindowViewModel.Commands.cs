@@ -1,4 +1,5 @@
 using AdaptiveSpritesDmiTool.Application;
+using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -177,7 +178,7 @@ public partial class WorkspaceShellViewModel
 
     public void HandleTargetSurfacePointerLeave()
     {
-        if (_isDraggingEditableArea)
+        if (_isDraggingEditableArea || _activeStrokeKind != EditorStrokeKind.None)
         {
             return;
         }
@@ -231,7 +232,7 @@ public partial class WorkspaceShellViewModel
                 {
                     EditorStatus = "Drawing the selected source into Editable.";
                     RefreshInteractionState();
-                    QueueDrawStrokeCoordinate(cell.Coordinate);
+                    BeginEditorStroke(EditorStrokeKind.Paint, cell.Coordinate, _selectedSourceCoordinate);
                 }
                 break;
             case EditorTool.Fill:
@@ -244,15 +245,15 @@ public partial class WorkspaceShellViewModel
 
                 StartEditableAreaDrag(cell.Coordinate, EditableDragAction.FillArea, "Fill drag started in Editable.");
                 break;
-            case EditorTool.Delete:
+            case EditorTool.Erase:
                 ResetEditableDragState();
-                QueueRestoreStrokeCoordinate(cell.Coordinate);
+                BeginEditorStroke(EditorStrokeKind.Erase, cell.Coordinate, null);
                 break;
-            case EditorTool.Undo:
-                EditorStatus = "Release to restore the editable pixel to its original source.";
-                RefreshInteractionState();
+            case EditorTool.Restore:
+                ResetEditableDragState();
+                BeginEditorStroke(EditorStrokeKind.Restore, cell.Coordinate, null);
                 break;
-            case EditorTool.UndoArea:
+            case EditorTool.RestoreArea:
                 StartEditableAreaDrag(cell.Coordinate, EditableDragAction.RestoreArea, "Restore drag started in Editable.");
                 break;
             case EditorTool.Move:
@@ -281,18 +282,9 @@ public partial class WorkspaceShellViewModel
         EnsureActiveDirection(cell.Direction);
         UpdateEditableHoverState(cell.Coordinate);
 
-        if (SelectedEditorTool == EditorTool.Single)
+        if (_activeStrokeKind != EditorStrokeKind.None)
         {
-            if (_selectedSourceCoordinate is not null && _hasPendingDrawStrokeFinalize)
-            {
-                QueueDrawStrokeCoordinate(cell.Coordinate);
-            }
-            return;
-        }
-
-        if (SelectedEditorTool == EditorTool.Delete)
-        {
-            QueueRestoreStrokeCoordinate(cell.Coordinate);
+            AppendEditorStrokeCoordinate(cell.Coordinate);
             return;
         }
 
@@ -354,49 +346,66 @@ public partial class WorkspaceShellViewModel
         switch (SelectedEditorTool)
         {
             case EditorTool.Single:
-                if (_selectedSourceCoordinate is not { } source)
-                {
-                    StatusMessage = "Pick a source pixel first.";
-                    RefreshInteractionState();
-                    return;
-                }
-
-                FinalizeDrawStroke();
-                break;
-            case EditorTool.Delete:
-                FinalizeRestoreStroke();
-                break;
-            case EditorTool.Undo:
-                ApplyRestoreOperation(new PixelAreaSelection(cell.Coordinate, cell.Coordinate), "Restored editable pixel.");
+            case EditorTool.Erase:
+            case EditorTool.Restore:
+                FinalizeEditorStroke();
                 break;
         }
     }
 
-    private void QueueRestoreStrokeCoordinate(PixelCoordinate coordinate)
+    private void BeginEditorStroke(
+        EditorStrokeKind kind,
+        PixelCoordinate coordinate,
+        PixelCoordinate? sourceCoordinate)
     {
+        CancelActiveEditorGesture(refreshSurface: false);
+        _activeStrokeKind = kind;
+        _activeStrokeSourceCoordinate = sourceCoordinate;
+        AppendEditorStrokeCoordinate(coordinate);
+        EditorStatus = kind switch
+        {
+            EditorStrokeKind.Paint => "Painting editable pixels. Release to commit one change.",
+            EditorStrokeKind.Erase => "Erasing editable pixels to transparency. Release to commit one change.",
+            EditorStrokeKind.Restore => "Restoring original pixels. Release to commit one change.",
+            _ => EditorStatus
+        };
+    }
+
+    private void AppendEditorStrokeCoordinate(PixelCoordinate coordinate)
+    {
+        if (_activeStrokeKind == EditorStrokeKind.None)
+        {
+            return;
+        }
+
+        var segment = _lastStrokeCoordinate is { } last
+            ? PixelStrokeInterpolator.InterpolateSegment(last, coordinate)
+            : [coordinate];
+        foreach (var interpolated in segment)
+        {
+            if (_pendingStrokeCoordinateSet.Add(interpolated))
+            {
+                _pendingStrokeCoordinates.Add(interpolated);
+            }
+        }
+
+        _lastStrokeCoordinate = coordinate;
         _selectedEditableCoordinate = coordinate;
         _selectedArea = new PixelAreaSelection(coordinate, coordinate);
         SelectedAreaSummary = DescribeArea(_selectedArea.Value);
-
-        if (_pendingRestoreStrokeCoordinates.Add(coordinate))
-        {
-            _hasPendingRestoreStrokeFinalize = true;
-        }
-
-        ScheduleRestoreStrokeFlush();
+        ScheduleStrokePreview();
     }
 
-    private void ScheduleRestoreStrokeFlush()
+    private void ScheduleStrokePreview()
     {
-        _restoreStrokeFlushCts?.Cancel();
-        _restoreStrokeFlushCts?.Dispose();
-
+        _strokePreviewCts?.Cancel();
+        _strokePreviewCts?.Dispose();
         var cancellationSource = new CancellationTokenSource();
-        _restoreStrokeFlushCts = cancellationSource;
-        _ = FlushRestoreStrokeAsync(cancellationSource.Token);
+        _strokePreviewCts = cancellationSource;
+        _ = RefreshStrokePreviewAsync(cancellationSource.Token);
     }
 
-    private async Task FlushRestoreStrokeAsync(CancellationToken cancellationToken)
+    private async Task RefreshStrokePreviewAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -407,161 +416,163 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
-        if (cancellationToken.IsCancellationRequested)
+        var application = System.Windows.Application.Current;
+        if (application is null || cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        await System.Windows.Application.Current.Dispatcher.InvokeAsync(FlushRestoreStrokeIncremental);
+        await application.Dispatcher.InvokeAsync(RefreshStrokePreview);
     }
 
-    private void FlushRestoreStrokeIncremental()
+    private void RefreshStrokePreview()
     {
-        if (_pendingRestoreStrokeCoordinates.Count == 0)
+        if (_editorSession.CurrentConfig is not { } config ||
+            _activeStrokeKind == EditorStrokeKind.None ||
+            _pendingStrokeCoordinates.Count == 0)
         {
             return;
         }
 
-        var coordinates = _pendingRestoreStrokeCoordinates.ToArray();
-        _pendingRestoreStrokeCoordinates.Clear();
-        ApplyRestoreOperations(
-            coordinates,
-            "Restoring editable pixels...",
-            refreshWorkspace: false,
-            rebuildNavigator: false,
-            refreshPreview: false);
+        var plan = CreateStrokeMutationPlan(config);
+        if (plan.IsFailure)
+        {
+            StatusMessage = plan.Error.Message;
+            CancelActiveEditorGesture();
+            return;
+        }
+
+        var preview = EditorMutationEngine.Apply(config, plan.Value);
+        if (preview.IsFailure)
+        {
+            StatusMessage = preview.Error.Message;
+            CancelActiveEditorGesture();
+            return;
+        }
+
+        _gesturePreviewConfig = preview.Value.Config;
+        RefreshEditorSurface(rebuildNavigator: false, rebuildPreviewGrid: false, rebuildActivePreview: false);
     }
 
-    private void FinalizeRestoreStroke()
+    private Result<EditorMutationPlan> CreateStrokeMutationPlan(SpriteConfig config)
     {
-        _restoreStrokeFlushCts?.Cancel();
-        _restoreStrokeFlushCts?.Dispose();
-        _restoreStrokeFlushCts = null;
-
-        if (_pendingRestoreStrokeCoordinates.Count > 0)
+        var kind = _activeStrokeKind switch
         {
-            var coordinates = _pendingRestoreStrokeCoordinates.ToArray();
-            _pendingRestoreStrokeCoordinates.Clear();
-            ApplyRestoreOperations(
-                coordinates,
-                "Restored editable pixels.",
-                refreshWorkspace: true,
-                rebuildNavigator: true,
-                refreshPreview: true);
-            _hasPendingRestoreStrokeFinalize = false;
-            return;
+            EditorStrokeKind.Paint => EditorMappingMutationKind.SetSource,
+            EditorStrokeKind.Erase => EditorMappingMutationKind.SetTransparent,
+            EditorStrokeKind.Restore => EditorMappingMutationKind.Restore,
+            _ => (EditorMappingMutationKind)(-1)
+        };
+        if (!Enum.IsDefined(kind))
+        {
+            return Result.Failure<EditorMutationPlan>(Errors.Conflict("There is no active editor stroke."));
         }
 
-        if (!_hasPendingRestoreStrokeFinalize)
-        {
-            return;
-        }
-
-        _hasPendingRestoreStrokeFinalize = false;
-        InvalidateNavigatorSnapshotCache();
-        RefreshWorkspaceState();
-        RefreshEditorSurface();
-        RequestAutoPreviewRefresh();
-        PersistWorkspaceSettingsInBackground();
+        return EditorMutationPlanFactory.CreateStroke(
+            _pendingStrokeCoordinates,
+            kind,
+            kind == EditorMappingMutationKind.SetSource ? _activeStrokeSourceCoordinate : null,
+            CreateDirectionProjectionOptions(config));
     }
 
-    /// <summary>
-    /// Queues a coordinate for drawing and schedules an asynchronous flush.
-    /// Batching (timer/queue) is used instead of synchronous updates to prevent blocking the UI thread during continuous drawing.
-    /// </summary>
-    private void QueueDrawStrokeCoordinate(PixelCoordinate coordinate)
+    private void FinalizeEditorStroke()
     {
-        _selectedEditableCoordinate = coordinate;
-        _selectedArea = new PixelAreaSelection(coordinate, coordinate);
-        SelectedAreaSummary = DescribeArea(_selectedArea.Value);
-
-        if (_pendingDrawStrokeCoordinates.Add(coordinate))
+        if (_editorSession.CurrentConfig is not { } config ||
+            _activeStrokeKind == EditorStrokeKind.None ||
+            _pendingStrokeCoordinates.Count == 0)
         {
-            _hasPendingDrawStrokeFinalize = true;
+            CancelActiveEditorGesture();
+            return;
         }
 
-        ScheduleDrawStrokeFlush();
+        _strokePreviewCts?.Cancel();
+        _strokePreviewCts?.Dispose();
+        _strokePreviewCts = null;
+
+        var operationId = Guid.NewGuid();
+        var strokeKind = _activeStrokeKind;
+        var plan = CreateStrokeMutationPlan(config);
+        ClearStrokeState(clearPreview: true);
+        if (plan.IsFailure)
+        {
+            StatusMessage = plan.Error.Message;
+            LogEditorMutationFailure(operationId, strokeKind, plan.Error.Message);
+            RefreshEditorSurface();
+            return;
+        }
+
+        var result = _applyEditorMutationUseCase.Execute(plan.Value);
+        if (result.IsFailure)
+        {
+            StatusMessage = result.Error.Message;
+            LogEditorMutationFailure(
+                operationId,
+                strokeKind,
+                result.Error.Message,
+                plan.Value.SkippedProjectionCount);
+            RefreshEditorSurface();
+            return;
+        }
+
+        var message = strokeKind switch
+        {
+            EditorStrokeKind.Paint => "Painted editable pixels.",
+            EditorStrokeKind.Erase => "Erased editable pixels to transparency.",
+            EditorStrokeKind.Restore => "Restored original editable pixels.",
+            _ => "Applied editor stroke."
+        };
+        if (result.Value.SkippedProjectionCount > 0)
+        {
+            message += $" Skipped {result.Value.SkippedProjectionCount} out-of-bounds projection(s).";
+        }
+
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            var activeDirection = GetSafeSelectedDirection();
+            var directionScope = SelectedDirectionScope;
+            var stateName = BaseStateName;
+            var appliedOperationCount = result.Value.AppliedOperationCount;
+            var skippedProjectionCount = result.Value.SkippedProjectionCount;
+            _logger.LogInformation(
+                "editor_mutation operation_id={OperationId} tool={Tool} state={State} direction={Direction} frame={Frame} scope={Scope} applied={Applied} skipped={Skipped}",
+                operationId,
+                strokeKind,
+                stateName,
+                activeDirection,
+                0,
+                directionScope,
+                appliedOperationCount,
+                skippedProjectionCount);
+        }
+        ApplyEditorMutationResult(result, message);
     }
 
-    private void ScheduleDrawStrokeFlush()
-    {
-        _drawStrokeFlushCts?.Cancel();
-        _drawStrokeFlushCts?.Dispose();
+    public void CancelActiveEditorGesture() => CancelActiveEditorGesture(refreshSurface: true);
 
-        var cancellationSource = new CancellationTokenSource();
-        _drawStrokeFlushCts = cancellationSource;
-        _ = FlushDrawStrokeAsync(cancellationSource.Token);
+    private void CancelActiveEditorGesture(bool refreshSurface)
+    {
+        var hadPreview = _gesturePreviewConfig is not null;
+        ClearStrokeState(clearPreview: true);
+        if (refreshSurface && hadPreview)
+        {
+            RefreshEditorSurface();
+        }
     }
 
-    private async Task FlushDrawStrokeAsync(CancellationToken cancellationToken)
+    private void ClearStrokeState(bool clearPreview)
     {
-        try
+        _strokePreviewCts?.Cancel();
+        _strokePreviewCts?.Dispose();
+        _strokePreviewCts = null;
+        _pendingStrokeCoordinates.Clear();
+        _pendingStrokeCoordinateSet.Clear();
+        _lastStrokeCoordinate = null;
+        _activeStrokeSourceCoordinate = null;
+        _activeStrokeKind = EditorStrokeKind.None;
+        if (clearPreview)
         {
-            await Task.Delay(16, cancellationToken);
+            _gesturePreviewConfig = null;
         }
-        catch (OperationCanceledException)
-        {
-            return;
-        }
-
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
-
-        await System.Windows.Application.Current.Dispatcher.InvokeAsync(FlushDrawStrokeIncremental);
-    }
-
-    private void FlushDrawStrokeIncremental()
-    {
-        if (_pendingDrawStrokeCoordinates.Count == 0 || _selectedSourceCoordinate is not { } source)
-        {
-            return;
-        }
-
-        var coordinates = _pendingDrawStrokeCoordinates.ToArray();
-        _pendingDrawStrokeCoordinates.Clear();
-        ApplyDrawOperations(
-            coordinates,
-            source,
-            "Drawing editable pixels...",
-            refreshWorkspace: false,
-            rebuildNavigator: false,
-            refreshPreview: false);
-    }
-
-    private void FinalizeDrawStroke()
-    {
-        _drawStrokeFlushCts?.Cancel();
-        _drawStrokeFlushCts?.Dispose();
-        _drawStrokeFlushCts = null;
-
-        if (_pendingDrawStrokeCoordinates.Count > 0 && _selectedSourceCoordinate is { } source)
-        {
-            var coordinates = _pendingDrawStrokeCoordinates.ToArray();
-            _pendingDrawStrokeCoordinates.Clear();
-            ApplyDrawOperations(
-                coordinates,
-                source,
-                "Applied source pixel to Editable.",
-                refreshWorkspace: true,
-                rebuildNavigator: true,
-                refreshPreview: true);
-            _hasPendingDrawStrokeFinalize = false;
-            return;
-        }
-
-        if (!_hasPendingDrawStrokeFinalize)
-        {
-            return;
-        }
-
-        _hasPendingDrawStrokeFinalize = false;
-        InvalidateNavigatorSnapshotCache();
-        RefreshWorkspaceState();
-        RefreshEditorSurface();
-        RequestAutoPreviewRefresh();
-        PersistWorkspaceSettingsInBackground();
     }
 
     private void StartEditableAreaDrag(PixelCoordinate anchor, EditableDragAction action, string statusMessage)
@@ -704,16 +715,7 @@ public partial class WorkspaceShellViewModel
         _editableDragPayload = null;
         _editableDragAction = EditableDragAction.None;
         _isDraggingEditableArea = false;
-        _restoreStrokeFlushCts?.Cancel();
-        _restoreStrokeFlushCts?.Dispose();
-        _restoreStrokeFlushCts = null;
-        _pendingRestoreStrokeCoordinates.Clear();
-        _hasPendingRestoreStrokeFinalize = false;
-        _drawStrokeFlushCts?.Cancel();
-        _drawStrokeFlushCts?.Dispose();
-        _drawStrokeFlushCts = null;
-        _pendingDrawStrokeCoordinates.Clear();
-        _hasPendingDrawStrokeFinalize = false;
+        CancelActiveEditorGesture(refreshSurface: false);
     }
 
     private void ClearSelectedArea()
@@ -739,13 +741,18 @@ public partial class WorkspaceShellViewModel
             var directionPayload = new Dictionary<PixelCoordinate, PixelCoordinate?>();
             foreach (var editableCoordinate in area.Enumerate())
             {
-                var scopedEditableCoordinate = TransformEditableCoordinate(
+                var scopedEditableCoordinate = TryTransformEditableCoordinate(
                     editableCoordinate,
                     selectedDirection,
                     direction,
-                    config.Resolution);
+                    config);
 
-                if (mappingsByEditable.TryGetValue(scopedEditableCoordinate, out var explicitMapping))
+                if (scopedEditableCoordinate is null)
+                {
+                    continue;
+                }
+
+                if (mappingsByEditable.TryGetValue(scopedEditableCoordinate.Value, out var explicitMapping))
                 {
                     directionPayload[editableCoordinate] = explicitMapping.Target;
                     continue;
@@ -760,7 +767,7 @@ public partial class WorkspaceShellViewModel
                 // depending on the selection or context (explicit mapping vs identity fallback).
                 var source = ResolveEffectiveSourceCoordinate(
                     direction,
-                    scopedEditableCoordinate,
+                    scopedEditableCoordinate.Value,
                     includeIdentityFallback: true);
 
                 directionPayload[editableCoordinate] = source;
@@ -1097,7 +1104,9 @@ public partial class WorkspaceShellViewModel
         var metadata = ConfigMetadata.CreateNew(ConfigSource.UserCreated, sourceIdentifier: "presentation-shell");
         var result = _createConfigUseCase.Execute(
             requestedName,
-            metadata);
+            metadata,
+            new SpriteEditorSettings(
+                ResolveWorkspaceMirrorAxisOffset(_editorSession.LoadedAsset!.Resolution)));
 
         if (result.IsFailure)
         {
@@ -1109,6 +1118,7 @@ public partial class WorkspaceShellViewModel
         SaveConfigPath = string.Empty;
         LegacyCsvPath = string.Empty;
         DraftConfigName = result.Value.Name;
+        SynchronizeMirrorAxisFromConfig(result.Value);
         UpsertCurrentSessionIntoConfigQueue(forceAddNewItem: true);
         StatusMessage = $"Created config '{result.Value.Name}'.";
         RefreshWorkspaceState();
@@ -1587,7 +1597,11 @@ public partial class WorkspaceShellViewModel
         }
 
         var metadata = ConfigMetadata.CreateNew(ConfigSource.UserCreated, sourceIdentifier: "presentation-shell:implicit-draft");
-        var result = _createConfigUseCase.Execute(forceNewQueueItem ? GenerateNextDraftConfigName() : "Unsaved Draft", metadata);
+        var result = _createConfigUseCase.Execute(
+            forceNewQueueItem ? GenerateNextDraftConfigName() : "Unsaved Draft",
+            metadata,
+            new SpriteEditorSettings(
+                ResolveWorkspaceMirrorAxisOffset(_editorSession.LoadedAsset.Resolution)));
         if (result.IsFailure)
         {
             StatusMessage = result.Error.Message;
@@ -1598,6 +1612,7 @@ public partial class WorkspaceShellViewModel
         ConfigPath = string.Empty;
         SaveConfigPath = string.Empty;
         LegacyCsvPath = string.Empty;
+        SynchronizeMirrorAxisFromConfig(result.Value);
         UpsertCurrentSessionIntoConfigQueue(forceAddNewItem: forceNewQueueItem);
     }
 
@@ -1614,6 +1629,7 @@ public partial class WorkspaceShellViewModel
         SaveConfigPath = path;
         LegacyCsvPath = string.Empty;
         DraftConfigName = result.Value.Name;
+        SynchronizeMirrorAxisFromConfig(result.Value);
         AdoptCurrentConfigDisplayName(preferredDisplayName);
         UpsertCurrentSessionIntoConfigQueue();
         StatusMessage = $"Loaded config '{DraftConfigName}'.";
@@ -1647,6 +1663,7 @@ public partial class WorkspaceShellViewModel
         LegacyCsvPath = path;
         ConfigPath = string.Empty;
         DraftConfigName = result.Value.Name;
+        SynchronizeMirrorAxisFromConfig(result.Value);
         SaveConfigPath = string.Empty;
         AdoptCurrentConfigDisplayName(preferredDisplayName);
         UpsertCurrentSessionIntoConfigQueue();

@@ -39,7 +39,8 @@
     <sys:String x:Key="Text.Tooltip.Fill">Заполнить область Editable выбранным пикселем Source</sys:String>
     <sys:String x:Key="Text.Tooltip.Move">Переместить один маппинг пикселя Editable</sys:String>
     <sys:String x:Key="Text.Tooltip.Select">Выделить область Editable и переместить ее</sys:String>
-    <sys:String x:Key="Text.Tooltip.Delete">Восстановить исходные пиксели в Editable</sys:String>
+    <sys:String x:Key="Text.Tooltip.Erase">Сделать пиксели Editable прозрачными</sys:String>
+    <sys:String x:Key="Text.Tooltip.Restore">Восстановить исходные пиксели в Editable</sys:String>
     <sys:String x:Key="Text.Tooltip.SingleDirection">Одно направление</sys:String>
     <sys:String x:Key="Text.Tooltip.ParallelDirections">Парные направления</sys:String>
     <sys:String x:Key="Text.Tooltip.AllDirections">Все направления</sys:String>
@@ -49,6 +50,8 @@
     <sys:String x:Key="Text.Tooltip.ShowOverlayLayer">Показать слой наложения</sys:String>
     <sys:String x:Key="Text.Tooltip.MirrorDirections">Зеркалить правки в противоположные направления</sys:String>
     <sys:String x:Key="Text.Tooltip.CentralizedPropagation">Использовать централизованное зеркальное распространение</sys:String>
+    <sys:String x:Key="Text.Tooltip.ConfigureMirrorAxis">Настроить смещение оси отражения в целых пикселях</sys:String>
+    <sys:String x:Key="Text.Tooltip.ShowMirrorAxisGuide">Показывать ось отражения на всех полотнах</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowCaptions">Показывать подписи на клетках сетки</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowSourceLabels">Показывать координаты Source на замаппленных пикселях Editable</sys:String>
     <sys:String x:Key="Text.Tooltip.Undo">Отменить</sys:String>

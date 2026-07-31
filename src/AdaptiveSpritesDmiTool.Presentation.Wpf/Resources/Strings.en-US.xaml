@@ -39,7 +39,8 @@
     <sys:String x:Key="Text.Tooltip.Fill">Fill Editable area from the selected Source pixel</sys:String>
     <sys:String x:Key="Text.Tooltip.Move">Move one Editable pixel mapping</sys:String>
     <sys:String x:Key="Text.Tooltip.Select">Select Editable area and move it</sys:String>
-    <sys:String x:Key="Text.Tooltip.Delete">Restore original pixels in Editable</sys:String>
+    <sys:String x:Key="Text.Tooltip.Erase">Make Editable pixels transparent</sys:String>
+    <sys:String x:Key="Text.Tooltip.Restore">Restore original pixels in Editable</sys:String>
     <sys:String x:Key="Text.Tooltip.SingleDirection">Single direction</sys:String>
     <sys:String x:Key="Text.Tooltip.ParallelDirections">Parallel directions</sys:String>
     <sys:String x:Key="Text.Tooltip.AllDirections">All directions</sys:String>
@@ -49,6 +50,8 @@
     <sys:String x:Key="Text.Tooltip.ShowOverlayLayer">Show overlay layer</sys:String>
     <sys:String x:Key="Text.Tooltip.MirrorDirections">Mirror edits across opposite directions</sys:String>
     <sys:String x:Key="Text.Tooltip.CentralizedPropagation">Use centralized mirrored propagation</sys:String>
+    <sys:String x:Key="Text.Tooltip.ConfigureMirrorAxis">Configure whole-pixel mirror axis offset</sys:String>
+    <sys:String x:Key="Text.Tooltip.ShowMirrorAxisGuide">Show the mirror axis on every canvas</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowCaptions">Show captions on grid cells</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowSourceLabels">Show source coordinate labels on mapped editable pixels</sys:String>
     <sys:String x:Key="Text.Tooltip.Undo">Undo</sys:String>

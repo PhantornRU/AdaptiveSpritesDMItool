@@ -1,7 +1,8 @@
 param(
-    [string]$Version = "v2.2",
+    [string]$Version = "v2.3.0",
     [string]$Runtime = "win-x64",
-    [string]$Configuration = "Release"
+    [string]$Configuration = "Release",
+    [switch]$SkipBuildVerification
 )
 
 Set-StrictMode -Version Latest
@@ -9,6 +10,10 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $versionLabel = $Version.Trim()
+
+if (-not [string]::Equals($Runtime, "win-x64", [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "V2.3 release packaging supports only the locked win-x64 runtime. Actual: $Runtime"
+}
 
 if ([string]::IsNullOrWhiteSpace($versionLabel)) {
     throw "Version must not be empty."
@@ -21,7 +26,7 @@ if (-not $versionLabel.StartsWith("v", [System.StringComparison]::OrdinalIgnoreC
 $semanticVersion = $versionLabel.Substring(1)
 
 if (-not ($semanticVersion -match '^\d+\.\d+(\.\d+)?$')) {
-    throw "Version must look like v2.2 or v2.2.0. Actual: $Version"
+    throw "Version must look like v2.3 or v2.3.0. Actual: $Version"
 }
 
 $versionPartCount = $semanticVersion.Split('.').Count
@@ -125,10 +130,13 @@ if (-not (Test-Path -LiteralPath $samplesSource)) {
 }
 
 Invoke-External -Name "Hidden Unicode scan" -FilePath (Join-Path $PSScriptRoot "check-hidden-unicode.ps1")
-Invoke-External -Name "Restore" -FilePath "dotnet" -Arguments @("restore", $solutionPath, "-m:1")
-Invoke-External -Name "Build" -FilePath "dotnet" -Arguments @("build", $solutionPath, "-c", $Configuration, "-m:1", "-v", "minimal", "--no-restore")
-Invoke-External -Name "Test" -FilePath "dotnet" -Arguments @("test", $solutionPath, "-c", $Configuration, "-m:1", "-v", "minimal", "--no-build")
-Invoke-External -Name "Restore publish runtime" -FilePath "dotnet" -Arguments @("restore", $projectPath, "-r", $Runtime, "-m:1")
+if (-not $SkipBuildVerification) {
+    Invoke-External -Name "Restore" -FilePath "dotnet" -Arguments @("restore", $solutionPath, "--locked-mode", "-m:1")
+    Invoke-External -Name "Build" -FilePath "dotnet" -Arguments @("build", $solutionPath, "-c", $Configuration, "-m:1", "-v", "minimal", "--no-restore")
+    Invoke-External -Name "Test" -FilePath "dotnet" -Arguments @("test", $solutionPath, "-c", $Configuration, "-m:1", "-v", "minimal", "--no-build")
+}
+
+Invoke-External -Name "Restore publish runtime" -FilePath "dotnet" -Arguments @("restore", $projectPath, "--locked-mode", "-m:1")
 Invoke-External -Name "Publish" -FilePath "dotnet" -Arguments @(
     "publish",
     $projectPath,

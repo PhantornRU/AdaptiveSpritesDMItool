@@ -12,9 +12,9 @@ public enum EditorTool
 {
     Single = 0,
     Fill = 1,
-    Delete = 2,
-    Undo = 3,
-    UndoArea = 4,
+    Erase = 2,
+    Restore = 3,
+    RestoreArea = 4,
     Select = 5,
     Move = 6
 }

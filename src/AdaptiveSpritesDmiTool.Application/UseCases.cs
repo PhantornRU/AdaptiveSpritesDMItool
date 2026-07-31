@@ -14,9 +14,12 @@ public sealed class StartEmptyWorkspaceUseCase(IWorkspaceService workspaceServic
 
 public sealed class CreateConfigUseCase(EditorSession session)
 {
-    public Result<SpriteConfig> Execute(string name, ConfigMetadata metadata)
+    public Result<SpriteConfig> Execute(
+        string name,
+        ConfigMetadata metadata,
+        SpriteEditorSettings? editorSettings = null)
     {
-        var result = session.CreateConfig(name, metadata);
+        var result = session.CreateConfig(name, metadata, editorSettings);
         return result.IsFailure || session.CurrentConfig is null
             ? Result.Failure<SpriteConfig>(result.Error)
             : Result.Success(session.CurrentConfig);
@@ -231,6 +234,15 @@ public sealed class ApplyConfigTransformUseCase(EditorSession session)
     {
         ArgumentNullException.ThrowIfNull(transform);
         return session.ApplyTransform(transform);
+    }
+}
+
+public sealed class ApplyEditorMutationUseCase(EditorSession session)
+{
+    public Result<EditorMutationApplyResult> Execute(EditorMutationPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        return session.ApplyMutation(plan);
     }
 }
 

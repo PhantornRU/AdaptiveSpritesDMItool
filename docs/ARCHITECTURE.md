@@ -1,6 +1,6 @@
-# Архитектура v2.2
+# Архитектура v2.3.0
 
-AdaptiveSpritesDMItool v2.2 - WPF-приложение для редактирования и применения pixel-mapping конфигов к `.dmi` sprites.
+AdaptiveSpritesDMItool v2.3.0 - WPF-приложение для редактирования и применения pixel-mapping конфигов к `.dmi` sprites.
 
 ## Проекты
 
@@ -19,12 +19,13 @@ AdaptiveSpritesDMItool v2.2 - WPF-приложение для редактиро
 
 ## Версии
 
-- Application version: `2.2`
-- WPF target framework: `net8.0-windows`
+- Application version: `2.3.0`
+- WPF target framework: `net10.0-windows`
 - Release runtime: `win-x64`
 - Publish mode: self-contained single-file
-- Config schema: JSON `version: 1`
-- Release executable: `AdaptiveDMITool-v2.2.exe`
+- Config schema: JSON `version: 2`
+- Workspace schema: JSON `version: 7`
+- Release executable: `AdaptiveDMITool-v2.3.0.exe`
 
 ## Точки Входа
 
@@ -57,14 +58,15 @@ AdaptiveSpritesDMItool v2.2 - WPF-приложение для редактиро
 
 1. User opens a `.dmi`.
 2. User creates a config, loads JSON, or imports CSV.
-3. Editor commands update mappings through Application use cases.
+3. Editor gestures build and validate an `EditorMutationPlan`, then commit once through Application use cases.
 4. Preview is built through Infrastructure adapters.
 5. Config is saved as JSON.
-6. Batch processing applies the active config to selected `.dmi` files or an input folder.
+6. DMI output is saved beside the destination, reopened, fingerprint-verified, and atomically committed.
+7. Batch processing applies the active config to selected `.dmi` files or an input folder.
 
 ## Imported State Layers
 
-v2.2 keeps imported DMI state layers as workspace state. Each imported state can be:
+v2.3.0 keeps imported DMI state layers as workspace state. Each imported state can be:
 
 - assigned to Source and/or Editable surfaces;
 - placed as a background or overlay layer;
@@ -76,7 +78,7 @@ v2.2 keeps imported DMI state layers as workspace state. Each imported state can
 
 - **Асинхронный превью:** `DmiSharpPreviewBuilder` работает асинхронно, чтобы не блокировать UI-поток во время сборки составных изображений (base + overlay).
 - **Кэширование I/O:** Используется `ConcurrentDictionary` для кэширования загруженных кадров, чтобы избежать повторного чтения с диска при каждой пересборке превью.
-- **Batching обновлений:** Инструменты рисования и стирания генерируют множество событий изменения конфигурации. Чтобы не перегружать пайплайн тяжелыми операциями пересборки превью, применяется батчинг (batching) с использованием 16ms таймера. Это позволяет объединить частые обновления в один цикл рендеринга (примерно 60 FPS).
+- **Атомарные жесты:** Paint, Erase и Restore интерполируют координаты и обновляют только временный preview с интервалом около 16ms. Конфигурация и Undo меняются один раз при успешном завершении жеста.
 - **Оптимизация рендеринга:** Подробное описание WPF-рендеринга и оптимизаций см. в [docs/RENDERING.md](RENDERING.md).
 
 ## Batch Outputs

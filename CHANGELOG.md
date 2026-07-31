@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.3.0
+
+- Made editor strokes and area/move gestures atomic, with one Undo entry per completed gesture.
+- Split transparent Erase from mapping-removing Restore and added stroke interpolation.
+- Replaced clamped mirror geometry with exact configurable-axis projection and an optional guide.
+- Added JSON config schema v2 and Workspace schema v7 with backwards-compatible migration.
+- Preserved DMI state order and added reopened metadata/RGBA verification plus atomic file replacement.
+- Updated to .NET 10 LTS, WPF-UI 4.3.0, CommunityToolkit.Mvvm 8.4.2, and ImageSharp 3.1.12.
+- Added NuGet lock files, locked CI restore, vulnerability audit, and win-x64 artifact packaging.
+
+Release notes: [docs/releases/v2.3.0.md](docs/releases/v2.3.0.md)
+
 ## v2.2
 
 - Updated application metadata to `2.2`.

@@ -8,6 +8,7 @@ public sealed class EditorSession
 {
     private readonly Stack<SpriteConfig> _undoStack = new();
     private readonly Stack<SpriteConfig> _redoStack = new();
+    private SpriteConfig? _savedConfig;
 
     public WorkspaceState Workspace { get; private set; } = WorkspaceState.Empty;
 
@@ -16,6 +17,8 @@ public sealed class EditorSession
     public SpriteConfig? CurrentConfig { get; private set; }
 
     public string? CurrentConfigPath { get; private set; }
+
+    public bool IsDirty { get; private set; }
 
     public PreviewSelection PreviewSelection { get; private set; } = new(string.Empty, null, null);
 
@@ -31,6 +34,8 @@ public sealed class EditorSession
         LoadedAsset = null;
         CurrentConfig = null;
         CurrentConfigPath = null;
+        _savedConfig = null;
+        IsDirty = false;
         PreviewSelection = new PreviewSelection(string.Empty, null, null);
         SelectedDirection = SpriteDirection.South;
         _undoStack.Clear();
@@ -54,15 +59,25 @@ public sealed class EditorSession
         return Result.Success();
     }
 
-    public Result CreateConfig(string name, ConfigMetadata metadata)
+    public Result CreateConfig(
+        string name,
+        ConfigMetadata metadata,
+        SpriteEditorSettings? editorSettings = null)
     {
         if (LoadedAsset is null)
         {
             return Result.Failure(Errors.Conflict("A DMI asset must be loaded before creating a config."));
         }
 
-        CurrentConfig = SpriteConfig.CreateEmpty(name, LoadedAsset.Resolution, LoadedAsset.SupportedDirections, metadata);
+        CurrentConfig = SpriteConfig.CreateEmpty(
+            name,
+            LoadedAsset.Resolution,
+            LoadedAsset.SupportedDirections,
+            metadata,
+            editorSettings);
         CurrentConfigPath = null;
+        _savedConfig = null;
+        IsDirty = true;
         _undoStack.Clear();
         _redoStack.Clear();
         return Result.Success();
@@ -83,6 +98,8 @@ public sealed class EditorSession
 
         CurrentConfig = config;
         CurrentConfigPath = path;
+        _savedConfig = string.IsNullOrWhiteSpace(path) ? null : config.Clone();
+        IsDirty = _savedConfig is null;
         _undoStack.Clear();
         _redoStack.Clear();
         return Result.Success();
@@ -96,6 +113,8 @@ public sealed class EditorSession
         }
 
         CurrentConfigPath = path;
+        _savedConfig = CurrentConfig.Clone();
+        IsDirty = false;
         return Result.Success();
     }
 
@@ -107,6 +126,7 @@ public sealed class EditorSession
         }
 
         CurrentConfig = CurrentConfig.WithName(name);
+        UpdateDirtyState();
         return Result.Success(CurrentConfig);
     }
 
@@ -134,28 +154,58 @@ public sealed class EditorSession
 
     public Result<SpriteConfig> UpsertMapping(SpriteDirection direction, PixelCoordinate source, PixelCoordinate? target)
     {
-        if (CurrentConfig is null)
-        {
-            return Result.Failure<SpriteConfig>(Errors.Conflict("There is no active config to edit."));
-        }
-
-        _undoStack.Push(CurrentConfig.Clone());
-        _redoStack.Clear();
-        CurrentConfig = CurrentConfig.SetMapping(direction, source, target);
-        return Result.Success(CurrentConfig);
+        var mutation = new EditorMappingMutation(
+            target is null ? EditorMappingMutationKind.SetTransparent : EditorMappingMutationKind.SetSource,
+            direction,
+            source,
+            target);
+        var result = ApplyMutation(new EditorMutationPlan([mutation]));
+        return result.IsFailure
+            ? Result.Failure<SpriteConfig>(result.Error)
+            : Result.Success(result.Value.Config);
     }
 
     public Result<SpriteConfig> RemoveMapping(SpriteDirection direction, PixelCoordinate source)
     {
+        var result = ApplyMutation(
+            new EditorMutationPlan(
+                [new EditorMappingMutation(EditorMappingMutationKind.Restore, direction, source)]));
+        return result.IsFailure
+            ? Result.Failure<SpriteConfig>(result.Error)
+            : Result.Success(result.Value.Config);
+    }
+
+    public Result<EditorMutationApplyResult> ApplyMutation(EditorMutationPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
         if (CurrentConfig is null)
         {
-            return Result.Failure<SpriteConfig>(Errors.Conflict("There is no active config to edit."));
+            return Result.Failure<EditorMutationApplyResult>(Errors.Conflict("There is no active config to edit."));
         }
 
-        _undoStack.Push(CurrentConfig.Clone());
+        var snapshot = CurrentConfig.Clone();
+        var applyResult = EditorMutationEngine.Apply(snapshot, plan);
+        if (applyResult.IsFailure)
+        {
+            return applyResult;
+        }
+
+        if (!applyResult.Value.IsChanged)
+        {
+            return Result.Success(
+                applyResult.Value with
+                {
+                    Config = CurrentConfig,
+                    AppliedOperationCount = 0
+                });
+        }
+
+        _undoStack.Push(snapshot);
         _redoStack.Clear();
-        CurrentConfig = CurrentConfig.RemoveMapping(direction, source);
-        return Result.Success(CurrentConfig);
+        CurrentConfig = applyResult.Value.Config;
+        UpdateDirtyState();
+        return Result.Success(applyResult.Value);
     }
 
     public Result<SpriteConfig> ApplyTransform(Func<SpriteConfig, SpriteConfig> transform)
@@ -168,13 +218,39 @@ public sealed class EditorSession
         }
 
         var snapshot = CurrentConfig.Clone();
-        var updatedConfig = transform(CurrentConfig.Clone());
-        ArgumentNullException.ThrowIfNull(updatedConfig);
+        try
+        {
+            var updatedConfig = transform(CurrentConfig.Clone());
+            if (updatedConfig is null)
+            {
+                return Result.Failure<SpriteConfig>(Errors.Validation("Config transform returned no config."));
+            }
 
-        _undoStack.Push(snapshot);
-        _redoStack.Clear();
-        CurrentConfig = updatedConfig;
-        return Result.Success(CurrentConfig);
+            var validation = updatedConfig.Validate();
+            if (!validation.IsValid)
+            {
+                return Result.Failure<SpriteConfig>(Errors.Validation(validation.Errors[0].Message));
+            }
+
+            if (snapshot.HasSameMappingContent(updatedConfig))
+            {
+                return Result.Success(CurrentConfig);
+            }
+
+            _undoStack.Push(snapshot);
+            _redoStack.Clear();
+            CurrentConfig = updatedConfig;
+            UpdateDirtyState();
+            return Result.Success(CurrentConfig);
+        }
+        catch (ArgumentException exception)
+        {
+            return Result.Failure<SpriteConfig>(Errors.Validation(exception.Message));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Result.Failure<SpriteConfig>(Errors.Conflict(exception.Message));
+        }
     }
 
     public Result<SpriteConfig> Undo()
@@ -186,6 +262,7 @@ public sealed class EditorSession
 
         _redoStack.Push(CurrentConfig.Clone());
         CurrentConfig = _undoStack.Pop();
+        UpdateDirtyState();
         return Result.Success(CurrentConfig);
     }
 
@@ -198,8 +275,13 @@ public sealed class EditorSession
 
         _undoStack.Push(CurrentConfig.Clone());
         CurrentConfig = _redoStack.Pop();
+        UpdateDirtyState();
         return Result.Success(CurrentConfig);
     }
+
+    private void UpdateDirtyState() =>
+        IsDirty = CurrentConfig is not null &&
+            (_savedConfig is null || !_savedConfig.HasSameMappingContent(CurrentConfig));
 }
 
 public sealed class EditorWorkspaceService : IWorkspaceService

@@ -20,14 +20,14 @@ public partial class WorkspaceShellViewModel
     private void RefreshMappingRows()
     {
         MappingRows.Clear();
-        if (_editorSession.CurrentConfig is null)
+        if (ResolveRenderedConfig() is not { } config)
         {
             return;
         }
 
         var direction = GetSafeSelectedDirection();
 
-        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction)
+        foreach (var mapping in config.GetMappings(direction)
                      .OrderBy(static mapping => mapping.Source.Y)
                      .ThenBy(static mapping => mapping.Source.X))
         {
@@ -55,8 +55,7 @@ public partial class WorkspaceShellViewModel
         OppositeHighlightedCoordinate = SelectedTargetCoordinate;
 
         var activeDirection = GetSafeSelectedDirection();
-        var resolution = ResolveEditorResolution();
-        if (resolution is null)
+        if (_editorSession.CurrentConfig is not { } config)
         {
             return;
         }
@@ -65,7 +64,11 @@ public partial class WorkspaceShellViewModel
         {
             if (_selectedEditableCoordinate.HasValue)
             {
-                surface.TransformedSelectedTargetCoordinate = TransformEditableCoordinate(_selectedEditableCoordinate.Value, activeDirection, surface.Direction, resolution.Value);
+                surface.TransformedSelectedTargetCoordinate = TryTransformEditableCoordinate(
+                    _selectedEditableCoordinate.Value,
+                    activeDirection,
+                    surface.Direction,
+                    config);
             }
             else
             {
@@ -74,9 +77,23 @@ public partial class WorkspaceShellViewModel
 
             if (_selectedArea is { } selectedArea)
             {
-                var p1 = TransformEditableCoordinate(new PixelCoordinate(selectedArea.Left, selectedArea.Top), activeDirection, surface.Direction, resolution.Value);
-                var p2 = TransformEditableCoordinate(new PixelCoordinate(selectedArea.Right, selectedArea.Bottom), activeDirection, surface.Direction, resolution.Value);
-                surface.TransformedSelectedAreaBounds = new PixelAreaBounds(Math.Min(p1.X, p2.X), Math.Min(p1.Y, p2.Y), Math.Max(p1.X, p2.X), Math.Max(p1.Y, p2.Y));
+                var p1 = TryTransformEditableCoordinate(
+                    new PixelCoordinate(selectedArea.Left, selectedArea.Top),
+                    activeDirection,
+                    surface.Direction,
+                    config);
+                var p2 = TryTransformEditableCoordinate(
+                    new PixelCoordinate(selectedArea.Right, selectedArea.Bottom),
+                    activeDirection,
+                    surface.Direction,
+                    config);
+                surface.TransformedSelectedAreaBounds = p1 is { } first && p2 is { } second
+                    ? new PixelAreaBounds(
+                        Math.Min(first.X, second.X),
+                        Math.Min(first.Y, second.Y),
+                        Math.Max(first.X, second.X),
+                        Math.Max(first.Y, second.Y))
+                    : null;
             }
             else
             {
@@ -728,6 +745,8 @@ public partial class WorkspaceShellViewModel
             StatusMessage = result.Error.Message;
             return;
         }
+
+        SynchronizeMirrorAxisFromConfig(_editorSession.CurrentConfig!);
 
         foreach (var existingItem in ConfigQueueItems)
         {
@@ -1421,7 +1440,7 @@ public partial class WorkspaceShellViewModel
     // The persisted config keeps legacy semantics: mapping.Source is the editable cell,
     // mapping.Target is the source/palette coordinate used to draw that editable cell.
     private Dictionary<PixelCoordinate, PixelMapping> GetEditableMappings(SpriteDirection direction) =>
-        _editorSession.CurrentConfig?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
+        ResolveRenderedConfig()?.GetMappings(direction).ToDictionary(static mapping => mapping.Source) ?? [];
 
     private SpriteImage? RenderEditableSurfaceImage(SpriteImage? editableBaseImage, SpriteImage? sourceReferenceImage, SpriteDirection direction)
     {
@@ -1431,12 +1450,12 @@ public partial class WorkspaceShellViewModel
         }
 
         var rendered = new SpriteImage(editableBaseImage.Width, editableBaseImage.Height, editableBaseImage.RgbaBytes[..]);
-        if (_editorSession.CurrentConfig is null)
+        if (ResolveRenderedConfig() is not { } config)
         {
             return rendered;
         }
 
-        foreach (var mapping in _editorSession.CurrentConfig.GetMappings(direction))
+        foreach (var mapping in config.GetMappings(direction))
         {
             var destCoordinate = mapping.Source;
             var destinationOffset = ((destCoordinate.Y * rendered.Width) + destCoordinate.X) * 4;

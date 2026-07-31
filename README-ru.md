@@ -1,4 +1,4 @@
-# Adaptive Sprites DMI Tool v2.2
+# Adaptive Sprites DMI Tool v2.3.0
 
 Adaptive Sprites DMI Tool - Windows WPF-приложение для создания, предпросмотра и применения конфигов пиксельных преобразований к BYOND `.dmi` спрайтам.
 
@@ -6,21 +6,21 @@ English documentation: [README.md](README.md)
 
 ## Текущая версия
 
-- Версия приложения: `2.2`
+- Версия приложения: `2.3.0`
 - Целевая платформа: Windows x64
-- UI: WPF на .NET 8
+- UI: WPF на .NET 10 LTS
 - Релизный пакет: self-contained `win-x64` ZIP
-- Версия схемы JSON-конфига: `1`
+- Версия схемы JSON-конфига: `2` (чтение v1 и v2)
 - Основной формат конфигов: versioned JSON
 - Совместимость со старым форматом: только импорт CSV
 
 Релизный ZIP содержит опубликованное WPF-приложение. Распакуйте архив и запустите:
 
 ```text
-AdaptiveDMITool-v2.2.exe
+AdaptiveDMITool-v2.3.0.exe
 ```
 
-## Главное в v2.2
+## Главное в v2.3.0
 
 - Добавлены русские и английские ресурсы интерфейса с сохраняемой настройкой языка.
 - Добавлены настройки оболочки: тема, язык, режим viewport редактора, поведение панелей workspace, видимость неактивных Source-полотен и вписывание нескольких direction-полотен.
@@ -29,7 +29,12 @@ AdaptiveDMITool-v2.2.exe
 - Порядок, размещение, opacity и назначение импортированных state-слоев сохраняются в workspace settings и восстанавливаются при запуске.
 - Загрузка states и сортировка списков states стали стабильнее, чтобы восстановленные workspace и импортированные DMI state selections были предсказуемее.
 - Улучшен batch workspace: локализация, выбор папок и файлов, фильтрация, статусы, run log, исключение output-папки из input-сканирования и предпросмотр `One DIR` / `All DIR`.
-- Исправлены сценарии `Fill`, `Move`, зеркальные направления и параллельное редактирование направлений.
+- Жесты `Paint`, `Erase`, `Restore`, `Fill`, `Move` и `Select/Move` стали атомарными и создают ровно одну запись Undo.
+- Быстрые штрихи интерполируются без пропущенных пикселей; Erase пишет прозрачный RGBA, а Restore удаляет mapping.
+- Зеркальная проекция использует точную формулу без скрытого `-1` и clamp; смещение оси хранится в JSON v2 и Workspace v7.
+- Добавлена независимая направляющая зеркальной оси на всех canvas.
+- DMI writer сохраняет порядок states, повторно проверяет metadata и SHA-256 RGBA-кадров и атомарно заменяет файл.
+- Проект переведен на .NET 10 LTS; обновлены WPF-UI, CommunityToolkit.Mvvm и ImageSharp, добавлены lock-файлы и аудит зависимостей.
 - Улучшены rendering и производительность при обновлениях редактора, рисовании и zoom.
 - Сделано более надежное закрытие приложения и сохранение состояния workspace.
 - Release workflow теперь создает ZIP с приложением и отдельный samples ZIP с полной папкой `samples/`.
@@ -42,7 +47,7 @@ AdaptiveDMITool-v2.2.exe
 - подключение дополнительных landmark и overlay state-источников для предпросмотра
 - редактирование pixel mappings для `4-dir` и `8-dir` спрайтов
 - редактирование одного направления, параллельных направлений или всех направлений из одного workspace
-- инструменты редактора: `Paint`, `Fill`, `Move`, `Erase`, undo, area undo и selection
+- инструменты редактора: `Paint`, `Fill`, `Move`, `Erase`, `Restore`, area restore, undo и selection
 - предпросмотр base, landmark, overlay, composite, grid и text-grid режимов
 - сохранение и загрузка JSON-конфигов со схемной версией
 - импорт CSV-конфигов из старых рабочих процессов
@@ -65,9 +70,10 @@ AdaptiveDMITool-v2.2.exe
 
 ## Форматы конфигов
 
-В v2.2 основной формат - JSON. Текущая схема использует:
+В v2.3.0 основной формат - JSON. Текущая схема использует:
 
-- `version: 1`
+- `version: 2`
+- `editorSettings.mirrorAxisOffsetPixels`
 - `supportedDirections: "four"` или `"eight"`
 - `mappings`, сгруппированные по именам направлений
 - `target: null` для прозрачного выходного пикселя
@@ -84,12 +90,12 @@ CSV можно импортировать, но новые конфиги сох
 Требования:
 
 - Windows
-- .NET 8 SDK
+- .NET 10 SDK
 
 Обычная developer-сборка:
 
 ```powershell
-dotnet restore AdaptiveSpritesDMItool.sln -m:1
+dotnet restore AdaptiveSpritesDMItool.sln --locked-mode -m:1
 dotnet build AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-restore
 dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 dotnet run --project src/AdaptiveSpritesDmiTool.Presentation.Wpf/AdaptiveSpritesDmiTool.Presentation.Wpf.csproj -c Release
@@ -106,22 +112,22 @@ Launch-конфигурация использует `type: "dotnet"` и `projec
 Релизный пакет:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.2 -Runtime win-x64
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.3.0 -Runtime win-x64
 ```
 
 Скрипт создает:
 
-- `artifacts/publish/AdaptiveSpritesDMItool-v2.2-win-x64/`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.2-win-x64.zip`
-- `artifacts/release/AdaptiveSpritesDMItool-v2.2-win-x64.sha256.txt`
-- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.2.zip`
-- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.2.sha256.txt`
+- `artifacts/publish/AdaptiveSpritesDMItool-v2.3.0-win-x64/`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.3.0-win-x64.zip`
+- `artifacts/release/AdaptiveSpritesDMItool-v2.3.0-win-x64.sha256.txt`
+- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.3.0.zip`
+- `artifacts/release/AdaptiveSpritesDMItool-samples-v2.3.0.sha256.txt`
 
 `artifacts/` - сгенерированный вывод сборки, он намеренно исключен из git.
 
 ## Архитектура
 
-Активная runtime-архитектура v2.2 разделена на слои:
+Активная runtime-архитектура v2.3.0 разделена на слои:
 
 - `src/AdaptiveSpritesDmiTool.Domain`
   Чистая доменная модель, value objects, валидация, модель направлений и инварианты конфигов.
@@ -138,10 +144,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Ver
 
 ## Тестирование
 
-Для v2.2 пройдена релизная проверка:
+Автоматизированная проверка v2.3.0 покрывает:
 
-- 127 unit tests
-- 46 integration tests
+- 230 unit tests
+- 56 integration tests
 - hidden Unicode scan
 - Release build
 - Release test run
@@ -159,6 +165,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Ver
 - [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)
 - [docs/TEST_PLAN.md](docs/TEST_PLAN.md)
 - [CHANGELOG.md](CHANGELOG.md)
+- [docs/releases/v2.3.0.md](docs/releases/v2.3.0.md)
 - [docs/releases/v2.2.md](docs/releases/v2.2.md)
 - [docs/releases/v2.1.md](docs/releases/v2.1.md)
 

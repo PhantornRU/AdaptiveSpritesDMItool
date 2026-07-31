@@ -503,6 +503,35 @@ public partial class WorkspaceShellViewModel
     }
 
     [RelayCommand]
+    private void ConfigureMirrorAxis()
+    {
+        if (ResolveEditorResolution() is not { } resolution)
+        {
+            StatusMessage = "Load a sprite before configuring the mirror axis.";
+            return;
+        }
+
+        CancelActiveEditorGesture();
+        var maximumOffset = SpriteEditorSettings.GetMaximumMirrorAxisOffset(resolution);
+        var selectedOffset = _fileDialogService.ConfigureMirrorAxisOffset(MirrorAxisOffsetPixels, maximumOffset);
+        if (selectedOffset is null)
+        {
+            return;
+        }
+
+        MirrorAxisOffsetPixels = selectedOffset.Value;
+    }
+
+    [RelayCommand]
+    private void CancelEditorGesture()
+    {
+        CancelActiveEditorGesture();
+        ResetEditableDragState();
+        EditorStatus = "Editor gesture cancelled.";
+        RefreshInteractionState();
+    }
+
+    [RelayCommand]
     private void ToggleDisplayedDirection(SpriteDirection direction)
     {
         if (SelectedDirectionScope != DirectionScope.All)
@@ -643,6 +672,7 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        CancelActiveEditorGesture();
         if (TryApplySelectedDirection(value, refreshUi: true))
         {
             RequestAutoPreviewRefresh();
@@ -658,9 +688,9 @@ public partial class WorkspaceShellViewModel
         {
             EditorTool.Single => "Pick a source pixel, then click Editable to draw it.",
             EditorTool.Fill => "Pick a source pixel, then drag across Editable to fill an area.",
-            EditorTool.Delete => "Click or drag across Editable to restore original pixels.",
-            EditorTool.Undo => "Click an Editable pixel to restore its original source.",
-            EditorTool.UndoArea => "Drag across Editable to restore an area.",
+            EditorTool.Erase => "Click or drag across Editable to make pixels transparent.",
+            EditorTool.Restore => "Click or drag across Editable to restore original pixels.",
+            EditorTool.RestoreArea => "Drag across Editable to restore an area.",
             EditorTool.Select => "Drag across Editable to select an area, then drag inside it to move the mapped pixels.",
             EditorTool.Move => "Drag an Editable pixel to move its current mapping.",
             _ => EditorStatus
@@ -669,8 +699,24 @@ public partial class WorkspaceShellViewModel
         RefreshInteractionState();
     }
 
+    partial void OnBaseStateNameChanged(string value)
+    {
+        ResetEditableDragState();
+    }
+
+    partial void OnLandmarkStateNameChanged(string value)
+    {
+        ResetEditableDragState();
+    }
+
+    partial void OnOverlayStateNameChanged(string value)
+    {
+        ResetEditableDragState();
+    }
+
     partial void OnSelectedDirectionScopeChanged(DirectionScope value)
     {
+        CancelActiveEditorGesture();
         _allDirectionDisplaySelection.Clear();
 
         if (value == DirectionScope.All && AvailableDirections.Count > 0)
@@ -698,16 +744,58 @@ public partial class WorkspaceShellViewModel
 
     partial void OnMirrorAcrossDirectionsChanged(bool value)
     {
+        CancelActiveEditorGesture();
         EditorStatus = value
             ? "Direction mirroring enabled for propagated edits."
             : "Direction mirroring disabled for propagated edits.";
+        RefreshEditorSurface();
+        PersistWorkspaceSettingsInBackground();
     }
 
-    partial void OnUseCentralizedPropagationChanged(bool value)
+    partial void OnMirrorAxisOffsetPixelsChanged(int value)
     {
-        EditorStatus = value
-            ? "Centralized propagation enabled for mirrored directions."
-            : "Centralized propagation disabled for mirrored directions.";
+        CancelActiveEditorGesture();
+        if (_isSynchronizingMirrorAxis)
+        {
+            RefreshEditorSurface();
+            return;
+        }
+
+        if (_editorSession.CurrentConfig is not { } config)
+        {
+            PersistWorkspaceSettingsInBackground();
+            RefreshEditorSurface();
+            return;
+        }
+
+        var settings = new SpriteEditorSettings(value);
+        if (!settings.IsValidFor(config.Resolution))
+        {
+            _isSynchronizingMirrorAxis = true;
+            try
+            {
+                MirrorAxisOffsetPixels = config.EditorSettings.MirrorAxisOffsetPixels;
+            }
+            finally
+            {
+                _isSynchronizingMirrorAxis = false;
+            }
+
+            StatusMessage = $"Mirror axis offset must be between " +
+                $"{-SpriteEditorSettings.GetMaximumMirrorAxisOffset(config.Resolution)} and " +
+                $"{SpriteEditorSettings.GetMaximumMirrorAxisOffset(config.Resolution)}.";
+            return;
+        }
+
+        var result = _applyConfigTransformUseCase.Execute(current => current.WithEditorSettings(settings));
+        ApplyMutationResult(result, $"Mirror axis moved to {value:+#;-#;0} pixel(s).", refreshPreview: false);
+    }
+
+    partial void OnShowMirrorAxisGuideChanged(bool value)
+    {
+        EditorStatus = value ? "Mirror axis guide shown." : "Mirror axis guide hidden.";
+        RefreshEditorSurface();
+        PersistWorkspaceSettingsInBackground();
     }
 
     partial void OnAutoPreviewModeChanged(AutoPreviewMode value)

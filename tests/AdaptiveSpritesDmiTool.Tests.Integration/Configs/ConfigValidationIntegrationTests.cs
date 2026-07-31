@@ -21,7 +21,7 @@ public sealed class ConfigValidationIntegrationTests : IDisposable
             path,
             """
             {
-              "version": 2,
+              "version": 3,
               "name": "demo",
               "resolution": { "width": 32, "height": 32 },
               "supportedDirections": "four",

@@ -299,6 +299,7 @@ public partial class MainWindow : Window
 
     private void TargetSurface_LostMouseCapture(object sender, MouseEventArgs e)
     {
+        ViewModel.CancelActiveEditorGesture();
         ViewModel.HandleTargetSurfacePointerLeave();
     }
 
