@@ -2001,6 +2001,46 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task ReactivatingModifiedSavedConfigQueueItemShouldPreserveDirtyBaselineUntilSave()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var session = new EditorSession();
+        var dialogService = new StubFileDialogService
+        {
+            DmiPath = "sprite.dmi",
+            ConfigPath = "saved.json"
+        };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            configRepository: new SuccessfulConfigRepository(CreateConfig("saved")),
+            fileDialogService: dialogService,
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        await viewModel.LoadConfigCommand.ExecuteAsync(null);
+        var savedItem = viewModel.ConfigQueueItems.Single(item =>
+            item.SessionSnapshot.ConfigPath == "saved.json");
+        var editable = new PixelCoordinate(1, 1);
+        var target = new PixelCoordinate(2, 2);
+        ApplySingleMapping(viewModel, SpriteDirection.South, editable, target);
+
+        viewModel.CreateConfigCommand.Execute(null);
+        viewModel.ActivateConfigQueueItemCommand.Execute(savedItem);
+
+        session.CurrentConfigPath.Should().Be("saved.json");
+        session.CurrentConfig!.GetEffectiveTarget(SpriteDirection.South, editable).Should().Be(target);
+        session.IsDirty.Should().BeTrue();
+        viewModel.ConfigSummary.Should().Contain("modified");
+
+        await viewModel.SaveConfigCommand.ExecuteAsync(null);
+
+        session.IsDirty.Should().BeFalse();
+        viewModel.ConfigSummary.Should().NotContain("modified");
+    }
+
+    [Fact]
     public void BuildBatchSourceTreeItemsShouldSkipChildDirectoriesWithEnumerationErrors()
     {
         var root = Path.Combine("batch", "root");

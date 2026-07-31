@@ -136,7 +136,7 @@ if (-not $SkipBuildVerification) {
     Invoke-External -Name "Test" -FilePath "dotnet" -Arguments @("test", $solutionPath, "-c", $Configuration, "-m:1", "-v", "minimal", "--no-build")
 }
 
-Invoke-External -Name "Restore publish runtime" -FilePath "dotnet" -Arguments @("restore", $projectPath, "--locked-mode", "-m:1")
+Invoke-External -Name "Restore publish runtime" -FilePath "dotnet" -Arguments @("restore", $projectPath, "-r", $Runtime, "--locked-mode", "-m:1")
 Invoke-External -Name "Publish" -FilePath "dotnet" -Arguments @(
     "publish",
     $projectPath,

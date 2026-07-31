@@ -319,6 +319,65 @@ public sealed class EditorMutationTests
     }
 
     [Fact]
+    public void CleanSavedConfigSnapshotShouldRemainCleanAfterRestore()
+    {
+        var session = CreateSession(new SpriteResolution(4, 4));
+        session.SetCurrentConfigPath("config.json").IsSuccess.Should().BeTrue();
+        var snapshot = session.CaptureCurrentConfigSnapshot().Value;
+
+        session.CreateConfig(
+            "other",
+            ConfigMetadata.CreateNew(ConfigSource.UserCreated, "tests"));
+
+        session.RestoreCurrentConfigSnapshot(snapshot).IsSuccess.Should().BeTrue();
+
+        session.CurrentConfigPath.Should().Be("config.json");
+        session.CurrentConfig!.Name.Should().Be("config");
+        session.IsDirty.Should().BeFalse();
+        session.CanUndo.Should().BeFalse();
+        session.CanRedo.Should().BeFalse();
+    }
+
+    [Fact]
+    public void DirtySavedConfigSnapshotShouldRestoreOriginalBaseline()
+    {
+        var session = CreateSession(new SpriteResolution(4, 4));
+        var editable = new PixelCoordinate(1, 1);
+        var target = new PixelCoordinate(2, 2);
+        session.SetCurrentConfigPath("config.json").IsSuccess.Should().BeTrue();
+        session.UpsertMapping(SpriteDirection.South, editable, target).IsSuccess.Should().BeTrue();
+        var snapshot = session.CaptureCurrentConfigSnapshot().Value;
+
+        session.CreateConfig(
+            "other",
+            ConfigMetadata.CreateNew(ConfigSource.UserCreated, "tests"));
+
+        session.RestoreCurrentConfigSnapshot(snapshot).IsSuccess.Should().BeTrue();
+
+        session.CurrentConfigPath.Should().Be("config.json");
+        session.CurrentConfig!.GetEffectiveTarget(SpriteDirection.South, editable).Should().Be(target);
+        session.IsDirty.Should().BeTrue();
+        session.CanUndo.Should().BeFalse();
+        session.CanRedo.Should().BeFalse();
+
+        session.RemoveMapping(SpriteDirection.South, editable).IsSuccess.Should().BeTrue();
+        session.IsDirty.Should().BeFalse();
+    }
+
+    [Fact]
+    public void UnsavedConfigSnapshotShouldRemainDirtyAfterRestore()
+    {
+        var session = CreateSession(new SpriteResolution(4, 4));
+        var snapshot = session.CaptureCurrentConfigSnapshot().Value;
+        session.SetCurrentConfigPath("other.json").IsSuccess.Should().BeTrue();
+
+        session.RestoreCurrentConfigSnapshot(snapshot).IsSuccess.Should().BeTrue();
+
+        session.CurrentConfigPath.Should().BeNull();
+        session.IsDirty.Should().BeTrue();
+    }
+
+    [Fact]
     public void EditorSettingsChangeShouldMarkSavedConfigDirtyAndUndoShouldRestoreCleanState()
     {
         var session = CreateSession(new SpriteResolution(5, 3));

@@ -649,10 +649,16 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        var snapshotResult = _editorSession.CaptureCurrentConfigSnapshot();
+        if (snapshotResult.IsFailure)
+        {
+            StatusMessage = snapshotResult.Error.Message;
+            return;
+        }
+
         activeItem.Name = _editorSession.CurrentConfig.Name;
-        activeItem.ConfigPath = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath) ? null : _editorSession.CurrentConfigPath;
-        activeItem.PathSummary = BuildConfigPathSummary(activeItem.ConfigPath);
-        activeItem.ConfigSnapshot = _editorSession.CurrentConfig.Clone();
+        activeItem.PathSummary = BuildConfigPathSummary(snapshotResult.Value.ConfigPath);
+        activeItem.SessionSnapshot = snapshotResult.Value;
         activeItem.IsActive = true;
     }
 
@@ -663,18 +669,23 @@ public partial class WorkspaceShellViewModel
             throw new InvalidOperationException("Cannot create a config queue item without an active config.");
         }
 
+        var snapshotResult = _editorSession.CaptureCurrentConfigSnapshot();
+        if (snapshotResult.IsFailure)
+        {
+            throw new InvalidOperationException(snapshotResult.Error.Message);
+        }
+
         foreach (var existingItem in ConfigQueueItems)
         {
             existingItem.IsActive = false;
         }
 
-        var configPath = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath) ? null : _editorSession.CurrentConfigPath;
+        var sessionSnapshot = snapshotResult.Value;
         var item = new ConfigQueueItemViewModel(
             Guid.NewGuid(),
             _editorSession.CurrentConfig.Name,
-            BuildConfigPathSummary(configPath),
-            configPath,
-            _editorSession.CurrentConfig.Clone(),
+            BuildConfigPathSummary(sessionSnapshot.ConfigPath),
+            sessionSnapshot,
             isActive: true);
         ConfigQueueItems.Add(item);
         _activeConfigQueueItemId = item.Id;
@@ -703,12 +714,20 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
-        var configPath = string.IsNullOrWhiteSpace(_editorSession.CurrentConfigPath) ? null : _editorSession.CurrentConfigPath;
+        var snapshotResult = _editorSession.CaptureCurrentConfigSnapshot();
+        if (snapshotResult.IsFailure)
+        {
+            StatusMessage = snapshotResult.Error.Message;
+            return;
+        }
+
+        var sessionSnapshot = snapshotResult.Value;
+        var configPath = sessionSnapshot.ConfigPath;
         ConfigQueueItemViewModel? matchedItem = null;
         if (!string.IsNullOrWhiteSpace(configPath))
         {
             matchedItem = ConfigQueueItems.FirstOrDefault(item =>
-                string.Equals(item.ConfigPath, configPath, StringComparison.OrdinalIgnoreCase));
+                string.Equals(item.SessionSnapshot.ConfigPath, configPath, StringComparison.OrdinalIgnoreCase));
         }
 
         if (matchedItem is null)
@@ -724,9 +743,8 @@ public partial class WorkspaceShellViewModel
 
         _activeConfigQueueItemId = matchedItem.Id;
         matchedItem.Name = _editorSession.CurrentConfig.Name;
-        matchedItem.ConfigPath = configPath;
         matchedItem.PathSummary = BuildConfigPathSummary(configPath);
-        matchedItem.ConfigSnapshot = _editorSession.CurrentConfig.Clone();
+        matchedItem.SessionSnapshot = sessionSnapshot;
         matchedItem.IsActive = true;
     }
 
@@ -739,7 +757,7 @@ public partial class WorkspaceShellViewModel
 
         SyncCurrentConfigIntoActiveQueueItem();
 
-        var result = _editorSession.SetCurrentConfig(item.ConfigSnapshot.Clone(), item.ConfigPath);
+        var result = _editorSession.RestoreCurrentConfigSnapshot(item.SessionSnapshot);
         if (result.IsFailure)
         {
             StatusMessage = result.Error.Message;
@@ -754,8 +772,8 @@ public partial class WorkspaceShellViewModel
         }
 
         _activeConfigQueueItemId = item.Id;
-        ConfigPath = item.ConfigPath ?? string.Empty;
-        SaveConfigPath = item.ConfigPath ?? string.Empty;
+        ConfigPath = item.SessionSnapshot.ConfigPath ?? string.Empty;
+        SaveConfigPath = item.SessionSnapshot.ConfigPath ?? string.Empty;
         DraftConfigName = item.Name;
         StatusMessage = $"Activated config '{item.Name}'.";
         RefreshWorkspaceState();

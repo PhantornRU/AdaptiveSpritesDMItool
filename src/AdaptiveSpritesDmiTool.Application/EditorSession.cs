@@ -4,6 +4,25 @@ using AdaptiveSpritesDmiTool.Domain.Workspaces;
 
 namespace AdaptiveSpritesDmiTool.Application;
 
+public sealed class EditorConfigSessionSnapshot
+{
+    internal EditorConfigSessionSnapshot(
+        SpriteConfig config,
+        string? configPath,
+        SpriteConfig? savedConfigBaseline)
+    {
+        Config = config ?? throw new ArgumentNullException(nameof(config));
+        ConfigPath = string.IsNullOrWhiteSpace(configPath) ? null : configPath;
+        SavedConfigBaseline = savedConfigBaseline;
+    }
+
+    internal SpriteConfig Config { get; }
+
+    public string? ConfigPath { get; }
+
+    internal SpriteConfig? SavedConfigBaseline { get; }
+}
+
 public sealed class EditorSession
 {
     private readonly Stack<SpriteConfig> _undoStack = new();
@@ -87,19 +106,50 @@ public sealed class EditorSession
     {
         ArgumentNullException.ThrowIfNull(config);
 
-        if (LoadedAsset is not null)
+        var compatibility = ValidateConfigCompatibility(config);
+        if (compatibility.IsFailure)
         {
-            var compatibility = config.ValidateCompatibility(LoadedAsset.Resolution, LoadedAsset.SupportedDirections);
-            if (!compatibility.IsValid)
-            {
-                return Result.Failure(Errors.Validation(compatibility.Errors[0].Message));
-            }
+            return compatibility;
         }
 
         CurrentConfig = config;
         CurrentConfigPath = path;
         _savedConfig = string.IsNullOrWhiteSpace(path) ? null : config.Clone();
         IsDirty = _savedConfig is null;
+        _undoStack.Clear();
+        _redoStack.Clear();
+        return Result.Success();
+    }
+
+    public Result<EditorConfigSessionSnapshot> CaptureCurrentConfigSnapshot()
+    {
+        if (CurrentConfig is null)
+        {
+            return Result.Failure<EditorConfigSessionSnapshot>(
+                Errors.Conflict("There is no active config to capture."));
+        }
+
+        return Result.Success(
+            new EditorConfigSessionSnapshot(
+                CurrentConfig.Clone(),
+                CurrentConfigPath,
+                _savedConfig?.Clone()));
+    }
+
+    public Result RestoreCurrentConfigSnapshot(EditorConfigSessionSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        var compatibility = ValidateConfigCompatibility(snapshot.Config);
+        if (compatibility.IsFailure)
+        {
+            return compatibility;
+        }
+
+        CurrentConfig = snapshot.Config.Clone();
+        CurrentConfigPath = snapshot.ConfigPath;
+        _savedConfig = snapshot.SavedConfigBaseline?.Clone();
+        UpdateDirtyState();
         _undoStack.Clear();
         _redoStack.Clear();
         return Result.Success();
@@ -282,6 +332,19 @@ public sealed class EditorSession
     private void UpdateDirtyState() =>
         IsDirty = CurrentConfig is not null &&
             (_savedConfig is null || !_savedConfig.HasSameMappingContent(CurrentConfig));
+
+    private Result ValidateConfigCompatibility(SpriteConfig config)
+    {
+        if (LoadedAsset is null)
+        {
+            return Result.Success();
+        }
+
+        var compatibility = config.ValidateCompatibility(LoadedAsset.Resolution, LoadedAsset.SupportedDirections);
+        return compatibility.IsValid
+            ? Result.Success()
+            : Result.Failure(Errors.Validation(compatibility.Errors[0].Message));
+    }
 }
 
 public sealed class EditorWorkspaceService : IWorkspaceService

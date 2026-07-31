@@ -239,15 +239,13 @@ public sealed partial class ConfigQueueItemViewModel : ObservableObject
         Guid id,
         string name,
         string pathSummary,
-        string? configPath,
-        SpriteConfig configSnapshot,
+        EditorConfigSessionSnapshot sessionSnapshot,
         bool isActive)
     {
         Id = id;
         this.name = name;
         this.pathSummary = pathSummary;
-        this.configPath = configPath;
-        this.configSnapshot = configSnapshot;
+        this.sessionSnapshot = sessionSnapshot;
         this.isActive = isActive;
     }
 
@@ -260,10 +258,7 @@ public sealed partial class ConfigQueueItemViewModel : ObservableObject
     private string pathSummary;
 
     [ObservableProperty]
-    private string? configPath;
-
-    [ObservableProperty]
-    private SpriteConfig configSnapshot;
+    private EditorConfigSessionSnapshot sessionSnapshot;
 
     [ObservableProperty]
     private bool isActive;
