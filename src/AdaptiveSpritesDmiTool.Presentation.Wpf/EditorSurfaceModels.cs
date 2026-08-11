@@ -152,6 +152,9 @@ public sealed partial class EditorDirectionCanvasViewModel : ObservableObject
     private PixelAreaBounds? _transformedSelectedAreaBounds;
 
     [ObservableProperty]
+    private PixelCoordinate? _transformedSelectedSourceCoordinate;
+
+    [ObservableProperty]
     private PixelCoordinate? _transformedSelectedTargetCoordinate;
 }
 

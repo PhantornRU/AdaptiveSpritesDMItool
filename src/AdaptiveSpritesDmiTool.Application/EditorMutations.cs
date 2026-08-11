@@ -24,6 +24,15 @@ public sealed record DirectionProjectionResult(
     IReadOnlyList<ProjectedPixel> Pixels,
     int SkippedProjectionCount);
 
+public readonly record struct ProjectedMapping(
+    SpriteDirection Direction,
+    PixelCoordinate EditableCoordinate,
+    PixelCoordinate SourceCoordinate);
+
+public sealed record DirectionMappingProjectionResult(
+    IReadOnlyList<ProjectedMapping> Mappings,
+    int SkippedProjectionCount);
+
 public static class DirectionProjectionPolicy
 {
     public static Result<DirectionProjectionResult> Project(
@@ -32,52 +41,22 @@ public static class DirectionProjectionPolicy
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        if (!options.Resolution.Contains(coordinate))
+        if (Validate(options, (coordinate, "Coordinate")) is { } validationError)
         {
-            return Result.Failure<DirectionProjectionResult>(
-                Errors.Validation($"Coordinate '{coordinate}' is outside resolution '{options.Resolution}'."));
-        }
-
-        if (!options.SupportedDirections.Supports(options.ActiveDirection))
-        {
-            return Result.Failure<DirectionProjectionResult>(
-                Errors.Validation($"Direction '{options.ActiveDirection}' is not supported."));
-        }
-
-        var maximumOffset = SpriteEditorSettings.GetMaximumMirrorAxisOffset(options.Resolution);
-        if (Math.Abs((long)options.MirrorAxisOffsetPixels) > maximumOffset)
-        {
-            return Result.Failure<DirectionProjectionResult>(
-                Errors.Validation(
-                    $"Mirror axis offset '{options.MirrorAxisOffsetPixels}' is outside the valid range " +
-                    $"'{-maximumOffset}..{maximumOffset}' for resolution '{options.Resolution}'."));
+            return Result.Failure<DirectionProjectionResult>(validationError);
         }
 
         var pixels = new List<ProjectedPixel>();
         var skipped = 0;
         foreach (var direction in ResolveDirections(options))
         {
-            var projectedX = coordinate.X;
-            if (options.MirrorAcrossDirections && HasOppositeOrientation(options.ActiveDirection, direction))
-            {
-                var projectedXLong =
-                    (long)options.Resolution.Width - 1 - coordinate.X + (2L * options.MirrorAxisOffsetPixels);
-                if (projectedXLong < 0 || projectedXLong >= options.Resolution.Width)
-                {
-                    skipped++;
-                    continue;
-                }
-
-                projectedX = (int)projectedXLong;
-            }
-
-            if (projectedX < 0 || projectedX >= options.Resolution.Width)
+            if (!TryProjectCoordinate(coordinate, direction, options, out var projectedCoordinate))
             {
                 skipped++;
                 continue;
             }
 
-            pixels.Add(new ProjectedPixel(direction, new PixelCoordinate(projectedX, coordinate.Y)));
+            pixels.Add(new ProjectedPixel(direction, projectedCoordinate));
         }
 
         return Result.Success(
@@ -87,6 +66,48 @@ public static class DirectionProjectionPolicy
                     .OrderBy(static pixel => (int)pixel.Direction)
                     .ThenBy(static pixel => pixel.Coordinate.Y)
                     .ThenBy(static pixel => pixel.Coordinate.X)
+                    .ToArray(),
+                skipped));
+    }
+
+    public static Result<DirectionMappingProjectionResult> ProjectMapping(
+        PixelCoordinate editableCoordinate,
+        PixelCoordinate sourceCoordinate,
+        DirectionProjectionOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        if (Validate(
+                options,
+                (editableCoordinate, "Editable"),
+                (sourceCoordinate, "Source")) is { } validationError)
+        {
+            return Result.Failure<DirectionMappingProjectionResult>(validationError);
+        }
+
+        var mappings = new List<ProjectedMapping>();
+        var skipped = 0;
+        foreach (var direction in ResolveDirections(options))
+        {
+            if (!TryProjectCoordinate(editableCoordinate, direction, options, out var projectedEditable) ||
+                !TryProjectCoordinate(sourceCoordinate, direction, options, out var projectedSource))
+            {
+                skipped++;
+                continue;
+            }
+
+            mappings.Add(new ProjectedMapping(direction, projectedEditable, projectedSource));
+        }
+
+        return Result.Success(
+            new DirectionMappingProjectionResult(
+                mappings
+                    .Distinct()
+                    .OrderBy(static mapping => (int)mapping.Direction)
+                    .ThenBy(static mapping => mapping.EditableCoordinate.Y)
+                    .ThenBy(static mapping => mapping.EditableCoordinate.X)
+                    .ThenBy(static mapping => mapping.SourceCoordinate.Y)
+                    .ThenBy(static mapping => mapping.SourceCoordinate.X)
                     .ToArray(),
                 skipped));
     }
@@ -131,6 +152,58 @@ public static class DirectionProjectionPolicy
         }
 
         return directions;
+    }
+
+    private static Error? Validate(
+        DirectionProjectionOptions options,
+        params (PixelCoordinate Coordinate, string Label)[] coordinates)
+    {
+        foreach (var (coordinate, label) in coordinates)
+        {
+            if (!options.Resolution.Contains(coordinate))
+            {
+                return Errors.Validation(
+                    $"{label} coordinate '{coordinate}' is outside resolution '{options.Resolution}'.");
+            }
+        }
+
+        if (!options.SupportedDirections.Supports(options.ActiveDirection))
+        {
+            return Errors.Validation($"Direction '{options.ActiveDirection}' is not supported.");
+        }
+
+        var maximumOffset = SpriteEditorSettings.GetMaximumMirrorAxisOffset(options.Resolution);
+        if (Math.Abs((long)options.MirrorAxisOffsetPixels) > maximumOffset)
+        {
+            return Errors.Validation(
+                $"Mirror axis offset '{options.MirrorAxisOffsetPixels}' is outside the valid range " +
+                $"'{-maximumOffset}..{maximumOffset}' for resolution '{options.Resolution}'.");
+        }
+
+        return null;
+    }
+
+    private static bool TryProjectCoordinate(
+        PixelCoordinate coordinate,
+        SpriteDirection direction,
+        DirectionProjectionOptions options,
+        out PixelCoordinate projectedCoordinate)
+    {
+        var projectedX = (long)coordinate.X;
+        if (options.MirrorAcrossDirections && HasOppositeOrientation(options.ActiveDirection, direction))
+        {
+            projectedX =
+                (long)options.Resolution.Width - 1 - coordinate.X + (2L * options.MirrorAxisOffsetPixels);
+        }
+
+        if (projectedX < 0 || projectedX >= options.Resolution.Width)
+        {
+            projectedCoordinate = default;
+            return false;
+        }
+
+        projectedCoordinate = new PixelCoordinate((int)projectedX, coordinate.Y);
+        return true;
     }
 
     private static bool IsPrimaryOrientation(SpriteDirection direction) =>
@@ -182,6 +255,28 @@ public static class EditorMutationPlanFactory
         var skipped = 0;
         foreach (var coordinate in coordinates)
         {
+            if (kind == EditorMappingMutationKind.SetSource && sourceCoordinate is { } source)
+            {
+                var mappingProjection = DirectionProjectionPolicy.ProjectMapping(
+                    coordinate,
+                    source,
+                    projectionOptions);
+                if (mappingProjection.IsFailure)
+                {
+                    return Result.Failure<EditorMutationPlan>(mappingProjection.Error);
+                }
+
+                skipped += mappingProjection.Value.SkippedProjectionCount;
+                operations.AddRange(
+                    mappingProjection.Value.Mappings.Select(mapping =>
+                        new EditorMappingMutation(
+                            kind,
+                            mapping.Direction,
+                            mapping.EditableCoordinate,
+                            mapping.SourceCoordinate)));
+                continue;
+            }
+
             var projection = DirectionProjectionPolicy.Project(coordinate, projectionOptions);
             if (projection.IsFailure)
             {

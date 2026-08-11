@@ -739,6 +739,46 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task MirroredFillShouldProjectSelectedSourceForOppositeDirection()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+        viewModel.SelectedEditorTool = EditorTool.Fill;
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+
+        AssertDirectionMappings(
+            viewModel,
+            SpriteDirection.South,
+            (new PixelCoordinate(1, 1), new PixelCoordinate(0, 1)),
+            (new PixelCoordinate(2, 1), new PixelCoordinate(0, 1)),
+            (new PixelCoordinate(1, 2), new PixelCoordinate(0, 1)),
+            (new PixelCoordinate(2, 2), new PixelCoordinate(0, 1)));
+        AssertDirectionMappings(
+            viewModel,
+            SpriteDirection.North,
+            (new PixelCoordinate(2, 1), new PixelCoordinate(3, 1)),
+            (new PixelCoordinate(1, 1), new PixelCoordinate(3, 1)),
+            (new PixelCoordinate(2, 2), new PixelCoordinate(3, 1)),
+            (new PixelCoordinate(1, 2), new PixelCoordinate(3, 1)));
+    }
+
+    [Fact]
     public async Task PaintStrokeShouldInterpolateSparsePointerSamplesAndCommitOneUndoStep()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -921,7 +961,58 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
-    public async Task ParallelScopeShouldMirrorEditableCoordinatesUsingExactCenter()
+    public async Task ParallelScopeShouldMirrorEditableAndSourceCoordinatesUsingExactCenter()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService,
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.HideInactiveSourceCanvases = false;
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+
+        viewModel.SourceViewportSurfaces
+            .Single(surface => surface.Direction == SpriteDirection.North)
+            .TransformedSelectedSourceCoordinate
+            .Should()
+            .Be(new PixelCoordinate(1, 2));
+
+        AssertDirectionMappings(
+            viewModel,
+            SpriteDirection.South,
+            (new PixelCoordinate(0, 1), new PixelCoordinate(2, 2)));
+        AssertDirectionMappings(
+            viewModel,
+            SpriteDirection.North,
+            (new PixelCoordinate(3, 1), new PixelCoordinate(1, 2)));
+        AssertDirectionMappings(viewModel, SpriteDirection.East);
+        AssertDirectionMappings(viewModel, SpriteDirection.West);
+
+        session.Undo().IsSuccess.Should().BeTrue();
+        AssertDirectionMappings(viewModel, SpriteDirection.South);
+        AssertDirectionMappings(viewModel, SpriteDirection.North);
+        session.Redo().IsSuccess.Should().BeTrue();
+        session.CurrentConfig!.GetMappings(SpriteDirection.South).Should().ContainSingle();
+        session.CurrentConfig.GetMappings(SpriteDirection.North).Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task MirroredSetSourceShouldSkipDirectionWhenSourceProjectionIsOutOfBounds()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -934,25 +1025,29 @@ public sealed class MainWindowViewModelSmokeTests
         await viewModel.OpenDmiCommand.ExecuteAsync(null);
         viewModel.CreateConfigCommand.Execute(null);
 
+        viewModel.HideInactiveSourceCanvases = false;
         viewModel.MirrorAcrossDirections = true;
-        viewModel.MirrorAxisOffsetPixels = 0;
+        viewModel.MirrorAxisOffsetPixels = 1;
         viewModel.SelectedDirection = SpriteDirection.South;
         viewModel.SelectedDirectionScope = DirectionScope.Parallel;
 
-        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 2, 2));
-        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
-        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 2));
 
+        viewModel.SourceViewportSurfaces
+            .Single(surface => surface.Direction == SpriteDirection.North)
+            .TransformedSelectedSourceCoordinate
+            .Should()
+            .BeNull();
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+
+        viewModel.StatusMessage.Should().Contain("Skipped 1 out-of-bounds projection");
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.South,
-            (new PixelCoordinate(0, 1), new PixelCoordinate(2, 2)));
-        AssertDirectionMappings(
-            viewModel,
-            SpriteDirection.North,
-            (new PixelCoordinate(3, 1), new PixelCoordinate(2, 2)));
-        AssertDirectionMappings(viewModel, SpriteDirection.East);
-        AssertDirectionMappings(viewModel, SpriteDirection.West);
+            (new PixelCoordinate(2, 1), new PixelCoordinate(0, 2)));
+        AssertDirectionMappings(viewModel, SpriteDirection.North);
     }
 
     [Fact]
@@ -985,7 +1080,7 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.North,
-            (new PixelCoordinate(3, 1), new PixelCoordinate(2, 2)));
+            (new PixelCoordinate(3, 1), new PixelCoordinate(1, 2)));
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.East,
@@ -993,7 +1088,7 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.West,
-            (new PixelCoordinate(3, 1), new PixelCoordinate(2, 2)));
+            (new PixelCoordinate(3, 1), new PixelCoordinate(1, 2)));
     }
 
     [Fact]
@@ -1026,7 +1121,7 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.NorthWest,
-            (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
+            (new PixelCoordinate(3, 2), new PixelCoordinate(0, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.SouthWest);
         AssertDirectionMappings(viewModel, SpriteDirection.NorthEast);
         AssertDirectionMappings(viewModel, SpriteDirection.South);
@@ -1059,13 +1154,13 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 2));
 
         AssertDirectionMappings(viewModel, SpriteDirection.SouthEast, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.NorthWest, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.NorthWest, (new PixelCoordinate(3, 2), new PixelCoordinate(0, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.SouthWest, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.NorthEast, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.NorthEast, (new PixelCoordinate(3, 2), new PixelCoordinate(0, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.South, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.North, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.North, (new PixelCoordinate(3, 2), new PixelCoordinate(0, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.East, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.West, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.West, (new PixelCoordinate(3, 2), new PixelCoordinate(0, 1)));
     }
 
     [Fact]

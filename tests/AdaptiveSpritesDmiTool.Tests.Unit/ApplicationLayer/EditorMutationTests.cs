@@ -219,6 +219,229 @@ public sealed class EditorMutationTests
     }
 
     [Fact]
+    public void MappingProjectionShouldMirrorEditableAndSourceAcrossParallelDirections()
+    {
+        var options = Options(
+            new SpriteResolution(4, 4),
+            SupportedDirectionSet.Four,
+            SpriteDirection.South,
+            DirectionPropagationScope.Parallel,
+            mirror: true,
+            offset: 0);
+
+        var result = DirectionProjectionPolicy.ProjectMapping(
+            new PixelCoordinate(0, 1),
+            new PixelCoordinate(2, 2),
+            options);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Mappings.Should().Equal(
+            new ProjectedMapping(
+                SpriteDirection.South,
+                new PixelCoordinate(0, 1),
+                new PixelCoordinate(2, 2)),
+            new ProjectedMapping(
+                SpriteDirection.North,
+                new PixelCoordinate(3, 1),
+                new PixelCoordinate(1, 2)));
+        result.Value.SkippedProjectionCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void MappingProjectionShouldUseOrientationParityAcrossAllEightDirections()
+    {
+        var options = Options(
+            new SpriteResolution(4, 4),
+            SupportedDirectionSet.Eight,
+            SpriteDirection.SouthEast,
+            DirectionPropagationScope.All,
+            mirror: true,
+            offset: 0);
+
+        var result = DirectionProjectionPolicy.ProjectMapping(
+            new PixelCoordinate(0, 1),
+            new PixelCoordinate(3, 2),
+            options);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Mappings.Should().HaveCount(8);
+        foreach (var mapping in result.Value.Mappings)
+        {
+            var shouldMirror = DirectionProjectionPolicy.HasOppositeOrientation(
+                SpriteDirection.SouthEast,
+                mapping.Direction);
+            mapping.EditableCoordinate.Should().Be(
+                shouldMirror ? new PixelCoordinate(3, 1) : new PixelCoordinate(0, 1));
+            mapping.SourceCoordinate.Should().Be(
+                shouldMirror ? new PixelCoordinate(0, 2) : new PixelCoordinate(3, 2));
+        }
+    }
+
+    [Theory]
+    [InlineData(-1, 0, 1, 1, 0)]
+    [InlineData(1, 3, 2, 2, 3)]
+    public void MappingProjectionShouldApplyShiftedAxisToBothEndpoints(
+        int offset,
+        int editableX,
+        int sourceX,
+        int expectedEditableX,
+        int expectedSourceX)
+    {
+        var options = Options(
+            new SpriteResolution(4, 4),
+            SupportedDirectionSet.Four,
+            SpriteDirection.South,
+            DirectionPropagationScope.Parallel,
+            mirror: true,
+            offset);
+
+        var result = DirectionProjectionPolicy.ProjectMapping(
+            new PixelCoordinate(editableX, 1),
+            new PixelCoordinate(sourceX, 2),
+            options);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Mappings.Single(mapping => mapping.Direction == SpriteDirection.North)
+            .Should().Be(
+                new ProjectedMapping(
+                    SpriteDirection.North,
+                    new PixelCoordinate(expectedEditableX, 1),
+                    new PixelCoordinate(expectedSourceX, 2)));
+    }
+
+    [Theory]
+    [InlineData(0, 2)]
+    [InlineData(2, 0)]
+    public void MappingProjectionShouldSkipDirectionOnceWhenEitherEndpointIsOutOfBounds(
+        int editableX,
+        int sourceX)
+    {
+        var options = Options(
+            new SpriteResolution(4, 4),
+            SupportedDirectionSet.Four,
+            SpriteDirection.South,
+            DirectionPropagationScope.Parallel,
+            mirror: true,
+            offset: 1);
+
+        var result = DirectionProjectionPolicy.ProjectMapping(
+            new PixelCoordinate(editableX, 1),
+            new PixelCoordinate(sourceX, 2),
+            options);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Mappings.Should().Equal(
+            new ProjectedMapping(
+                SpriteDirection.South,
+                new PixelCoordinate(editableX, 1),
+                new PixelCoordinate(sourceX, 2)));
+        result.Value.SkippedProjectionCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void MappingProjectionShouldPreserveBothEndpointsWhenMirrorIsDisabled()
+    {
+        var options = Options(
+            new SpriteResolution(4, 4),
+            SupportedDirectionSet.Eight,
+            SpriteDirection.South,
+            DirectionPropagationScope.All,
+            mirror: false,
+            offset: 1);
+
+        var result = DirectionProjectionPolicy.ProjectMapping(
+            new PixelCoordinate(0, 1),
+            new PixelCoordinate(2, 3),
+            options);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Mappings.Should().HaveCount(8).And.OnlyContain(mapping =>
+            mapping.EditableCoordinate == new PixelCoordinate(0, 1) &&
+            mapping.SourceCoordinate == new PixelCoordinate(2, 3));
+    }
+
+    [Fact]
+    public void MappingProjectionShouldPreserveBothEndpointsForActiveOnlyScope()
+    {
+        var options = Options(
+            new SpriteResolution(4, 4),
+            SupportedDirectionSet.Four,
+            SpriteDirection.North,
+            DirectionPropagationScope.ActiveOnly,
+            mirror: true,
+            offset: -1);
+
+        var result = DirectionProjectionPolicy.ProjectMapping(
+            new PixelCoordinate(3, 1),
+            new PixelCoordinate(1, 2),
+            options);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Mappings.Should().Equal(
+            new ProjectedMapping(
+                SpriteDirection.North,
+                new PixelCoordinate(3, 1),
+                new PixelCoordinate(1, 2)));
+    }
+
+    [Fact]
+    public void SetSourceStrokeShouldUseProjectedMappingEndpoints()
+    {
+        var options = Options(
+            new SpriteResolution(4, 4),
+            SupportedDirectionSet.Four,
+            SpriteDirection.South,
+            DirectionPropagationScope.Parallel,
+            mirror: true,
+            offset: 0);
+
+        var result = EditorMutationPlanFactory.CreateStroke(
+            [new PixelCoordinate(0, 1)],
+            EditorMappingMutationKind.SetSource,
+            new PixelCoordinate(2, 2),
+            options);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Operations.Should().Equal(
+            new EditorMappingMutation(
+                EditorMappingMutationKind.SetSource,
+                SpriteDirection.South,
+                new PixelCoordinate(0, 1),
+                new PixelCoordinate(2, 2)),
+            new EditorMappingMutation(
+                EditorMappingMutationKind.SetSource,
+                SpriteDirection.North,
+                new PixelCoordinate(3, 1),
+                new PixelCoordinate(1, 2)));
+    }
+
+    [Theory]
+    [InlineData(EditorMappingMutationKind.Restore)]
+    [InlineData(EditorMappingMutationKind.SetTransparent)]
+    public void TargetOnlyStrokeShouldKeepExistingProjectionSemantics(EditorMappingMutationKind kind)
+    {
+        var options = Options(
+            new SpriteResolution(4, 4),
+            SupportedDirectionSet.Four,
+            SpriteDirection.South,
+            DirectionPropagationScope.Parallel,
+            mirror: true,
+            offset: 0);
+
+        var result = EditorMutationPlanFactory.CreateStroke(
+            [new PixelCoordinate(0, 1)],
+            kind,
+            null,
+            options);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Operations.Should().Equal(
+            new EditorMappingMutation(kind, SpriteDirection.South, new PixelCoordinate(0, 1)),
+            new EditorMappingMutation(kind, SpriteDirection.North, new PixelCoordinate(3, 1)));
+        result.Value.Operations.Should().OnlyContain(static operation => operation.SourceCoordinate == null);
+    }
+
+    [Fact]
     public void StrokeInterpolatorShouldFillSparseHorizontalAndDiagonalSamples()
     {
         PixelStrokeInterpolator.Interpolate(

@@ -144,8 +144,8 @@ Run after large presentation, release, or packaging changes:
 14. Add imported DMI state layers, adjust order and opacity, restart, and verify layer settings were restored.
 15. Repeat the editor checks at multiple zoom levels and at Windows display scaling values of 100%, 125%, and 150%.
 16. Enable the mirror-axis guide independently of the grid; verify the centered axis and positive/negative offsets on every Source and Editable canvas.
-17. Exercise Single, Parallel, and All scopes with Mirror both enabled and disabled, including an offset that produces out-of-bounds projections; verify skipped targets are reported and never clamped to an edge.
-18. Draw fast sparse Paint, Erase, and Restore strokes; verify continuity and exactly one Undo step per completed gesture.
+17. Exercise Single, Parallel, and All scopes with Mirror both enabled and disabled. On an asymmetric 4/8-direction asset, verify that propagated source-based edits mirror both `Editable` and `Source`, including their selected-coordinate markers. With a non-zero offset, verify that an out-of-bounds endpoint skips the whole propagated mapping once and neither endpoint is clamped.
+18. Draw fast sparse Paint, Erase, and Restore strokes, including strokes beside every corner with a non-zero mirror offset; verify continuity, exactly one Undo step per completed gesture, and no additional edge/corner pixels.
 19. Verify inclusive Fill bounds, overlapping Move and Select/Move, transparent Erase, and original-pixel Restore.
 20. During a gesture, test Escape, tool/state/direction changes, lost mouse capture, and mouse release outside the canvas; verify cancellation or completion at the last valid coordinate as appropriate.
 21. Save the same asymmetric synthetic DMI both to a new path and in place, then compare preview pixels with the reopened DMI.

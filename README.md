@@ -31,6 +31,7 @@ AdaptiveDMITool-v2.4.0.exe
 - Added managed PNG sheet/sequence exports through sibling staging and ownership manifests; unmanaged directories are never replaced.
 - Added Workspace schema v8 and mixed DMI/PNG batch with independent outputs and 1/4/8 raster profiles.
 - Preserved DMI hotspot metadata through normalization followed by the existing reopen/metadata/RGBA verification.
+- Fixed mirrored source-based edits so opposite directions transform both `Editable` and `Source` coordinates without changing stored config semantics.
 
 V2.4 retains the V2.3 editor and writer hardening:
 

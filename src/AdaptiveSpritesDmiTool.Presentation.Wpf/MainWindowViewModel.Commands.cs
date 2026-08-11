@@ -742,7 +742,7 @@ public partial class WorkspaceShellViewModel
             var directionPayload = new Dictionary<PixelCoordinate, PixelCoordinate?>();
             foreach (var editableCoordinate in area.Enumerate())
             {
-                var scopedEditableCoordinate = TryTransformEditableCoordinate(
+                var scopedEditableCoordinate = TryTransformDirectionCoordinate(
                     editableCoordinate,
                     selectedDirection,
                     direction,

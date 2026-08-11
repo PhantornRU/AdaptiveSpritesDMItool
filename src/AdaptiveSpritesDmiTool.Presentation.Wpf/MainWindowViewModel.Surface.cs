@@ -61,11 +61,22 @@ public partial class WorkspaceShellViewModel
             return;
         }
 
+        foreach (var surface in SourceViewportSurfaces)
+        {
+            surface.TransformedSelectedSourceCoordinate = _selectedSourceCoordinate is { } sourceCoordinate
+                ? TryTransformDirectionCoordinate(
+                    sourceCoordinate,
+                    activeDirection,
+                    surface.Direction,
+                    config)
+                : null;
+        }
+
         foreach (var surface in TargetViewportSurfaces)
         {
             if (_selectedEditableCoordinate.HasValue)
             {
-                surface.TransformedSelectedTargetCoordinate = TryTransformEditableCoordinate(
+                surface.TransformedSelectedTargetCoordinate = TryTransformDirectionCoordinate(
                     _selectedEditableCoordinate.Value,
                     activeDirection,
                     surface.Direction,
@@ -78,12 +89,12 @@ public partial class WorkspaceShellViewModel
 
             if (_selectedArea is { } selectedArea)
             {
-                var p1 = TryTransformEditableCoordinate(
+                var p1 = TryTransformDirectionCoordinate(
                     new PixelCoordinate(selectedArea.Left, selectedArea.Top),
                     activeDirection,
                     surface.Direction,
                     config);
-                var p2 = TryTransformEditableCoordinate(
+                var p2 = TryTransformDirectionCoordinate(
                     new PixelCoordinate(selectedArea.Right, selectedArea.Bottom),
                     activeDirection,
                     surface.Direction,

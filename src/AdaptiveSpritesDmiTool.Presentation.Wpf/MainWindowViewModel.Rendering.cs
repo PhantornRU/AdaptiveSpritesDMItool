@@ -581,8 +581,8 @@ public partial class WorkspaceShellViewModel
                 }
 
                 var destinationLogical = new PixelCoordinate(destinationLogicalX, destinationLogicalY);
-                var origin = TryTransformEditableCoordinate(entry.Key, GetSafeSelectedDirection(), direction, config);
-                var destination = TryTransformEditableCoordinate(destinationLogical, GetSafeSelectedDirection(), direction, config);
+                var origin = TryTransformDirectionCoordinate(entry.Key, GetSafeSelectedDirection(), direction, config);
+                var destination = TryTransformDirectionCoordinate(destinationLogical, GetSafeSelectedDirection(), direction, config);
                 if (origin is null || destination is null)
                 {
                     skipped++;
@@ -720,7 +720,7 @@ public partial class WorkspaceShellViewModel
             CreateDirectionProjectionOptions(config) with { SupportedDirections = supportedDirections });
     }
 
-    private PixelCoordinate? TryTransformEditableCoordinate(
+    private PixelCoordinate? TryTransformDirectionCoordinate(
         PixelCoordinate coordinate,
         SpriteDirection selectedDirection,
         SpriteDirection targetDirection,
@@ -899,8 +899,8 @@ public partial class WorkspaceShellViewModel
     {
         NormalizeSelectedDirection();
         RefreshMappingRows();
-        RefreshInteractionState();
         RebuildActiveSurfaceRenderStates();
+        RefreshInteractionState();
         if (rebuildNavigator)
         {
             RebuildDirectionNavigatorItems();

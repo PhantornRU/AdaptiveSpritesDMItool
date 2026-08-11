@@ -62,7 +62,7 @@
     <sys:String x:Key="Text.Tooltip.OverlayView">Overlay view</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowGrid">Show grid</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowOverlayLayer">Show overlay layer</sys:String>
-    <sys:String x:Key="Text.Tooltip.MirrorDirections">Mirror edits across opposite directions</sys:String>
+    <sys:String x:Key="Text.Tooltip.MirrorDirections">Mirror Editable and Source coordinates across opposite directions</sys:String>
     <sys:String x:Key="Text.Tooltip.CentralizedPropagation">Use centralized mirrored propagation</sys:String>
     <sys:String x:Key="Text.Tooltip.ConfigureMirrorAxis">Configure whole-pixel mirror axis offset</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowMirrorAxisGuide">Show the mirror axis on every canvas</sys:String>

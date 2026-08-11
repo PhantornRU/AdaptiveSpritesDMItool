@@ -32,6 +32,7 @@ AdaptiveDMITool-v2.4.0.exe
 - Workspace schema v8 сохраняет документ, generic auxiliary layers, форматы batch и raster profile.
 - Batch обрабатывает DMI и PNG независимо; ошибка одного output не блокирует другой.
 - Hotspot metadata DMI нормализуется и проверяется повторным открытием вместе с остальными metadata и RGBA hash.
+- Для source-based правок исправлено зеркалирование: противоположные направления преобразуют координаты и `Editable`, и `Source`, не меняя семантику сохранённых конфигов.
 
 V2.4 сохраняет все исправления редактора и writer из V2.3:
 

@@ -62,7 +62,7 @@
     <sys:String x:Key="Text.Tooltip.OverlayView">Режим наложения</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowGrid">Показать сетку</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowOverlayLayer">Показать слой наложения</sys:String>
-    <sys:String x:Key="Text.Tooltip.MirrorDirections">Зеркалить правки в противоположные направления</sys:String>
+    <sys:String x:Key="Text.Tooltip.MirrorDirections">Зеркалить координаты Editable и Source в противоположные направления</sys:String>
     <sys:String x:Key="Text.Tooltip.CentralizedPropagation">Использовать централизованное зеркальное распространение</sys:String>
     <sys:String x:Key="Text.Tooltip.ConfigureMirrorAxis">Настроить смещение оси отражения в целых пикселях</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowMirrorAxisGuide">Показывать ось отражения на всех полотнах</sys:String>

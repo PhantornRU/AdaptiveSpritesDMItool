@@ -1246,7 +1246,7 @@
                                                 ShowCaptions="{Binding DataContext.EditorWorkspace.ShowGridCaptions, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 ShowMirrorAxisGuide="{Binding DataContext.EditorWorkspace.ShowMirrorAxisGuide, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 MirrorAxisOffsetPixels="{Binding DataContext.EditorWorkspace.MirrorAxisOffsetPixels, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                SelectedSourceCoordinate="{Binding DataContext.EditorWorkspace.SelectedSourceCoordinate, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                SelectedSourceCoordinate="{Binding TransformedSelectedSourceCoordinate}"
                                                 HoveredCoordinate="{Binding DataContext.EditorWorkspace.SourceHoveredCoordinate, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 HighlightedCoordinates="{Binding DataContext.EditorWorkspace.SourceLinkedHoverCoordinates, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 PreviewMouseLeftButtonDown="SourceSurface_PreviewMouseLeftButtonDown"
@@ -1688,7 +1688,7 @@
                                                       Content="Layered" />
                                             <CheckBox Style="{StaticResource EditorPrimaryToolbarCheckBoxStyle}"
                                                       IsChecked="{Binding MirrorAcrossDirections, Mode=TwoWay}"
-                                                      ToolTip="Mirror editable coordinates across opposite directions"
+                                                      ToolTip="Mirror Editable and Source coordinates across opposite directions"
                                                       Content="Mirror" />
                                             <Button Style="{StaticResource EditorPrimaryToolbarButtonStyle}"
                                                     Command="{Binding ConfigureMirrorAxisCommand}"
