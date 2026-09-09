@@ -1,4 +1,5 @@
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using DMISharp;
 
 namespace AdaptiveSpritesDmiTool.Infrastructure.Dmi;
@@ -46,6 +47,15 @@ internal static class DmiSharpConversions
                 StateDirection.NorthEast,
                 StateDirection.NorthWest
             ],
+            _ => throw new ArgumentOutOfRangeException(nameof(depth), depth, "Unsupported DMI direction depth.")
+        };
+
+    public static SpriteDirectionDepth ToDomainDepth(DirectionDepth depth) =>
+        depth switch
+        {
+            DirectionDepth.One => SpriteDirectionDepth.One,
+            DirectionDepth.Four => SpriteDirectionDepth.Four,
+            DirectionDepth.Eight => SpriteDirectionDepth.Eight,
             _ => throw new ArgumentOutOfRangeException(nameof(depth), depth, "Unsupported DMI direction depth.")
         };
 

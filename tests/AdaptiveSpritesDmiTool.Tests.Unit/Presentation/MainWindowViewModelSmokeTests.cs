@@ -1,6 +1,7 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using AdaptiveSpritesDmiTool.Presentation.Wpf;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -25,7 +26,8 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.SelectedEditorViewportMode.Should().Be(EditorViewportMode.Matrix);
         viewModel.SelectedBottomWorkspaceTab.Should().Be(BottomWorkspaceTab.Mappings);
         viewModel.StatusMessage.Should().Be("Ready.");
-        viewModel.NavigationRail.Items.Should().HaveCount(4);
+        viewModel.NavigationRail.Items.Should().HaveCount(5);
+        viewModel.NavigationRail.Items.Should().ContainSingle(item => item.Section == ShellSectionKind.Documents);
         viewModel.EditorWorkspace.IsAvailable.Should().BeFalse();
         viewModel.BatchWorkspace.IsAvailable.Should().BeFalse();
         viewModel.StartTab.ShowCreateConfigAction.Should().BeFalse();
@@ -737,6 +739,46 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
+    public async Task MirroredFillShouldProjectSelectedSourceForOppositeDirection()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+        viewModel.SelectedEditorTool = EditorTool.Fill;
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 1, 1));
+        viewModel.HandleTargetCellPointerEnter(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+
+        AssertDirectionMappings(
+            viewModel,
+            SpriteDirection.South,
+            (new PixelCoordinate(1, 1), new PixelCoordinate(0, 1)),
+            (new PixelCoordinate(2, 1), new PixelCoordinate(0, 1)),
+            (new PixelCoordinate(1, 2), new PixelCoordinate(0, 1)),
+            (new PixelCoordinate(2, 2), new PixelCoordinate(0, 1)));
+        AssertDirectionMappings(
+            viewModel,
+            SpriteDirection.North,
+            (new PixelCoordinate(2, 1), new PixelCoordinate(3, 1)),
+            (new PixelCoordinate(1, 1), new PixelCoordinate(3, 1)),
+            (new PixelCoordinate(2, 2), new PixelCoordinate(3, 1)),
+            (new PixelCoordinate(1, 2), new PixelCoordinate(3, 1)));
+    }
+
+    [Fact]
     public async Task PaintStrokeShouldInterpolateSparsePointerSamplesAndCommitOneUndoStep()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
@@ -919,7 +961,58 @@ public sealed class MainWindowViewModelSmokeTests
     }
 
     [Fact]
-    public async Task ParallelScopeShouldMirrorEditableCoordinatesUsingExactCenter()
+    public async Task ParallelScopeShouldMirrorEditableAndSourceCoordinatesUsingExactCenter()
+    {
+        var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
+        var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
+        var session = new EditorSession();
+        var viewModel = CreateViewModel(
+            settingsRepository,
+            dmiReader: new SuccessfulDmiReader(SupportedDirectionSet.Four),
+            fileDialogService: dialogService,
+            editorSession: session);
+
+        await viewModel.InitializeAsync();
+        await viewModel.OpenDmiCommand.ExecuteAsync(null);
+        viewModel.CreateConfigCommand.Execute(null);
+
+        viewModel.HideInactiveSourceCanvases = false;
+        viewModel.MirrorAcrossDirections = true;
+        viewModel.MirrorAxisOffsetPixels = 0;
+        viewModel.SelectedDirection = SpriteDirection.South;
+        viewModel.SelectedDirectionScope = DirectionScope.Parallel;
+
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 2, 2));
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+
+        viewModel.SourceViewportSurfaces
+            .Single(surface => surface.Direction == SpriteDirection.North)
+            .TransformedSelectedSourceCoordinate
+            .Should()
+            .Be(new PixelCoordinate(1, 2));
+
+        AssertDirectionMappings(
+            viewModel,
+            SpriteDirection.South,
+            (new PixelCoordinate(0, 1), new PixelCoordinate(2, 2)));
+        AssertDirectionMappings(
+            viewModel,
+            SpriteDirection.North,
+            (new PixelCoordinate(3, 1), new PixelCoordinate(1, 2)));
+        AssertDirectionMappings(viewModel, SpriteDirection.East);
+        AssertDirectionMappings(viewModel, SpriteDirection.West);
+
+        session.Undo().IsSuccess.Should().BeTrue();
+        AssertDirectionMappings(viewModel, SpriteDirection.South);
+        AssertDirectionMappings(viewModel, SpriteDirection.North);
+        session.Redo().IsSuccess.Should().BeTrue();
+        session.CurrentConfig!.GetMappings(SpriteDirection.South).Should().ContainSingle();
+        session.CurrentConfig.GetMappings(SpriteDirection.North).Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task MirroredSetSourceShouldSkipDirectionWhenSourceProjectionIsOutOfBounds()
     {
         var settingsRepository = new InMemorySettingsRepository(WorkspaceSettings.Empty);
         var dialogService = new StubFileDialogService { DmiPath = "sprite.dmi" };
@@ -932,25 +1025,29 @@ public sealed class MainWindowViewModelSmokeTests
         await viewModel.OpenDmiCommand.ExecuteAsync(null);
         viewModel.CreateConfigCommand.Execute(null);
 
+        viewModel.HideInactiveSourceCanvases = false;
         viewModel.MirrorAcrossDirections = true;
-        viewModel.MirrorAxisOffsetPixels = 0;
+        viewModel.MirrorAxisOffsetPixels = 1;
         viewModel.SelectedDirection = SpriteDirection.South;
         viewModel.SelectedDirectionScope = DirectionScope.Parallel;
 
-        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 2, 2));
-        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 1));
-        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 0, 1));
+        viewModel.HandleSourceCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 0, 2));
 
+        viewModel.SourceViewportSurfaces
+            .Single(surface => surface.Direction == SpriteDirection.North)
+            .TransformedSelectedSourceCoordinate
+            .Should()
+            .BeNull();
+
+        viewModel.HandleTargetCellPointerDown(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+        viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.South, 2, 1));
+
+        viewModel.StatusMessage.Should().Contain("Skipped 1 out-of-bounds projection");
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.South,
-            (new PixelCoordinate(0, 1), new PixelCoordinate(2, 2)));
-        AssertDirectionMappings(
-            viewModel,
-            SpriteDirection.North,
-            (new PixelCoordinate(3, 1), new PixelCoordinate(2, 2)));
-        AssertDirectionMappings(viewModel, SpriteDirection.East);
-        AssertDirectionMappings(viewModel, SpriteDirection.West);
+            (new PixelCoordinate(2, 1), new PixelCoordinate(0, 2)));
+        AssertDirectionMappings(viewModel, SpriteDirection.North);
     }
 
     [Fact]
@@ -983,7 +1080,7 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.North,
-            (new PixelCoordinate(3, 1), new PixelCoordinate(2, 2)));
+            (new PixelCoordinate(3, 1), new PixelCoordinate(1, 2)));
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.East,
@@ -991,7 +1088,7 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.West,
-            (new PixelCoordinate(3, 1), new PixelCoordinate(2, 2)));
+            (new PixelCoordinate(3, 1), new PixelCoordinate(1, 2)));
     }
 
     [Fact]
@@ -1024,7 +1121,7 @@ public sealed class MainWindowViewModelSmokeTests
         AssertDirectionMappings(
             viewModel,
             SpriteDirection.NorthWest,
-            (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
+            (new PixelCoordinate(3, 2), new PixelCoordinate(0, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.SouthWest);
         AssertDirectionMappings(viewModel, SpriteDirection.NorthEast);
         AssertDirectionMappings(viewModel, SpriteDirection.South);
@@ -1057,13 +1154,13 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.HandleTargetCellPointerUp(new PixelCellViewModel(SpriteDirection.SouthEast, 0, 2));
 
         AssertDirectionMappings(viewModel, SpriteDirection.SouthEast, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.NorthWest, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.NorthWest, (new PixelCoordinate(3, 2), new PixelCoordinate(0, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.SouthWest, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.NorthEast, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.NorthEast, (new PixelCoordinate(3, 2), new PixelCoordinate(0, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.South, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.North, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.North, (new PixelCoordinate(3, 2), new PixelCoordinate(0, 1)));
         AssertDirectionMappings(viewModel, SpriteDirection.East, (new PixelCoordinate(0, 2), new PixelCoordinate(3, 1)));
-        AssertDirectionMappings(viewModel, SpriteDirection.West, (new PixelCoordinate(3, 2), new PixelCoordinate(3, 1)));
+        AssertDirectionMappings(viewModel, SpriteDirection.West, (new PixelCoordinate(3, 2), new PixelCoordinate(0, 1)));
     }
 
     [Fact]
@@ -1808,7 +1905,7 @@ public sealed class MainWindowViewModelSmokeTests
         {
             foreach (var direction in expectedDirections)
             {
-                var key = (sourcePath, stateName, direction);
+                var key = (sourcePath, stateName, direction, 0, SpriteSourceFormat.Dmi);
                 cache.Contains(key).Should().BeTrue(
                     $"Cache should contain key for state '{stateName}', direction {direction}");
             }
@@ -2194,6 +2291,85 @@ public sealed class MainWindowViewModelSmokeTests
         viewModel.PreviewSummary.Should().Contain("missing or not selected");
     }
 
+    [Fact]
+    public async Task DocumentWorkspaceShouldResolveChangedAndMissingSourcesBeforeOpeningAtomically()
+    {
+        var changedSourceId = Guid.NewGuid();
+        var missingSourceId = Guid.NewGuid();
+        var document = new SpriteDocument(
+            Guid.NewGuid(),
+            "resolved-project",
+            new SpriteResolution(1, 1),
+            [
+                new SpriteSourceReference(
+                    changedSourceId,
+                    "changed.png",
+                    @"C:\assets\changed.png",
+                    SpriteSourceFormat.Png,
+                    1,
+                    1,
+                    1,
+                    new string('a', 64)),
+                new SpriteSourceReference(
+                    missingSourceId,
+                    "missing.png",
+                    @"C:\assets\missing.png",
+                    SpriteSourceFormat.Png,
+                    1,
+                    1,
+                    1,
+                    new string('b', 64))
+            ],
+            [
+                new SpriteDocumentState(
+                    "idle",
+                    SpriteDirectionDepth.One,
+                    1,
+                    SpriteAnimationMetadata.Static,
+                    [
+                        new SpriteDocumentFrame(
+                            SpriteDirection.South,
+                            0,
+                            new SpriteFrameReference(
+                                changedSourceId,
+                                new SpriteSourceRectangle(0, 0, 1, 1)))
+                    ])
+            ]);
+        var repository = new SourceResolutionDocumentRepository(document, changedSourceId, missingSourceId);
+        var unusedServices = new UnusedSpriteDocumentServices();
+        var documentSession = new SpriteDocumentSession();
+        var workflow = new SpriteDocumentWorkflow(
+            unusedServices,
+            unusedServices,
+            repository,
+            unusedServices,
+            unusedServices,
+            documentSession);
+        var dialogs = new StubFileDialogService
+        {
+            SpriteDocumentPath = @"C:\projects\sprite.adaptive-dmi.json",
+            SourceChangeChoice = SpriteSourceChangeChoice.AcceptNewFingerprint,
+            RelinkSourcePath = @"C:\replacement\missing.png"
+        };
+        var viewModel = CreateViewModel(
+            new InMemorySettingsRepository(WorkspaceSettings.Empty),
+            fileDialogService: dialogs,
+            spriteDocumentWorkflow: workflow);
+
+        await viewModel.DocumentWorkspace.OpenDocumentCommand.ExecuteAsync(null);
+
+        repository.Requests.Should().HaveCount(3);
+        repository.Requests[1].AcceptedChangedSources.Should().Contain(changedSourceId);
+        repository.Requests[2].AcceptedChangedSources.Should().Contain(changedSourceId);
+        repository.Requests[2].RelinkedSources.Should().ContainKey(missingSourceId)
+            .WhoseValue.Should().Be(dialogs.RelinkSourcePath);
+        dialogs.SourceChangePromptCount.Should().Be(1);
+        dialogs.RelinkPromptCount.Should().Be(1);
+        documentSession.CurrentDocument.Should().BeSameAs(document);
+        documentSession.IsDirty.Should().BeTrue();
+        viewModel.DocumentWorkspace.IsDocumentDirty.Should().BeTrue();
+    }
+
     private static MainWindowViewModel CreateViewModel(
         InMemorySettingsRepository settingsRepository,
         IConfigRepository? configRepository = null,
@@ -2204,7 +2380,8 @@ public sealed class MainWindowViewModelSmokeTests
         IBatchProcessingService? batchProcessingService = null,
         IFileDialogService? fileDialogService = null,
         EditorSession? editorSession = null,
-        ILogger<WorkspaceShellViewModel>? logger = null)
+        ILogger<WorkspaceShellViewModel>? logger = null,
+        SpriteDocumentWorkflow? spriteDocumentWorkflow = null)
     {
         var session = editorSession ?? new EditorSession();
         var workspace = new EditorWorkspaceService();
@@ -2230,7 +2407,8 @@ public sealed class MainWindowViewModelSmokeTests
             new SpriteImageBitmapSourceFactory(),
             fileDialogService ?? new StubFileDialogService(),
             session,
-            logger ?? NullLogger<WorkspaceShellViewModel>.Instance);
+            logger ?? NullLogger<WorkspaceShellViewModel>.Instance,
+            spriteDocumentWorkflow);
     }
 
     private static BatchSourceTreeItemViewModel[] BuildBatchSourceTreeItemsForTest(
@@ -2600,6 +2778,63 @@ public sealed class MainWindowViewModelSmokeTests
         }
     }
 
+    private sealed class SourceResolutionDocumentRepository(
+        SpriteDocument document,
+        Guid changedSourceId,
+        Guid missingSourceId) : ISpriteDocumentRepository
+    {
+        public List<SpriteDocumentLoadRequest> Requests { get; } = [];
+
+        public Task<Result<SpriteDocument>> LoadAsync(
+            SpriteDocumentLoadRequest request,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Requests.Add(request);
+            var result = Requests.Count switch
+            {
+                1 => Result.Failure<SpriteDocument>(SpriteDocumentSourceErrors.Changed(changedSourceId, "changed.png")),
+                2 => Result.Failure<SpriteDocument>(SpriteDocumentSourceErrors.Missing(missingSourceId, "missing.png")),
+                _ => Result.Success(document)
+            };
+            return Task.FromResult(result);
+        }
+
+        public Task<Result> SaveAsync(
+            string projectPath,
+            SpriteDocument savedDocument,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Success());
+    }
+
+    private sealed class UnusedSpriteDocumentServices :
+        IAssetProbeService,
+        ISpriteDocumentImporter,
+        ISpriteFrameSource,
+        ISpriteDocumentExporter
+    {
+        public Task<Result<AssetProbe>> ProbeAsync(
+            string path,
+            AssetImportLimits limits,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Failure<AssetProbe>(Errors.Unexpected("Probe should not be called.")));
+
+        public Task<Result<SpriteDocument>> ImportAsync(
+            SpriteDocumentImportRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Failure<SpriteDocument>(Errors.Unexpected("Import should not be called.")));
+
+        public Task<Result<SpriteImage>> ReadAsync(
+            SpriteFrameReadRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Failure<SpriteImage>(Errors.Unexpected("Frame read should not be called.")));
+
+        public Task<Result<SpriteDocumentExportResult>> ExportAsync(
+            SpriteDocumentExportRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Failure<SpriteDocumentExportResult>(Errors.Unexpected("Export should not be called.")));
+    }
+
     private sealed class StubFileDialogService : IFileDialogService
     {
         public string? DmiPath { get; init; }
@@ -2610,6 +2845,16 @@ public sealed class MainWindowViewModelSmokeTests
 
         public string? BatchDirectory { get; init; }
 
+        public string? SpriteDocumentPath { get; init; }
+
+        public SpriteSourceChangeChoice SourceChangeChoice { get; init; } = SpriteSourceChangeChoice.Cancel;
+
+        public string? RelinkSourcePath { get; init; }
+
+        public int SourceChangePromptCount { get; private set; }
+
+        public int RelinkPromptCount { get; private set; }
+
         public string? OpenDmiFile(string? initialPath) => DmiPath ?? initialPath;
 
         public string? OpenConfigFile(string? initialPath) => ConfigPath ?? initialPath;
@@ -2619,6 +2864,20 @@ public sealed class MainWindowViewModelSmokeTests
         public string? OpenLegacyCsvFile(string? initialPath) => LegacyCsvPath ?? initialPath;
 
         public string? SelectDirectory(string description, string? initialPath) => BatchDirectory ?? initialPath;
+
+        public string? OpenSpriteDocumentFile(string? initialPath) => SpriteDocumentPath ?? initialPath;
+
+        public SpriteSourceChangeChoice ResolveSpriteSourceChange(SpriteDocumentSourceIssue issue)
+        {
+            SourceChangePromptCount++;
+            return SourceChangeChoice;
+        }
+
+        public string? RelinkSpriteSource(SpriteDocumentSourceIssue issue, string? initialPath)
+        {
+            RelinkPromptCount++;
+            return RelinkSourcePath;
+        }
     }
 
     private static SpriteImage CreateCoordinateImage(int width, int height)

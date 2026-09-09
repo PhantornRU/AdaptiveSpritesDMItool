@@ -1,3 +1,4 @@
+using System.Globalization;
 using DMISharp;
 using FluentAssertions;
 using SixLabors.ImageSharp;
@@ -22,7 +23,17 @@ internal static class TestDmiFactory
             dmiFile.AddState(state);
         }
 
-        dmiFile.Save(path);
+        var originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+            dmiFile.Save(path);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+
         File.Exists(path).Should().BeTrue();
     }
 

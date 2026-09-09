@@ -114,6 +114,26 @@ public sealed class DeterministicBatchProcessingServiceTests : IDisposable
         progress.Values[^1].CurrentFile.Should().BeNull();
     }
 
+    [Fact]
+    public async Task InputLayoutShouldIncludePngAndExcludeNestedOutputTree()
+    {
+        var inputDirectory = CreateDirectory("layout-input");
+        var outputDirectory = Path.Combine(inputDirectory, "processed");
+        Directory.CreateDirectory(outputDirectory);
+        var dmiPath = Path.Combine(inputDirectory, "a.dmi");
+        var pngPath = Path.Combine(inputDirectory, "b.png");
+        var ignoredPath = Path.Combine(inputDirectory, "c.json");
+        var outputPngPath = Path.Combine(outputDirectory, "generated.png");
+        await File.WriteAllTextAsync(dmiPath, "dmi");
+        await File.WriteAllTextAsync(pngPath, "png");
+        await File.WriteAllTextAsync(ignoredPath, "json");
+        await File.WriteAllTextAsync(outputPngPath, "generated");
+
+        var resolved = BatchPathLayout.ResolveInputFiles(inputDirectory, outputDirectory, explicitFiles: null);
+
+        resolved.Should().Equal(Path.GetFullPath(dmiPath), Path.GetFullPath(pngPath));
+    }
+
     private static BatchJobRequest CreateRequest(string inputDirectory, string outputDirectory, OverwritePolicy overwritePolicy) =>
         new(
             inputDirectory,

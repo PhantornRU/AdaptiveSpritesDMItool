@@ -1,6 +1,7 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using System.IO;
@@ -741,7 +742,7 @@ public partial class WorkspaceShellViewModel
             var directionPayload = new Dictionary<PixelCoordinate, PixelCoordinate?>();
             foreach (var editableCoordinate in area.Enumerate())
             {
-                var scopedEditableCoordinate = TryTransformEditableCoordinate(
+                var scopedEditableCoordinate = TryTransformDirectionCoordinate(
                     editableCoordinate,
                     selectedDirection,
                     direction,
@@ -933,24 +934,33 @@ public partial class WorkspaceShellViewModel
                 : Path.GetFileName(item.FullPath);
 
         _selectedBatchPreviewAsset = null;
-        if (item is { IsDirectory: false } &&
-            item.FullPath.EndsWith(".dmi", StringComparison.OrdinalIgnoreCase) &&
-            File.Exists(item.FullPath))
+        if (item is { IsDirectory: false } && File.Exists(item.FullPath))
         {
-            var inspectResult = await _inspectDmiFileUseCase.ExecuteAsync(item.FullPath, CancellationToken.None);
-            if (inspectResult.IsSuccess)
+            if (_spriteDocumentWorkflow is not null)
             {
-                var currentResolution = ResolveEditorResolution();
-                item.IsValid = currentResolution is null || inspectResult.Value.Resolution == currentResolution.Value;
-                item.ValidationMessage = item.IsValid
-                    ? string.Empty
-                    : $"Resolution {inspectResult.Value.Resolution} does not match current {currentResolution!.Value}.";
-                _selectedBatchPreviewAsset = inspectResult.Value;
+                var probeResult = await _spriteDocumentWorkflow.ProbeAsync(item.FullPath, CancellationToken.None);
+                if (probeResult.IsFailure)
+                {
+                    item.IsValid = false;
+                    item.ValidationMessage = probeResult.Error.Message;
+                }
+                else if (probeResult.Value.DetectedFormat == SpriteSourceFormat.Dmi)
+                {
+                    await InspectSelectedBatchDmiAsync(item, CancellationToken.None);
+                }
+                else
+                {
+                    var currentResolution = ResolveEditorResolution();
+                    var assetResolution = new SpriteResolution(probeResult.Value.Width, probeResult.Value.Height);
+                    item.IsValid = currentResolution is null || assetResolution == currentResolution.Value;
+                    item.ValidationMessage = item.IsValid
+                        ? string.Empty
+                        : $"Resolution {assetResolution} does not match current {currentResolution!.Value}.";
+                }
             }
             else
             {
-                item.IsValid = false;
-                item.ValidationMessage = inspectResult.Error.Message;
+                await InspectSelectedBatchDmiAsync(item, CancellationToken.None);
             }
         }
         else if (item is not null)
@@ -960,6 +970,26 @@ public partial class WorkspaceShellViewModel
         }
 
         RefreshBatchPipelineState(rebuildSourceTree: false);
+    }
+
+    private async Task InspectSelectedBatchDmiAsync(
+        BatchSourceTreeItemViewModel item,
+        CancellationToken cancellationToken)
+    {
+        var inspectResult = await _inspectDmiFileUseCase.ExecuteAsync(item.FullPath, cancellationToken);
+        if (inspectResult.IsFailure)
+        {
+            item.IsValid = false;
+            item.ValidationMessage = inspectResult.Error.Message;
+            return;
+        }
+
+        var currentResolution = ResolveEditorResolution();
+        item.IsValid = currentResolution is null || inspectResult.Value.Resolution == currentResolution.Value;
+        item.ValidationMessage = item.IsValid
+            ? string.Empty
+            : $"Resolution {inspectResult.Value.Resolution} does not match current {currentResolution!.Value}.";
+        _selectedBatchPreviewAsset = inspectResult.Value;
     }
 
     [RelayCommand]
@@ -1006,7 +1036,7 @@ public partial class WorkspaceShellViewModel
     [RelayCommand]
     private void BrowseBatchInputDirectory()
     {
-        var path = _fileDialogService.SelectDirectory("Select the folder with DMI files to process.", BatchInputDirectory);
+        var path = _fileDialogService.SelectDirectory("Select the folder with DMI and PNG files to process.", BatchInputDirectory);
         if (!string.IsNullOrWhiteSpace(path))
         {
             BatchInputDirectory = path;
@@ -1016,7 +1046,7 @@ public partial class WorkspaceShellViewModel
     [RelayCommand]
     private void BrowseBatchOutputDirectory()
     {
-        var path = _fileDialogService.SelectDirectory("Select the output folder for processed DMI files.", BatchOutputDirectory);
+        var path = _fileDialogService.SelectDirectory("Select the output folder for processed assets.", BatchOutputDirectory);
         if (!string.IsNullOrWhiteSpace(path))
         {
             BatchOutputDirectory = path;
@@ -1314,7 +1344,7 @@ public partial class WorkspaceShellViewModel
                     state.Name,
                     SpriteDirection.South,
                     cancellationToken);
-                _importedStateFrameCache[(asset.SourcePath ?? string.Empty, state.Name, SpriteDirection.South)] =
+                _importedStateFrameCache[(asset.SourcePath ?? string.Empty, state.Name, SpriteDirection.South, 0, SpriteSourceFormat.Dmi)] =
                     previewResult.IsSuccess ? previewResult.Value : null;
 
                 // Warm up cache for all supported directions of the asset
@@ -1469,7 +1499,7 @@ public partial class WorkspaceShellViewModel
             state.StateName,
             SpriteDirection.South,
             cancellationToken);
-        _importedStateFrameCache[(state.SourcePath, state.StateName, SpriteDirection.South)] =
+        _importedStateFrameCache[(state.SourcePath, state.StateName, SpriteDirection.South, 0, SpriteSourceFormat.Dmi)] =
             previewResult.IsSuccess ? previewResult.Value : null;
 
         // Warm up cache for all available directions
@@ -1551,6 +1581,32 @@ public partial class WorkspaceShellViewModel
                     item.IsValid = true;
                     item.ValidationMessage = string.Empty;
                     continue;
+                }
+
+                if (_spriteDocumentWorkflow is not null)
+                {
+                    var probeResult = await _spriteDocumentWorkflow.ProbeAsync(item.FullPath, cancellationToken);
+                    if (validationVersion != _batchSourceValidationVersion)
+                    {
+                        return;
+                    }
+
+                    if (probeResult.IsFailure)
+                    {
+                        item.IsValid = false;
+                        item.ValidationMessage = probeResult.Error.Message;
+                        continue;
+                    }
+
+                    if (probeResult.Value.DetectedFormat == SpriteSourceFormat.Png)
+                    {
+                        var assetResolution = new SpriteResolution(probeResult.Value.Width, probeResult.Value.Height);
+                        item.IsValid = resolution is null || assetResolution == resolution.Value;
+                        item.ValidationMessage = item.IsValid
+                            ? string.Empty
+                            : $"Resolution {assetResolution} does not match current {resolution!.Value}.";
+                        continue;
+                    }
                 }
 
                 var inspectResult = await _inspectDmiFileUseCase.ExecuteAsync(item.FullPath, cancellationToken);

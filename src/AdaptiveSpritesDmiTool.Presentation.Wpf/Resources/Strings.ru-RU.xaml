@@ -5,6 +5,20 @@
     <sys:String x:Key="Text.Tab.Editor">Редактор</sys:String>
     <sys:String x:Key="Text.Tab.Data">Данные</sys:String>
     <sys:String x:Key="Text.Tab.Settings">Настройки</sys:String>
+    <sys:String x:Key="Text.Tab.Documents">Документы</sys:String>
+    <sys:String x:Key="Text.Documents.Title">Документы спрайтов</sys:String>
+    <sys:String x:Key="Text.Documents.NoDocument">Документ не открыт</sys:String>
+    <sys:String x:Key="Text.Documents.EmptySummary">Откройте DMI или импортируйте PNG-графику.</sys:String>
+    <sys:String x:Key="Text.Documents.Unsaved">Несохраненный проект</sys:String>
+    <sys:String x:Key="Text.Documents.Open">Открыть DMI / проект</sys:String>
+    <sys:String x:Key="Text.Documents.SaveProject">Сохранить проект</sys:String>
+    <sys:String x:Key="Text.Documents.ImportPng">Импорт PNG / последовательности</sys:String>
+    <sys:String x:Key="Text.Documents.ImportSheet">Импорт sprite sheet</sys:String>
+    <sys:String x:Key="Text.Documents.SourceChangedTitle">Источник спрайта изменен</sys:String>
+    <sys:String x:Key="Text.Documents.SourceChangedPrompt">Источник '{0}' изменился после сохранения проекта.&#10;&#10;Да: принять новый fingerprint.&#10;Нет: выбрать файл-замену.&#10;Отмена: оставить текущий документ без изменений.</sys:String>
+    <sys:String x:Key="Text.Documents.RelinkSourceTitleFormat">Перепривязать источник спрайта: {0}</sys:String>
+    <sys:String x:Key="Text.Documents.OpenedDirtyFormat">Открыт '{0}'. Сохраните проект, чтобы записать обновленные fingerprints источников.</sys:String>
+    <sys:String x:Key="Text.Documents.LoadCancelled">Загрузка документа отменена; текущий документ не изменен.</sys:String>
 
     <sys:String x:Key="Text.OpenDmi">Открыть DMI</sys:String>
     <sys:String x:Key="Text.SaveConfig">Сохранить конфиг</sys:String>
@@ -48,7 +62,7 @@
     <sys:String x:Key="Text.Tooltip.OverlayView">Режим наложения</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowGrid">Показать сетку</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowOverlayLayer">Показать слой наложения</sys:String>
-    <sys:String x:Key="Text.Tooltip.MirrorDirections">Зеркалить правки в противоположные направления</sys:String>
+    <sys:String x:Key="Text.Tooltip.MirrorDirections">Зеркалить координаты Editable и Source в противоположные направления</sys:String>
     <sys:String x:Key="Text.Tooltip.CentralizedPropagation">Использовать централизованное зеркальное распространение</sys:String>
     <sys:String x:Key="Text.Tooltip.ConfigureMirrorAxis">Настроить смещение оси отражения в целых пикселях</sys:String>
     <sys:String x:Key="Text.Tooltip.ShowMirrorAxisGuide">Показывать ось отражения на всех полотнах</sys:String>
@@ -164,11 +178,11 @@
     <sys:String x:Key="Text.Batch.ProcessingFailed">Batch-обработка завершилась ошибкой.</sys:String>
     <sys:String x:Key="Text.Batch.SummaryFinishedFormat">Batch завершен: обработано {0}, пропущено {1}, ошибок {2}, отменено {3}.</sys:String>
     <sys:String x:Key="Text.Batch.SummaryCancelledFormat">Batch отменен: обработано {0}, пропущено {1}, ошибок {2}, отменено {3}.</sys:String>
-    <sys:String x:Key="Text.Batch.AllDmiFiles">Все DMI-файлы</sys:String>
+    <sys:String x:Key="Text.Batch.AllDmiFiles">Все DMI- и PNG-файлы</sys:String>
     <sys:String x:Key="Text.Batch.WholeSourceFolder">Вся папка источника</sys:String>
     <sys:String x:Key="Text.Batch.SelectedFolder">Выбранная папка</sys:String>
     <sys:String x:Key="Text.Batch.SelectedFile">Выбранный файл</sys:String>
-    <sys:String x:Key="Text.Batch.SelectValidDmi">Выберите хотя бы один валидный DMI-файл для batch-запуска.</sys:String>
+    <sys:String x:Key="Text.Batch.SelectValidDmi">Выберите хотя бы один валидный DMI- или PNG-файл для batch-запуска.</sys:String>
     <sys:String x:Key="Text.Batch.NoConfig">Нет конфига</sys:String>
     <sys:String x:Key="Text.Batch.LoadConfig">Загрузите конфиг</sys:String>
     <sys:String x:Key="Text.Batch.NoState">Нет состояния</sys:String>
@@ -177,4 +191,7 @@
     <sys:String x:Key="Text.Batch.SelectStatePreview">Выберите состояние для сравнения оригинала и результата.</sys:String>
     <sys:String x:Key="Text.Batch.SelectedStateFormat">Выбрано состояние: {0}</sys:String>
     <sys:String x:Key="Text.Batch.NoPreviewSelection">Нет выбранного предпросмотра.</sys:String>
+    <sys:String x:Key="Text.Batch.Formats">Форматы вывода</sys:String>
+    <sys:String x:Key="Text.Batch.RasterDirections">Направления PNG</sys:String>
+    <sys:String x:Key="Text.Batch.PngLayout">Раскладка PNG</sys:String>
 </ResourceDictionary>

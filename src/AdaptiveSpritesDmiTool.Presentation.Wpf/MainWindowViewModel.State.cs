@@ -64,6 +64,7 @@ public partial class WorkspaceShellViewModel
     [NotifyPropertyChangedFor(nameof(IsEditorSectionSelected))]
     [NotifyPropertyChangedFor(nameof(IsBatchSectionSelected))]
     [NotifyPropertyChangedFor(nameof(IsSettingsSectionSelected))]
+    [NotifyPropertyChangedFor(nameof(IsDocumentsSectionSelected))]
     private ShellSectionKind selectedShellSection = ShellSectionKind.Start;
 
     [ObservableProperty]
@@ -535,4 +536,6 @@ public partial class WorkspaceShellViewModel
     public bool IsBatchSectionSelected => SelectedShellSection == ShellSectionKind.Batch;
 
     public bool IsSettingsSectionSelected => SelectedShellSection == ShellSectionKind.Settings;
+
+    public bool IsDocumentsSectionSelected => SelectedShellSection == ShellSectionKind.Documents;
 }

@@ -191,7 +191,9 @@ public partial class WorkspaceShellViewModel
                     SelectedOverwritePolicy,
                     progress,
                     explicitFiles,
-                    cancellationToken);
+                    cancellationToken,
+                    _selectedBatchOutputFormats,
+                    _rasterExportSettings);
 
                 if (result.IsFailure)
                 {

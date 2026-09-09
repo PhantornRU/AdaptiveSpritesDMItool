@@ -1,6 +1,14 @@
-# Переход с CSV на JSON
+# Миграция данных v2.4.0
 
-В v2.3.0 основной формат конфигов - JSON schema v2. CSV оставлен для импорта старых таблиц mapping.
+В v2.4.0 основной формат mapping-конфигов остается JSON schema v2. CSV оставлен для импорта старых таблиц mapping.
+
+## Workspace v7 -> v8
+
+Workspace v7 открывается автоматически. DMI-specific imported state entries преобразуются в auxiliary DMI layers, все V2.3 mirror/editor settings сохраняются, а набор batch export formats инициализируется значениями DMI + PNG. Mapping JSON при этом не изменяется.
+
+## PNG projects
+
+Импорт PNG создает source-referenced document. Сохраните рядом sidecar `<name>.adaptive-dmi.json`, если проект нужно открыть повторно без повторной настройки нарезки. Переносите sidecar вместе с относительными source-файлами. При изменении или отсутствии source приложение потребует явного relink/accept/cancel для каждого проблемного файла. После accept или relink сохраните sidecar, чтобы записать новый fingerprint/path; до этого проект остается измененным.
 
 ## JSON v1 -> v2
 

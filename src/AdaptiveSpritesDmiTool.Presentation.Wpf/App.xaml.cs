@@ -2,6 +2,7 @@ using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Infrastructure.BatchProcessing;
 using AdaptiveSpritesDmiTool.Infrastructure.Configs;
 using AdaptiveSpritesDmiTool.Infrastructure.Dmi;
+using AdaptiveSpritesDmiTool.Infrastructure.Documents;
 using AdaptiveSpritesDmiTool.Infrastructure.Preview;
 using AdaptiveSpritesDmiTool.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
@@ -145,12 +146,20 @@ public partial class App : System.Windows.Application
             .ConfigureServices(services =>
             {
                 services.AddSingleton<EditorSession>();
+                services.AddSingleton<SpriteDocumentSession>();
                 services.AddSingleton<IWorkspaceService, EditorWorkspaceService>();
                 services.AddSingleton<IConfigRepository, JsonSpriteConfigRepository>();
                 services.AddSingleton<ILegacyCsvConfigImporter, LegacyCsvConfigImporter>();
                 services.AddSingleton<IDmiReader, DmiSharpReader>();
                 services.AddSingleton<IStateFrameReader, DmiSharpStateFrameReader>();
                 services.AddSingleton<IDmiWriter, DmiSharpConfigWriter>();
+                services.AddSingleton<IAssetProbeService, AssetProbeService>();
+                services.AddSingleton<ISpriteDocumentImporter, SpriteDocumentImporter>();
+                services.AddSingleton<ISpriteDocumentRepository, SpriteDocumentSidecarRepository>();
+                services.AddSingleton<ISpriteFrameSource, SpriteFrameSource>();
+                services.AddSingleton<ISpriteDocumentExporter, SpriteDocumentExporter>();
+                services.AddSingleton<IAuxiliaryLayerFrameReader, ContentAwareAuxiliaryLayerFrameReader>();
+                services.AddSingleton<SpriteDocumentWorkflow>();
                 services.AddSingleton<IPreviewBuilder, DmiSharpPreviewBuilder>();
                 services.AddSingleton<IBatchProcessingService, DeterministicBatchProcessingService>();
                 services.AddSingleton<ISettingsRepository>(_ => new JsonWorkspaceSettingsRepository(AppStoragePaths.SettingsFilePath));
@@ -165,6 +174,12 @@ public partial class App : System.Windows.Application
                 services.AddSingleton<ReadStateFrameUseCase>();
                 services.AddSingleton<BuildPreviewUseCase>();
                 services.AddSingleton<ApplyConfigToDmiBatchUseCase>();
+                services.AddSingleton<ProbeAssetUseCase>();
+                services.AddSingleton<ImportSpriteDocumentUseCase>();
+                services.AddSingleton<LoadSpriteDocumentUseCase>();
+                services.AddSingleton<SaveSpriteDocumentUseCase>();
+                services.AddSingleton<ReadSpriteDocumentFrameUseCase>();
+                services.AddSingleton<ExportSpriteDocumentUseCase>();
                 services.AddSingleton<UndoChangeUseCase>();
                 services.AddSingleton<RedoChangeUseCase>();
                 services.AddSingleton<SetPreviewSelectionUseCase>();

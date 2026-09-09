@@ -17,38 +17,6 @@ $extensions = @(
     '.yaml'
 )
 
-$excludedSegments = @(
-    '.git',
-    'bin',
-    'obj'
-)
-
-function Test-IsExcludedPath {
-    param([string] $Path)
-
-    $relativePath = Get-RelativePath -Path $Path
-    $segments = $relativePath -split '[\\/]+'
-
-    foreach ($segment in $segments) {
-        if ($excludedSegments -contains $segment) {
-            return $true
-        }
-    }
-
-    return $false
-}
-
-function Get-RelativePath {
-    param([string] $Path)
-
-    $fullPath = [System.IO.Path]::GetFullPath($Path)
-    if (-not $fullPath.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) {
-        return $fullPath
-    }
-
-    return $fullPath.Substring($root.Length).TrimStart([char[]]@('\', '/'))
-}
-
 function Get-LineColumn {
     param(
         [string] $Text,
@@ -75,54 +43,40 @@ function Get-LineColumn {
 }
 
 $findings = New-Object System.Collections.Generic.List[object]
+$repositoryFiles = @(& git -C $root ls-files --cached --others --exclude-standard)
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to enumerate repository files for the hidden Unicode scan."
+}
 
-Get-ChildItem -Path $root -Recurse -File |
-    Where-Object { $extensions -contains $_.Extension.ToLowerInvariant() } |
-    Where-Object { -not (Test-IsExcludedPath $_.FullName) } |
+$repositoryFiles |
+    Where-Object { $extensions -contains [System.IO.Path]::GetExtension($_).ToLowerInvariant() } |
     ForEach-Object {
-        $file = $_
-        $relativePath = Get-RelativePath -Path $file.FullName
-        $text = [System.IO.File]::ReadAllText($file.FullName, $utf8Strict)
+        $relativePath = $_
+        $fullPath = Join-Path $root $relativePath
+        if (-not [System.IO.File]::Exists($fullPath)) {
+            return
+        }
 
-        for ($i = 0; $i -lt $text.Length; $i++) {
-            if ([System.Char]::IsLowSurrogate($text[$i])) {
+        $text = [System.IO.File]::ReadAllText($fullPath, $utf8Strict)
+
+        $formatCharacters = [System.Text.RegularExpressions.Regex]::Matches(
+            $text,
+            '\p{Cf}',
+            [System.Text.RegularExpressions.RegexOptions]::CultureInvariant)
+        foreach ($match in $formatCharacters) {
+            $index = $match.Index
+            $codePoint = [System.Char]::ConvertToUtf32($text, $index)
+            if ($codePoint -eq 0xFEFF -and $index -eq 0) {
                 continue
             }
 
-            $category = [System.Globalization.CharUnicodeInfo]::GetUnicodeCategory($text, $i)
-
-            if ([System.Char]::IsHighSurrogate($text[$i])) {
-                if ($i + 1 -ge $text.Length -or -not [System.Char]::IsLowSurrogate($text[$i + 1])) {
-                    throw "Invalid UTF-16 surrogate pair in '$relativePath' at index $i."
-                }
-
-                if ($category -ne [System.Globalization.UnicodeCategory]::Format) {
-                    $i++
-                    continue
-                }
-            }
-
-            $codePoint = [System.Char]::ConvertToUtf32($text, $i)
-
-            if ([System.Char]::IsHighSurrogate($text[$i])) {
-                $i++
-            }
-
-            if ($category -ne [System.Globalization.UnicodeCategory]::Format) {
-                continue
-            }
-
-            if ($codePoint -eq 0xFEFF -and $i -eq 0) {
-                continue
-            }
-
-            $location = Get-LineColumn -Text $text -Index $i
+            $location = Get-LineColumn -Text $text -Index $index
             $findings.Add([pscustomobject]@{
                 Path = $relativePath
                 Line = $location.Line
                 Column = $location.Column
                 CodePoint = ('U+{0:X4}' -f $codePoint)
-                Name = [System.Globalization.CharUnicodeInfo]::GetUnicodeCategory($text, $i)
+                Name = [System.Globalization.UnicodeCategory]::Format
             }) | Out-Null
         }
     }

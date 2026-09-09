@@ -1,5 +1,6 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.Specialized;
@@ -19,7 +20,8 @@ public enum ShellSectionKind
     Start = 0,
     Editor = 1,
     Batch = 2,
-    Settings = 3
+    Settings = 3,
+    Documents = 4
 }
 
 public enum AutoPreviewMode
@@ -207,6 +209,7 @@ public sealed class NavigationRailViewModel(WorkspaceShellViewModel shell) : She
     public ObservableCollection<NavigationRailItemViewModel> Items { get; } =
     [
         new NavigationRailItemViewModel(shell, ShellSectionKind.Start, "Start", "Home24", () => true),
+        new NavigationRailItemViewModel(shell, ShellSectionKind.Documents, "Documents", "DocumentImage24", () => true),
         new NavigationRailItemViewModel(shell, ShellSectionKind.Editor, "Editor", "BoxEdit24", () => shell.EditorWorkspace.IsAvailable),
         new NavigationRailItemViewModel(shell, ShellSectionKind.Batch, "Data", "BookDatabase24", () => shell.BatchWorkspace.IsAvailable),
         new NavigationRailItemViewModel(shell, ShellSectionKind.Settings, "Settings", "Settings24", () => true)
@@ -1227,6 +1230,46 @@ public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
         set => Shell.SelectedOverwritePolicy = value;
     }
 
+    public bool IsDmiBatchOutputSelected
+    {
+        get => Shell.IsDmiBatchOutputSelected;
+        set
+        {
+            Shell.IsDmiBatchOutputSelected = value;
+            OnPropertyChanged(nameof(CanRunSelectedBatch));
+            RunSelectedBatchCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    public bool IsPngBatchOutputSelected
+    {
+        get => Shell.IsPngBatchOutputSelected;
+        set
+        {
+            Shell.IsPngBatchOutputSelected = value;
+            OnPropertyChanged(nameof(CanRunSelectedBatch));
+            RunSelectedBatchCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    public IReadOnlyList<SpriteDirectionDepth> RasterDirectionDepths { get; } =
+        [SpriteDirectionDepth.One, SpriteDirectionDepth.Four, SpriteDirectionDepth.Eight];
+
+    public SpriteDirectionDepth SelectedRasterDirectionDepth
+    {
+        get => Shell.SelectedRasterDirectionDepth;
+        set => Shell.SelectedRasterDirectionDepth = value;
+    }
+
+    public IReadOnlyList<SpriteDocumentExportFormat> PngExportLayouts { get; } =
+        [SpriteDocumentExportFormat.PngSheet, SpriteDocumentExportFormat.PngSequence];
+
+    public SpriteDocumentExportFormat SelectedPngExportLayout
+    {
+        get => Shell.SelectedPngExportLayout;
+        set => Shell.SelectedPngExportLayout = value;
+    }
+
     public bool IsSingleDirectionPreviewSelected
     {
         get => Shell.SelectedBatchPreviewDirectionMode == BatchPreviewDirectionMode.Single;
@@ -1286,7 +1329,10 @@ public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
             ? PresentationText.Format("Text.Batch.RunAllFormat", "Run all {0}", ValidCandidateFileCount)
             : PresentationText.Format("Text.Batch.RunSelectedFormat", "Run {0} selected", SelectedCandidateFileCount);
 
-    public bool CanRunSelectedBatch => SelectedCandidateFileCount > 0 && !Shell.IsBusy;
+    public bool CanRunSelectedBatch =>
+        SelectedCandidateFileCount > 0 &&
+        Shell.HasSelectedBatchOutputFormats &&
+        !Shell.IsBusy;
 
     public bool IsOutputInsideInputDirectory =>
         !string.IsNullOrWhiteSpace(BatchInputDirectory) &&
@@ -1341,7 +1387,7 @@ public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
         }
     }
 
-    public string SourceSelectionName => Shell.SelectedBatchSourceItem?.Name ?? App.Text("Text.Batch.AllDmiFiles", "All DMI files");
+    public string SourceSelectionName => Shell.SelectedBatchSourceItem?.Name ?? App.Text("Text.Batch.AllDmiFiles", "All DMI and PNG files");
 
     public string SourceSelectionDetail => Shell.SelectedBatchSourceItem is null
         ? App.Text("Text.Batch.WholeSourceFolder", "Whole source folder")
@@ -1390,7 +1436,7 @@ public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
 
         if (selectedFiles.Length == 0)
         {
-            Shell.StatusMessage = App.Text("Text.Batch.SelectValidDmi", "Select at least one valid DMI file to run batch.");
+            Shell.StatusMessage = App.Text("Text.Batch.SelectValidDmi", "Select at least one valid DMI or PNG file to run batch.");
             return;
         }
 
@@ -1625,7 +1671,9 @@ public sealed partial class BatchWorkspaceViewModel : ShellSectionViewModel
                 continue;
             }
 
-            if (Path.GetExtension(item.FullPath).Equals(".dmi", StringComparison.OrdinalIgnoreCase))
+            var extension = Path.GetExtension(item.FullPath);
+            if (extension.Equals(".dmi", StringComparison.OrdinalIgnoreCase) ||
+                extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
             {
                 if (IncludeSubdirectories ||
                     Path.GetDirectoryName(Path.GetFullPath(item.FullPath))?.Equals(rootDirectory, StringComparison.OrdinalIgnoreCase) == true)

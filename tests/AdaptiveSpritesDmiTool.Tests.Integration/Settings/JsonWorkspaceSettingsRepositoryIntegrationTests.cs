@@ -1,5 +1,6 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using AdaptiveSpritesDmiTool.Infrastructure.Settings;
 using FluentAssertions;
 
@@ -60,7 +61,27 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
             ],
             MirrorAxisOffsetPixels: -4,
             ShowMirrorAxisGuide: true,
-            MirrorAcrossDirections: false);
+            MirrorAcrossDirections: false,
+            LastOpenedDocumentPath: "project.adaptive-dmi.json",
+            AuxiliaryLayers:
+            [
+                new WorkspaceAuxiliaryLayerSettings(
+                    Guid.Parse("2da98eeb-c5a7-45fa-a403-25fbd92a855c"),
+                    "reference",
+                    "reference.png",
+                    "reference.png",
+                    SpriteSourceFormat.Png,
+                    FrameIndex: 2,
+                    IsSourceAssigned: true,
+                    IsEditableAssigned: false,
+                    PlacementMode: "Overlay",
+                    Order: 1,
+                    OpacityPercent: 60)
+            ],
+            SelectedBatchOutputFormats: [WorkspaceBatchOutputFormat.Png, WorkspaceBatchOutputFormat.Dmi],
+            RasterExportSettings: new WorkspaceRasterExportSettings(
+                SpriteDirectionDepth.Eight,
+                SpriteDocumentExportFormat.PngSequence));
 
         (await repository.SaveAsync(settings, CancellationToken.None)).IsSuccess.Should().BeTrue();
 
@@ -89,6 +110,42 @@ public sealed class JsonWorkspaceSettingsRepositoryIntegrationTests : IDisposabl
         result.Value.MirrorAxisOffsetPixels.Should().Be(0);
         result.Value.ShowMirrorAxisGuide.Should().BeFalse();
         result.Value.MirrorAcrossDirections.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task RepositoryShouldMigrateVersionSevenToVersionEightDefaults()
+    {
+        var path = Path.Combine(_tempDirectory, "version7.json");
+        await File.WriteAllTextAsync(
+            path,
+            """
+            {
+              "version": 7,
+              "lastOverwritePolicy": "OverwriteExisting",
+              "importedStates": [
+                {
+                  "stateName": "coat",
+                  "sourcePath": "coat.dmi",
+                  "placementMode": "Overlay",
+                  "order": 2,
+                  "opacityPercent": 80
+                }
+              ]
+            }
+            """);
+
+        var result = await new JsonWorkspaceSettingsRepository(path).LoadAsync(CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.SelectedBatchOutputFormats.Should().Equal(
+            WorkspaceBatchOutputFormat.Dmi,
+            WorkspaceBatchOutputFormat.Png);
+        result.Value.RasterExportSettings.Should().Be(WorkspaceRasterExportSettings.Default);
+        result.Value.AuxiliaryLayers.Should().ContainSingle(layer =>
+            layer.Format == SpriteSourceFormat.Dmi &&
+            layer.StateName == "coat" &&
+            layer.FrameIndex == 0 &&
+            layer.OpacityPercent == 80);
     }
 
     [Fact]

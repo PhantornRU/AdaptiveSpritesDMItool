@@ -26,7 +26,9 @@ public sealed class MainWindowViewModel : WorkspaceShellViewModel
         SpriteImageBitmapSourceFactory bitmapSourceFactory,
         IFileDialogService fileDialogService,
         EditorSession editorSession,
-        ILogger<WorkspaceShellViewModel> logger)
+        ILogger<WorkspaceShellViewModel> logger,
+        SpriteDocumentWorkflow? spriteDocumentWorkflow = null,
+        IAuxiliaryLayerFrameReader? auxiliaryLayerFrameReader = null)
         : base(
             startEmptyWorkspaceUseCase,
             createConfigUseCase,
@@ -48,7 +50,9 @@ public sealed class MainWindowViewModel : WorkspaceShellViewModel
             bitmapSourceFactory,
             fileDialogService,
             editorSession,
-            logger)
+            logger,
+            spriteDocumentWorkflow,
+            auxiliaryLayerFrameReader)
     {
     }
 }

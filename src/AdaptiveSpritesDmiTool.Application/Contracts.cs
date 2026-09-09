@@ -1,5 +1,6 @@
 using AdaptiveSpritesDmiTool.Application.Common;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using AdaptiveSpritesDmiTool.Domain.Workspaces;
 
 namespace AdaptiveSpritesDmiTool.Application;
@@ -64,7 +65,9 @@ public sealed record BatchJobRequest(
     string OutputDirectory,
     SpriteConfig Config,
     OverwritePolicy OverwritePolicy,
-    IReadOnlyList<string>? ExplicitFiles = null);
+    IReadOnlyList<string>? ExplicitFiles = null,
+    IReadOnlyList<WorkspaceBatchOutputFormat>? OutputFormats = null,
+    WorkspaceRasterExportSettings? RasterExportSettings = null);
 
 public sealed record BatchJobResult(IReadOnlyList<BatchFileResult> Files)
 {
@@ -80,6 +83,34 @@ public sealed record WorkspaceImportedStateSettings(
     string PlacementMode,
     int Order,
     int OpacityPercent = 100);
+
+public enum WorkspaceBatchOutputFormat
+{
+    Dmi = 0,
+    Png = 1
+}
+
+public sealed record WorkspaceAuxiliaryLayerSettings(
+    Guid? SourceId,
+    string StateName,
+    string SourcePath,
+    string? SourceFileLabel,
+    SpriteSourceFormat Format,
+    int FrameIndex,
+    bool IsSourceAssigned,
+    bool IsEditableAssigned,
+    string PlacementMode,
+    int Order,
+    int OpacityPercent = 100);
+
+public sealed record WorkspaceRasterExportSettings(
+    SpriteDirectionDepth DirectionDepth,
+    SpriteDocumentExportFormat Layout)
+{
+    public static WorkspaceRasterExportSettings Default { get; } = new(
+        SpriteDirectionDepth.Four,
+        SpriteDocumentExportFormat.PngSheet);
+}
 
 public sealed record WorkspaceSettings(
     string? LastOpenedDmiPath,
@@ -104,7 +135,11 @@ public sealed record WorkspaceSettings(
     IReadOnlyList<WorkspaceImportedStateSettings>? ImportedStates = null,
     int MirrorAxisOffsetPixels = 0,
     bool ShowMirrorAxisGuide = false,
-    bool MirrorAcrossDirections = true)
+    bool MirrorAcrossDirections = true,
+    string? LastOpenedDocumentPath = null,
+    IReadOnlyList<WorkspaceAuxiliaryLayerSettings>? AuxiliaryLayers = null,
+    IReadOnlyList<WorkspaceBatchOutputFormat>? SelectedBatchOutputFormats = null,
+    WorkspaceRasterExportSettings? RasterExportSettings = null)
 {
     public static WorkspaceSettings Empty { get; } = new(
         LastOpenedDmiPath: null,
@@ -129,7 +164,11 @@ public sealed record WorkspaceSettings(
         ImportedStates: Array.Empty<WorkspaceImportedStateSettings>(),
         MirrorAxisOffsetPixels: 0,
         ShowMirrorAxisGuide: false,
-        MirrorAcrossDirections: true);
+        MirrorAcrossDirections: true,
+        LastOpenedDocumentPath: null,
+        AuxiliaryLayers: Array.Empty<WorkspaceAuxiliaryLayerSettings>(),
+        SelectedBatchOutputFormats: [WorkspaceBatchOutputFormat.Dmi, WorkspaceBatchOutputFormat.Png],
+        RasterExportSettings: WorkspaceRasterExportSettings.Default);
 }
 
 public interface IConfigRepository

@@ -1,5 +1,6 @@
 using AdaptiveSpritesDmiTool.Application;
 using AdaptiveSpritesDmiTool.Domain.Configurations;
+using AdaptiveSpritesDmiTool.Domain.Documents;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Media.Imaging;
@@ -149,6 +150,9 @@ public sealed partial class EditorDirectionCanvasViewModel : ObservableObject
 
     [ObservableProperty]
     private PixelAreaBounds? _transformedSelectedAreaBounds;
+
+    [ObservableProperty]
+    private PixelCoordinate? _transformedSelectedSourceCoordinate;
 
     [ObservableProperty]
     private PixelCoordinate? _transformedSelectedTargetCoordinate;
@@ -322,7 +326,10 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
         bool isEditableAssigned,
         ImportedStatePlacementMode placementMode,
         int order,
-        int opacityPercent = 100)
+        int opacityPercent = 100,
+        Guid? sourceId = null,
+        SpriteSourceFormat sourceFormat = SpriteSourceFormat.Dmi,
+        int frameIndex = 0)
     {
         StateName = stateName;
         this.sourcePath = sourcePath;
@@ -333,11 +340,20 @@ public sealed partial class ImportedDmiStateItemViewModel : ObservableObject
         this.placementMode = placementMode;
         this.order = order;
         this.opacityPercent = Math.Clamp(opacityPercent, 0, 100);
+        SourceId = sourceId;
+        SourceFormat = sourceFormat;
+        FrameIndex = Math.Max(0, frameIndex);
         orderText = order.ToString(System.Globalization.CultureInfo.InvariantCulture);
         opacityText = this.opacityPercent.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public string StateName { get; }
+
+    public Guid? SourceId { get; }
+
+    public SpriteSourceFormat SourceFormat { get; }
+
+    public int FrameIndex { get; }
 
     [ObservableProperty]
     private string sourcePath;

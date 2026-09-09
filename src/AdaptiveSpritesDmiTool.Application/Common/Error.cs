@@ -1,6 +1,9 @@
 namespace AdaptiveSpritesDmiTool.Application.Common;
 
-public sealed record Error(string Code, string Message)
+public sealed record Error(
+    string Code,
+    string Message,
+    IReadOnlyDictionary<string, string>? Metadata = null)
 {
     public static readonly Error None = new(string.Empty, string.Empty);
 }

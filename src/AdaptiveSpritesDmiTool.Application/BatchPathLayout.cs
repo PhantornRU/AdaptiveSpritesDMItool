@@ -19,7 +19,10 @@ public static class BatchPathLayout
                 .Where(static file => !string.IsNullOrWhiteSpace(file))
                 .Select(static file => Path.GetFullPath(file))
             : Directory
-                .EnumerateFiles(inputRoot, "*.dmi", SearchOption.AllDirectories)
+                .EnumerateFiles(inputRoot, "*", SearchOption.AllDirectories)
+                .Where(static file =>
+                    Path.GetExtension(file).Equals(".dmi", StringComparison.OrdinalIgnoreCase) ||
+                    Path.GetExtension(file).Equals(".png", StringComparison.OrdinalIgnoreCase))
                 .Select(static file => Path.GetFullPath(file));
 
         return files

@@ -716,7 +716,11 @@
             Style="{StaticResource BatchCard}"
             Padding="10"
             Margin="0,0,0,8">
-            <Grid Height="36">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="36" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1.05*" MinWidth="230" />
                     <ColumnDefinition Width="40" />
@@ -835,6 +839,47 @@
                     Command="{Binding CancelCommand}"
                     IsEnabled="{Binding IsBusy}"
                     Style="{StaticResource BatchRailButton}" />
+
+                <StackPanel
+                    Grid.Row="1"
+                    Grid.ColumnSpan="13"
+                    Margin="0,8,0,0"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource BatchRailLabel}"
+                        Text="{DynamicResource Text.Batch.Formats}" />
+                    <CheckBox
+                        Margin="0,0,12,0"
+                        Content="DMI"
+                        IsChecked="{Binding IsDmiBatchOutputSelected, Mode=TwoWay}" />
+                    <CheckBox
+                        Margin="0,0,20,0"
+                        Content="PNG"
+                        IsChecked="{Binding IsPngBatchOutputSelected, Mode=TwoWay}" />
+                    <TextBlock
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource BatchRailLabel}"
+                        Text="{DynamicResource Text.Batch.RasterDirections}" />
+                    <ComboBox
+                        Width="92"
+                        Margin="0,0,20,0"
+                        Style="{StaticResource BatchComboBox}"
+                        ItemsSource="{Binding RasterDirectionDepths}"
+                        SelectedItem="{Binding SelectedRasterDirectionDepth, Mode=TwoWay}" />
+                    <TextBlock
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource BatchRailLabel}"
+                        Text="{DynamicResource Text.Batch.PngLayout}" />
+                    <ComboBox
+                        Width="140"
+                        Style="{StaticResource BatchComboBox}"
+                        ItemsSource="{Binding PngExportLayouts}"
+                        SelectedItem="{Binding SelectedPngExportLayout, Mode=TwoWay}" />
+                </StackPanel>
             </Grid>
         </Border>
 

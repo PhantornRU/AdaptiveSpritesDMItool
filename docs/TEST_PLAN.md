@@ -1,8 +1,8 @@
-# Test Plan v2.3.0
+# Test Plan v2.4.0
 
 ## Strategy
 
-Проверка v2.3.0 строится на трех уровнях:
+Проверка v2.4.0 сохраняет три уровня V2.3 и добавляет document/codec regression matrix:
 
 - unit tests для Domain invariants, Application use cases и WPF shell view models;
 - integration tests для JSON persistence, CSV import, DMI adapters, preview, settings и batch behavior;
@@ -30,6 +30,7 @@
 - interpolated atomic strokes, conflict rejection and semantic no-op history
 - config queue behavior
 - batch workspace view-model state
+- Documents source-resolution UI retries changed/missing sources atomically and keeps accepted/relinked projects dirty
 
 ### Integration
 
@@ -53,17 +54,29 @@
 - workspace settings repository roundtrip and version validation
 - imported state workspace settings validation
 - batch manifest validation and artifacts behavior
+- DMI/PNG content probing independent of extension
+- DMI and PNG import into `SpriteDocument`
+- deterministic sidecar v1 roundtrip, relative-path relocation, structured missing/changed-source detection, explicit accept/relink and dirty-until-save behavior
+- single PNG, ordered PNG sequence and sprite-sheet slicing with non-zero margins/spacing plus row/column reading order
+- deterministic PNG sheet/sequence export and managed-directory ownership checks
+- ordered multi-state/multi-direction DMI animation import/export with fractional delay, loop, rewind and movement metadata
+- Workspace v7 to v8 migration
+- mixed DMI/PNG batch with per-output failure isolation
 
-## v2.3.0 Release Validation
+### Security limits
 
-Release-проверка v2.3.0 включает:
+Покрываются граничные и превышенные значения encoded size, width/height, checked decoded-pixel arithmetic, frame/cell count and state count. Invalid input must fail before bulk decode or destination mutation.
+
+## v2.4.0 Release Validation
+
+Release-проверка v2.4.0 включает:
 
 - hidden Unicode scan
 - locked `dotnet restore`
 - `dotnet build` in Release configuration
 - `dotnet test` in Release configuration
-- 230 unit tests
-- 56 integration tests
+- 242 unit tests
+- 77 integration tests
 - NuGet vulnerability audit
 - self-contained Windows x64 publish
 - ZIP packaging
@@ -103,6 +116,13 @@ Release-проверка v2.3.0 включает:
 25. workspace settings persist across restart
 26. imported DMI states restore across restart
 27. imported DMI layer order and opacity affect Source/Editable composition
+28. content probe routes DMI and PNG by signature/metadata rather than extension
+29. static PNG, ordered sequence and sprite-sheet import create the expected 1/4/8 frame graph
+30. sidecar v1 roundtrip, source relocation, per-source accept/relink, dirty-until-save provenance and safety-limit rejection
+31. DMI document export preserves state order, animation metadata, hotspots and RGBA through reopen verification
+32. PNG sheet and sequence exports replace only tool-owned managed folders
+33. mixed DMI/PNG batch isolates DMI and PNG output failures
+34. raster profiles accept config/profile 4/8 combinations only according to the documented matrix
 
 ## Manual Smoke
 
@@ -124,13 +144,18 @@ Run after large presentation, release, or packaging changes:
 14. Add imported DMI state layers, adjust order and opacity, restart, and verify layer settings were restored.
 15. Repeat the editor checks at multiple zoom levels and at Windows display scaling values of 100%, 125%, and 150%.
 16. Enable the mirror-axis guide independently of the grid; verify the centered axis and positive/negative offsets on every Source and Editable canvas.
-17. Exercise Single, Parallel, and All scopes with Mirror both enabled and disabled, including an offset that produces out-of-bounds projections; verify skipped targets are reported and never clamped to an edge.
-18. Draw fast sparse Paint, Erase, and Restore strokes; verify continuity and exactly one Undo step per completed gesture.
+17. Exercise Single, Parallel, and All scopes with Mirror both enabled and disabled. On an asymmetric 4/8-direction asset, verify that propagated source-based edits mirror both `Editable` and `Source`, including their selected-coordinate markers. With a non-zero offset, verify that an out-of-bounds endpoint skips the whole propagated mapping once and neither endpoint is clamped.
+18. Draw fast sparse Paint, Erase, and Restore strokes, including strokes beside every corner with a non-zero mirror offset; verify continuity, exactly one Undo step per completed gesture, and no additional edge/corner pixels.
 19. Verify inclusive Fill bounds, overlapping Move and Select/Move, transparent Erase, and original-pixel Restore.
 20. During a gesture, test Escape, tool/state/direction changes, lost mouse capture, and mouse release outside the canvas; verify cancellation or completion at the last valid coordinate as appropriate.
 21. Save the same asymmetric synthetic DMI both to a new path and in place, then compare preview pixels with the reopened DMI.
 22. Open the saved DMI in a third-party BYOND/DMI tool and verify state order, animation frames, directions, metadata, transparency, and unique corner pixels.
 23. After any WPF-UI dependency update, repeat the full toolbar, dialogs, themes, DPI, canvas input, and window-resize smoke before accepting the package.
+24. In Documents, import one static PNG, an ordered multi-file sequence, and a sheet with non-zero margins/spacing; compare the grid overlay with the imported frames.
+25. Save and reopen the `*.adaptive-dmi.json` sidecar, then move the project with its relative sources and verify it relinks without changing fingerprints.
+26. Modify one source after saving and verify that load requires explicit reject/accept/relink instead of silently using the new file.
+27. Export PNG sheet and sequence twice, verify managed replacement, then point export at an unmanaged non-empty directory and verify its contents remain unchanged.
+28. Run mixed DMI+PNG batch for 1/4/8 profiles; verify separate result rows and that a PNG profile mismatch does not suppress a valid DMI output.
 
 ## Validation Commands
 
@@ -145,7 +170,7 @@ dotnet test AdaptiveSpritesDMItool.sln -c Release -m:1 -v minimal --no-build
 Release validation:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.3.0 -Runtime win-x64
+powershell -NoProfile -ExecutionPolicy Bypass -File ./eng/build-release.ps1 -Version v2.4.0 -Runtime win-x64
 ```
 
 Docs-only validation:
